@@ -19,7 +19,7 @@ export interface User {
 
 export enum UserRole {
   CLIENT = 'client',
-  BUSINESS_OWNER = 'business_owner',
+  PROVIDER = 'provider',
   ADMIN = 'admin',
 }
 
@@ -71,6 +71,10 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
 // ============================================
 // Auth Responses
 // ============================================
@@ -78,8 +82,18 @@ export interface VerifyEmailRequest {
 export interface AuthResponse {
   success: boolean;
   data: {
-    token: string;
+    accessToken: string;
+    refreshToken: string;
     user: User;
+  };
+  message?: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  data: {
+    accessToken: string;
+    refreshToken: string;
   };
   message?: string;
 }
