@@ -92,7 +92,7 @@ Cilj MVP-a je da omogući osnovnu funkcionalnost zakazivanja termina sa autentif
 - [ ] `auth.middleware.ts` - Verifikacija JWT tokena
 - [ ] `role.middleware.ts` - Provera role korisnika
   - isClient
-  - isBusinessOwner
+  - isProvider
   - isAdmin
 
 ### Task 2.6: Email Templates
@@ -492,5 +492,5 @@ Za svaki task:
 
 ---
 
-**Verzija**: 1.0  
+**Verzija**: 1.0
 **Zadnja izmena**: April 7, 2026

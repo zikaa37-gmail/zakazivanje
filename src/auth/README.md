@@ -35,7 +35,9 @@ auth/
 ## 🚀 Komponente
 
 ### 1. LoginComponent
+
 **Putanja**: `/auth/login`
+
 - Login forma (email + password)
 - Validacija polja
 - Redirekcija nakon uspešnog logina
@@ -43,7 +45,9 @@ auth/
 - Link ka registraciji
 
 ### 2. RegisterComponent
+
 **Putanja**: `/auth/register`
+
 - Registracija **klijenta**
 - Polja: ime, prezime, email, telefon, WhatsApp, lozinka
 - Preferirani način komunikacije (email/whatsapp/both)
@@ -51,7 +55,9 @@ auth/
 - Link ka login
 
 ### 3. RegisterBusinessComponent
+
 **Putanja**: `/auth/register-business`
+
 - Registracija **vlasnika biznisa**
 - **Lični podaci**: ime, prezime, email, telefon, WhatsApp, lozinka
 - **Podaci o bizuisu**: naziv, kategorija, PIB, matični broj, telefon, WhatsApp
@@ -60,19 +66,25 @@ auth/
 - Link ka login
 
 ### 4. ForgotPasswordComponent
+
 **Putanja**: `/auth/forgot-password`
+
 - Forma za unos email adrese
 - Slanje reset linka na email/WhatsApp
 - Info poruka za korisnika
 
 ### 5. ResetPasswordComponent
+
 **Putanja**: `/auth/reset-password?token=xyz`
+
 - Nova lozinka + potvrda
 - Token iz query params
 - Validacija tokena
 
 ### 6. VerifyEmailComponent
+
 **Putanja**: `/auth/verify-email?token=xyz`
+
 - Automatska verifikacija pri učitavanju
 - Success/Error prikaz
 - Redirekcija na login nakon uspešne verifikacije
@@ -108,15 +120,15 @@ isAuthenticated(): boolean
 getToken(): string | null
 hasRole(role: UserRole): boolean
 isClient(): boolean
-isBusinessOwner(): boolean
+isProvider(): boolean
 isAdmin(): boolean
 ```
 
 ### Signali
 
 ```typescript
-currentUser = signal<User | null>(null)
-isLoading = signal<boolean>(false)
+currentUser = signal<User | null>(null);
+isLoading = signal<boolean>(false);
 ```
 
 ## 🎯 Auth Flow
@@ -139,7 +151,7 @@ isLoading = signal<boolean>(false)
 1. Korisnik popunjava formu (/auth/register-business)
 2. POST /api/auth/register/business
 3. Backend kreira:
-   - User sa role='business_owner'
+   - User sa role='provider'
    - Business sa is_approved=false
 4. Slanje verifikacionog email/WhatsApp
 5. Korisnik klika link → /auth/verify-email?token=xyz
@@ -189,7 +201,7 @@ interface User {
   phone?: string;
   whatsappNumber?: string;
   avatar?: string;
-  role: UserRole; // 'client' | 'business_owner' | 'admin'
+  role: UserRole; // 'client' | 'provider' | 'admin'
   isEmailVerified: boolean;
   preferredCommunication: CommunicationType; // 'email' | 'whatsapp' | 'both'
   createdAt: string;

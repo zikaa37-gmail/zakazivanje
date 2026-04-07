@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
     whatsapp_number VARCHAR(20) COMMENT 'WhatsApp broj (može biti isti kao phone)',
     avatar VARCHAR(255) COMMENT 'URL do profilne slike',
     -- Role & Status
-    role ENUM('client', 'business_owner', 'admin') NOT NULL DEFAULT 'client',
+    role ENUM('client', 'provider', 'admin') NOT NULL DEFAULT 'client',
     is_active BOOLEAN DEFAULT TRUE COMMENT 'Soft delete flag',
     preferred_communication ENUM('email', 'whatsapp', 'both') DEFAULT 'whatsapp',
     -- Email Verification
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Comments
 -- ============================================
 -- role: client = obični korisnik koji zakazuje termine
---       business_owner = vlasnik biznisa
+--       provider = vlasnik biznisa (pružalac usluga)
 --       admin = admin platforme
 -- is_active: FALSE = soft delete (nikad ne brisati hard delete)
 -- preferred_communication: kako korisnik želi da prima notifikacije

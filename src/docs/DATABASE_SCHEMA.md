@@ -1,7 +1,7 @@
 # Database Schema - Zakazivanje Platforma
 
-> **Verzija**: 2.0  
-> **Status**: Draft - Za Review  
+> **Verzija**: 2.0
+> **Status**: Draft - Za Review
 > **Datum**: April 7, 2026
 
 ---
@@ -86,7 +86,7 @@ CREATE TABLE users (
   avatar VARCHAR(255),
 
   -- Role & Status
-  role ENUM('client', 'business_owner', 'admin') NOT NULL DEFAULT 'client',
+  role ENUM('client', 'provider', 'admin') NOT NULL DEFAULT 'client',
   is_active BOOLEAN DEFAULT TRUE,
 
   -- Email Verification
@@ -112,25 +112,25 @@ CREATE TABLE users (
 
 **Polja**:
 
-| Field                        | Type         | Description                     |
-| ---------------------------- | ------------ | ------------------------------- |
-| `id`                         | INT          | Primary key                     |
-| `email`                      | VARCHAR(255) | Unique, za login                |
-| `password`                   | VARCHAR(255) | Hashed (bcrypt)                 |
-| `first_name`                 | VARCHAR(100) | Ime korisnika                   |
-| `last_name`                  | VARCHAR(100) | Prezime korisnika               |
-| `phone`                      | VARCHAR(20)  | Telefon (opciono)               |
-| `avatar`                     | VARCHAR(255) | URL do profilne slike           |
-| `role`                       | ENUM         | client / business_owner / admin |
-| `is_active`                  | BOOLEAN      | Da li je nalog aktivan          |
-| `is_email_verified`          | BOOLEAN      | Da li je email verifikovan      |
-| `email_verification_token`   | VARCHAR(255) | Token za verifikaciju           |
-| `email_verification_expires` | DATETIME     | Istek tokena                    |
-| `password_reset_token`       | VARCHAR(255) | Token za reset lozinke          |
-| `password_reset_expires`     | DATETIME     | Istek reset tokena              |
-| `created_at`                 | TIMESTAMP    | Kada je kreiran nalog           |
-| `updated_at`                 | TIMESTAMP    | Poslednja izmena                |
-| `last_login`                 | TIMESTAMP    | Poslednji login                 |
+| Field                        | Type         | Description                |
+| ---------------------------- | ------------ | -------------------------- |
+| `id`                         | INT          | Primary key                |
+| `email`                      | VARCHAR(255) | Unique, za login           |
+| `password`                   | VARCHAR(255) | Hashed (bcrypt)            |
+| `first_name`                 | VARCHAR(100) | Ime korisnika              |
+| `last_name`                  | VARCHAR(100) | Prezime korisnika          |
+| `phone`                      | VARCHAR(20)  | Telefon (opciono)          |
+| `avatar`                     | VARCHAR(255) | URL do profilne slike      |
+| `role`                       | ENUM         | client / provider / admin  |
+| `is_active`                  | BOOLEAN      | Da li je nalog aktivan     |
+| `is_email_verified`          | BOOLEAN      | Da li je email verifikovan |
+| `email_verification_token`   | VARCHAR(255) | Token za verifikaciju      |
+| `email_verification_expires` | DATETIME     | Istek tokena               |
+| `password_reset_token`       | VARCHAR(255) | Token za reset lozinke     |
+| `password_reset_expires`     | DATETIME     | Istek reset tokena         |
+| `created_at`                 | TIMESTAMP    | Kada je kreiran nalog      |
+| `updated_at`                 | TIMESTAMP    | Poslednja izmena           |
+| `last_login`                 | TIMESTAMP    | Poslednji login            |
 
 **Validacija**:
 
@@ -607,7 +607,7 @@ CREATE TABLE blocked_time_slots (
    }
 
 2. Transakcija:
-   a) Kreiranje user-a sa role='business_owner'
+   a) Kreiranje user-a sa role='provider'
    b) Kreiranje business-a sa owner_id i is_approved=false
 
 3. Generisanje email_verification_token
@@ -632,13 +632,13 @@ CREATE TABLE blocked_time_slots (
 5. Ažuriranje last_login
 
 6. Generisanje JWT tokena:
-   Payload: { userId, email, role, businessId (if business_owner) }
+   Payload: { userId, email, role, businessId (if provider) }
 
 7. Response: {
      success: true,
      token: "jwt_token",
      user: { id, email, firstName, lastName, role },
-     business: { ... } // ako je business_owner
+     business: { ... } // ako je provider
    }
 ```
 
@@ -785,5 +785,5 @@ Appointment.hasOne(Review, { foreignKey: 'appointment_id' });
 
 ---
 
-**Status**: 🟡 Čeka Review  
+**Status**: 🟡 Čeka Review
 **Sledeći korak**: Odobriti šemu i krenuti sa implementacijom modela

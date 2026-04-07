@@ -1,5 +1,5 @@
-import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
@@ -9,6 +9,8 @@ import {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginRequest,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
   RegisterBusinessRequest,
   RegisterClientRequest,
   RegisterResponse,
@@ -45,7 +47,11 @@ export class AuthService {
       tap({
         next: (response) => {
           if (response.success) {
-            this.setSession(response.data.token, response.data.user);
+            this.setSession(
+              response.data.accessToken,
+              response.data.refreshToken,
+              response.data.user,
+            );
           }
           this.isLoading.set(false);
         },
@@ -160,11 +166,38 @@ export class AuthService {
   }
 
   // ============================================
+  // Refresh Access Token
+  // ============================================
+
+  refreshAccessToken(): Observable<RefreshTokenResponse> {
+    const refreshToken = this.getRefreshToken();
+
+    if (!refreshToken) {
+      throw new Error('Refresh token nije dostupan');
+    }
+
+    const data: RefreshTokenRequest = { refreshToken };
+
+    return this.http
+      .post<RefreshTokenResponse>(`${environment.apiUrl}/auth/refresh-token`, data)
+      .pipe(
+        tap({
+          next: (response) => {
+            if (response.success) {
+              this.updateTokens(response.data.accessToken, response.data.refreshToken);
+            }
+          },
+        }),
+      );
+  }
+
+  // ============================================
   // Logout
   // ============================================
 
   logout(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     this.currentUser.set(null);
     this.router.navigate(['/login']);
@@ -174,17 +207,23 @@ export class AuthService {
   // Session Management
   // ============================================
 
-  private setSession(token: string, user: User): void {
-    localStorage.setItem('token', token);
+  private setSession(accessToken: string, refreshToken: string, user: User): void {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUser.set(user);
   }
 
+  private updateTokens(accessToken: string, refreshToken: string): void {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  }
+
   private loadUserFromStorage(): void {
-    const token = localStorage.getItem('token');
+    const accessToken = localStorage.getItem('accessToken');
     const userStr = localStorage.getItem('user');
 
-    if (token && userStr) {
+    if (accessToken && userStr) {
       try {
         const user = JSON.parse(userStr) as User;
         this.currentUser.set(user);
@@ -203,7 +242,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem('accessToken');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
   }
 
   hasRole(role: UserRole): boolean {
@@ -214,8 +257,8 @@ export class AuthService {
     return this.hasRole(UserRole.CLIENT);
   }
 
-  isBusinessOwner(): boolean {
-    return this.hasRole(UserRole.BUSINESS_OWNER);
+  isProvider(): boolean {
+    return this.hasRole(UserRole.PROVIDER);
   }
 
   isAdmin(): boolean {

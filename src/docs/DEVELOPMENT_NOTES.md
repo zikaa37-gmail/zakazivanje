@@ -286,7 +286,7 @@ CREATE TABLE users (
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
-  role ENUM('client', 'business_owner', 'admin') NOT NULL,
+  role ENUM('client', 'provider', 'admin') NOT NULL,
   avatar VARCHAR(255),
   is_email_verified BOOLEAN DEFAULT FALSE,
   email_verification_token VARCHAR(255),
@@ -469,5 +469,5 @@ Kao [tip korisnika], želim [akcija], da bih [cilj].
 
 ---
 
-**Zadnja izmena**: April 7, 2026  
+**Zadnja izmena**: April 7, 2026
 **Autor**: Zakazivanje Dev Team
