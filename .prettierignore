@@ -1,0 +1,45 @@
+# Prettier ignore file
+
+# Dependencies
+node_modules/
+dist/
+out-tsc/
+tmp/
+temp/
+
+# Build outputs
+*.tsbuildinfo
+.angular/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (već imaju specifičan format)
+.env
+.env.*
+
+# Package locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Coverage
+coverage/
+*.lcov
+
+# Others
+*.min.js
+*.min.css

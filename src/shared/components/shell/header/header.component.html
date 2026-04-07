@@ -1,0 +1,31 @@
+<mat-toolbar color="primary">
+  <span class="logo" routerLink="/">Zakazivanje</span>
+  <span class="spacer"></span>
+
+  <nav class="nav-links">
+    <button mat-button routerLink="/">Početna</button>
+    <button mat-button routerLink="/search">Pretraga</button>
+
+    @if (!isAuthenticated) {
+      <button mat-button routerLink="/auth/login">Prijava</button>
+      <button mat-raised-button color="accent" routerLink="/auth/register">
+        Registracija
+      </button>
+    } @else {
+      <button mat-button [matMenuTriggerFor]="userMenu">
+        <mat-icon>account_circle</mat-icon>
+        {{ currentUser()?.firstName || 'Korisnik' }}
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item (click)="goToProfile()">
+          <mat-icon>person</mat-icon>
+          <span>Profil</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Odjavi se</span>
+        </button>
+      </mat-menu>
+    }
+  </nav>
+</mat-toolbar>
