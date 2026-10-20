@@ -1,0 +1,69 @@
+:host {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.row-actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.row-actions-trigger:hover {
+  border-color: var(--color-border-dark);
+}
+
+.row-actions-trigger:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.row-actions-menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 16px var(--shadow-color);
+  padding: 0.25rem;
+  z-index: 60;
+}
+
+.row-actions-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-actions-item:hover {
+  background: var(--color-bg);
+}
+
+.row-actions-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row-actions-item-danger {
+  color: var(--color-danger);
+}

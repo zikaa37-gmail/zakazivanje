@@ -56,6 +56,18 @@ class AuthTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('email');
     }
 
+    public function test_registration_claims_client_added_by_admin(): void
+    {
+        Notification::fake();
+        $placeholder = User::factory()->create(['email' => 'marija@example.com', 'password' => null, 'note' => 'VIP']);
+
+        $this->postJson('/api/auth/register', $this->clientPayload())->assertCreated();
+
+        $this->assertSame(1, User::where('email', 'marija@example.com')->count());
+        $this->assertNotNull($placeholder->fresh()->password);
+        $this->assertSame('VIP', $placeholder->fresh()->note);
+    }
+
     public function test_user_updates_own_profile(): void
     {
         $user = User::factory()->create();

@@ -1,0 +1,176 @@
+@use 'themes/breakpoints' as bp;
+
+$sidebar: 248px;
+
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.shell-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  width: min(300px, 85vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  transform: translateX(-100%);
+  transition: transform 0.2s ease;
+
+  &.open {
+    transform: none;
+    box-shadow: 0 12px 32px var(--shadow-color);
+  }
+}
+
+.shell-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  background: var(--color-overlay);
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.shell-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.shell-logo-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.shell-brand-name {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.shell-brand-role {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.shell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.shell-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.95rem;
+
+  &:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  &.active {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+  }
+}
+
+.shell-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.shell-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-danger);
+  }
+}
+
+.shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: var(--header-height);
+  padding: 0 1rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.shell-menu-toggle {
+  display: inline-flex;
+  border: 0;
+  padding: 0.25rem;
+  margin-left: -0.25rem;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.shell-main {
+  padding: 1rem;
+  max-width: 1200px;
+}
+
+@include bp.md-up {
+  .shell-sidebar {
+    width: $sidebar;
+    transform: none;
+    box-shadow: none !important;
+  }
+
+  .shell-backdrop,
+  .shell-topbar {
+    display: none;
+  }
+
+  .shell-main {
+    margin-left: $sidebar;
+    padding: 2rem;
+  }
+}

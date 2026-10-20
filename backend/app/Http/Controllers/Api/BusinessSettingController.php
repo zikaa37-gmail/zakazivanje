@@ -31,7 +31,11 @@ class BusinessSettingController extends Controller
             'instagram' => ['nullable', 'string', 'max:255'],
             'pib' => ['nullable', 'string', 'max:20'],
             'registration_number' => ['nullable', 'string', 'max:50'],
-            'logo' => ['nullable', 'string', 'max:2000000'],
+            'logo' => ['nullable', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpeg|webp|svg\+xml);base64,/'],
+            'theme_primary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_secondary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_tertiary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'booking_confirmation' => ['required', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
         ]);
 
         $settings = BusinessSetting::current();

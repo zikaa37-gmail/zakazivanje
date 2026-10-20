@@ -1,0 +1,54 @@
+<header class="sticky top-0 z-20 flex items-center gap-3 h-14 px-4 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
+  @if (business.logo()) {
+    <img [src]="business.logo()" alt="" class="w-9 h-9 rounded-lg object-contain" />
+  }
+  <span class="font-bold truncate">{{ business.name() }}</span>
+  <span class="avatar avatar-initials avatar-sm ml-auto">{{ initials() }}</span>
+</header>
+
+<main class="content-container py-6 max-w-xl">
+  <div class="text-center mb-6">
+    <span class="avatar avatar-initials !w-20 !h-20 !text-2xl">{{ initials() }}</span>
+    <h1 class="text-xl font-bold mt-3">{{ auth.currentUser()?.first_name }} {{ auth.currentUser()?.last_name }}</h1>
+    <p class="muted">{{ auth.currentUser()?.email }}</p>
+  </div>
+
+  <div class="card">
+    <h2 class="text-base font-semibold">Lični podaci</h2>
+    <app-error-message [message]="error()" />
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="p-first">Ime</label>
+          <input id="p-first" appInput size="m" formControlName="first_name" />
+        </div>
+        <div class="field">
+          <label for="p-last">Prezime</label>
+          <input id="p-last" appInput size="m" formControlName="last_name" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="p-phone">Telefon</label>
+        <input id="p-phone" appInput size="m" type="tel" formControlName="phone" />
+      </div>
+      <div class="field">
+        <label for="p-channel">Obaveštenja preko</label>
+        <select id="p-channel" appInput size="m" formControlName="preferred_communication">
+          @for (option of communication; track option.value) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex justify-end">
+        <app-button type="submit" size="s" [loading]="saving()">Sačuvaj</app-button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card mt-4">
+    <p class="text-sm muted mb-3">Zakazivanje termina stiže uskoro.</p>
+    <button type="button" appBtn theme="secondary" class="w-full" (click)="auth.logout()" data-testid="logout">
+      <span appIcon="logout" aria-hidden="true"></span> Odjavi se
+    </button>
+  </div>
+</main>

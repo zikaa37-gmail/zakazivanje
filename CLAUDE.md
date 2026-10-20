@@ -83,7 +83,9 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Seed nalozi (lozinka `password`): `admin@zakazivanje.test` (admin), `klijent@zakazivanje.test`.
+Seed nalozi: admin `zakazivanje@fiskultura.rs` / `zakazivanje`, klijent Petar Petrović
+`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu su na `/login` samo u development build-u
+(`environment.development.ts` → `devLogins`); u produkciji ih nema.
 
 Frontend (from `frontend/`):
 
@@ -97,10 +99,15 @@ Posle izmena pokreni relevantne testove: `php artisan test` (backend) i `npx ng 
 ## Current state
 
 Implementirano: JWT auth (login, refresh sa rotacijom, logout, registracija klijenta, potvrda
-email-a tokenom, zaboravljena / reset lozinke, izmena profila i lozinke), podešavanja biznisa
-(`GET /api/public/business`, `PUT /api/business-settings` samo admin), frontend školjka (Tailwind,
-deljene komponente, auth servis i interceptori). Frontend stranice se prave po predlogu iz
-`docs/stranice.md` kad ga korisnik potvrdi.
+email-a tokenom, zaboravljena / reset lozinke, izmena profila i lozinke), admin sekcija
+(`/admin`, `AdminShellComponent`): zaposleni (usluge, radno vreme po danima sa više smena, boja,
+režim potvrde po zaposlenom), usluge (kategorija, trajanje, cena, ko radi), cene i akcije
+(`Promotion` + `PriceQuoteService`: paket, %, dinari, N+M, loyalty; period i dani), klijenti
+(i bez naloga — `users.password` je `null`; registracija istim emailom preuzima zapis),
+podešavanja (podaci o biznisu, logo kao data URL, tema iz boja logoa — `extractPalette()`,
+`ThemeService.applyBrand()` računa nijanse `--color-primary/secondary/tertiary*`; režim potvrde
+`manual` / `automatic`). Klijent posle prijave ima samo `/profile`. Sledeće: zakazivanje termina
+(#17, uključujući ponavljajuće termine), kalendar (#18), obaveštenja (#19), javna početna.
 
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

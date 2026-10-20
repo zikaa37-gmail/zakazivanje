@@ -22,9 +22,16 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $data = $request->validate($this->userRules());
+        $placeholder = User::where('email', $request->input('email'))
+            ->where('role', User::ROLE_CLIENT)
+            ->whereNull('password')
+            ->first();
 
-        $user = User::create([...$data, 'role' => User::ROLE_CLIENT]);
+        $data = $request->validate($this->userRules($placeholder));
+
+        $user = $placeholder
+            ? tap($placeholder)->update($data)
+            : User::create([...$data, 'role' => User::ROLE_CLIENT]);
         $user->sendEmailVerification();
 
         return response()->json([
@@ -42,7 +49,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (! $user || $user->password === null || ! Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages(['email' => ['Pogrešan email ili lozinka.']]);
         }
 
@@ -188,12 +195,12 @@ class AuthController extends Controller
         return response()->json(['message' => 'Lozinka je promenjena. Prijavi se ponovo.']);
     }
 
-    private function userRules(): array
+    private function userRules(?User $placeholder = null): array
     {
         return [
             'first_name' => ['required', 'string', 'min:2', 'max:100'],
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($placeholder?->id)],
             'password' => ['required', 'string', 'min:8'],
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],

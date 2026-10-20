@@ -1,0 +1,45 @@
+<div class="time-picker">
+  <button
+    type="button"
+    class="time-picker-trigger"
+    [class.open]="open()"
+    [disabled]="control().disabled"
+    (click)="toggle()"
+    [attr.aria-expanded]="open()"
+    [attr.data-testid]="testId() || null"
+  >
+    <span>{{ displayLabel() }}</span>
+    <span appIcon="clock" [iconSize]="16" aria-hidden="true"></span>
+  </button>
+
+  @if (open()) {
+    <div class="time-picker-panel">
+      <div class="time-picker-col" [attr.data-testid]="testId() ? testId() + '-hours' : null">
+        @for (h of hours; track h) {
+          <button
+            type="button"
+            class="time-picker-option"
+            [class.selected]="h === selectedHour()"
+            (click)="selectHour(h)"
+            [attr.data-testid]="testId() ? testId() + '-hour-' + h : null"
+          >
+            {{ pad(h) }}
+          </button>
+        }
+      </div>
+      <div class="time-picker-col" [attr.data-testid]="testId() ? testId() + '-minutes' : null">
+        @for (m of minutes; track m) {
+          <button
+            type="button"
+            class="time-picker-option"
+            [class.selected]="m === selectedMinute()"
+            (click)="selectMinute(m)"
+            [attr.data-testid]="testId() ? testId() + '-minute-' + m : null"
+          >
+            {{ pad(m) }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

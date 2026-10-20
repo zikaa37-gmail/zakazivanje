@@ -88,3 +88,8 @@ input[type='search'].form-input {
   -webkit-appearance: none;
   margin: 0;
 }
+
+.form-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}

@@ -58,6 +58,10 @@ const ICON_NAMES = [
   'arrow-left',
   'rotate-ccw',
   'activity',
+  'scissors',
+  'percent',
+  'gift',
+  'palette',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];

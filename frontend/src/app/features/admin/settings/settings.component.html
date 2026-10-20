@@ -1,0 +1,178 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Podešavanja</h1>
+    <p class="page-subtitle">Podaci o biznisu, izgled aplikacije i pravila zakazivanja</p>
+  </div>
+  <app-button [loading]="saving()" (click)="save()" data-testid="settings-save">
+    <span appIcon="check" aria-hidden="true"></span> Sačuvaj
+  </app-button>
+</div>
+
+<div class="chip-group mb-4" role="tablist">
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'business'" (click)="tab.set('business')" data-testid="tab-business">Biznis</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'look'" (click)="tab.set('look')" data-testid="tab-look">Logo i boje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="tab.set('booking')" data-testid="tab-booking">Zakazivanje</button>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (!loading()) {
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @switch (tab()) {
+      @case ('business') {
+        <div class="card">
+          <div class="form-grid">
+            <div class="field">
+              <label for="s-name">Naziv <span class="required-mark">*</span></label>
+              <input id="s-name" appInput size="m" formControlName="name" data-testid="settings-name" />
+            </div>
+            <div class="field">
+              <label for="s-category">Delatnost</label>
+              <select id="s-category" appInput size="m" formControlName="category">
+                @for (c of categories; track c.value) {
+                  <option [ngValue]="c.value">{{ c.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="s-address">Adresa</label>
+              <input id="s-address" appInput size="m" formControlName="address" />
+            </div>
+            <div class="field">
+              <label for="s-city">Grad</label>
+              <input id="s-city" appInput size="m" formControlName="city" />
+            </div>
+            <div class="field">
+              <label for="s-phone">Telefon</label>
+              <input id="s-phone" appInput size="m" type="tel" formControlName="phone" />
+            </div>
+            <div class="field">
+              <label for="s-whatsapp">WhatsApp</label>
+              <input id="s-whatsapp" appInput size="m" type="tel" formControlName="whatsapp_number" />
+            </div>
+            <div class="field">
+              <label for="s-email">Email</label>
+              <input id="s-email" appInput size="m" type="email" formControlName="email" />
+            </div>
+            <div class="field">
+              <label for="s-instagram">Instagram</label>
+              <input id="s-instagram" appInput size="m" formControlName="instagram" placeholder="@salon" />
+            </div>
+            <div class="field">
+              <label for="s-website">Sajt</label>
+              <input id="s-website" appInput size="m" type="url" formControlName="website" placeholder="https://" />
+            </div>
+            <div class="field">
+              <label for="s-pib">PIB</label>
+              <input id="s-pib" appInput size="m" formControlName="pib" inputmode="numeric" />
+            </div>
+            <div class="field">
+              <label for="s-mb">Matični broj</label>
+              <input id="s-mb" appInput size="m" formControlName="registration_number" inputmode="numeric" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="s-description">Opis (vidljiv klijentima)</label>
+            <textarea id="s-description" appInput size="m" rows="3" formControlName="description"></textarea>
+          </div>
+        </div>
+      }
+
+      @case ('look') {
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="card">
+            <h2 class="text-base font-semibold">Logo</h2>
+            <div class="flex items-center gap-4 mt-3">
+              @if (logo()) {
+                <img [src]="logo()" alt="Logo" class="w-24 h-24 object-contain rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]" data-testid="logo-preview" />
+              } @else {
+                <span class="auth-logo-placeholder !m-0 !w-24 !h-24"><span appIcon="image" [iconSize]="32"></span></span>
+              }
+              <div class="flex flex-col gap-2">
+                <label appBtn theme="secondary" size="s" class="cursor-pointer">
+                  <span appIcon="upload" aria-hidden="true"></span> {{ logo() ? 'Promeni' : 'Otpremi logo' }}
+                  <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="sr-only" (change)="onLogoSelected($event)" data-testid="logo-input" />
+                </label>
+                @if (logo()) {
+                  <button type="button" appBtn theme="ghost" size="s" (click)="removeLogo()">Ukloni</button>
+                }
+                <span class="text-xs muted">PNG, JPG, WEBP ili SVG. Smanjuje se na 512 px.</span>
+              </div>
+            </div>
+
+            @if (logo()) {
+              <div class="mt-4 pt-4 border-t border-[var(--color-border)]">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-semibold">Boje iz logoa</span>
+                  <button type="button" appBtn theme="ghost" size="s" [disabled]="extracting()" (click)="suggestColors()">
+                    <span appIcon="wand" aria-hidden="true"></span> Izvuci ponovo
+                  </button>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                  @for (color of suggested(); track color) {
+                    <span class="w-10 h-10 rounded-lg border border-[var(--color-border)]" [style.background]="color" [title]="color"></span>
+                  } @empty {
+                    <span class="text-sm muted">Nema predloga.</span>
+                  }
+                  @if (suggested().length) {
+                    <button type="button" appBtn size="s" class="ml-auto" (click)="applySuggested()" data-testid="apply-logo-colors">Primeni</button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="card">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-base font-semibold">Boje teme</h2>
+              <button type="button" appBtn theme="ghost" size="s" (click)="resetColors()">
+                <span appIcon="rotate-ccw" aria-hidden="true"></span> Podrazumevane
+              </button>
+            </div>
+            <p class="text-sm muted">Pregled se menja odmah; čuva se klikom na „Sačuvaj".</p>
+            <div class="flex flex-col gap-3 mt-3">
+              @for (field of colorFields; track field.key) {
+                <div class="flex items-center gap-3">
+                  <input type="color" class="w-12 h-12 shrink-0 cursor-pointer rounded" [formControlName]="field.key" [attr.aria-label]="field.label" [attr.data-testid]="'color-' + field.key" />
+                  <div class="min-w-0 flex-1">
+                    <div class="font-semibold text-sm">{{ field.label }}</div>
+                    <div class="text-xs muted">{{ field.hint }}</div>
+                  </div>
+                  <input appInput class="font-mono uppercase shrink-0" style="width: 7rem" [formControlName]="field.key" maxlength="7" />
+                </div>
+              }
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-[var(--color-border)] flex flex-wrap gap-2 items-center">
+              <button type="button" appBtn>Primarno</button>
+              <button type="button" appBtn theme="tertiary">Tercijarno</button>
+              <span class="badge" [style.background]="'var(--color-secondary-tint)'" [style.color]="'var(--color-secondary)'">−15% akcija</span>
+              <span class="badge" [style.background]="'var(--color-primary-tint)'" [style.color]="'var(--color-primary)'">Potvrđen</span>
+              <span class="px-3 py-2 rounded-lg font-semibold" [style.background]="form.controls.theme_secondary.value" [style.color]="textOn(form.controls.theme_secondary.value)">15:15</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      @case ('booking') {
+        <div class="card max-w-2xl">
+          <h2 class="text-base font-semibold">Potvrda termina</h2>
+          <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>
+          <div class="flex flex-col gap-2 mt-3">
+            @for (option of confirmationOptions; track option.value) {
+              <label class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer"
+                [style.border-color]="form.controls.booking_confirmation.value === option.value ? 'var(--color-primary)' : 'var(--color-border)'"
+                [style.background]="form.controls.booking_confirmation.value === option.value ? 'var(--color-primary-tint)' : 'transparent'">
+                <input type="radio" class="mt-1" formControlName="booking_confirmation" [value]="option.value" [attr.data-testid]="'confirmation-' + option.value" />
+                <span>
+                  <span class="font-semibold block">{{ option.label }}</span>
+                  <span class="text-sm muted">{{ option.hint }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+      }
+    }
+  </form>
+}

@@ -12,6 +12,8 @@ export type BusinessCategory =
   | 'medical'
   | 'other';
 
+export type ConfirmationMode = 'manual' | 'automatic';
+
 export interface BusinessSetting {
   id: number;
   name: string;
@@ -27,7 +29,16 @@ export interface BusinessSetting {
   pib: string | null;
   registration_number: string | null;
   logo: string | null;
+  theme_primary: string | null;
+  theme_secondary: string | null;
+  theme_tertiary: string | null;
+  booking_confirmation: ConfirmationMode;
 }
+
+export const CONFIRMATION_OPTIONS: { value: ConfirmationMode; label: string; hint: string }[] = [
+  { value: 'manual', label: 'Ručno', hint: 'Termin čeka da ga admin potvrdi.' },
+  { value: 'automatic', label: 'Automatski', hint: 'Termin je potvrđen odmah po zakazivanju.' },
+];
 
 export const BUSINESS_CATEGORIES: { value: BusinessCategory; label: string }[] = [
   { value: 'hair_salon', label: 'Frizerski salon' },

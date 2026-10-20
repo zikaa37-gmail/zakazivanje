@@ -1,0 +1,17 @@
+<label class="toggle" [class.disabled]="disabled()">
+  <input
+    type="checkbox"
+    class="toggle-input"
+    role="switch"
+    [checked]="checked()"
+    [disabled]="disabled()"
+    (change)="onChange($event)"
+    [attr.data-testid]="testId() || null"
+  />
+  <span class="toggle-track" aria-hidden="true">
+    <span class="toggle-thumb"></span>
+  </span>
+  @if (label()) {
+    <span class="toggle-label">{{ label() }}</span>
+  }
+</label>

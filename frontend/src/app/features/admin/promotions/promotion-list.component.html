@@ -1,0 +1,153 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Cene i akcije</h1>
+    <p class="page-subtitle">Popusti, paketi, 2+1 i nagrade za verne klijente. Popusti se ne sabiraju — važi najpovoljniji.</p>
+  </div>
+  <button type="button" appBtn (click)="openForm()" data-testid="promotion-add">
+    <span appIcon="plus" aria-hidden="true"></span> Nova akcija
+  </button>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (loading() && promotions().length === 0) {
+} @else if (promotions().length === 0) {
+  <div class="card empty-state">Nema akcija. Osnovne cene se unose na stranici Usluge.</div>
+} @else {
+  <div class="grid gap-3 md:grid-cols-2">
+    @for (p of promotions(); track p.id) {
+      <div class="card flex gap-3" [class.opacity-60]="!p.active" [attr.data-testid]="'promotion-' + p.id">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-[var(--color-secondary-tint)] text-[var(--color-secondary)]">
+          <span [appIcon]="icon(p.type)" [iconSize]="20" aria-hidden="true"></span>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-start gap-2">
+            <div class="font-semibold flex-1">{{ p.name }}</div>
+            <app-row-actions [actions]="rowActions" (selected)="onAction(p, $event)" />
+          </div>
+          <div class="text-lg font-bold text-[var(--color-secondary)]">{{ summary(p) }}</div>
+          <div class="text-sm muted">{{ scope(p) }}</div>
+          <div class="flex flex-wrap gap-2 mt-2">
+            <span class="badge badge-neutral">{{ typeLabel(p.type) }}</span>
+            @if (days(p)) {
+              <span class="badge badge-neutral">{{ days(p) }}</span>
+            }
+            @if (p.starts_on || p.ends_on) {
+              <span class="badge badge-neutral">{{ p.starts_on ? (p.starts_on | srDate) : '…' }} – {{ p.ends_on ? (p.ends_on | srDate) : '…' }}</span>
+            }
+            @if (!p.active) {
+              <span class="badge badge-warning">Isključena</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (modalOpen()) {
+  <app-modal [title]="editing() ? 'Izmena akcije' : 'Nova akcija'" size="l" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="promotion-modal">
+    <app-error-message [message]="formError()" />
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="field">
+        <label>Vrsta akcije</label>
+        <div class="chip-group">
+          @for (t of types; track t.value) {
+            <button type="button" class="chip" [class.selected]="type() === t.value" (click)="form.controls.type.setValue(t.value)" [attr.data-testid]="'promotion-type-' + t.value">{{ t.label }}</button>
+          }
+        </div>
+        <span class="text-sm muted">{{ typeHint() }}</span>
+      </div>
+
+      <div class="field">
+        <label for="promotion-name">Naziv <span class="required-mark">*</span></label>
+        <input id="promotion-name" appInput size="m" formControlName="name" placeholder="npr. Srećni utorak" data-testid="promotion-name" />
+      </div>
+
+      <div class="form-grid">
+        @switch (type()) {
+          @case ('discount_percent') {
+            <div class="field">
+              <label for="p-percent">Popust (%)</label>
+              <input id="p-percent" appInput size="m" type="number" min="1" max="100" formControlName="discount_percent" data-testid="promotion-percent" />
+            </div>
+          }
+          @case ('discount_amount') {
+            <div class="field">
+              <label for="p-amount">Popust (din.)</label>
+              <input id="p-amount" appInput size="m" type="number" min="1" step="50" formControlName="discount_amount" />
+            </div>
+          }
+          @case ('package') {
+            <div class="field">
+              <label for="p-package">Cena paketa (din.)</label>
+              <input id="p-package" appInput size="m" type="number" min="0" step="50" formControlName="package_price" />
+              @if (packageRegularPrice() > 0) {
+                <span class="text-sm muted">Pojedinačno: {{ packageRegularPrice() | rsd }}</span>
+              }
+            </div>
+          }
+          @case ('bundle') {
+            <div class="field">
+              <label for="p-buy">Plaća se</label>
+              <input id="p-buy" appInput size="m" type="number" min="1" max="20" formControlName="buy_quantity" />
+            </div>
+            <div class="field">
+              <label for="p-free">Gratis</label>
+              <input id="p-free" appInput size="m" type="number" min="1" max="20" formControlName="free_quantity" />
+            </div>
+          }
+          @case ('loyalty') {
+            <div class="field">
+              <label for="p-visits">Svaka N-ta poseta</label>
+              <input id="p-visits" appInput size="m" type="number" min="2" max="100" formControlName="loyalty_visits" />
+            </div>
+            <div class="field">
+              <label for="p-loyalty">Popust (%) — 100 = gratis</label>
+              <input id="p-loyalty" appInput size="m" type="number" min="1" max="100" formControlName="discount_percent" />
+            </div>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label>{{ type() === 'package' ? 'Usluge u paketu (bar dve)' : 'Važi za usluge (ništa izabrano = sve)' }}</label>
+        <div class="chip-group">
+          @for (service of services(); track service.id) {
+            <button type="button" class="chip" [class.selected]="selectedServices().has(service.id)" (click)="toggleService(service.id)">
+              {{ service.name }} <span class="muted">{{ service.price | rsd }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="p-from">Važi od</label>
+          <input id="p-from" appInput size="m" type="date" formControlName="starts_on" />
+        </div>
+        <div class="field">
+          <label for="p-to">Važi do</label>
+          <input id="p-to" appInput size="m" type="date" formControlName="ends_on" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Samo određenim danima (ništa izabrano = svaki dan)</label>
+        <div class="chip-group">
+          @for (day of weekdays; track day.value) {
+            <button type="button" class="chip" [class.selected]="selectedDays().has(day.value)" (click)="toggleDay(day.value)">{{ day.label }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="p-description">Opis za klijente</label>
+        <textarea id="p-description" appInput size="m" rows="2" formControlName="description"></textarea>
+      </div>
+
+      <app-toggle [checked]="form.controls.active.value" label="Akcija je uključena" (checkedChange)="form.controls.active.setValue($event)" />
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="promotion-save">Sačuvaj</app-button>
+  </app-modal>
+}

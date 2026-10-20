@@ -16,10 +16,10 @@
   padding: 1rem;
   width: 100%;
   max-width: 520px;
-  max-height: 85vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 12px 32px var(--shadow-color);
   margin: auto 0;
 }
@@ -61,6 +61,13 @@
 
 .modal-body {
   font-size: 0.95rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  margin: 0 -1rem;
+  padding: 0.25rem 1rem;
 }
 
 .modal-footer-separator {

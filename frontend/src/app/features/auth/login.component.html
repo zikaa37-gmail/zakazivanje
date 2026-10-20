@@ -1,0 +1,47 @@
+<div class="auth-page">
+  <div class="auth-card">
+    @if (business.logo()) {
+      <img class="auth-logo" [src]="business.logo()" alt="" />
+    } @else {
+      <span class="auth-logo-placeholder"><span appIcon="scissors" [iconSize]="36"></span></span>
+    }
+    <h1 class="text-2xl font-bold">{{ business.name() }}</h1>
+    <p class="muted mb-6">Prijavi se da vidiš svoje termine</p>
+
+    <app-error-message [message]="error()" data-testid="login-error" />
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" appInput size="m" type="email" autocomplete="email" formControlName="email" data-testid="login-email" />
+        @if (form.controls.email.touched && form.controls.email.invalid) {
+          <span class="field-error">Unesi ispravan email.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="login-password">Lozinka</label>
+        <input id="login-password" appInput size="m" type="password" autocomplete="current-password" formControlName="password" data-testid="login-password" />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <span class="field-error">Unesi lozinku.</span>
+        }
+      </div>
+
+      <app-button type="submit" size="l" [block]="true" [loading]="loading()" data-testid="login-submit">Prijavi se</app-button>
+    </form>
+
+    <a class="auth-link" routerLink="/forgot-password">Zaboravljena lozinka?</a>
+
+    @if (devLogins.length) {
+      <div class="dev-logins" data-testid="dev-logins">
+        <p class="dev-logins-title">Brza prijava (test)</p>
+        <div class="flex gap-2">
+          @for (login of devLogins; track login.email) {
+            <button type="button" appBtn theme="secondary" class="flex-1" [disabled]="loading()" (click)="quickLogin(login)" [attr.data-testid]="'dev-login-' + $index">
+              {{ login.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

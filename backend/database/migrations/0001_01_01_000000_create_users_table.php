@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('first_name', 100);
             $table->string('last_name', 100);
-            $table->string('email')->unique();
+            $table->string('email')->nullable()->unique();
             $table->string('phone', 30)->nullable();
             $table->string('whatsapp_number', 30)->nullable();
             $table->longText('avatar')->nullable();
@@ -21,7 +21,8 @@ return new class extends Migration
             $table->boolean('active')->default(true);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('email_verification_token', 64)->nullable()->unique();
-            $table->string('password');
+            $table->string('password')->nullable();
+            $table->text('note')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

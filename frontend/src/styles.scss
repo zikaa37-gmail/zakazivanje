@@ -4,6 +4,7 @@
 @use 'themes/inputs';
 @use 'themes/modal';
 @use 'themes/tables';
+@use 'themes/data-row';
 @use 'themes/scrollbar';
 
 @import 'tailwindcss';
@@ -108,12 +109,38 @@ textarea {
 
 .auth-card {
   width: 100%;
-  max-width: 340px;
+  max-width: 380px;
   text-align: center;
 }
 
+.auth-logo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  border-radius: 18px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.dev-logins {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border-dark);
+}
+
+.dev-logins-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
 .auth-logo {
-  height: 140px;
+  height: 96px;
   width: auto;
   margin: 0 auto 1rem;
   display: block;
@@ -255,4 +282,90 @@ button.badge:focus-visible {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
+}
+
+.avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0.15rem 0 0;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-dark);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.chip.selected {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.day-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.day-dot.on {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+.color-dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.muted {
+  color: var(--color-text-muted);
 }

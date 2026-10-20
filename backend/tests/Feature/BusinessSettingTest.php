@@ -17,7 +17,7 @@ class BusinessSettingTest extends TestCase
 
     public function test_only_admin_updates_business_settings(): void
     {
-        $payload = ['name' => 'Berbernica Mika', 'category' => 'barber', 'city' => 'Novi Sad'];
+        $payload = ['name' => 'Berbernica Mika', 'category' => 'barber', 'city' => 'Novi Sad', 'booking_confirmation' => 'automatic', 'theme_primary' => '#123abc'];
 
         $this->putJson('/api/business-settings', $payload)->assertUnauthorized();
         $this->actingAsJwt(User::factory()->create())->putJson('/api/business-settings', $payload)->assertForbidden();
@@ -26,14 +26,14 @@ class BusinessSettingTest extends TestCase
         $this->actingAsJwt($admin)->putJson('/api/business-settings', $payload)
             ->assertOk()->assertJsonPath('name', 'Berbernica Mika');
 
-        $this->getJson('/api/public/business')->assertJsonPath('city', 'Novi Sad');
+        $this->getJson('/api/public/business')->assertJsonPath('city', 'Novi Sad')->assertJsonPath('theme_primary', '#123abc');
     }
 
     public function test_unknown_category_is_rejected(): void
     {
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
-        $this->actingAsJwt($admin)->putJson('/api/business-settings', ['name' => 'Salon', 'category' => 'bakery'])
+        $this->actingAsJwt($admin)->putJson('/api/business-settings', ['name' => 'Salon', 'category' => 'bakery', 'booking_confirmation' => 'manual'])
             ->assertUnprocessable()->assertJsonValidationErrors('category');
     }
 }

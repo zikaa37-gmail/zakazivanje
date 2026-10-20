@@ -54,20 +54,20 @@
 }
 
 .btn-primary {
-  background: var(--color-neutral);
-  color: var(--color-on-neutral);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-neutral-dark);
+  background: var(--color-primary-dark);
 }
 
 .btn-primary:active:not(:disabled) {
-  background: var(--color-neutral-active);
+  background: var(--color-primary-active);
 }
 
 .btn-primary:focus-visible {
-  outline-color: var(--color-neutral);
+  outline-color: var(--color-primary);
 }
 
 .btn-secondary {
@@ -92,20 +92,20 @@
 }
 
 .btn-tertiary {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: var(--color-tertiary);
+  color: var(--color-on-tertiary);
 }
 
 .btn-tertiary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-tertiary-dark);
 }
 
 .btn-tertiary:active:not(:disabled) {
-  background: var(--color-primary-active);
+  background: var(--color-tertiary-active);
 }
 
 .btn-tertiary:focus-visible {
-  outline-color: var(--color-primary);
+  outline-color: var(--color-tertiary);
 }
 
 .btn-danger {

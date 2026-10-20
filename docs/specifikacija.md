@@ -38,6 +38,18 @@ pružaoca), #20 (pretraga biznisa), #22 (omiljeni biznisi).
 
 ## Pravila (predlog, potvrditi)
 
+- **Potvrda termina**: u Podešavanjima `ručno` / `automatski` (`business_settings.booking_confirmation`);
+  svaki zaposleni može da ima svoj režim (`staff_members.booking_confirmation`, prazno = kao biznis) —
+  `StaffMember::confirmationMode()`.
+- **Ponavljajući termini** (uz #17): klijent ili admin zakazuje „svakog ponedeljka u 15:00" (nedeljno /
+  na 2 nedelje, do datuma ili N puta). Čuva se pravilo ponavljanja, termini se prave unapred (npr. 8
+  nedelja), a zauzet termin se prijavljuje adminu umesto da se tiho preskoči. Otkazivanje: samo taj
+  termin ili ceo niz.
+- **Cene i akcije** (`promotions`, `PriceQuoteService`): paket (više usluga po paket-ceni), popust u %
+  ili dinarima, N+M gratis (npr. 2+1 po usluzi, broji se po klijentu), loyalty (svaka N-ta poseta X%).
+  Akcija može da važi samo u periodu i određenim danima. Popusti se ne sabiraju — paket prvo, pa na
+  svaku preostalu stavku najpovoljniji popust.
+
 - Termin se računa iz trajanja usluge; slobodni termini = radno vreme zaposlenog − zauzeti termini −
   blokirano vreme, u koracima od podesivog intervala (npr. 15 min).
 - Klijent otkazuje najkasnije X sati pre termina (podešavanje).

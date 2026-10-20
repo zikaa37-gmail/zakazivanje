@@ -24,6 +24,10 @@ return new class extends Migration
             $table->string('pib', 20)->nullable();
             $table->string('registration_number', 50)->nullable();
             $table->longText('logo')->nullable();
+            $table->string('theme_primary', 7)->nullable();
+            $table->string('theme_secondary', 7)->nullable();
+            $table->string('theme_tertiary', 7)->nullable();
+            $table->string('booking_confirmation', 20)->default('manual');
             $table->timestamps();
         });
 

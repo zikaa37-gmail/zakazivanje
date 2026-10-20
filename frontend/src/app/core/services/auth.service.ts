@@ -39,7 +39,7 @@ export class AuthService {
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
   readonly isAdmin = computed(() => this.currentUserSignal()?.role === 'admin');
-  readonly homeUrl = computed(() => (this.isAuthenticated() ? '/profile' : '/'));
+  readonly homeUrl = computed(() => (this.isAdmin() ? '/admin' : this.isAuthenticated() ? '/profile' : '/login'));
 
   isRefreshing = false;
   readonly refreshedAccessToken = new BehaviorSubject<string | null>(null);

@@ -1,0 +1,35 @@
+<button
+  #trigger
+  type="button"
+  class="row-actions-trigger"
+  (click)="toggle()"
+  aria-label="Više opcija"
+  [attr.aria-expanded]="open()"
+  [attr.data-testid]="testId() ? testId() + '-more' : null"
+>
+  <span appIcon="more-vertical" aria-hidden="true"></span>
+</button>
+
+@if (open()) {
+  <div
+    class="row-actions-menu"
+    [style.top.px]="menuTop()"
+    [style.bottom.px]="menuBottom()"
+    [style.right.px]="menuRight()"
+    role="menu" [attr.data-testid]="testId() ? testId() + '-menu' : null">
+    @for (action of actions(); track action.id) {
+      <button
+        type="button"
+        class="row-actions-item"
+        [class.row-actions-item-danger]="action.danger"
+        [disabled]="action.disabled"
+        (click)="select(action)"
+        role="menuitem"
+        [attr.data-testid]="testId() ? testId() + '-' + action.id : null"
+      >
+        <span [appIcon]="action.icon" aria-hidden="true"></span>
+        <span>{{ action.label }}</span>
+      </button>
+    }
+  </div>
+}

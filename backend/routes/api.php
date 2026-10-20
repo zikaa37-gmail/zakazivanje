@@ -2,10 +2,15 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BusinessSettingController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\StaffMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
 Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:60,1');
+Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:60,1');
 
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
@@ -27,4 +32,25 @@ Route::middleware('jwt')->group(function () {
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::put('/business-settings', [BusinessSettingController::class, 'update']);
+
+    Route::post('/staff/list', [StaffMemberController::class, 'index']);
+    Route::post('/staff', [StaffMemberController::class, 'store']);
+    Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
+    Route::delete('/staff/{staffMember}', [StaffMemberController::class, 'destroy']);
+
+    Route::post('/services/list', [ServiceController::class, 'index']);
+    Route::post('/services/quote', [ServiceController::class, 'quote']);
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    Route::post('/promotions/list', [PromotionController::class, 'index']);
+    Route::post('/promotions', [PromotionController::class, 'store']);
+    Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
+    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
+
+    Route::post('/clients/list', [ClientController::class, 'index']);
+    Route::post('/clients', [ClientController::class, 'store']);
+    Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
 });
