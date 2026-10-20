@@ -2,8 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 200px);
-  padding: 2rem;
+  min-height: calc(100vh - 120px);
+  padding: 1rem;
 }
 
 .verify-email-card {
@@ -19,13 +19,13 @@ mat-card-header {
   padding-bottom: 1.5rem;
 
   mat-card-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
   }
 }
 
 .verifying-content {
-  padding: 2rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,22 +39,22 @@ mat-card-header {
 }
 
 .success-content {
-  padding: 2rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 
   .success-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background-color: #4caf50;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 2.25rem;
     font-weight: bold;
   }
 
@@ -66,22 +66,22 @@ mat-card-header {
 }
 
 .error-content {
-  padding: 2rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 
   .error-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background-color: #f44336;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 2.25rem;
     font-weight: bold;
   }
 
@@ -93,6 +93,45 @@ mat-card-header {
 
   .action-button {
     margin-top: 1rem;
-    min-width: 200px;
+    min-width: 160px;
+  }
+}
+
+@media (min-width: 768px) {
+  .verify-email-container {
+    min-height: calc(100vh - 200px);
+    padding: 2rem;
+  }
+
+  mat-card-header {
+    mat-card-title {
+      font-size: 2rem;
+    }
+  }
+
+  .verifying-content,
+  .success-content,
+  .error-content {
+    padding: 2rem;
+  }
+
+  .success-content {
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      font-size: 3rem;
+    }
+  }
+
+  .error-content {
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      font-size: 3rem;
+    }
+
+    .action-button {
+      min-width: 200px;
+    }
   }
 }

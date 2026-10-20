@@ -2,8 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 200px);
-  padding: 2rem;
+  min-height: calc(100vh - 120px);
+  padding: 1rem;
 }
 
 .login-card {
@@ -18,13 +18,26 @@ mat-card-header {
   padding-bottom: 1.5rem;
 
   mat-card-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 0.5rem;
   }
 
   mat-card-subtitle {
     font-size: 1rem;
     opacity: 0.7;
+  }
+}
+
+@media (min-width: 768px) {
+  .login-container {
+    min-height: calc(100vh - 200px);
+    padding: 2rem;
+  }
+
+  mat-card-header {
+    mat-card-title {
+      font-size: 2rem;
+    }
   }
 }
 

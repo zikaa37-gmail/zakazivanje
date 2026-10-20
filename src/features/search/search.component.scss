@@ -1,3 +1,9 @@
 .search-container {
-  padding: 2rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .search-container {
+    padding: 2rem;
+  }
 }

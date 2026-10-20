@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -18,6 +18,7 @@ import { AuthService } from '../../../../auth/auth.service';
 export class HeaderComponent {
   authService = inject(AuthService);
   private router = inject(Router);
+  mobileMenuOpen = signal(false);
 
   get currentUser() {
     return this.authService.currentUser;
@@ -28,10 +29,20 @@ export class HeaderComponent {
   }
 
   logout(): void {
+    this.closeMobileMenu();
     this.authService.logout();
   }
 
   goToProfile(): void {
+    this.closeMobileMenu();
     this.router.navigate(['/profile']);
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update((isOpen) => !isOpen);
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
   }
 }

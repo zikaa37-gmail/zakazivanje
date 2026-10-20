@@ -1,31 +1,70 @@
-<mat-toolbar color="primary">
-  <span class="logo" routerLink="/">Zakazivanje</span>
-  <span class="spacer"></span>
+<header class="header-wrapper">
+  <mat-toolbar color="primary" class="toolbar">
+    <button
+      mat-icon-button
+      class="menu-toggle"
+      type="button"
+      aria-label="Otvori meni"
+      [attr.aria-expanded]="mobileMenuOpen()"
+      (click)="toggleMobileMenu()"
+    >
+      <mat-icon>{{ mobileMenuOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
 
-  <nav class="nav-links">
-    <button mat-button routerLink="/">Početna</button>
-    <button mat-button routerLink="/search">Pretraga</button>
+    <span class="logo" routerLink="/" (click)="closeMobileMenu()">Zakazivanje</span>
+    <span class="spacer"></span>
 
-    @if (!isAuthenticated) {
-      <button mat-button routerLink="/auth/login">Prijava</button>
-      <button mat-raised-button color="accent" routerLink="/auth/register">
-        Registracija
-      </button>
-    } @else {
-      <button mat-button [matMenuTriggerFor]="userMenu">
-        <mat-icon>account_circle</mat-icon>
-        {{ currentUser()?.firstName || 'Korisnik' }}
-      </button>
-      <mat-menu #userMenu="matMenu">
-        <button mat-menu-item (click)="goToProfile()">
-          <mat-icon>person</mat-icon>
-          <span>Profil</span>
+    <nav class="nav-links desktop-nav">
+      <button mat-button routerLink="/" (click)="closeMobileMenu()">Početna</button>
+      <button mat-button routerLink="/search" (click)="closeMobileMenu()">Pretraga</button>
+
+      @if (!isAuthenticated) {
+        <button mat-button routerLink="/auth/login" (click)="closeMobileMenu()">Prijava</button>
+        <button mat-raised-button color="accent" routerLink="/auth/register" (click)="closeMobileMenu()">
+          Registracija
         </button>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>Odjavi se</span>
+      } @else {
+        <button mat-button [matMenuTriggerFor]="userMenu">
+          <mat-icon>account_circle</mat-icon>
+          {{ currentUser()?.firstName || 'Korisnik' }}
         </button>
-      </mat-menu>
-    }
-  </nav>
-</mat-toolbar>
+        <mat-menu #userMenu="matMenu">
+          <button mat-menu-item (click)="goToProfile()">
+            <mat-icon>person</mat-icon>
+            <span>Profil</span>
+          </button>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Odjavi se</span>
+          </button>
+        </mat-menu>
+      }
+    </nav>
+  </mat-toolbar>
+
+  @if (mobileMenuOpen()) {
+    <button class="mobile-nav-backdrop" type="button" aria-label="Zatvori meni" (click)="closeMobileMenu()"></button>
+    <nav class="mobile-nav" aria-label="Glavna navigacija">
+      <button mat-button class="mobile-nav-item" routerLink="/" (click)="closeMobileMenu()">Početna</button>
+      <button mat-button class="mobile-nav-item" routerLink="/search" (click)="closeMobileMenu()">Pretraga</button>
+
+      @if (!isAuthenticated) {
+        <button mat-button class="mobile-nav-item" routerLink="/auth/login" (click)="closeMobileMenu()">
+          Prijava
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          class="mobile-nav-item"
+          routerLink="/auth/register"
+          (click)="closeMobileMenu()"
+        >
+          Registracija
+        </button>
+      } @else {
+        <button mat-button class="mobile-nav-item" (click)="goToProfile()">Profil</button>
+        <button mat-button class="mobile-nav-item" (click)="logout()">Odjavi se</button>
+      }
+    </nav>
+  }
+</header>
