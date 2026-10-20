@@ -1,0 +1,3 @@
+@if (message()) {
+  <div class="form-error-banner" role="alert" [attr.data-testid]="testId() ?? null">{{ message() }}</div>
+}

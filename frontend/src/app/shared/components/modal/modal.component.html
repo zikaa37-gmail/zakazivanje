@@ -1,0 +1,89 @@
+<div class="modal-overlay" (click)="onBackdropClick()" [attr.data-testid]="testId() ? testId() + '-overlay' : null">
+  <div
+    #panel
+    tabindex="-1"
+    class="modal-panel"
+    (keydown.enter)="onEnter($event)"
+    [class.modal-s]="size() === 's'"
+    [class.modal-l]="size() === 'l'"
+    [class.modal-xl]="size() === 'xl'"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="testId() ? testId() + '-title' : null"
+    [attr.data-testid]="testId() || null"
+  >
+    <div class="modal-head">
+      <strong [id]="testId() ? testId() + '-title' : null">{{ title() }}</strong>
+      <div class="modal-head-actions">
+        <ng-content select="[modal-header-actions]"></ng-content>
+        <button
+          type="button"
+          class="btn-icon"
+          (click)="onCancel()"
+          aria-label="Zatvori"
+          [attr.data-testid]="testId() ? 'close-' + testId() : null"
+        >
+          <span appIcon="close" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body">
+      <ng-content></ng-content>
+    </div>
+
+    @if (footerMode() !== 'none') {
+      <hr class="modal-footer-separator" />
+      <div class="modal-footer">
+        @if (footerMode() === 'default') {
+          <button
+            type="button"
+            appBtn
+            theme="secondary"
+            size="s"
+            class="btn-collapse-mobile"
+            (click)="onCancel()"
+            [attr.data-testid]="testId() ? testId() + '-cancel' : null"
+          >
+            @if (cancelIcon()) {
+              <span [appIcon]="cancelIcon()!" aria-hidden="true"></span>
+            }
+            <span class="btn-text">{{ cancelLabel() }}</span>
+          </button>
+          <button
+            type="button"
+            appBtn
+            [theme]="danger() ? 'danger' : 'primary'"
+            size="s"
+            class="btn-collapse-mobile"
+            [disabled]="confirmDisabled()"
+            (click)="onConfirm()"
+            [attr.data-testid]="testId() ? testId() + '-confirm' : null"
+          >
+            @if (confirmIcon()) {
+              <span [appIcon]="confirmIcon()!" aria-hidden="true"></span>
+            }
+            <span class="btn-text">{{ confirmLabel() }}</span>
+          </button>
+        } @else {
+          <button
+            type="button"
+            appBtn
+            theme="secondary"
+            size="s"
+            class="btn-collapse-mobile"
+            (click)="onCancel()"
+            [attr.data-testid]="testId() ? testId() + '-cancel' : null"
+          >
+            @if (cancelIcon()) {
+              <span [appIcon]="cancelIcon()!" aria-hidden="true"></span>
+            }
+            <span class="btn-text">{{ cancelLabel() }}</span>
+          </button>
+          <ng-content select="[modal-footer]"></ng-content>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,111 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Usluge</h1>
+    <p class="page-subtitle">Usluge koje klijenti vide i mogu da zakažu</p>
+  </div>
+  <button type="button" appBtn (click)="openForm()" data-testid="service-add">
+    <span appIcon="plus" aria-hidden="true"></span> Nova usluga
+  </button>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (loading() && services().length === 0) {
+} @else if (services().length === 0) {
+  <div class="card empty-state">Još nema usluga. Dodaj prvu (naziv, trajanje i cena).</div>
+} @else {
+  <div class="flex flex-col gap-4">
+    @for (group of groups(); track group.category) {
+      <div class="card">
+        <h2 class="text-base font-semibold mb-2">{{ group.category }}</h2>
+
+        <div class="hidden md:block">
+          <app-data-list [columns]="columns" [headers]="['Naziv', 'Trajanje', 'Cena', 'Rade je', 'Status']">
+            @for (service of group.items; track service.id) {
+              <app-data-row [columns]="columns" [attr.data-testid]="'service-' + service.id">
+                <div class="min-w-0">
+                  <div class="font-semibold truncate">{{ service.name }}</div>
+                  @if (service.description) {
+                    <div class="text-xs muted truncate">{{ service.description }}</div>
+                  }
+                </div>
+                <div>{{ service.duration_minutes | duration }}</div>
+                <div class="font-semibold">{{ service.price | rsd }}</div>
+                <div class="truncate muted">{{ staffNames(service) }}</div>
+                <span class="badge" [class.badge-success]="service.active" [class.badge-neutral]="!service.active">{{ service.active ? 'Aktivna' : 'Neaktivna' }}</span>
+                <app-row-actions [actions]="rowActions" (selected)="onAction(service, $event)" />
+              </app-data-row>
+            }
+          </app-data-list>
+        </div>
+
+        <div class="md:hidden flex flex-col">
+          @for (service of group.items; track service.id) {
+            <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.opacity-60]="!service.active">
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold">{{ service.name }}</div>
+                <div class="text-sm muted">{{ service.duration_minutes | duration }} · {{ staffNames(service) }}</div>
+              </div>
+              <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
+              <app-row-actions [actions]="rowActions" (selected)="onAction(service, $event)" />
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (modalOpen()) {
+  <app-modal [title]="editing() ? 'Izmena usluge' : 'Nova usluga'" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="service-modal">
+    <app-error-message [message]="formError()" />
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="field">
+        <label for="service-name">Naziv <span class="required-mark">*</span></label>
+        <input id="service-name" appInput size="m" formControlName="name" data-testid="service-name" />
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="service-duration">Trajanje <span class="required-mark">*</span></label>
+          <select id="service-duration" appInput size="m" formControlName="duration_minutes" data-testid="service-duration">
+            @for (d of durations; track d) {
+              <option [ngValue]="d">{{ d }} min</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="service-price">Cena (din.) <span class="required-mark">*</span></label>
+          <input id="service-price" appInput size="m" type="number" min="0" step="50" inputmode="numeric" formControlName="price" data-testid="service-price" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="service-category">Kategorija</label>
+        <input id="service-category" appInput size="m" formControlName="category" list="service-categories" placeholder="npr. Šišanje" />
+        <datalist id="service-categories">
+          @for (c of categories(); track c) {
+            <option [value]="c"></option>
+          }
+        </datalist>
+      </div>
+      <div class="field">
+        <label for="service-description">Opis</label>
+        <textarea id="service-description" appInput size="m" rows="3" formControlName="description"></textarea>
+      </div>
+      <div class="field">
+        <label>Rade je</label>
+        <div class="chip-group">
+          @for (member of staff(); track member.id) {
+            <button type="button" class="chip" [class.selected]="selectedStaff().has(member.id)" (click)="toggleStaff(member.id)">
+              <span class="color-dot" [style.background]="member.color"></span>
+              {{ member.first_name }} {{ member.last_name }}
+            </button>
+          } @empty {
+            <span class="muted text-sm">Još nema zaposlenih.</span>
+          }
+        </div>
+      </div>
+      <app-toggle [checked]="form.controls.active.value" label="Aktivna (vidljiva klijentima)" (checkedChange)="form.controls.active.setValue($event)" />
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="service-save">Sačuvaj</app-button>
+  </app-modal>
+}

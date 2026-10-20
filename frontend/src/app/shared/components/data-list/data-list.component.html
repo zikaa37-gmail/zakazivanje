@@ -1,0 +1,11 @@
+<div class="data-list" [attr.data-testid]="testId() || null">
+  @if (headers().length > 0) {
+    <div class="data-row data-list-header" [style.grid-template-columns]="columns()">
+      @for (label of headers(); track label) {
+        <div>{{ label }}</div>
+      }
+      <div></div>
+    </div>
+  }
+  <ng-content></ng-content>
+</div>

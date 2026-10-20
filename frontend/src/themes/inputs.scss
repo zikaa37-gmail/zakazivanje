@@ -1,0 +1,95 @@
+.form-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+}
+
+.form-input-s {
+  padding: 0.45rem 0.7rem;
+  min-height: 36px;
+  font-size: 0.85rem;
+}
+
+.form-input-m {
+  padding: 0.7rem 0.8rem;
+  min-height: 44px;
+  font-size: 1rem;
+}
+
+textarea.form-input-s {
+  min-height: 70px;
+  resize: vertical;
+}
+
+textarea.form-input-m {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.form-input:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.form-input[readonly] {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.4rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 16px;
+}
+
+input[type='search'].form-input {
+  padding-left: 2.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.9rem center;
+  background-size: 16px;
+}
+
+.input-number {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.input-number-field {
+  width: 72px;
+  min-height: 30px;
+  padding: 0.35rem 0.4rem;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.input-number-field::-webkit-outer-spin-button,
+.input-number-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}

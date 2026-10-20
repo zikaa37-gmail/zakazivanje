@@ -1,0 +1,48 @@
+@if (menuOpen()) {
+  <button type="button" class="shell-backdrop" aria-label="Zatvori meni" (click)="menuOpen.set(false)"></button>
+}
+
+<aside class="shell-sidebar" [class.open]="menuOpen()" data-testid="admin-sidebar">
+  <div class="shell-brand">
+    @if (business.logo()) {
+      <img class="shell-logo" [src]="business.logo()" alt="" />
+    } @else {
+      <span class="shell-logo shell-logo-placeholder"><span appIcon="scissors" [iconSize]="20"></span></span>
+    }
+    <div class="min-w-0">
+      <div class="shell-brand-name">{{ business.name() }}</div>
+      <div class="shell-brand-role">Administrator</div>
+    </div>
+  </div>
+
+  <nav class="shell-nav" aria-label="Admin meni">
+    @for (item of nav; track item.path) {
+      <a class="shell-nav-item" [routerLink]="item.path" routerLinkActive="active" [attr.data-testid]="'nav-' + item.path.split('/').pop()">
+        <span [appIcon]="item.icon" [iconSize]="18" aria-hidden="true"></span>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="shell-user">
+    <span class="avatar avatar-initials">{{ initials() }}</span>
+    <div class="min-w-0 flex-1">
+      <div class="shell-user-name">{{ auth.currentUser()?.first_name }} {{ auth.currentUser()?.last_name }}</div>
+      <button type="button" class="shell-logout" (click)="logout()" data-testid="logout">
+        <span appIcon="logout" [iconSize]="14" aria-hidden="true"></span> Odjavi se
+      </button>
+    </div>
+  </div>
+</aside>
+
+<header class="shell-topbar">
+  <button type="button" class="shell-menu-toggle" aria-label="Otvori meni" [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(true)" data-testid="menu-toggle">
+    <span appIcon="menu" [iconSize]="22" aria-hidden="true"></span>
+  </button>
+  <span class="shell-brand-name truncate">{{ business.name() }}</span>
+  <span class="avatar avatar-initials avatar-sm ml-auto">{{ initials() }}</span>
+</header>
+
+<main class="shell-main">
+  <router-outlet />
+</main>

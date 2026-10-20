@@ -1,0 +1,17 @@
+@for (position of positions; track position) {
+  @if (toastsFor(position); as list) {
+    @if (list.length > 0) {
+      <div class="toast-stack" [class]="'toast-stack-' + position">
+        @for (toast of list; track toast.id) {
+          <div class="toast" [class]="'toast-' + toast.type" role="alert" [attr.data-testid]="'toast-' + toast.type">
+            <span class="toast-icon" [appIcon]="iconFor(toast.type)" aria-hidden="true"></span>
+            <span class="toast-message">{{ toast.message }}</span>
+            <button type="button" class="toast-close" (click)="toastService.dismiss(toast.id)" aria-label="Zatvori">
+              <span appIcon="close" aria-hidden="true"></span>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+}

@@ -1,0 +1,26 @@
+$desktop: 1024px;
+$md: 768px;
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin mobile-only {
+  @media (max-width: $desktop - 1px) {
+    @content;
+  }
+}
+
+@mixin below-md {
+  @media (max-width: $md - 1px) {
+    @content;
+  }
+}
+
+@mixin md-up {
+  @media (min-width: $md) {
+    @content;
+  }
+}

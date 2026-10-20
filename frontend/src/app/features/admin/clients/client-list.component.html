@@ -1,0 +1,114 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Klijenti</h1>
+    <p class="page-subtitle">{{ total() }} {{ total() === 1 ? 'klijent' : 'klijenata' }}</p>
+  </div>
+  <button type="button" appBtn (click)="openForm()" data-testid="client-add">
+    <span appIcon="plus" aria-hidden="true"></span> Novi klijent
+  </button>
+</div>
+
+<div class="relative mb-4 max-w-md">
+  <input appInput size="m" type="search" style="padding-left: 2.25rem" placeholder="Ime, telefon ili email..." [formControl]="search" data-testid="client-search" />
+  <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (loading() && clients().length === 0) {
+} @else if (clients().length === 0) {
+  <div class="card empty-state">{{ search.value ? 'Nema klijenata za ovu pretragu.' : 'Još nema klijenata.' }}</div>
+} @else {
+  <div class="card">
+    <div class="hidden md:block">
+      <app-data-list [columns]="columns" [headers]="['Klijent', 'Telefon', 'Napomena', 'Tip']">
+        @for (client of clients(); track client.id) {
+          <app-data-row [columns]="columns" [attr.data-testid]="'client-' + client.id">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
+              <div class="min-w-0">
+                <div class="font-semibold truncate">{{ client.first_name }} {{ client.last_name }}</div>
+                <div class="text-xs muted truncate">{{ client.email || '—' }}</div>
+              </div>
+            </div>
+            <a [href]="'tel:' + client.phone" class="whitespace-nowrap">{{ client.phone }}</a>
+            <div class="truncate muted">{{ client.note || '' }}</div>
+            <span class="badge" [class.badge-success]="client.has_account" [class.badge-neutral]="!client.has_account">{{ client.has_account ? 'Nalog' : 'Bez naloga' }}</span>
+            <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
+          </app-data-row>
+        }
+      </app-data-list>
+    </div>
+
+    <div class="md:hidden flex flex-col">
+      @for (client of clients(); track client.id) {
+        <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0">
+          <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold truncate">{{ client.first_name }} {{ client.last_name }}</div>
+            <a [href]="'tel:' + client.phone" class="text-sm">{{ client.phone }}</a>
+          </div>
+          <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
+        </div>
+      }
+    </div>
+
+    @if (lastPage() > 1) {
+      <div class="flex items-center justify-between gap-2 pt-3">
+        <button type="button" appBtn theme="secondary" size="s" [disabled]="page() <= 1" (click)="load(page() - 1)">
+          <span appIcon="arrow-left" aria-hidden="true"></span>
+        </button>
+        <span class="text-sm muted">Strana {{ page() }} od {{ lastPage() }}</span>
+        <button type="button" appBtn theme="secondary" size="s" [disabled]="page() >= lastPage()" (click)="load(page() + 1)">
+          <span appIcon="arrow-right" aria-hidden="true"></span>
+        </button>
+      </div>
+    }
+  </div>
+}
+
+@if (modalOpen()) {
+  <app-modal [title]="editing() ? 'Izmena klijenta' : 'Novi klijent'" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="client-modal">
+    <app-error-message [message]="formError()" />
+    @if (!editing()) {
+      <p class="text-sm muted">Za klijente koji zakazuju telefonom. Ako se kasnije registruju istim emailom, nalog se povezuje.</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="client-first">Ime <span class="required-mark">*</span></label>
+          <input id="client-first" appInput size="m" formControlName="first_name" data-testid="client-first-name" />
+        </div>
+        <div class="field">
+          <label for="client-last">Prezime <span class="required-mark">*</span></label>
+          <input id="client-last" appInput size="m" formControlName="last_name" data-testid="client-last-name" />
+        </div>
+        <div class="field">
+          <label for="client-phone">Telefon <span class="required-mark">*</span></label>
+          <input id="client-phone" appInput size="m" type="tel" formControlName="phone" data-testid="client-phone" />
+        </div>
+        <div class="field">
+          <label for="client-whatsapp">WhatsApp</label>
+          <input id="client-whatsapp" appInput size="m" type="tel" formControlName="whatsapp_number" placeholder="isto kao telefon" />
+        </div>
+        <div class="field">
+          <label for="client-email">Email</label>
+          <input id="client-email" appInput size="m" type="email" formControlName="email" />
+        </div>
+        <div class="field">
+          <label for="client-channel">Obaveštenja preko</label>
+          <select id="client-channel" appInput size="m" formControlName="preferred_communication">
+            @for (option of communication; track option.value) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="client-note">Napomena</label>
+        <textarea id="client-note" appInput size="m" rows="3" formControlName="note" placeholder="npr. alergija, omiljeni frizer..."></textarea>
+      </div>
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="client-save">Sačuvaj</app-button>
+  </app-modal>
+}
