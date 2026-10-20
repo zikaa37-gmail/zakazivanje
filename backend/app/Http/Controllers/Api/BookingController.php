@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\User;
+use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
 use App\Services\PriceQuoteService;
@@ -18,6 +19,7 @@ class BookingController extends Controller
     public function __construct(
         private AvailabilityService $availability,
         private BookingService $bookings,
+        private AppointmentNotifier $notifier,
     ) {}
 
     public function slots(Request $request)
@@ -99,6 +101,8 @@ class BookingController extends Controller
             Appointment::SOURCE_ONLINE,
             $data['note'] ?? null,
         );
+
+        $this->notifier->booked($appointment);
 
         return response()->json($appointment, 201);
     }

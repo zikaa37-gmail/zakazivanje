@@ -1,0 +1,30 @@
+-- Tabela `zk_notification_logs`: šema i podaci iz lokalne baze (20.10.2026). Generiše deploy/build-database.py.
+
+SET NAMES utf8mb4;
+SET TIME_ZONE='+00:00';
+SET FOREIGN_KEY_CHECKS=0;
+SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
+
+DROP TABLE IF EXISTS `zk_notification_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `zk_notification_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned DEFAULT NULL,
+  `appointment_id` bigint unsigned DEFAULT NULL,
+  `type` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `channel` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `recipient` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `error` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `zk_notification_logs_user_id_foreign` (`user_id`),
+  KEY `zk_notification_logs_appointment_id_foreign` (`appointment_id`),
+  KEY `zk_notification_logs_created_at_index` (`created_at`),
+  CONSTRAINT `zk_notification_logs_appointment_id_foreign` FOREIGN KEY (`appointment_id`) REFERENCES `zk_appointments` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `zk_notification_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+SET FOREIGN_KEY_CHECKS=1;

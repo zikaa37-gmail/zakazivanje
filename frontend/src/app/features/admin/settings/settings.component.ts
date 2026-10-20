@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { NOTIFICATION_TYPES, NotificationLogEntry, NotificationLogService } from '../../../core/services/notification-log.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
@@ -14,7 +15,8 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
-type Tab = 'business' | 'look' | 'booking';
+type Tab = 'business' | 'look' | 'booking' | 'notifications';
+type NotifyKey = 'notify_booking_received' | 'notify_booking_confirmed' | 'notify_booking_cancelled' | 'notify_admin_new_booking';
 type ColorKey = 'theme_primary' | 'theme_secondary' | 'theme_tertiary';
 
 const DEFAULT_COLORS: Record<ColorKey, string> = {
@@ -34,6 +36,7 @@ export class SettingsComponent {
   private business = inject(BusinessSettingService);
   private theme = inject(ThemeService);
   private toast = inject(ToastService);
+  private notificationLogs = inject(NotificationLogService);
 
   readonly categories = BUSINESS_CATEGORIES;
   readonly confirmationOptions = CONFIRMATION_OPTIONS;
@@ -75,7 +78,32 @@ export class SettingsComponent {
     booking_horizon_days: this.fb.nonNullable.control(60),
     cancellation_hours: this.fb.nonNullable.control(24),
     allow_guest_booking: this.fb.nonNullable.control(true),
+    notify_booking_received: this.fb.nonNullable.control(true),
+    notify_booking_confirmed: this.fb.nonNullable.control(true),
+    notify_booking_cancelled: this.fb.nonNullable.control(true),
+    reminder_hours: this.fb.nonNullable.control(24),
+    notify_admin_new_booking: this.fb.nonNullable.control(true),
   });
+
+  readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
+    { key: 'notify_booking_received', label: 'Termin primljen', hint: 'Klijentu, kad zakaže termin koji čeka potvrdu' },
+    { key: 'notify_booking_confirmed', label: 'Termin potvrđen', hint: 'Klijentu, kad potvrdiš termin ili ga sam zakažeš (sa .ics za kalendar)' },
+    { key: 'notify_booking_cancelled', label: 'Termin otkazan', hint: 'Klijentu, kad salon otkaže termin' },
+    { key: 'notify_admin_new_booking', label: 'Obaveštenja za admina', hint: 'Mejl adminu za novi online termin i kad klijent otkaže' },
+  ];
+  readonly reminderOptions = [
+    { value: 0, label: 'Bez podsetnika' },
+    { value: 2, label: '2 sata pre' },
+    { value: 3, label: '3 sata pre' },
+    { value: 6, label: '6 sati pre' },
+    { value: 12, label: '12 sati pre' },
+    { value: 24, label: 'Dan pre (24 h)' },
+    { value: 48, label: 'Dva dana pre (48 h)' },
+  ];
+  readonly notificationTypes = NOTIFICATION_TYPES;
+  readonly logs = signal<NotificationLogEntry[]>([]);
+  readonly logsLoading = signal(false);
+  readonly testing = signal<'mail' | 'whatsapp' | null>(null);
 
   readonly intervals = [5, 10, 15, 20, 30, 45, 60];
   readonly leadOptions = [
@@ -106,6 +134,41 @@ export class SettingsComponent {
     inject(DestroyRef).onDestroy(() => {
       if (this.saved) this.applyColors(this.saved.theme_primary, this.saved.theme_secondary, this.saved.theme_tertiary);
     });
+  }
+
+  openTab(tab: Tab): void {
+    this.tab.set(tab);
+    if (tab === 'notifications') this.loadLogs();
+  }
+
+  loadLogs(): void {
+    this.logsLoading.set(true);
+    this.notificationLogs.list().subscribe({
+      next: (logs) => {
+        this.logs.set(logs);
+        this.logsLoading.set(false);
+      },
+      error: () => this.logsLoading.set(false),
+    });
+  }
+
+  sendTest(channel: 'mail' | 'whatsapp'): void {
+    this.testing.set(channel);
+    this.notificationLogs.test(channel).subscribe({
+      next: (res) => {
+        this.testing.set(null);
+        this.toast.success(res.message);
+        this.loadLogs();
+      },
+      error: (err) => {
+        this.testing.set(null);
+        this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.'));
+      },
+    });
+  }
+
+  typeLabel(type: string): string {
+    return this.notificationTypes[type] ?? type;
   }
 
   textOn(color: string): string {
@@ -228,6 +291,11 @@ export class SettingsComponent {
       booking_horizon_days: settings.booking_horizon_days,
       cancellation_hours: settings.cancellation_hours,
       allow_guest_booking: settings.allow_guest_booking,
+      notify_booking_received: settings.notify_booking_received,
+      notify_booking_confirmed: settings.notify_booking_confirmed,
+      notify_booking_cancelled: settings.notify_booking_cancelled,
+      reminder_hours: settings.reminder_hours,
+      notify_admin_new_booking: settings.notify_admin_new_booking,
     });
   }
 

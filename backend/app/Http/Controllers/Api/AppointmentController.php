@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentRecurrence;
 use App\Models\User;
+use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
 use App\Services\RecurrenceService;
@@ -20,6 +21,7 @@ class AppointmentController extends Controller
         private AvailabilityService $availability,
         private BookingService $bookings,
         private RecurrenceService $recurrences,
+        private AppointmentNotifier $notifier,
     ) {}
 
     public function index(Request $request)
@@ -85,6 +87,8 @@ class AppointmentController extends Controller
                 $data['admin_note'] ?? null,
             );
 
+            $this->notifier->booked($appointment);
+
             return response()->json(['appointments' => [$appointment], 'skipped' => []], 201);
         }
 
@@ -105,6 +109,9 @@ class AppointmentController extends Controller
             throw ValidationException::withMessages(['starts_at' => ['Nijedan termin iz ponavljanja nije slobodan.']]);
         }
 
+        $labels = [1 => 'svake nedelje', 2 => 'svake druge nedelje', 3 => 'svake treće nedelje', 4 => 'svake četvrte nedelje'];
+        $this->notifier->booked($result['created'][0], $labels[$interval]);
+
         return response()->json(['appointments' => $result['created'], 'skipped' => $result['skipped']], 201);
     }
 
@@ -113,8 +120,13 @@ class AppointmentController extends Controller
         $data = $request->validate(['status' => ['required', Rule::in(Appointment::STATUSES)]]);
 
         if ($data['status'] === Appointment::STATUS_CANCELLED) {
-            return $this->bookings->cancel($appointment, 'admin');
+            $this->bookings->cancel($appointment, 'admin');
+            $this->notifier->cancelledBySalon($appointment);
+
+            return $appointment;
         }
+
+        $previous = $appointment->status;
 
         if (in_array($data['status'], Appointment::BLOCKING_STATUSES, true)
             && ! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)
@@ -128,6 +140,8 @@ class AppointmentController extends Controller
             'cancelled_at' => null,
             'cancelled_by' => null,
         ]);
+
+        $this->notifier->statusChanged($appointment, $previous);
 
         return $appointment;
     }
@@ -143,6 +157,7 @@ class AppointmentController extends Controller
         }
 
         $this->bookings->cancel($appointment, 'admin');
+        $this->notifier->cancelledBySalon($appointment);
 
         return ['message' => 'Termin je otkazan.'];
     }

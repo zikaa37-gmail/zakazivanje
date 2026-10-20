@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
+use App\Services\AppointmentNotifier;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,7 @@ class MyAppointmentController extends Controller
             ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a)]);
     }
 
-    public function cancel(Request $request, Appointment $appointment, BookingService $bookings)
+    public function cancel(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier)
     {
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
@@ -38,7 +39,10 @@ class MyAppointmentController extends Controller
             throw ValidationException::withMessages(['appointment' => ["Otkazivanje je moguće najkasnije {$hours} h pre termina — pozovi salon."]]);
         }
 
-        return $bookings->cancel($appointment, 'client');
+        $bookings->cancel($appointment, 'client');
+        $notifier->cancelledByClient($appointment);
+
+        return $appointment;
     }
 
     private function canCancel(Appointment $appointment): bool

@@ -27,6 +27,7 @@ CREATE TABLE `zk_appointments` (
   `cancelled_by` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `reminder_sent_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `zk_appointments_recurrence_id_foreign` (`recurrence_id`),
   KEY `zk_appointments_staff_member_id_starts_at_index` (`staff_member_id`,`starts_at`),

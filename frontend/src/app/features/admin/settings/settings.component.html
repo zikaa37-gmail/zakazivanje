@@ -9,9 +9,10 @@
 </div>
 
 <div class="chip-group mb-4" role="tablist">
-  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'business'" (click)="tab.set('business')" data-testid="tab-business">Biznis</button>
-  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'look'" (click)="tab.set('look')" data-testid="tab-look">Logo i boje</button>
-  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="tab.set('booking')" data-testid="tab-booking">Zakazivanje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'business'" (click)="openTab('business')" data-testid="tab-business">Biznis</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'look'" (click)="openTab('look')" data-testid="tab-look">Logo i boje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="openTab('booking')" data-testid="tab-booking">Zakazivanje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'notifications'" (click)="openTab('notifications')" data-testid="tab-notifications">Obaveštenja</button>
 </div>
 
 <app-error-message [message]="error()" />
@@ -202,6 +203,76 @@
               </label>
             }
           </div>
+        </div>
+      }
+      @case ('notifications') {
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="card">
+            <h2 class="text-base font-semibold">Šta se šalje</h2>
+            <p class="text-sm muted">Klijent dobija poruke kanalom koji je izabrao (email, WhatsApp ili oba); ako ga nema, koristi se drugi.</p>
+            <div class="flex flex-col gap-3 mt-3">
+              @for (t of notificationToggles; track t.key) {
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="font-semibold text-sm">{{ t.label }}</div>
+                    <div class="text-xs muted">{{ t.hint }}</div>
+                  </div>
+                  <app-toggle [checked]="form.controls[t.key].value" (checkedChange)="form.controls[t.key].setValue($event)" [attr.data-testid]="'toggle-' + t.key" />
+                </div>
+              }
+              <div class="field !mb-0">
+                <label for="s-reminder">Podsetnik klijentu</label>
+                <select id="s-reminder" appInput size="m" formControlName="reminder_hours" data-testid="reminder-hours">
+                  @for (o of reminderOptions; track o.value) {
+                    <option [ngValue]="o.value">{{ o.label }}</option>
+                  }
+                </select>
+                <span class="text-xs muted">Ne šalje se za termine zakazane unutar tog vremena (već su dobili potvrdu).</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="text-base font-semibold">Proba</h2>
+            <p class="text-sm muted">Pošalji probnu poruku sebi (email i telefon iz tvog naloga).</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <app-button theme="secondary" size="s" [loading]="testing() === 'mail'" (click)="sendTest('mail')" data-testid="test-mail">
+                <span appIcon="mail" aria-hidden="true"></span> Probni email
+              </app-button>
+              <app-button theme="secondary" size="s" [loading]="testing() === 'whatsapp'" (click)="sendTest('whatsapp')" data-testid="test-whatsapp">
+                <span appIcon="message-square" aria-hidden="true"></span> Probni WhatsApp
+              </app-button>
+            </div>
+            <p class="text-xs muted mt-3">WhatsApp ide preko Twilio-a (TWILIO_* u .env na serveru). Bez toga se poruke samo beleže kao „preskočeno".</p>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-base font-semibold">Dnevnik slanja</h2>
+            <button type="button" appBtn theme="ghost" size="s" (click)="loadLogs()"><span appIcon="rotate-ccw" aria-hidden="true"></span> Osveži</button>
+          </div>
+          @if (logsLoading() && logs().length === 0) {
+          } @else if (logs().length === 0) {
+            <p class="empty-state">Još ništa nije poslato.</p>
+          } @else {
+            <div class="flex flex-col" data-testid="notification-logs">
+              @for (log of logs(); track log.id) {
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 border-t border-[var(--color-bg)] text-sm">
+                  <span class="muted w-28 shrink-0">{{ log.created_at.slice(8, 10) }}.{{ log.created_at.slice(5, 7) }}. {{ log.created_at.slice(11, 16) }}</span>
+                  <span class="font-semibold w-40 shrink-0">{{ typeLabel(log.type) }}</span>
+                  <span class="flex-1 min-w-0 truncate">
+                    {{ log.user ? log.user.first_name + ' ' + log.user.last_name : '' }}
+                    <span class="muted">{{ log.recipient }}</span>
+                  </span>
+                  <span class="badge badge-neutral">{{ log.channel === 'mail' ? 'Email' : 'WhatsApp' }}</span>
+                  <span class="badge" [class.badge-success]="log.status === 'sent'" [class.badge-warning]="log.status === 'skipped'" [class.badge-danger]="log.status === 'failed'" [title]="log.error ?? ''">
+                    {{ log.status === 'sent' ? 'Poslato' : log.status === 'skipped' ? 'Preskočeno' : 'Greška' }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
         </div>
       }
     }

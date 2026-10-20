@@ -39,10 +39,15 @@ specifične za ovu aplikaciju.
 3. **Odmah** promeni lozinku admin naloga (seed lozinka je `password`) ili napravi pravi admin nalog
    i obriši test naloge.
 4. `index.php` i `.htaccess` iz `deploy/` otpremi u koren poddomena (FTP / File Manager).
-5. Kad aplikacija dobije zakazane komande (podsetnici za termine), dodaj trajni cron:
+5. **Trajni cron (obavezan)** — cPanel → Cron Jobs:
    ```
    * * * * * /usr/local/bin/php /home/fiskultu/zakazivanje_app/artisan schedule:run >> /dev/null 2>&1
    ```
+   Pokreće: red poslova (`queue:work`, svaki minut — mejlovi i WhatsApp idu kroz red,
+   `QUEUE_CONNECTION=database`), podsetnike (`appointments:send-reminders`, na 15 min) i dopunu
+   ponavljajućih termina (`appointments:extend-recurring`, 02:00). Bez crona se obaveštenja ne šalju.
+6. WhatsApp (opciono): `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` u `deploy/.env`.
+   Bez njih se WhatsApp poruke beleže kao „preskočeno" (Podešavanja → Obaveštenja → Dnevnik slanja).
 
 ## Sledeći deploy-i
 

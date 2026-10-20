@@ -53,6 +53,11 @@ class BusinessSettingController extends Controller
             'booking_horizon_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
             'cancellation_hours' => ['sometimes', 'integer', 'min:0', 'max:336'],
             'allow_guest_booking' => ['sometimes', 'boolean'],
+            'notify_booking_received' => ['sometimes', 'boolean'],
+            'notify_booking_confirmed' => ['sometimes', 'boolean'],
+            'notify_booking_cancelled' => ['sometimes', 'boolean'],
+            'reminder_hours' => ['sometimes', 'integer', Rule::in([0, 2, 3, 6, 12, 24, 48])],
+            'notify_admin_new_booking' => ['sometimes', 'boolean'],
         ]);
 
         $settings = BusinessSetting::current();
