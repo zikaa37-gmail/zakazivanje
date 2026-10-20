@@ -1,0 +1,190 @@
+@use 'breakpoints' as bp;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  padding: 0.7rem 1.1rem;
+  font-size: 0.95rem;
+  min-height: 44px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-s {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+  min-height: 30px;
+  gap: 0.25rem;
+}
+
+.btn-m {
+  padding: 0.7rem 1.1rem;
+  font-size: 0.95rem;
+  min-height: 44px;
+}
+
+.btn-l {
+  padding: 0.9rem 1.5rem;
+  font-size: 1.05rem;
+  min-height: 52px;
+}
+
+.btn-primary {
+  background: var(--color-neutral);
+  color: var(--color-on-neutral);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-neutral-dark);
+}
+
+.btn-primary:active:not(:disabled) {
+  background: var(--color-neutral-active);
+}
+
+.btn-primary:focus-visible {
+  outline-color: var(--color-neutral);
+}
+
+.btn-secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-bg);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:active:not(:disabled) {
+  background: var(--color-border);
+  color: var(--color-text);
+  border-color: var(--color-border-dark);
+}
+
+.btn-secondary:focus-visible {
+  outline-color: var(--color-primary);
+}
+
+.btn-tertiary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.btn-tertiary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+.btn-tertiary:focus-visible {
+  outline-color: var(--color-primary);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: var(--color-on-primary);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--color-danger-dark);
+}
+
+.btn-danger:active:not(:disabled) {
+  background: var(--color-danger-active);
+}
+
+.btn-danger:focus-visible {
+  outline-color: var(--color-danger);
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: var(--color-on-primary);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: var(--color-success-dark);
+}
+
+.btn-success:active:not(:disabled) {
+  background: var(--color-success-active);
+}
+
+.btn-success:focus-visible {
+  outline-color: var(--color-success);
+}
+
+.btn-neutral {
+  background: var(--color-neutral);
+  color: var(--color-on-neutral);
+}
+
+.btn-neutral:hover:not(:disabled) {
+  background: var(--color-neutral-dark);
+}
+
+.btn-neutral:active:not(:disabled) {
+  background: var(--color-neutral-active);
+}
+
+.btn-neutral:focus-visible {
+  outline-color: var(--color-neutral);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-primary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--color-primary-tint);
+}
+
+.btn-ghost:active:not(:disabled) {
+  background: var(--color-primary-tint);
+  color: var(--color-primary-dark);
+}
+
+.btn-ghost:focus-visible {
+  outline-color: var(--color-primary);
+}
+
+.btn-collapse-mobile {
+  @include bp.below-md {
+    padding: 0.5rem 0.65rem;
+    min-height: 36px;
+
+    .btn-text {
+      display: none;
+    }
+  }
+}

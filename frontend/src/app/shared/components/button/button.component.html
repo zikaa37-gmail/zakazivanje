@@ -1,0 +1,13 @@
+<button
+  [attr.type]="type()"
+  [class]="'btn btn-' + theme() + ' btn-' + size() + (block() ? ' btn-block' : '')"
+  [disabled]="disabled() || loading()"
+  [attr.data-testid]="testId() ?? null"
+  [attr.aria-label]="ariaLabel() ?? null"
+>
+  @if (loading()) {
+    <app-spinner [size]="spinnerSize()" />
+  } @else {
+    <ng-content></ng-content>
+  }
+</button>

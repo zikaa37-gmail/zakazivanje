@@ -1,0 +1,45 @@
+# Ide u KOREN poddomena (isti folder gde stoje Angular build fajlovi
+# i Laravel-ov index.php), preimenovano u ".htaccess".
+#
+# VAŽNO: DirectoryIndex mora eksplicitno birati index.html PRE index.php — Apache inače bira
+# index.php prvi kad oba postoje u istom folderu za goli "/" zahtev, ŠTO ZAOBILAZI pravila ispod
+# (mod_rewrite se ni ne pokreće za taj slučaj) i servira Laravel-ovu "welcome" stranicu umesto
+# Angular-a.
+DirectoryIndex index.html index.php
+#
+# Keš: index.html se nikad ne keširaju (posle deploy-a browser odmah uzima novu verziju), a JS / CSS
+# fajlovi imaju heš u imenu pa mogu da se keširaju dugo.
+<IfModule mod_headers.c>
+    <FilesMatch "\.html$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    <FilesMatch "-[A-Z0-9]{8}\.(js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+#
+# Redosled pravila ispod je bitan:
+# 1) Postojeći fajl/folder (Angular JS/CSS/slike, Laravel storage symlink) -> posluži direktno.
+# 2) /api/* -> Laravel-ov front controller (index.php).
+# 3) sve ostalo -> Angular-ov index.html (SPA rutiranje na frontu).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Handle Authorization Header (potrebno Laravel-u/JWT-u)
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Postojeći fajl ili folder -> posluži direktno, bez daljeg rewrite-a
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # API pozivi idu Laravel-u
+    RewriteCond %{REQUEST_URI} ^/api
+    RewriteRule ^ index.php [L]
+
+    # Sve ostalo (/, /search, /profile...) -> Angular SPA
+    RewriteRule ^ /index.html [L]
+</IfModule>

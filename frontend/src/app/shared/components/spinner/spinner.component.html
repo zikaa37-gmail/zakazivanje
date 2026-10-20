@@ -1,0 +1,10 @@
+@if (overlay()) {
+  @if (loader.isLoading()) {
+    <div class="loader-overlay" role="status" aria-live="polite" aria-label="Učitavanje" data-testid="global-loader">
+      <span class="spinner" [style.width.px]="size()" [style.height.px]="size()"></span>
+      <p class="empty-state">Učitavanje...</p>
+    </div>
+  }
+} @else {
+  <span class="spinner" [style.width.px]="size()" [style.height.px]="size()" role="status" aria-label="Učitavanje" data-testid="spinner"></span>
+}

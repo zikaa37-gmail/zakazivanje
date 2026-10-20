@@ -1,0 +1,29 @@
+@if (confirmService.request(); as req) {
+  <div class="confirm-overlay" (click)="respond(false)" data-testid="confirm-dialog-overlay">
+    <div
+      class="confirm-modal"
+      (click)="$event.stopPropagation()"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+      data-testid="confirm-dialog"
+    >
+      <h3 id="confirm-dialog-title">{{ req.title || 'Potvrda' }}</h3>
+      <p>{{ req.message }}</p>
+      <div class="confirm-actions">
+        <button type="button" appBtn theme="secondary" (click)="respond(false)" data-testid="confirm-dialog-cancel">
+          {{ req.cancelLabel || 'Otkaži' }}
+        </button>
+        <button
+          type="button"
+          appBtn
+          [theme]="req.danger === false ? 'primary' : 'danger'"
+          (click)="respond(true)"
+          data-testid="confirm-dialog-confirm"
+        >
+          {{ req.confirmLabel || 'Potvrdi' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

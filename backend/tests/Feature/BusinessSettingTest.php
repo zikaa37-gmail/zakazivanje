@@ -1,0 +1,39 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class BusinessSettingTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_business_info_is_public(): void
+    {
+        $this->getJson('/api/public/business')->assertOk()->assertJsonStructure(['name', 'category']);
+    }
+
+    public function test_only_admin_updates_business_settings(): void
+    {
+        $payload = ['name' => 'Berbernica Mika', 'category' => 'barber', 'city' => 'Novi Sad'];
+
+        $this->putJson('/api/business-settings', $payload)->assertUnauthorized();
+        $this->actingAsJwt(User::factory()->create())->putJson('/api/business-settings', $payload)->assertForbidden();
+
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->actingAsJwt($admin)->putJson('/api/business-settings', $payload)
+            ->assertOk()->assertJsonPath('name', 'Berbernica Mika');
+
+        $this->getJson('/api/public/business')->assertJsonPath('city', 'Novi Sad');
+    }
+
+    public function test_unknown_category_is_rejected(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $this->actingAsJwt($admin)->putJson('/api/business-settings', ['name' => 'Salon', 'category' => 'bakery'])
+            ->assertUnprocessable()->assertJsonValidationErrors('category');
+    }
+}
