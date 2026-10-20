@@ -22,6 +22,6 @@ CREATE TABLE `zk_services` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_services` VALUES (1,'Žensko šišanje',NULL,'Šišanje',45,2500.00,1,0,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(2,'Muško šišanje',NULL,'Šišanje',30,1500.00,1,1,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(3,'Feniranje',NULL,'Stilizovanje',30,1200.00,1,2,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(4,'Farbanje',NULL,'Boja',90,4500.00,1,3,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(5,'Manikir',NULL,'Nokti',60,2000.00,1,4,'2026-10-20 08:15:58','2026-10-20 08:15:58');
+INSERT INTO `zk_services` VALUES (1,'Žensko šišanje',NULL,'Šišanje',45,2500.00,1,0,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(2,'Muško šišanje',NULL,'Šišanje',30,1500.00,1,1,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(3,'Feniranje',NULL,'Stilizovanje',30,1200.00,1,2,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(4,'Farbanje',NULL,'Boja',90,4500.00,1,3,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(5,'Manikir',NULL,'Nokti',60,2000.00,1,4,'2026-10-20 10:02:56','2026-10-20 10:02:56');
 
 SET FOREIGN_KEY_CHECKS=1;

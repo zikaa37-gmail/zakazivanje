@@ -106,8 +106,17 @@ režim potvrde po zaposlenom), usluge (kategorija, trajanje, cena, ko radi), cen
 (i bez naloga — `users.password` je `null`; registracija istim emailom preuzima zapis),
 podešavanja (podaci o biznisu, logo kao data URL, tema iz boja logoa — `extractPalette()`,
 `ThemeService.applyBrand()` računa nijanse `--color-primary/secondary/tertiary*`; režim potvrde
-`manual` / `automatic`). Klijent posle prijave ima samo `/profile`. Sledeće: zakazivanje termina
-(#17, uključujući ponavljajuće termine), kalendar (#18), obaveštenja (#19), javna početna.
+`manual` / `automatic`). Zakazivanje (#17): `AvailabilityService` (slobodni termini), `BookingService`
+(zaključava zaposlene u transakciji, cena kroz `PriceQuoteService` sa istorijom klijenta, režim
+potvrde zaposlenog), `RecurrenceService` + `appointments:extend-recurring` (svake noći 02:00, 8
+nedelja unapred; zauzeti datumi u `skipped_dates`), gost bez naloga (vezuje se po telefonu / emailu
+za klijenta bez lozinke), pravila u Podešavanjima (`slot_interval_minutes`, `booking_lead_minutes`,
+`booking_horizon_days`, `cancellation_hours`, `allow_guest_booking`). Frontend: javna školjka
+(`PublicShellComponent`, donja navigacija na telefonu) sa početnom, `/book` (4 koraka, stanje u
+`BookingDraftService` / sessionStorage — preživi odlazak na prijavu), `/my-appointments`,
+`/register`, `/verify-email`; admin `/admin/appointments` (filteri, statusi, novi termin sa
+ponavljanjem, broj termina na čekanju u meniju). Sledeće: kalendar (#18, uključuje UI za
+`blocked_times`), obaveštenja (#19), zaboravljena lozinka (backend postoji).
 
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

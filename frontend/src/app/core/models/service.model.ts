@@ -21,3 +21,13 @@ export interface SalonServicePayload {
 }
 
 export const DURATION_OPTIONS = [15, 20, 30, 45, 60, 75, 90, 105, 120, 150, 180, 240];
+
+export interface PublicService {
+  id: number;
+  name: string;
+  description: string | null;
+  category: string | null;
+  duration_minutes: number;
+  price: number;
+  staff_members: { id: number; first_name: string; last_name: string; title: string | null }[];
+}

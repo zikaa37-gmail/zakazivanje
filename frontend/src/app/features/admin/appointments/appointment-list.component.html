@@ -1,0 +1,211 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Termini</h1>
+    <p class="page-subtitle">{{ appointments().length }} u izabranom periodu</p>
+  </div>
+  <button type="button" appBtn (click)="openForm()" data-testid="appointment-add">
+    <span appIcon="plus" aria-hidden="true"></span> Novi termin
+  </button>
+</div>
+
+<div class="flex flex-wrap items-center gap-2 mb-4">
+  <div class="chip-group">
+    @for (p of periods; track p.value) {
+      <button type="button" class="chip" [class.selected]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'period-' + p.value">{{ p.label }}</button>
+    }
+  </div>
+  <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni">
+    <option value="">Svi zaposleni</option>
+    @for (m of staff(); track m.id) {
+      <option [value]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+    }
+  </select>
+  <select appInput class="!w-auto" [value]="statusFilter() ?? ''" (change)="statusFilter.set($any($event.target).value || null)" aria-label="Status" data-testid="status-filter">
+    <option value="">Svi statusi</option>
+    @for (s of statusOptions; track s.value) {
+      <option [value]="s.value">{{ s.label }}</option>
+    }
+  </select>
+  <div class="relative flex-1 min-w-[12rem]">
+    <input appInput type="search" style="padding-left: 2.25rem" placeholder="Klijent ili telefon..." [formControl]="search" />
+    <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
+  </div>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (loading() && appointments().length === 0) {
+} @else if (appointments().length === 0) {
+  <div class="card empty-state">Nema termina u ovom periodu.</div>
+} @else {
+  <div class="flex flex-col gap-4">
+    @for (group of groups(); track group.date) {
+      <div class="card">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold">{{ group.label }}</h2>
+          <span class="text-sm muted">{{ group.items.length }} · {{ group.revenue | rsd }}</span>
+        </div>
+        @for (a of group.items; track a.id) {
+          <div class="flex items-center gap-3 py-3 border-t border-[var(--color-bg)]" [class.opacity-50]="a.status === 'cancelled'" [attr.data-testid]="'appointment-' + a.id">
+            <div class="w-24 shrink-0">
+              <div class="font-bold">{{ startTime(a) }}</div>
+              <div class="text-xs muted">do {{ endTime(a) }}</div>
+            </div>
+            <span class="w-1 self-stretch rounded" [style.background]="a.staff_member?.color || 'var(--color-primary)'"></span>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold truncate">
+                {{ a.client?.first_name }} {{ a.client?.last_name }}
+                @if (a.recurrence_id) {
+                  <span appIcon="rotate-ccw" [iconSize]="13" class="muted" title="Ponavlja se"></span>
+                }
+              </div>
+              <div class="text-sm muted truncate">{{ serviceNames(a) }} · {{ a.staff_member?.first_name }}</div>
+              @if (a.note) {
+                <div class="text-xs muted truncate">„{{ a.note }}"</div>
+              }
+            </div>
+            <div class="hidden sm:block text-right shrink-0">
+              <div class="font-semibold">{{ a.total | rsd }}</div>
+              @if (a.discount > 0) {
+                <div class="text-xs text-[var(--color-secondary)]">−{{ a.discount | rsd }}</div>
+              }
+            </div>
+            <span [class]="'badge shrink-0 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
+            @if (a.status === 'pending') {
+              <button type="button" appBtn size="s" class="hidden md:inline-flex" (click)="onAction(a, 'confirmed')" [attr.data-testid]="'confirm-' + a.id">Potvrdi</button>
+            }
+            <app-row-actions [actions]="actions(a)" (selected)="onAction(a, $event)" [attr.data-testid]="'appointment-actions-' + a.id" />
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+@if (modalOpen()) {
+  <app-modal title="Novi termin" size="l" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="appointment-modal">
+    <app-error-message [message]="formError()" />
+
+    <div class="field">
+      <div class="flex items-center justify-between">
+        <label for="a-client">Klijent <span class="required-mark">*</span></label>
+        <button type="button" appBtn theme="ghost" size="s" (click)="newClient.set(!newClient()); selectedClient.set(null)" data-testid="appointment-new-client">
+          {{ newClient() ? 'Izaberi postojećeg' : '+ Novi klijent' }}
+        </button>
+      </div>
+      @if (newClient()) {
+        <form [formGroup]="newClientForm" class="grid gap-2 sm:grid-cols-3" novalidate>
+          <input appInput size="m" formControlName="first_name" placeholder="Ime" data-testid="nc-first" />
+          <input appInput size="m" formControlName="last_name" placeholder="Prezime" data-testid="nc-last" />
+          <input appInput size="m" type="tel" formControlName="phone" placeholder="Telefon" data-testid="nc-phone" />
+        </form>
+      } @else if (selectedClient(); as client) {
+        <div class="flex items-center gap-3 p-2 rounded-lg bg-[var(--color-primary-tint)]">
+          <span class="avatar avatar-initials avatar-sm">{{ client.first_name[0] }}{{ client.last_name[0] }}</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold">{{ client.first_name }} {{ client.last_name }}</div>
+            <div class="text-xs muted">{{ client.phone }}</div>
+          </div>
+          <button type="button" class="btn-icon" aria-label="Promeni klijenta" (click)="selectedClient.set(null)"><span appIcon="close" [iconSize]="14"></span></button>
+        </div>
+      } @else {
+        <div class="relative">
+          <input id="a-client" appInput size="m" type="search" [formControl]="clientSearch" placeholder="Ime ili telefon..." autocomplete="off" data-testid="appointment-client-search" />
+          @if (clientResults().length) {
+            <div class="absolute z-10 left-0 right-0 mt-1 card !p-1 shadow-lg">
+              @for (c of clientResults(); track c.id) {
+                <button type="button" class="w-full text-left px-3 py-2 rounded hover:bg-[var(--color-bg)]" (click)="pickClient(c)" [attr.data-testid]="'client-option-' + c.id">
+                  <span class="font-semibold">{{ c.first_name }} {{ c.last_name }}</span> <span class="muted text-sm">{{ c.phone }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label>Usluge <span class="required-mark">*</span></label>
+      <div class="chip-group">
+        @for (s of services(); track s.id) {
+          <button type="button" class="chip" [class.selected]="selectedServices().includes(s.id)" (click)="toggleService(s.id)" [attr.data-testid]="'appointment-service-' + s.id">
+            {{ s.name }} <span class="muted">{{ s.duration_minutes }} min</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <form [formGroup]="form" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="a-staff">Zaposleni <span class="required-mark">*</span></label>
+          <select id="a-staff" appInput size="m" formControlName="staff_member_id" (change)="loadSuggestions()" data-testid="appointment-staff">
+            <option [ngValue]="null">Izaberi...</option>
+            @for (m of eligibleStaff(); track m.id) {
+              <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="a-date">Datum <span class="required-mark">*</span></label>
+          <input id="a-date" appInput size="m" type="date" formControlName="date" (change)="loadSuggestions()" data-testid="appointment-date" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Vreme <span class="required-mark">*</span> @if (modalDuration()) { <span class="muted font-normal">· traje {{ modalDuration() }} min</span> }</label>
+        <div class="flex flex-wrap items-center gap-2">
+          <app-time-picker [control]="time" data-testid="appointment-time" />
+          @for (slot of suggestions().slice(0, 12); track slot.time) {
+            <button type="button" class="chip" [class.selected]="time.value === slot.time" (click)="time.setValue(slot.time)" [attr.data-testid]="'suggest-' + slot.time">{{ slot.time }}</button>
+          }
+        </div>
+        @if (form.controls.staff_member_id.value && selectedServices().length && !suggestions().length) {
+          <span class="text-xs muted">Nema slobodnih termina po radnom vremenu tog dana — možeš ručno da upišeš vreme.</span>
+        }
+      </div>
+
+      <div class="field">
+        <app-toggle [checked]="repeat()" label="Ponavljaj termin" (checkedChange)="repeat.set($event)" data-testid="appointment-repeat" />
+        @if (repeat()) {
+          <div class="flex flex-col gap-2 p-3 rounded-lg bg-[var(--color-bg)]">
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+              <select appInput class="!w-auto" formControlName="interval_weeks" data-testid="appointment-interval">
+                <option [ngValue]="1">Svake nedelje</option>
+                <option [ngValue]="2">Svake 2 nedelje</option>
+                <option [ngValue]="3">Svake 3 nedelje</option>
+                <option [ngValue]="4">Svake 4 nedelje</option>
+              </select>
+              <span>{{ weekdayLabel() ? 'u ' + weekdayLabel() : '' }} {{ time.value ? 'u ' + time.value : '' }}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+              <label class="checkbox-field"><input type="radio" name="repeat-end" [checked]="repeatEnd() === 'count'" (change)="repeatEnd.set('count')" /> Broj termina</label>
+              @if (repeatEnd() === 'count') {
+                <input appInput class="!w-20" type="number" min="2" max="104" formControlName="count" data-testid="appointment-count" />
+              }
+              <label class="checkbox-field"><input type="radio" name="repeat-end" [checked]="repeatEnd() === 'date'" (change)="repeatEnd.set('date')" /> Do datuma</label>
+              @if (repeatEnd() === 'date') {
+                <input appInput class="!w-auto" type="date" formControlName="ends_on" />
+              }
+              <label class="checkbox-field"><input type="radio" name="repeat-end" [checked]="repeatEnd() === 'never'" (change)="repeatEnd.set('never')" data-testid="repeat-never" /> Bez kraja</label>
+            </div>
+            <span class="text-xs muted">Termini se prave 8 nedelja unapred i dopunjuju se svake noći. Zauzeti datumi se preskaču i prijavljuju.</span>
+          </div>
+        }
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="a-note">Napomena klijenta</label>
+          <input id="a-note" appInput size="m" formControlName="note" />
+        </div>
+        <div class="field">
+          <label for="a-admin-note">Interna napomena</label>
+          <input id="a-admin-note" appInput size="m" formControlName="admin_note" />
+        </div>
+      </div>
+    </form>
+
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="appointment-save">Zakaži</app-button>
+  </app-modal>
+}

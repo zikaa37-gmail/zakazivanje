@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt' => \App\Http\Middleware\JwtAuthenticate::class,
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'jwt.optional' => \App\Http\Middleware\OptionalJwt::class,
         ]);
 
         $middleware->api(append: [

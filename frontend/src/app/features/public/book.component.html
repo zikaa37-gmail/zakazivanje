@@ -1,0 +1,233 @@
+<div class="content-container py-4 max-w-2xl">
+  @if (booked(); as appointment) {
+    <div class="text-center py-8" data-testid="booking-success">
+      <span class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[var(--color-success-tint)] text-[var(--color-success)]">
+        <span appIcon="check" [iconSize]="40" aria-hidden="true"></span>
+      </span>
+      <h1 class="text-2xl font-bold mt-4">Termin je zakazan</h1>
+      <p class="muted">
+        {{ appointment.status === 'pending' ? 'Salon će potvrditi termin, a ti ćeš dobiti obaveštenje.' : 'Termin je potvrđen. Vidimo se!' }}
+      </p>
+      <div class="card text-left mt-4">
+        <div class="font-semibold">{{ bookedDate(appointment) }}</div>
+        <div class="text-sm muted">
+          @for (item of appointment.items; track item.id; let last = $last) { {{ item.name }}{{ last ? '' : ' + ' }} }
+          · {{ appointment.staff_member?.first_name }} {{ appointment.staff_member?.last_name }}
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <span class="badge" [class.badge-warning]="appointment.status === 'pending'" [class.badge-success]="appointment.status === 'confirmed'">
+            {{ appointment.status === 'pending' ? 'Na čekanju' : 'Potvrđen' }}
+          </span>
+          <span class="font-bold">{{ appointment.total | rsd }}</span>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 mt-4">
+        @if (auth.isAuthenticated()) {
+          <a routerLink="/my-appointments" appBtn size="l" data-testid="go-my-appointments">Moji termini</a>
+        } @else {
+          <p class="text-sm muted">Napravi nalog istim emailom da bi video i otkazivao svoje termine.</p>
+        }
+        <button type="button" appBtn theme="secondary" size="l" (click)="bookAnother()">Zakaži još jedan termin</button>
+      </div>
+    </div>
+  } @else {
+    <div class="flex items-center gap-2 mb-3">
+      <button type="button" class="btn-icon" aria-label="Nazad" (click)="back()" data-testid="book-back">
+        <span appIcon="arrow-left" [iconSize]="18" aria-hidden="true"></span>
+      </button>
+      <h1 class="text-xl font-bold">Zakazivanje</h1>
+    </div>
+
+    <div class="stepper" aria-hidden="true">
+      @for (label of steps; track label; let i = $index) {
+        <span [class.done]="i < draft().step" [class.current]="i === draft().step">{{ i + 1 }}. {{ label }}</span>
+      }
+    </div>
+
+    <app-error-message [message]="error()" data-testid="book-error" />
+
+    @switch (draft().step) {
+      @case (0) {
+        <h2 class="text-lg font-semibold mb-3">Izaberi uslugu</h2>
+        @if (servicesLoading() && services().length === 0) {
+        } @else {
+          <div class="flex flex-col gap-2">
+            @for (service of services(); track service.id) {
+              <button type="button" class="choice-card" [class.selected]="draft().serviceIds.includes(service.id)" (click)="toggleService(service.id)" [attr.data-testid]="'book-service-' + service.id">
+                <div class="min-w-0 flex-1">
+                  <div class="font-semibold">{{ service.name }}</div>
+                  <div class="text-sm muted">{{ service.duration_minutes | duration }}</div>
+                </div>
+                <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
+                <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>
+              </button>
+            }
+          </div>
+          <p class="text-xs muted mt-2">Možeš da izabereš i više usluga u istom terminu.</p>
+        }
+      }
+
+      @case (1) {
+        <h2 class="text-lg font-semibold mb-3">Kod koga?</h2>
+        <div class="flex flex-col gap-2">
+          @for (option of staffOptions(); track option.id) {
+            <button type="button" class="choice-card" [class.selected]="draft().staffChosen && draft().staffMemberId === option.id" (click)="chooseStaff(option.id)" [attr.data-testid]="'book-staff-' + (option.id ?? 'any')">
+              <span class="avatar avatar-initials">
+                @if (option.id === null) {
+                  <span appIcon="users" aria-hidden="true"></span>
+                } @else {
+                  {{ option.name[0] }}
+                }
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold">{{ option.name }}</div>
+                <div class="text-sm muted">{{ option.title }}</div>
+              </div>
+              <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>
+            </button>
+          }
+        </div>
+      }
+
+      @case (2) {
+        <h2 class="text-lg font-semibold mb-2">Izaberi termin</h2>
+        <div class="flex items-center justify-between mb-2">
+          <button type="button" class="btn-icon" aria-label="Prethodne dve nedelje" [disabled]="!canGoBack()" (click)="shiftWindow(-1)">
+            <span appIcon="arrow-left" aria-hidden="true"></span>
+          </button>
+          <span class="font-semibold text-sm">{{ windowLabel() }}</span>
+          <button type="button" class="btn-icon" aria-label="Sledeće dve nedelje" (click)="shiftWindow(1)">
+            <span appIcon="arrow-right" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="day-strip mb-4">
+          @for (day of days(); track day.date) {
+            <button type="button" class="day-pill" [class.selected]="day.date === draft().date" [disabled]="!day.available" (click)="chooseDay(day)" [attr.data-testid]="'book-day-' + day.date">
+              <small>{{ weekday(day.date) }}</small>
+              <strong>{{ dayOfMonth(day.date) }}</strong>
+            </button>
+          }
+        </div>
+
+        @if (!daysLoading() && noneAvailable()) {
+          <div class="card empty-state">Nema slobodnih termina u ove dve nedelje. Pogledaj sledeće.</div>
+        } @else if (draft().date) {
+          @if (slotsLoading() && slots().length === 0) {
+          } @else if (slots().length === 0) {
+            <div class="card empty-state">Za ovaj dan nema slobodnih termina.</div>
+          } @else {
+            @for (group of slotGroups(); track group.label) {
+              <div class="text-xs font-semibold muted mb-2 mt-3">{{ group.label }}</div>
+              <div class="slot-grid">
+                @for (slot of group.items; track slot.time) {
+                  <button type="button" class="slot" [class.selected]="slot.time === draft().time" (click)="chooseTime(slot.time)" [attr.data-testid]="'book-slot-' + slot.time">{{ slot.time }}</button>
+                }
+              </div>
+            }
+          }
+        }
+      }
+
+      @case (3) {
+        <h2 class="text-lg font-semibold mb-3">Proveri i potvrdi</h2>
+        <div class="card flex flex-col gap-3">
+          <div class="flex items-start gap-3">
+            <span class="avatar avatar-initials avatar-sm"><span appIcon="scissors" [iconSize]="14"></span></span>
+            <div>
+              @for (service of selectedServices(); track service.id) {
+                <div class="font-semibold">{{ service.name }}</div>
+              }
+              <div class="text-sm muted">{{ totalDuration() | duration }}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="avatar avatar-initials avatar-sm"><span appIcon="user" [iconSize]="14"></span></span>
+            <div class="font-semibold">{{ staffLabel() }}</div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="avatar avatar-initials avatar-sm"><span appIcon="calendar" [iconSize]="14"></span></span>
+            <div>
+              <div class="font-semibold">{{ dateLabel() }}</div>
+              <div class="text-sm muted">u {{ draft().time }}</div>
+            </div>
+          </div>
+          <hr class="border-[var(--color-border)]" />
+          @if (quote(); as q) {
+            @for (pkg of q.packages; track pkg.promotion_id) {
+              <div class="flex justify-between text-sm text-[var(--color-secondary)]"><span>{{ pkg.name }}</span><span>−{{ pkg.discount | rsd }}</span></div>
+            }
+            @for (line of q.lines; track line.service_id) {
+              @if (line.discount > 0) {
+                <div class="flex justify-between text-sm text-[var(--color-secondary)]"><span>{{ line.promotion_name }}</span><span>−{{ line.discount | rsd }}</span></div>
+              }
+            }
+            <div class="flex justify-between items-baseline">
+              <span class="muted">Cena</span>
+              <span>
+                @if (q.discount > 0) {
+                  <s class="muted text-sm mr-2">{{ q.subtotal | rsd }}</s>
+                }
+                <strong class="text-lg" data-testid="book-total">{{ q.total | rsd }}</strong>
+              </span>
+            </div>
+          } @else {
+            <div class="flex justify-between"><span class="muted">Cena</span><strong>{{ regularPrice() | rsd }}</strong></div>
+          }
+        </div>
+
+        @if (!auth.isAuthenticated()) {
+          <div class="chip-group mt-4" role="tablist">
+            <button type="button" class="chip" [class.selected]="!asGuest()" (click)="asGuest.set(false)">Imam nalog</button>
+            @if (business.settings()?.allow_guest_booking !== false) {
+              <button type="button" class="chip" [class.selected]="asGuest()" (click)="asGuest.set(true)" data-testid="book-as-guest">Nastavi kao gost</button>
+            }
+          </div>
+
+          @if (!asGuest() || business.settings()?.allow_guest_booking === false) {
+            <div class="card mt-3 text-center">
+              <p class="muted text-sm">Prijavi se — izbor termina ostaje sačuvan.</p>
+              <button type="button" appBtn class="w-full" (click)="loginToBook()" data-testid="book-login">Prijavi se</button>
+            </div>
+          } @else {
+            <form [formGroup]="guestForm" class="mt-3" novalidate>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="g-first">Ime <span class="required-mark">*</span></label>
+                  <input id="g-first" appInput size="m" formControlName="first_name" autocomplete="given-name" data-testid="guest-first-name" />
+                </div>
+                <div class="field">
+                  <label for="g-last">Prezime <span class="required-mark">*</span></label>
+                  <input id="g-last" appInput size="m" formControlName="last_name" autocomplete="family-name" data-testid="guest-last-name" />
+                </div>
+                <div class="field">
+                  <label for="g-phone">Telefon <span class="required-mark">*</span></label>
+                  <input id="g-phone" appInput size="m" type="tel" formControlName="phone" autocomplete="tel" data-testid="guest-phone" />
+                </div>
+                <div class="field">
+                  <label for="g-email">Email (za potvrdu)</label>
+                  <input id="g-email" appInput size="m" type="email" formControlName="email" autocomplete="email" />
+                </div>
+              </div>
+            </form>
+          }
+        }
+
+        @if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking !== false)) {
+          <div class="field mt-3">
+            <label for="b-note">Napomena (opciono)</label>
+            <textarea id="b-note" appInput size="m" rows="2" [value]="draft().note" (input)="setNote($event)" placeholder="npr. alergija na..."></textarea>
+          </div>
+        }
+      }
+    }
+
+    <div class="sticky-action">
+      <div class="text-xs muted mb-2 truncate">{{ summary() || 'Izaberi uslugu' }}</div>
+      @if (draft().step < 3) {
+        <button type="button" appBtn size="l" class="w-full" [disabled]="stepDisabled()" (click)="next()" data-testid="book-next">Dalje</button>
+      } @else if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking !== false)) {
+        <app-button size="l" [block]="true" [loading]="saving()" (click)="submit()" data-testid="book-submit">Zakaži termin</app-button>
+      }
+    </div>
+  }
+</div>

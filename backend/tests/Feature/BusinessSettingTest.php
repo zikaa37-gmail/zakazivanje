@@ -12,7 +12,7 @@ class BusinessSettingTest extends TestCase
 
     public function test_business_info_is_public(): void
     {
-        $this->getJson('/api/public/business')->assertOk()->assertJsonStructure(['name', 'category']);
+        $this->getJson('/api/public/business')->assertOk()->assertJsonStructure(['name', 'category', 'opening_hours' => [['weekday', 'opens_at', 'closes_at']]]);
     }
 
     public function test_only_admin_updates_business_settings(): void

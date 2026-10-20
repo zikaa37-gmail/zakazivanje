@@ -19,7 +19,10 @@
     @for (item of nav; track item.path) {
       <a class="shell-nav-item" [routerLink]="item.path" routerLinkActive="active" [attr.data-testid]="'nav-' + item.path.split('/').pop()">
         <span [appIcon]="item.icon" [iconSize]="18" aria-hidden="true"></span>
-        <span>{{ item.label }}</span>
+        <span class="flex-1">{{ item.label }}</span>
+        @if (item.path === '/admin/appointments' && appointments.pendingCount() > 0) {
+          <span class="badge badge-warning" data-testid="pending-badge">{{ appointments.pendingCount() }}</span>
+        }
       </a>
     }
   </nav>
@@ -40,6 +43,9 @@
     <span appIcon="menu" [iconSize]="22" aria-hidden="true"></span>
   </button>
   <span class="shell-brand-name truncate">{{ business.name() }}</span>
+  @if (appointments.pendingCount() > 0) {
+    <a routerLink="/admin/appointments" class="badge badge-warning">{{ appointments.pendingCount() }} na čekanju</a>
+  }
   <span class="avatar avatar-initials avatar-sm ml-auto">{{ initials() }}</span>
 </header>
 

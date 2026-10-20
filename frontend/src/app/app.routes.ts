@@ -1,16 +1,9 @@
-import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
-import { AuthService } from './core/services/auth.service';
 
 export const routes: Routes = [
-  {
-    path: '',
-    pathMatch: 'full',
-    redirectTo: () => inject(AuthService).homeUrl(),
-  },
   {
     path: 'login',
     title: 'Prijava',
@@ -18,17 +11,55 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
   },
   {
-    path: 'profile',
-    title: 'Profil',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/client/profile.component').then((m) => m.ProfileComponent),
+    path: 'register',
+    title: 'Registracija',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'verify-email',
+    title: 'Potvrda emaila',
+    loadComponent: () => import('./features/auth/verify-email.component').then((m) => m.VerifyEmailComponent),
+  },
+  {
+    path: '',
+    loadComponent: () => import('./layout/public-shell.component').then((m) => m.PublicShellComponent),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/public/home.component').then((m) => m.HomeComponent),
+      },
+      {
+        path: 'book',
+        title: 'Zakazivanje',
+        loadComponent: () => import('./features/public/book.component').then((m) => m.BookComponent),
+      },
+      {
+        path: 'my-appointments',
+        title: 'Moji termini',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/client/my-appointments.component').then((m) => m.MyAppointmentsComponent),
+      },
+      {
+        path: 'profile',
+        title: 'Profil',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/client/profile.component').then((m) => m.ProfileComponent),
+      },
+    ],
   },
   {
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./layout/admin-shell.component').then((m) => m.AdminShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'staff' },
+      { path: '', pathMatch: 'full', redirectTo: 'appointments' },
+      {
+        path: 'appointments',
+        title: 'Termini',
+        loadComponent: () => import('./features/admin/appointments/appointment-list.component').then((m) => m.AppointmentListComponent),
+      },
       {
         path: 'staff',
         title: 'Zaposleni',

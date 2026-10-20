@@ -9,6 +9,7 @@ import { extractPalette, isHexColor, readableTextOn } from '../../../core/utils/
 import { resizeImage } from '../../../core/utils/resize-image';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
@@ -25,7 +26,7 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
@@ -69,7 +70,22 @@ export class SettingsComponent {
     theme_secondary: this.fb.nonNullable.control(DEFAULT_COLORS.theme_secondary),
     theme_tertiary: this.fb.nonNullable.control(DEFAULT_COLORS.theme_tertiary),
     booking_confirmation: this.fb.nonNullable.control<ConfirmationMode>('manual'),
+    slot_interval_minutes: this.fb.nonNullable.control(15),
+    booking_lead_minutes: this.fb.nonNullable.control(60),
+    booking_horizon_days: this.fb.nonNullable.control(60),
+    cancellation_hours: this.fb.nonNullable.control(24),
+    allow_guest_booking: this.fb.nonNullable.control(true),
   });
+
+  readonly intervals = [5, 10, 15, 20, 30, 45, 60];
+  readonly leadOptions = [
+    { value: 0, label: 'Bez ograničenja' },
+    { value: 30, label: '30 minuta' },
+    { value: 60, label: '1 sat' },
+    { value: 120, label: '2 sata' },
+    { value: 240, label: '4 sata' },
+    { value: 1440, label: '1 dan' },
+  ];
 
   constructor() {
     this.business.load().subscribe({
@@ -207,6 +223,11 @@ export class SettingsComponent {
       theme_secondary: settings.theme_secondary ?? DEFAULT_COLORS.theme_secondary,
       theme_tertiary: settings.theme_tertiary ?? DEFAULT_COLORS.theme_tertiary,
       booking_confirmation: settings.booking_confirmation,
+      slot_interval_minutes: settings.slot_interval_minutes,
+      booking_lead_minutes: settings.booking_lead_minutes,
+      booking_horizon_days: settings.booking_horizon_days,
+      cancellation_hours: settings.cancellation_hours,
+      allow_guest_booking: settings.allow_guest_booking,
     });
   }
 

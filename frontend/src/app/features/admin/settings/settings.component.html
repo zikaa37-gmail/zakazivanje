@@ -155,6 +155,37 @@
       }
 
       @case ('booking') {
+        <div class="card max-w-2xl mb-4">
+          <h2 class="text-base font-semibold">Pravila online zakazivanja</h2>
+          <div class="form-grid mt-3">
+            <div class="field">
+              <label for="s-interval">Termini se nude na svakih</label>
+              <select id="s-interval" appInput size="m" formControlName="slot_interval_minutes">
+                @for (i of intervals; track i) {
+                  <option [ngValue]="i">{{ i }} min</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="s-lead">Najkasnije pre termina</label>
+              <select id="s-lead" appInput size="m" formControlName="booking_lead_minutes">
+                @for (o of leadOptions; track o.value) {
+                  <option [ngValue]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="s-horizon">Zakazivanje unapred (dana)</label>
+              <input id="s-horizon" appInput size="m" type="number" min="1" max="365" formControlName="booking_horizon_days" />
+            </div>
+            <div class="field">
+              <label for="s-cancel">Klijent otkazuje najkasnije (sati pre)</label>
+              <input id="s-cancel" appInput size="m" type="number" min="0" max="336" formControlName="cancellation_hours" />
+            </div>
+          </div>
+          <app-toggle [checked]="form.controls.allow_guest_booking.value" label="Gost može da zakaže bez naloga (ime + telefon)" (checkedChange)="form.controls.allow_guest_booking.setValue($event)" />
+        </div>
+
         <div class="card max-w-2xl">
           <h2 class="text-base font-semibold">Potvrda termina</h2>
           <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>

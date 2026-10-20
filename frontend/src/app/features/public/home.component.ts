@@ -1,0 +1,62 @@
+import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { PublicService } from '../../core/models/service.model';
+import { WEEKDAYS } from '../../core/models/staff.model';
+import { BookingService } from '../../core/services/booking.service';
+import { BusinessSettingService } from '../../core/services/business-setting.service';
+import { BookingDraftService } from './booking-draft.service';
+import { IconDirective } from '../../shared/directives/icon.directive';
+import { DurationPipe } from '../../shared/pipes/duration.pipe';
+import { RsdPipe } from '../../shared/pipes/rsd.pipe';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  imports: [RouterLink, DurationPipe, IconDirective, RsdPipe],
+  templateUrl: './home.component.html',
+})
+export class HomeComponent {
+  private booking = inject(BookingService);
+  private draft = inject(BookingDraftService);
+  protected business = inject(BusinessSettingService);
+
+  readonly loading = signal(true);
+  readonly services = signal<PublicService[]>([]);
+
+  readonly hours = computed(() =>
+    (this.business.settings()?.opening_hours ?? []).map((h) => ({
+      label: WEEKDAYS.find((w) => w.value === h.weekday)?.label ?? '',
+      value: h.opens_at && h.closes_at ? `${h.opens_at} – ${h.closes_at}` : 'zatvoreno',
+      closed: !h.opens_at,
+    })),
+  );
+
+  readonly phoneHref = computed(() => {
+    const phone = this.business.settings()?.phone;
+    return phone ? `tel:${phone.replace(/\s/g, '')}` : null;
+  });
+
+  readonly instagramHref = computed(() => {
+    const handle = this.business.settings()?.instagram?.trim();
+    if (!handle) return null;
+    return handle.startsWith('http') ? handle : `https://instagram.com/${handle.replace(/^@/, '')}`;
+  });
+
+  constructor() {
+    this.booking.services().subscribe({
+      next: (services) => {
+        this.services.set(services);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  startWith(service: PublicService): void {
+    this.draft.start([service.id]);
+  }
+
+  startEmpty(): void {
+    this.draft.start([]);
+  }
+}

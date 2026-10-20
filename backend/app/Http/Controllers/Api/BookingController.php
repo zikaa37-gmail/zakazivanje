@@ -1,0 +1,145 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Appointment;
+use App\Models\BusinessSetting;
+use App\Models\User;
+use App\Services\AvailabilityService;
+use App\Services\BookingService;
+use App\Services\PriceQuoteService;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+
+class BookingController extends Controller
+{
+    public function __construct(
+        private AvailabilityService $availability,
+        private BookingService $bookings,
+    ) {}
+
+    public function slots(Request $request)
+    {
+        $data = $request->validate([
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['integer', 'distinct'],
+            'staff_member_id' => ['nullable', 'integer'],
+            'date' => ['required', 'date_format:Y-m-d'],
+        ]);
+
+        return $this->availability->slots(
+            $this->availability->servicesInOrder($data['service_ids']),
+            $data['staff_member_id'] ?? null,
+            CarbonImmutable::parse($data['date']),
+        );
+    }
+
+    public function days(Request $request)
+    {
+        $data = $request->validate([
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['integer', 'distinct'],
+            'staff_member_id' => ['nullable', 'integer'],
+            'from' => ['required', 'date_format:Y-m-d'],
+            'days' => ['nullable', 'integer', 'min:1', 'max:31'],
+        ]);
+
+        return $this->availability->days(
+            $this->availability->servicesInOrder($data['service_ids']),
+            $data['staff_member_id'] ?? null,
+            CarbonImmutable::parse($data['from']),
+            $data['days'] ?? 14,
+        );
+    }
+
+    public function quote(Request $request)
+    {
+        $data = $request->validate([
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['integer', 'distinct'],
+            'date' => ['nullable', 'date_format:Y-m-d'],
+        ]);
+
+        $services = $this->availability->servicesInOrder($data['service_ids']);
+        $date = isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today();
+
+        return $request->user()
+            ? $this->bookings->quoteFor($request->user(), $services, $date)
+            : app(PriceQuoteService::class)->quote($services, $date);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'service_ids' => ['required', 'array', 'min:1'],
+            'service_ids.*' => ['integer', 'distinct', 'exists:services,id'],
+            'staff_member_id' => ['nullable', 'integer', 'exists:staff_members,id'],
+            'starts_at' => ['required', 'date_format:Y-m-d H:i'],
+            'note' => ['nullable', 'string', 'max:500'],
+            'guest' => [$request->user() ? 'prohibited' : 'required', 'array'],
+            'guest.first_name' => ['required_with:guest', 'string', 'min:2', 'max:100'],
+            'guest.last_name' => ['required_with:guest', 'string', 'min:1', 'max:100'],
+            'guest.phone' => ['required_with:guest', 'string', 'max:30', 'regex:/^[\d\s+\-()]+$/'],
+            'guest.email' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $client = $request->user() ?? $this->guestClient($data['guest']);
+
+        if ($client->isAdmin()) {
+            throw ValidationException::withMessages(['guest' => ['Admin zakazuje kroz stranicu Termini.']]);
+        }
+
+        $appointment = $this->bookings->book(
+            $client,
+            $this->availability->servicesInOrder($data['service_ids']),
+            $data['staff_member_id'] ?? null,
+            CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']),
+            Appointment::SOURCE_ONLINE,
+            $data['note'] ?? null,
+        );
+
+        return response()->json($appointment, 201);
+    }
+
+    private function guestClient(array $guest): User
+    {
+        if (! BusinessSetting::current()->allow_guest_booking) {
+            throw ValidationException::withMessages(['guest' => ['Za zakazivanje je potreban nalog — prijavi se ili se registruj.']]);
+        }
+
+        $email = $guest['email'] ?? null;
+        $digits = preg_replace('/\D/', '', $guest['phone']);
+
+        if ($email) {
+            $byEmail = User::where('email', $email)->first();
+            if ($byEmail && $byEmail->password !== null) {
+                throw ValidationException::withMessages(['guest.email' => ['Za ovaj email već postoji nalog — prijavi se da zakažeš.']]);
+            }
+            if ($byEmail) {
+                return $byEmail;
+            }
+        }
+
+        $byPhone = User::query()
+            ->where('role', User::ROLE_CLIENT)
+            ->whereNull('password')
+            ->whereNotNull('phone')
+            ->get(['id', 'phone'])
+            ->first(fn (User $u) => preg_replace('/\D/', '', $u->phone) === $digits);
+
+        if ($byPhone) {
+            return User::find($byPhone->id);
+        }
+
+        return User::create([
+            'first_name' => $guest['first_name'],
+            'last_name' => $guest['last_name'],
+            'phone' => $guest['phone'],
+            'email' => $email,
+            'role' => User::ROLE_CLIENT,
+            'preferred_communication' => $email ? 'email' : 'whatsapp',
+        ]);
+    }
+}

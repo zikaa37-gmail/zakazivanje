@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { COMMUNICATION_OPTIONS, CommunicationChannel } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
-import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -21,7 +20,6 @@ export class ProfileComponent {
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
   protected auth = inject(AuthService);
-  protected business = inject(BusinessSettingService);
 
   readonly communication = COMMUNICATION_OPTIONS;
   readonly saving = signal(false);

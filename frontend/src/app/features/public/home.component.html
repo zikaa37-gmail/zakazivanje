@@ -1,0 +1,55 @@
+<div class="content-container py-4 md:py-8 flex flex-col gap-6 max-w-3xl">
+  <section class="hero">
+    <p class="hero-kicker">Zakaži termin za</p>
+    <h1 class="hero-title">manje od minut</h1>
+    <p class="hero-text">{{ business.settings()?.description || 'Bez poziva, i van radnog vremena.' }}</p>
+    <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold mb-2">Usluge</h2>
+    @if (loading() && services().length === 0) {
+    } @else if (services().length === 0) {
+      <div class="card empty-state">Usluge još nisu unete.</div>
+    } @else {
+      <div class="card !p-0 overflow-hidden">
+        @for (service of services(); track service.id) {
+          <a routerLink="/book" (click)="startWith(service)" class="service-row" [attr.data-testid]="'home-service-' + service.id">
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-[var(--color-text)]">{{ service.name }}</div>
+              <div class="text-sm muted flex items-center gap-1">
+                <span appIcon="clock" [iconSize]="13" aria-hidden="true"></span> {{ service.duration_minutes | duration }}
+              </div>
+            </div>
+            <div class="font-semibold text-[var(--color-text)] whitespace-nowrap">{{ service.price | rsd }}</div>
+            <span appIcon="arrow-right" class="muted" aria-hidden="true"></span>
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  <section>
+    <h2 class="text-lg font-semibold mb-2">Radno vreme i kontakt</h2>
+    <div class="card">
+      @for (row of hours(); track row.label) {
+        <div class="flex justify-between py-1 text-sm">
+          <span class="muted">{{ row.label }}</span>
+          <span class="font-semibold" [class.muted]="row.closed">{{ row.value }}</span>
+        </div>
+      }
+      <hr class="my-3 border-[var(--color-border)]" />
+      <div class="flex flex-col gap-2 text-sm">
+        @if (business.settings()?.address) {
+          <span class="flex items-center gap-2"><span appIcon="home" class="text-[var(--color-primary)]" aria-hidden="true"></span>{{ business.settings()?.address }}{{ business.settings()?.city ? ', ' + business.settings()?.city : '' }}</span>
+        }
+        @if (phoneHref()) {
+          <a [href]="phoneHref()" class="flex items-center gap-2"><span appIcon="phone" aria-hidden="true"></span>{{ business.settings()?.phone }}</a>
+        }
+        @if (instagramHref()) {
+          <a [href]="instagramHref()" target="_blank" rel="noopener" class="flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span>{{ business.settings()?.instagram }}</a>
+        }
+      </div>
+    </div>
+  </section>
+</div>

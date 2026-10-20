@@ -1,18 +1,29 @@
 <?php
 
+use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BlockedTimeController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\StaffMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
-Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:60,1');
-Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:60,1');
+Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:public');
+Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
 
-Route::middleware('throttle:10,1')->group(function () {
+Route::middleware(['jwt.optional', 'throttle:public'])->group(function () {
+    Route::post('/availability/slots', [BookingController::class, 'slots']);
+    Route::post('/availability/days', [BookingController::class, 'days']);
+    Route::post('/bookings/quote', [BookingController::class, 'quote']);
+});
+Route::post('/bookings', [BookingController::class, 'store'])->middleware(['jwt.optional', 'throttle:booking']);
+
+Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
@@ -28,6 +39,9 @@ Route::middleware('jwt')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
+
+    Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
+    Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
 });
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {
@@ -53,4 +67,15 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/clients', [ClientController::class, 'store']);
     Route::put('/clients/{client}', [ClientController::class, 'update']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
+
+    Route::post('/appointments/list', [AppointmentController::class, 'index']);
+    Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
+    Route::post('/appointments', [AppointmentController::class, 'store']);
+    Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+    Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+    Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
+
+    Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
+    Route::post('/blocked-times', [BlockedTimeController::class, 'store']);
+    Route::delete('/blocked-times/{blockedTime}', [BlockedTimeController::class, 'destroy']);
 });

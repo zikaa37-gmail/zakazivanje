@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation'])]
+#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'cancellation_hours', 'allow_guest_booking'])]
 class BusinessSetting extends Model
 {
     public const CATEGORIES = [
@@ -18,6 +18,17 @@ class BusinessSetting extends Model
     public const CONFIRMATION_AUTOMATIC = 'automatic';
 
     public const CONFIRMATION_MODES = [self::CONFIRMATION_MANUAL, self::CONFIRMATION_AUTOMATIC];
+
+    protected function casts(): array
+    {
+        return [
+            'slot_interval_minutes' => 'integer',
+            'booking_lead_minutes' => 'integer',
+            'booking_horizon_days' => 'integer',
+            'cancellation_hours' => 'integer',
+            'allow_guest_booking' => 'boolean',
+        ];
+    }
 
     public static function current(): self
     {
