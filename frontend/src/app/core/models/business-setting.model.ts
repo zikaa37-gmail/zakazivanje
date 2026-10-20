@@ -38,6 +38,11 @@ export interface BusinessSetting {
   booking_horizon_days: number;
   cancellation_hours: number;
   allow_guest_booking: boolean;
+  notify_booking_received: boolean;
+  notify_booking_confirmed: boolean;
+  notify_booking_cancelled: boolean;
+  reminder_hours: number;
+  notify_admin_new_booking: boolean;
   opening_hours?: { weekday: number; opens_at: string | null; closes_at: string | null }[];
 }
 

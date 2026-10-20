@@ -34,9 +34,14 @@ CREATE TABLE `zk_business_settings` (
   `booking_horizon_days` smallint unsigned NOT NULL DEFAULT '60',
   `cancellation_hours` smallint unsigned NOT NULL DEFAULT '24',
   `allow_guest_booking` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_booking_received` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_booking_confirmed` tinyint(1) NOT NULL DEFAULT '1',
+  `notify_booking_cancelled` tinyint(1) NOT NULL DEFAULT '1',
+  `reminder_hours` smallint unsigned NOT NULL DEFAULT '24',
+  `notify_admin_new_booking` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_business_settings` VALUES (1,'Salon Lepota','beauty_salon','Salon u centru grada, radimo od 2015.','Glavna 1','Beograd','+381 60 123 4567',NULL,'zakazivanje@fiskultura.rs',NULL,NULL,NULL,NULL,NULL,'#0f766e','#b45309','#7c3aed','manual','2026-10-20 10:02:54','2026-10-20 10:02:56',15,60,60,24,1);
+INSERT INTO `zk_business_settings` VALUES (1,'Salon Lepota','beauty_salon','Salon u centru grada, radimo od 2015.','Glavna 1','Beograd','+381 60 123 4567',NULL,'zakazivanje@fiskultura.rs',NULL,NULL,NULL,NULL,NULL,'#0f766e','#b45309','#7c3aed','manual','2026-10-20 13:03:05','2026-10-20 13:03:07',15,60,60,24,1,1,1,1,24,1);
 
 SET FOREIGN_KEY_CHECKS=1;

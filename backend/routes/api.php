@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\MyAppointmentController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\StaffMemberController;
@@ -74,6 +75,9 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
+
+    Route::post('/notification-logs/list', [NotificationController::class, 'logs']);
+    Route::post('/notifications/test', [NotificationController::class, 'test'])->middleware('throttle:booking');
 
     Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
     Route::post('/blocked-times', [BlockedTimeController::class, 'store']);

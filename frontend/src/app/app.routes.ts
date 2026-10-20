@@ -17,6 +17,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register.component').then((m) => m.RegisterComponent),
   },
   {
+    path: 'forgot-password',
+    title: 'Zaboravljena lozinka',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+  },
+  {
+    path: 'reset-password',
+    title: 'Nova lozinka',
+    loadComponent: () => import('./features/auth/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+  {
     path: 'verify-email',
     title: 'Potvrda emaila',
     loadComponent: () => import('./features/auth/verify-email.component').then((m) => m.VerifyEmailComponent),

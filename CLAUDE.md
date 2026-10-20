@@ -115,8 +115,17 @@ za klijenta bez lozinke), pravila u Podešavanjima (`slot_interval_minutes`, `bo
 (`PublicShellComponent`, donja navigacija na telefonu) sa početnom, `/book` (4 koraka, stanje u
 `BookingDraftService` / sessionStorage — preživi odlazak na prijavu), `/my-appointments`,
 `/register`, `/verify-email`; admin `/admin/appointments` (filteri, statusi, novi termin sa
-ponavljanjem, broj termina na čekanju u meniju). Sledeće: kalendar (#18, uključuje UI za
-`blocked_times`), obaveštenja (#19), zaboravljena lozinka (backend postoji).
+ponavljanjem, broj termina na čekanju u meniju). Obaveštenja (#19): `AppointmentNotifier` (jedino
+mesto koje odlučuje šta se šalje — poziva se iz kontrolera, ne iz `BookingService`), `AppointmentNotification`
+(primljen / potvrđen / otkazan / podsetnik, `.ics` prilog) i `AdminAppointmentNotification` (novi online
+termin, klijent otkazao), kanali po `User::notificationChannels()` (izbor klijenta, pa drugi kanal ako
+izabranog nema), WhatsApp preko Twilio-a (`WhatsAppChannel`, bez ključeva → „preskočeno"), sve se
+beleži u `notification_logs` (mejl preko `NotificationSent` / `NotificationFailed`), podsetnici
+`appointments:send-reminders` (na 15 min; ne šalje se za termine zakazane unutar prozora), uključivanje
+po vrsti i vreme podsetnika u Podešavanjima → Obaveštenja; ponavljanje šalje jednu poruku za ceo niz.
+Obaveštenja idu kroz red (`ShouldQueue`, `afterCommit`); lokalno je `QUEUE_CONNECTION=sync` i
+`MAIL_MAILER=log` (mejlovi u `backend/storage/logs/laravel.log`). Frontend: `/forgot-password`,
+`/reset-password`. Sledeće: kalendar (#18, uključuje UI za `blocked_times`).
 
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

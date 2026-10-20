@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
+use App\Services\WhatsAppService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -46,6 +47,25 @@ class User extends Authenticatable
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'client_id');
+    }
+
+    public function notificationChannels(array $map): array
+    {
+        $hasEmail = filled($this->email);
+        $hasPhone = WhatsAppService::normalizePhone($this->whatsapp_number ?: $this->phone) !== null;
+        $preference = $this->preferred_communication ?? 'email';
+        $wantsEmail = in_array($preference, ['email', 'both'], true);
+        $wantsWhatsApp = in_array($preference, ['whatsapp', 'both'], true);
+
+        $channels = [];
+        if ($hasEmail && ($wantsEmail || ! $hasPhone)) {
+            $channels[] = $map['mail'];
+        }
+        if ($hasPhone && ($wantsWhatsApp || ! $hasEmail)) {
+            $channels[] = $map['whatsapp'];
+        }
+
+        return $channels;
     }
 
     public function isAdmin(): bool

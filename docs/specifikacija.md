@@ -28,7 +28,7 @@ drugi biznis.
 | Zaposleni (usluge koje radi, radno vreme) | #16 | gotovo |
 | Zakazivanje termina (slobodni termini, potvrda, ponavljanje) | #17 | gotovo |
 | Kalendar termina (admin dnevni / nedeljni prikaz) | #18 | — |
-| Obaveštenja mejlom (potvrda, podsetnik, otkazivanje) | #19 | — |
+| Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Recenzije | #21 | kasnije |
 | Pregled / statistika za admina | #23 | kasnije |
 | Slike (logo, galerija) | #24 | kasnije |
