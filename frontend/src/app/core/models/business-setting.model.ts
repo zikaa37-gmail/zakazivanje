@@ -33,6 +33,12 @@ export interface BusinessSetting {
   theme_secondary: string | null;
   theme_tertiary: string | null;
   booking_confirmation: ConfirmationMode;
+  slot_interval_minutes: number;
+  booking_lead_minutes: number;
+  booking_horizon_days: number;
+  cancellation_hours: number;
+  allow_guest_booking: boolean;
+  opening_hours?: { weekday: number; opens_at: string | null; closes_at: string | null }[];
 }
 
 export const CONFIRMATION_OPTIONS: { value: ConfirmationMode; label: string; hint: string }[] = [

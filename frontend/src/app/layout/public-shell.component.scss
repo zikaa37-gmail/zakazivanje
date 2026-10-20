@@ -1,0 +1,127 @@
+@use 'themes/breakpoints' as bp;
+
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+.public-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: var(--header-height);
+  padding: 0 1rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.public-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  margin-right: auto;
+  color: var(--color-text);
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.public-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.public-logo-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.public-name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-desktop-nav {
+  display: none;
+  gap: 0.25rem;
+
+  a {
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius);
+    color: var(--color-text);
+    font-weight: 600;
+    font-size: 0.9rem;
+
+    &.active {
+      background: var(--color-primary-tint);
+      color: var(--color-primary);
+    }
+  }
+}
+
+.public-avatar {
+  flex-shrink: 0;
+}
+
+.public-main {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+.public-bottom-nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 30;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+
+  a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.55rem 0 0.6rem;
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+
+    &.active {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+@include bp.md-up {
+  .public-desktop-nav {
+    display: flex;
+  }
+
+  .public-login {
+    display: none;
+  }
+
+  .public-bottom-nav {
+    display: none;
+  }
+
+  .public-main {
+    padding-bottom: 2rem;
+  }
+}

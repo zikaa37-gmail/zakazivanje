@@ -23,10 +23,10 @@ drugi biznis.
 | Celina | Issue | Status |
 | --- | --- | --- |
 | Auth (registracija, potvrda mejla, reset lozinke, profil) | PR #1 | gotovo (prebačeno na Laravel) |
-| Podešavanja biznisa | — | backend gotov |
-| Usluge (CRUD: naziv, trajanje, cena) | #15 | — |
-| Zaposleni (usluge koje radi, radno vreme) | #16 | — |
-| Zakazivanje termina (slobodni termini, potvrda) | #17 | — |
+| Podešavanja biznisa (podaci, logo, tema, pravila zakazivanja) | — | gotovo |
+| Usluge (CRUD: naziv, trajanje, cena) | #15 | gotovo |
+| Zaposleni (usluge koje radi, radno vreme) | #16 | gotovo |
+| Zakazivanje termina (slobodni termini, potvrda, ponavljanje) | #17 | gotovo |
 | Kalendar termina (admin dnevni / nedeljni prikaz) | #18 | — |
 | Obaveštenja mejlom (potvrda, podsetnik, otkazivanje) | #19 | — |
 | Recenzije | #21 | kasnije |

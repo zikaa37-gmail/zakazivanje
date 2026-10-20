@@ -43,6 +43,11 @@ class User extends Authenticatable
         return $this->hasMany(RefreshToken::class);
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'client_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;

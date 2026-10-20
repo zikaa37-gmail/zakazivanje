@@ -28,7 +28,7 @@ export class BusinessSettingService {
   }
 
   private store(settings: BusinessSetting): void {
-    this.settings.set(settings);
+    this.settings.update((previous) => ({ ...settings, opening_hours: settings.opening_hours ?? previous?.opening_hours }));
     this.theme.applyBrand({
       primary: settings.theme_primary,
       secondary: settings.theme_secondary,

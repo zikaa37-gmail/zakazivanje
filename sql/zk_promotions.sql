@@ -29,6 +29,6 @@ CREATE TABLE `zk_promotions` (
   KEY `zk_promotions_type_index` (`type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_promotions` VALUES (1,'Šišanje + feniranje','package',NULL,NULL,NULL,3200.00,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(2,'Srećni utorak −15%','discount_percent',NULL,15.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[2]',1,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(3,'Muško šišanje 2+1','bundle',NULL,NULL,NULL,NULL,2,1,NULL,NULL,NULL,NULL,1,'2026-10-20 08:15:58','2026-10-20 08:15:58'),(4,'Svaka 10. poseta −50%','loyalty',NULL,50.00,NULL,NULL,NULL,NULL,10,NULL,NULL,NULL,1,'2026-10-20 08:15:58','2026-10-20 08:15:58');
+INSERT INTO `zk_promotions` VALUES (1,'Šišanje + feniranje','package',NULL,NULL,NULL,3200.00,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(2,'Srećni utorak −15%','discount_percent',NULL,15.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[2]',1,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(3,'Muško šišanje 2+1','bundle',NULL,NULL,NULL,NULL,2,1,NULL,NULL,NULL,NULL,1,'2026-10-20 10:02:56','2026-10-20 10:02:56'),(4,'Svaka 10. poseta −50%','loyalty',NULL,50.00,NULL,NULL,NULL,NULL,10,NULL,NULL,NULL,1,'2026-10-20 10:02:56','2026-10-20 10:02:56');
 
 SET FOREIGN_KEY_CHECKS=1;

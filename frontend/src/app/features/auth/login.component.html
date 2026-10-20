@@ -29,7 +29,8 @@
       <app-button type="submit" size="l" [block]="true" [loading]="loading()" data-testid="login-submit">Prijavi se</app-button>
     </form>
 
-    <a class="auth-link" routerLink="/forgot-password">Zaboravljena lozinka?</a>
+    <a class="auth-link" routerLink="/register" data-testid="login-register">Nemaš nalog? Registruj se</a>
+    <a class="auth-link !mt-1" routerLink="/">Nazad na početnu</a>
 
     @if (devLogins.length) {
       <div class="dev-logins" data-testid="dev-logins">

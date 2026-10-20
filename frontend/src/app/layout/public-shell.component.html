@@ -1,0 +1,38 @@
+<header class="public-topbar">
+  <a routerLink="/" class="public-brand">
+    @if (business.logo()) {
+      <img class="public-logo" [src]="business.logo()" alt="" />
+    } @else {
+      <span class="public-logo public-logo-placeholder"><span appIcon="scissors" [iconSize]="18"></span></span>
+    }
+    <span class="public-name">{{ business.name() }}</span>
+  </a>
+
+  <nav class="public-desktop-nav" aria-label="Glavni meni">
+    @for (item of nav(); track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }">{{ item.label }}</a>
+    }
+    @if (auth.isAdmin()) {
+      <a routerLink="/admin">Admin</a>
+    }
+  </nav>
+
+  @if (auth.isAuthenticated()) {
+    <a routerLink="/profile" class="avatar avatar-initials avatar-sm public-avatar" aria-label="Profil">{{ initials() }}</a>
+  } @else {
+    <a routerLink="/login" class="btn btn-secondary btn-s public-login" data-testid="header-login">Prijava</a>
+  }
+</header>
+
+<main class="public-main">
+  <router-outlet />
+</main>
+
+<nav class="public-bottom-nav" aria-label="Meni">
+  @for (item of nav(); track item.path) {
+    <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }" [attr.data-testid]="'bottom-nav-' + item.label">
+      <span [appIcon]="item.icon" [iconSize]="20" aria-hidden="true"></span>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>

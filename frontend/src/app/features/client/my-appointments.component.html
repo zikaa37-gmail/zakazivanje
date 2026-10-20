@@ -1,0 +1,60 @@
+<div class="content-container py-4 max-w-2xl">
+  <div class="page-header">
+    <h1 class="page-title">Moji termini</h1>
+    <a routerLink="/book" appBtn size="s" data-testid="my-book-new"><span appIcon="plus" aria-hidden="true"></span> Zakaži</a>
+  </div>
+
+  <div class="chip-group mb-4" role="tablist">
+    <button type="button" class="chip" [class.selected]="scope() === 'upcoming'" (click)="setScope('upcoming')">Predstojeći</button>
+    <button type="button" class="chip" [class.selected]="scope() === 'past'" (click)="setScope('past')" data-testid="my-past">Prošli i otkazani</button>
+  </div>
+
+  <app-error-message [message]="error()" />
+
+  @if (loading() && appointments().length === 0) {
+  } @else if (appointments().length === 0) {
+    <div class="card empty-state">
+      {{ scope() === 'upcoming' ? 'Nemaš zakazanih termina.' : 'Još nema prošlih termina.' }}
+      @if (scope() === 'upcoming') {
+        <div class="mt-3"><a routerLink="/book" appBtn>Zakaži termin</a></div>
+      }
+    </div>
+  } @else {
+    <div class="flex flex-col gap-3">
+      @for (a of appointments(); track a.id) {
+        <div class="card" [attr.data-testid]="'my-appointment-' + a.id">
+          <div class="flex gap-3">
+            <div class="date-badge">
+              <small>{{ weekday(a) }}</small>
+              <strong>{{ day(a) }}</strong>
+              <small>{{ month(a) }}</small>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold">{{ serviceNames(a) }}</div>
+              <div class="text-sm muted">{{ time(a) }} · {{ a.staff_member?.first_name }} {{ a.staff_member?.last_name }}</div>
+              <span class="badge mt-1" [class]="'badge mt-1 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between border-t border-[var(--color-border)] mt-3 pt-3">
+            @if (a.can_cancel) {
+              <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži termin</button>
+            } @else {
+              <span></span>
+            }
+            <span class="font-semibold">
+              @if (a.discount > 0) {
+                <s class="muted text-sm font-normal mr-1">{{ a.price | rsd }}</s>
+              }
+              {{ a.total | rsd }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+    @if (scope() === 'upcoming') {
+      <div class="card mt-3 text-sm bg-[var(--color-info-tint)] text-[var(--color-info)] border-0">
+        Otkazivanje je moguće najkasnije {{ cancellationHours() }} h pre termina. Posle toga pozovi salon.
+      </div>
+    }
+  }
+</div>

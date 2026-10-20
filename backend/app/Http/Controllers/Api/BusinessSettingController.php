@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
+use App\Models\StaffWorkingHour;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -13,7 +14,18 @@ class BusinessSettingController extends Controller
 
     public function show()
     {
-        return BusinessSetting::current();
+        $hours = StaffWorkingHour::query()
+            ->whereHas('staffMember', fn ($q) => $q->where('active', true))
+            ->get()
+            ->groupBy('weekday');
+
+        $openingHours = collect(range(1, 7))->map(fn ($day) => [
+            'weekday' => $day,
+            'opens_at' => $hours->get($day)?->min('starts_at'),
+            'closes_at' => $hours->get($day)?->max('ends_at'),
+        ]);
+
+        return [...BusinessSetting::current()->toArray(), 'opening_hours' => $openingHours];
     }
 
     public function update(Request $request)
@@ -36,6 +48,11 @@ class BusinessSettingController extends Controller
             'theme_secondary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'theme_tertiary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'booking_confirmation' => ['required', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
+            'slot_interval_minutes' => ['sometimes', 'integer', Rule::in([5, 10, 15, 20, 30, 45, 60])],
+            'booking_lead_minutes' => ['sometimes', 'integer', 'min:0', 'max:10080'],
+            'booking_horizon_days' => ['sometimes', 'integer', 'min:1', 'max:365'],
+            'cancellation_hours' => ['sometimes', 'integer', 'min:0', 'max:336'],
+            'allow_guest_booking' => ['sometimes', 'boolean'],
         ]);
 
         $settings = BusinessSetting::current();
