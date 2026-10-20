@@ -1,7 +1,7 @@
 # Predlog frontend stranica
 
 Mobile-first, isti vizuelni sistem kao `kosarkaska-evidencija` (Tailwind tokeni, `.card`, `appBtn`,
-`<app-modal>`), primarna boja teal. Status: **čeka potvrdu**.
+`<app-modal>`), primarna boja teal. Status: **čeka potvrdu**. Nacrti: [`docs/figma/`](figma/README.md).
 
 ## Javno (bez prijave)
 
