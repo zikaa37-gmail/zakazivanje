@@ -36,7 +36,8 @@ export interface BusinessSetting {
   slot_interval_minutes: number;
   booking_lead_minutes: number;
   booking_horizon_days: number;
-  cancellation_hours: number;
+  booking_min_days_ahead: number;
+  cancellation_days_before: number;
   allow_guest_booking: boolean;
   notify_booking_received: boolean;
   notify_booking_confirmed: boolean;

@@ -39,7 +39,7 @@ class AvailabilityService
             return [];
         }
 
-        $earliest = CarbonImmutable::now()->addMinutes($settings->booking_lead_minutes);
+        $earliest = $settings->earliestOnlineStart();
         $duration = $this->duration($services);
         $slots = [];
 

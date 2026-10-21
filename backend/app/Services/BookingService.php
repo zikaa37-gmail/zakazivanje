@@ -114,8 +114,10 @@ class BookingService
     {
         $settings = BusinessSetting::current();
 
-        if ($start->lt(CarbonImmutable::now()->addMinutes($settings->booking_lead_minutes))) {
-            throw ValidationException::withMessages(['starts_at' => ['Termin je previše blizu — izaberi kasnije vreme.']]);
+        if ($start->lt($settings->earliestOnlineStart())) {
+            throw ValidationException::withMessages(['starts_at' => [$settings->booking_min_days_ahead > 0
+                ? ($settings->booking_min_days_ahead === 1 ? 'Online se zakazuje najranije za sutra.' : "Online se zakazuje najranije {$settings->booking_min_days_ahead} dana unapred.")
+                : 'Termin je previše blizu — izaberi kasnije vreme.']]);
         }
 
         if ($start->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days)->endOfDay())) {
