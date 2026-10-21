@@ -17,7 +17,7 @@
   <div class="grid gap-3 md:grid-cols-2">
     @for (p of promotions(); track p.id) {
       <div class="card flex gap-3" [class.opacity-60]="!p.active" [attr.data-testid]="'promotion-' + p.id">
-        <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-[var(--color-secondary-tint)] text-[var(--color-secondary)]">
+        <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-[var(--color-secondary-tint)] text-[var(--color-secondary-text)]">
           <span [appIcon]="icon(p.type)" [iconSize]="20" aria-hidden="true"></span>
         </span>
         <div class="min-w-0 flex-1">
@@ -25,7 +25,7 @@
             <div class="font-semibold flex-1">{{ p.name }}</div>
             <app-row-actions [actions]="rowActions" (selected)="onAction(p, $event)" />
           </div>
-          <div class="text-lg font-bold text-[var(--color-secondary)]">{{ summary(p) }}</div>
+          <div class="text-lg font-bold text-[var(--color-secondary-text)]">{{ summary(p) }}</div>
           <div class="text-sm muted">{{ scope(p) }}</div>
           <div class="flex flex-wrap gap-2 mt-2">
             <span class="badge badge-neutral">{{ typeLabel(p.type) }}</span>

@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { isHexColor, mix, readableTextOn } from '../utils/color';
+import { isHexColor, mix, readableAccent, readableTextOn } from '../utils/color';
 
 export type AppTheme = 'light' | 'dark';
 
@@ -44,7 +44,7 @@ export class ThemeService {
 
     for (const token of TOKENS) {
       const base = this.brand[token];
-      const names = ['', '-dark', '-active', '-tint'].map((suffix) => `--color-${token}${suffix}`).concat(`--color-on-${token}`);
+      const names = ['', '-dark', '-active', '-tint', '-text'].map((suffix) => `--color-${token}${suffix}`).concat(`--color-on-${token}`);
 
       if (!isHexColor(base)) {
         names.forEach((name) => style.removeProperty(name));
@@ -53,11 +53,16 @@ export class ThemeService {
 
       const color = dark ? mix(base, '#ffffff', 0.25) : base;
       const toward = dark ? '#ffffff' : '#000000';
+      const hover = mix(color, toward, 0.18);
+      const active = mix(color, toward, 0.32);
       style.setProperty(`--color-${token}`, color);
-      style.setProperty(`--color-${token}-dark`, mix(color, toward, 0.18));
-      style.setProperty(`--color-${token}-active`, mix(color, toward, 0.32));
-      style.setProperty(`--color-${token}-tint`, dark ? mix(base, '#000000', 0.7) : mix(base, '#ffffff', 0.85));
-      style.setProperty(`--color-on-${token}`, readableTextOn(color));
+      style.setProperty(`--color-${token}-dark`, hover);
+      style.setProperty(`--color-${token}-active`, active);
+      const tint = dark ? mix(base, '#000000', 0.7) : mix(base, '#ffffff', 0.85);
+      const surfaces = dark ? ['#292524', '#1c1917', tint] : ['#ffffff', '#f5f5f4', tint];
+      style.setProperty(`--color-${token}-tint`, tint);
+      style.setProperty(`--color-${token}-text`, readableAccent(color, surfaces, dark ? '#ffffff' : '#000000'));
+      style.setProperty(`--color-on-${token}`, readableTextOn(color, hover, active));
     }
   }
 

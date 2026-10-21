@@ -23,8 +23,23 @@ export function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-export function readableTextOn(hex: string): string {
-  return luminance(hex) > 0.45 ? '#1c1917' : '#ffffff';
+export function contrastRatio(a: string, b: string): number {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+export function readableAccent(color: string, backgrounds: string[], toward: string, target = 4.5): string {
+  for (let amount = 0; amount <= 0.95; amount += 0.05) {
+    const candidate = mix(color, toward, amount);
+    if (backgrounds.every((bg) => contrastRatio(candidate, bg) >= target)) return candidate;
+  }
+  return toward;
+}
+
+export function readableTextOn(...backgrounds: string[]): string {
+  const candidates = ['#ffffff', '#1c1917'];
+  const worst = (text: string) => Math.min(...backgrounds.map((bg) => contrastRatio(text, bg)));
+  return worst(candidates[0]) >= worst(candidates[1]) ? candidates[0] : candidates[1];
 }
 
 export function isHexColor(value: string | null | undefined): value is string {

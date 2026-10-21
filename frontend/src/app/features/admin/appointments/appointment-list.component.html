@@ -67,7 +67,7 @@
             <div class="hidden sm:block text-right shrink-0">
               <div class="font-semibold">{{ a.total | rsd }}</div>
               @if (a.discount > 0) {
-                <div class="text-xs text-[var(--color-secondary)]">−{{ a.discount | rsd }}</div>
+                <div class="text-xs text-[var(--color-secondary-text)]">−{{ a.discount | rsd }}</div>
               }
             </div>
             <span [class]="'badge shrink-0 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>

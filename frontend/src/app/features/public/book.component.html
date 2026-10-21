@@ -155,11 +155,11 @@
           <hr class="border-[var(--color-border)]" />
           @if (quote(); as q) {
             @for (pkg of q.packages; track pkg.promotion_id) {
-              <div class="flex justify-between text-sm text-[var(--color-secondary)]"><span>{{ pkg.name }}</span><span>−{{ pkg.discount | rsd }}</span></div>
+              <div class="flex justify-between text-sm text-[var(--color-secondary-text)]"><span>{{ pkg.name }}</span><span>−{{ pkg.discount | rsd }}</span></div>
             }
             @for (line of q.lines; track line.service_id) {
               @if (line.discount > 0) {
-                <div class="flex justify-between text-sm text-[var(--color-secondary)]"><span>{{ line.promotion_name }}</span><span>−{{ line.discount | rsd }}</span></div>
+                <div class="flex justify-between text-sm text-[var(--color-secondary-text)]"><span>{{ line.promotion_name }}</span><span>−{{ line.discount | rsd }}</span></div>
               }
             }
             <div class="flex justify-between items-baseline">
