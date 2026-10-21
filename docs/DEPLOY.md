@@ -36,6 +36,8 @@ specifične za ovu aplikaciju.
   `.htaccess` u korenu poddomena = cPanel blok (PHP log) + `deploy/htaccess-production`; prethodna
   verzija je `.htaccess.bak`. FTP i baza su isti nalog kao `kosarkaska-evidencija`.
 - Sledeći deploy-i idu **bez** `--with-db` dok se ne dogovori drugačije (server će imati prave termine).
+- Mejl (`zakazivanje@fiskultura.rs`) i cron rade od 21.10.2026.
+- Na `/login` su dugmad za brzu prijavu (Admin / Klijent) — ukloniti iz `frontend/src/environments/environment.ts` pre pravih klijenata.
 
 ## Prvi deploy (jednom)
 

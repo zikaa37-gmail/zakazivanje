@@ -84,8 +84,8 @@ php artisan serve
 ```
 
 Seed nalozi: admin `zakazivanje@fiskultura.rs` / `zakazivanje`, klijent Petar Petrović
-`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu su na `/login` samo u development build-u
-(`environment.development.ts` → `devLogins`); u produkciji ih nema.
+`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Admin / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
+`environment.ts` i `environment.development.ts`) — dok su podaci test; ukloniti pre pravih klijenata.
 
 Frontend (from `frontend/`):
 
