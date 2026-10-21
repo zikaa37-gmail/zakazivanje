@@ -10,7 +10,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) |
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available}]` |
-| POST | `/availability/slots` | `{service_ids, staff_member_id?, date}` → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
+| POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
 | POST | `/bookings/quote` | cena sa akcijama (za prijavljenog klijenta računa i loyalty / N+M) |
 | POST | `/bookings` | `{service_ids, staff_member_id?, starts_at "Y-m-d H:i", note?, guest?}` — gost: `{first_name, last_name, phone, email?}`; `null` zaposleni = prvi slobodan |
 | POST | `/auth/register` | registracija klijenta → mejl za potvrdu (preuzima klijenta kog je admin upisao bez naloga, isti email) |
@@ -33,6 +33,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
+| POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; adminu mejl sa starim vremenom |
 | POST | `/my-appointments/{id}/cancel` | otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina) |
 
 ## Admin (`jwt` + `role:admin`)

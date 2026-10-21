@@ -17,18 +17,18 @@ export class BookingService {
     return this.http.get<PublicService[]>(`${this.api}/public/services`);
   }
 
-  days(serviceIds: number[], staffMemberId: number | null, from: string, days = 14): Observable<DayAvailability[]> {
+  days(serviceIds: number[], staffMemberId: number | null, from: string, days = 14, ignoreAppointmentId: number | null = null): Observable<DayAvailability[]> {
     return this.http.post<DayAvailability[]>(
       `${this.api}/availability/days`,
-      { service_ids: serviceIds, staff_member_id: staffMemberId, from, days },
+      { service_ids: serviceIds, staff_member_id: staffMemberId, from, days, ignore_appointment_id: ignoreAppointmentId },
       quiet(),
     );
   }
 
-  slots(serviceIds: number[], staffMemberId: number | null, date: string): Observable<Slot[]> {
+  slots(serviceIds: number[], staffMemberId: number | null, date: string, ignoreAppointmentId: number | null = null): Observable<Slot[]> {
     return this.http.post<Slot[]>(
       `${this.api}/availability/slots`,
-      { service_ids: serviceIds, staff_member_id: staffMemberId, date },
+      { service_ids: serviceIds, staff_member_id: staffMemberId, date, ignore_appointment_id: ignoreAppointmentId },
       quiet(),
     );
   }
@@ -43,6 +43,10 @@ export class BookingService {
 
   mine(scope: 'upcoming' | 'past'): Observable<Appointment[]> {
     return this.http.post<Appointment[]>(`${this.api}/my-appointments/list`, { scope });
+  }
+
+  rescheduleMine(id: number, staffMemberId: number | null, startsAt: string): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.api}/my-appointments/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
   }
 
   cancelMine(id: number): Observable<Appointment> {

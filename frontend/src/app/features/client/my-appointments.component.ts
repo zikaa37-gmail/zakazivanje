@@ -12,11 +12,12 @@ import { MonthCalendarComponent, MonthCalendarItem } from '../../shared/componen
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
+import { RescheduleComponent } from './reschedule.component';
 
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, RsdPipe],
+  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, RescheduleComponent, RsdPipe],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -31,6 +32,7 @@ export class MyAppointmentsComponent {
   readonly error = signal<string | null>(null);
   readonly appointments = signal<Appointment[]>([]);
   readonly mode = signal<'list' | 'calendar'>('list');
+  readonly rescheduling = signal<Appointment | null>(null);
   readonly visibleMonth = signal(today());
   readonly selectedDay = signal<string | null>(null);
   readonly allAppointments = signal<Appointment[]>([]);
@@ -53,6 +55,12 @@ export class MyAppointmentsComponent {
 
   constructor() {
     this.load();
+  }
+
+  onMoved(): void {
+    this.rescheduling.set(null);
+    this.load();
+    if (this.mode() === 'calendar') this.loadAll();
   }
 
   setMode(mode: 'list' | 'calendar'): void {

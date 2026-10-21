@@ -30,7 +30,7 @@ class AvailabilityService
         return (int) $services->sum('duration_minutes');
     }
 
-    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date): array
+    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, ?int $ignoreAppointmentId = null): array
     {
         $settings = BusinessSetting::current();
         $date = $date->startOfDay();
@@ -44,7 +44,7 @@ class AvailabilityService
         $slots = [];
 
         foreach ($this->eligibleStaff($services, $staffMemberId) as $staff) {
-            $busy = $this->busyIntervals($staff->id, $date, $date->endOfDay());
+            $busy = $this->busyIntervals($staff->id, $date, $date->endOfDay(), $ignoreAppointmentId);
 
             foreach ($staff->workingHours->where('weekday', $date->isoWeekday()) as $hours) {
                 $start = $date->setTimeFromTimeString($hours->starts_at);
@@ -65,13 +65,13 @@ class AvailabilityService
         return collect($slots)->map(fn ($ids, $time) => ['time' => $time, 'staff_member_ids' => array_values(array_unique($ids))])->values()->all();
     }
 
-    public function days(Collection $services, ?int $staffMemberId, CarbonImmutable $from, int $count): array
+    public function days(Collection $services, ?int $staffMemberId, CarbonImmutable $from, int $count, ?int $ignoreAppointmentId = null): array
     {
         return collect(range(0, $count - 1))
             ->map(fn ($i) => $from->addDays($i))
             ->map(fn (CarbonImmutable $day) => [
                 'date' => $day->toDateString(),
-                'available' => count($this->slots($services, $staffMemberId, $day)) > 0,
+                'available' => count($this->slots($services, $staffMemberId, $day, $ignoreAppointmentId)) > 0,
             ])
             ->all();
     }

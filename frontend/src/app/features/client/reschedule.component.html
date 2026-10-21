@@ -1,0 +1,56 @@
+<app-modal title="Promena termina" footerMode="custom" (cancelled)="closed.emit()" testId="reschedule-modal">
+  <app-error-message [message]="error()" />
+
+  <div class="text-sm muted mb-3">
+    Sada: <span class="font-semibold text-[var(--color-text)]">{{ current() }}</span>
+    · {{ appointment().items[0]?.name }}{{ appointment().items.length > 1 ? ' +' + (appointment().items.length - 1) : '' }}
+  </div>
+
+  @if (staffOptions().length > 1) {
+    <div class="chip-group mb-3">
+      @for (m of staffOptions(); track m.id) {
+        <button type="button" class="chip" [class.selected]="staffId() === m.id" (click)="chooseStaff(m.id)">{{ m.first_name }}</button>
+      }
+      <button type="button" class="chip" [class.selected]="staffId() === null" (click)="chooseStaff(null)" data-testid="reschedule-any">Bilo ko</button>
+    </div>
+  }
+
+  <div class="flex items-center justify-between mb-2">
+    <button type="button" class="btn-icon" aria-label="Prethodne dve nedelje" [disabled]="!canGoBack()" (click)="shiftWindow(-1)">
+      <span appIcon="arrow-left" aria-hidden="true"></span>
+    </button>
+    <span class="font-semibold text-sm">{{ windowLabel() }}</span>
+    <button type="button" class="btn-icon" aria-label="Sledeće dve nedelje" (click)="shiftWindow(1)">
+      <span appIcon="arrow-right" aria-hidden="true"></span>
+    </button>
+  </div>
+  <div class="day-strip mb-3">
+    @for (day of days(); track day.date) {
+      <button type="button" class="day-pill" [class.selected]="day.date === date()" [disabled]="!day.available" (click)="chooseDay(day)" [attr.data-testid]="'reschedule-day-' + day.date">
+        <small>{{ weekday(day.date) }}</small>
+        <strong>{{ dayOfMonth(day.date) }}</strong>
+      </button>
+    }
+  </div>
+
+  @if (date()) {
+    @if (loadingSlots() && slots().length === 0) {
+    } @else if (slots().length === 0) {
+      <p class="empty-state">Za ovaj dan nema slobodnih termina.</p>
+    } @else {
+      <div class="slot-grid">
+        @for (slot of slots(); track slot.time) {
+          <button type="button" class="slot" [class.selected]="slot.time === time()" (click)="time.set(slot.time)" [attr.data-testid]="'reschedule-slot-' + slot.time">{{ slot.time }}</button>
+        }
+      </div>
+    }
+  } @else {
+    <p class="empty-state">Nema slobodnih dana u ove dve nedelje.</p>
+  }
+
+  @if (summary(); as s) {
+    <p class="text-sm mt-3">Novo vreme: <span class="font-semibold">{{ s }}</span></p>
+  }
+
+  <app-button modal-footer size="s" [disabled]="!time()" [loading]="saving()" (click)="save()" data-testid="reschedule-save">Promeni termin</app-button>
+</app-modal>

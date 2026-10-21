@@ -43,6 +43,7 @@ Route::middleware('jwt')->group(function () {
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
+    Route::post('/my-appointments/{appointment}/reschedule', [MyAppointmentController::class, 'reschedule'])->middleware('throttle:booking');
 });
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {

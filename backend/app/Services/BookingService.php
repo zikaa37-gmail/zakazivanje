@@ -83,6 +83,45 @@ class BookingService
         });
     }
 
+    public function moveByClient(Appointment $appointment, ?int $staffMemberId, CarbonImmutable $start): Appointment
+    {
+        return DB::transaction(function () use ($appointment, $staffMemberId, $start) {
+            $services = $this->availability->servicesInOrder($appointment->items->pluck('service_id')->filter()->values()->all());
+            if ($services->isEmpty()) {
+                throw ValidationException::withMessages(['starts_at' => ['Usluge iz ovog termina više ne postoje — pozovi salon.']]);
+            }
+
+            $this->ensureBookingRules($start);
+            $end = $start->addMinutes($this->availability->duration($services));
+
+            $candidates = $this->availability->eligibleStaff($services, $staffMemberId);
+            StaffMember::whereKey($candidates->pluck('id'))->lockForUpdate()->get();
+
+            $staff = $candidates
+                ->filter(fn (StaffMember $s) => $this->availability->withinWorkingHours($s, $start, $end)
+                    && $this->availability->isFree($s->id, $start, $end, $appointment->id))
+                ->sortBy(fn (StaffMember $s) => $s->id === $appointment->staff_member_id ? -1 : Appointment::blocking()->where('staff_member_id', $s->id)->whereDate('starts_at', $start->toDateString())->count())
+                ->first();
+
+            if (! $staff) {
+                throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
+            }
+
+            $automatic = $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC;
+
+            $appointment->update([
+                'staff_member_id' => $staff->id,
+                'starts_at' => $start,
+                'ends_at' => $end,
+                'status' => $automatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
+                'confirmed_at' => $automatic ? now() : null,
+                'reminder_sent_at' => null,
+            ]);
+
+            return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color']);
+        });
+    }
+
     public function quoteFor(User $client, Collection $services, CarbonImmutable $date): array
     {
         $completed = Appointment::where('client_id', $client->id)->where('status', Appointment::STATUS_COMPLETED);

@@ -115,7 +115,7 @@ za klijenta bez lozinke), pravila u Podešavanjima (`slot_interval_minutes`, `bo
 `cancellation_days_before` (podrazumevano 1 = najkasnije dan pre), `allow_guest_booking`). Frontend: javna školjka
 (`PublicShellComponent`, donja navigacija na telefonu) sa početnom, `/book` (4 koraka, stanje u
 `BookingDraftService` / sessionStorage — preživi odlazak na prijavu), `/my-appointments`,
-`/register`, `/verify-email`; admin `/admin/appointments` (filteri, statusi, novi termin sa
+`/register`, `/verify-email`; klijent pomera termin iz Moji termini (`RescheduleComponent`, `BookingService::moveByClient`); admin `/admin/appointments` (filteri, statusi, novi termin sa
 ponavljanjem, broj termina na čekanju u meniju). Obaveštenja (#19): `AppointmentNotifier` (jedino
 mesto koje odlučuje šta se šalje — poziva se iz kontrolera, ne iz `BookingService`), `AppointmentNotification`
 (primljen / potvrđen / otkazan / podsetnik, `.ics` prilog) i `AdminAppointmentNotification` (novi online
