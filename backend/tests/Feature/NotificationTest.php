@@ -147,6 +147,16 @@ class NotificationTest extends TestCase
         Notification::assertSentTo($client, AppointmentNotification::class, fn ($n) => $n->recurrenceLabel === 'svake druge nedelje');
     }
 
+    public function test_failed_test_mail_returns_readable_error(): void
+    {
+        config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
+
+        $this->actingAsJwt($this->admin)->postJson('/api/notifications/test', ['channel' => 'mail'])
+            ->assertUnprocessable()->assertJsonValidationErrors('channel');
+
+        $this->assertTrue(NotificationLog::where('type', 'test')->where('status', 'failed')->exists());
+    }
+
     public function test_channel_selection_follows_preference_with_fallback(): void
     {
         $map = ['mail' => 'mail', 'whatsapp' => WhatsAppChannel::class];
