@@ -33,7 +33,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
-| POST | `/my-appointments/{id}/cancel` | otkazivanje (najkasnije `cancellation_hours` pre) |
+| POST | `/my-appointments/{id}/cancel` | otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina) |
 
 ## Admin (`jwt` + `role:admin`)
 

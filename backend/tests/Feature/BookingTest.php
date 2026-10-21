@@ -36,7 +36,8 @@ class BookingTest extends TestCase
             'slot_interval_minutes' => 15,
             'booking_lead_minutes' => 60,
             'booking_horizon_days' => 60,
-            'cancellation_hours' => 24,
+            'booking_min_days_ahead' => 0,
+            'cancellation_days_before' => 1,
             'allow_guest_booking' => true,
         ]);
 

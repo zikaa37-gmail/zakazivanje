@@ -46,7 +46,10 @@ export class MyAppointmentsComponent {
     const day = this.selectedDay();
     return day ? this.allAppointments().filter((a) => a.starts_at.startsWith(day)) : [];
   });
-  readonly cancellationHours = computed(() => this.business.settings()?.cancellation_hours ?? 24);
+  readonly cancellationText = computed(() => {
+    const days = this.business.settings()?.cancellation_days_before ?? 1;
+    return days === 0 ? 'do početka termina' : days === 1 ? 'najkasnije dan pre termina' : `najkasnije ${days} dana pre termina`;
+  });
 
   constructor() {
     this.load();

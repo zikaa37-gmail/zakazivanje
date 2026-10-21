@@ -35,8 +35,8 @@ class MyAppointmentController extends Controller
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
         if (! $this->canCancel($appointment)) {
-            $hours = BusinessSetting::current()->cancellation_hours;
-            throw ValidationException::withMessages(['appointment' => ["Otkazivanje je moguće najkasnije {$hours} h pre termina — pozovi salon."]]);
+            $label = BusinessSetting::current()->cancellationLabel();
+            throw ValidationException::withMessages(['appointment' => ["Otkazivanje je moguće {$label} — pozovi salon."]]);
         }
 
         $bookings->cancel($appointment, 'client');
@@ -48,6 +48,6 @@ class MyAppointmentController extends Controller
     private function canCancel(Appointment $appointment): bool
     {
         return in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)
-            && $appointment->starts_at->gt(now()->addHours(BusinessSetting::current()->cancellation_hours));
+            && now()->lt(BusinessSetting::current()->cancellationDeadline($appointment->starts_at));
     }
 }

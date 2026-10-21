@@ -111,7 +111,8 @@ podešavanja (podaci o biznisu, logo kao data URL, tema iz boja logoa — `extra
 potvrde zaposlenog), `RecurrenceService` + `appointments:extend-recurring` (svake noći 02:00, 8
 nedelja unapred; zauzeti datumi u `skipped_dates`), gost bez naloga (vezuje se po telefonu / emailu
 za klijenta bez lozinke), pravila u Podešavanjima (`slot_interval_minutes`, `booking_lead_minutes`,
-`booking_horizon_days`, `cancellation_hours`, `allow_guest_booking`). Frontend: javna školjka
+`booking_horizon_days`, `booking_min_days_ahead` (podrazumevano 1 = najranije sutra),
+`cancellation_days_before` (podrazumevano 1 = najkasnije dan pre), `allow_guest_booking`). Frontend: javna školjka
 (`PublicShellComponent`, donja navigacija na telefonu) sa početnom, `/book` (4 koraka, stanje u
 `BookingDraftService` / sessionStorage — preživi odlazak na prijavu), `/my-appointments`,
 `/register`, `/verify-email`; admin `/admin/appointments` (filteri, statusi, novi termin sa

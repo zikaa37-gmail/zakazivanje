@@ -52,5 +52,7 @@ pružaoca), #20 (pretraga biznisa), #22 (omiljeni biznisi).
 
 - Termin se računa iz trajanja usluge; slobodni termini = radno vreme zaposlenog − zauzeti termini −
   blokirano vreme, u koracima od podesivog intervala (npr. 15 min).
-- Klijent otkazuje najkasnije X sati pre termina (podešavanje).
+- Klijent online zakazuje najranije za sutra, a otkazuje najkasnije dan pre termina (do kraja tog dana) —
+  `booking_min_days_ahead` / `cancellation_days_before` u Podešavanjima (`BusinessSetting::earliestOnlineStart()`,
+  `cancellationDeadline()`); admin može da zakaže, pomeri i otkaže bilo kada.
 - Zakazivanje unapred najviše N dana (podešavanje).

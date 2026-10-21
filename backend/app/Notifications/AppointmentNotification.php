@@ -79,10 +79,9 @@ class AppointmentNotification extends Notification implements ShouldQueue
             $message->attachData(IcsCalendar::forAppointment($a, $this->type === self::CANCELLED), 'termin.ics', ['mime' => 'text/calendar']);
         }
 
-        $cancellation = $business->cancellation_hours;
         if ($this->type !== self::CANCELLED) {
-            $message->line($cancellation > 0
-                ? "Ako ne možeš da dođeš, otkaži najkasnije {$cancellation} h pre termina".($business->phone ? ' ili pozovi '.$business->phone : '').'.'
+            $message->line($business->cancellation_days_before > 0
+                ? 'Ako ne možeš da dođeš, otkaži '.$business->cancellationLabel().($business->phone ? ' ili pozovi '.$business->phone : '').'.'
                 : 'Ako ne možeš da dođeš, javi nam se.');
         }
 

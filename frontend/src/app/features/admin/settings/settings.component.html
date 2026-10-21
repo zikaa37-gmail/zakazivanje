@@ -180,9 +180,22 @@
               <input id="s-horizon" appInput size="m" type="number" min="1" max="365" formControlName="booking_horizon_days" />
             </div>
             <div class="field">
-              <label for="s-cancel">Klijent otkazuje najkasnije (sati pre)</label>
-              <input id="s-cancel" appInput size="m" type="number" min="0" max="336" formControlName="cancellation_hours" />
+              <label for="s-min-days">Klijent zakazuje online</label>
+              <select id="s-min-days" appInput size="m" formControlName="booking_min_days_ahead" data-testid="min-days">
+                @for (o of minDaysOptions; track o.value) {
+                  <option [ngValue]="o.value">{{ o.label }}</option>
+                }
+              </select>
             </div>
+            <div class="field">
+              <label for="s-cancel">Klijent otkazuje</label>
+              <select id="s-cancel" appInput size="m" formControlName="cancellation_days_before" data-testid="cancellation-days">
+                @for (o of cancellationOptions; track o.value) {
+                  <option [ngValue]="o.value">{{ o.label }}</option>
+                }
+              </select>
+            </div>
+            <p class="text-xs muted sm:col-span-2 -mt-2">Važi za klijente u online zakazivanju; admin može da zakaže, pomeri i otkaže bilo kada.</p>
           </div>
           <app-toggle [checked]="form.controls.allow_guest_booking.value" label="Gost može da zakaže bez naloga (ime + telefon)" (checkedChange)="form.controls.allow_guest_booking.setValue($event)" />
         </div>

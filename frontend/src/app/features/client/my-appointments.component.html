@@ -90,7 +90,7 @@
     </div>
     @if (scope() === 'upcoming') {
       <div class="card mt-3 text-sm" style="background: var(--color-info-tint); color: var(--color-info); border-color: transparent">
-        Otkazivanje je moguće najkasnije {{ cancellationHours() }} h pre termina. Posle toga pozovi salon.
+        Otkazivanje je moguće {{ cancellationText() }}. Posle toga pozovi salon.
       </div>
     }
   }

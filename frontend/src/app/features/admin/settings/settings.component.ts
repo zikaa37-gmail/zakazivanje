@@ -76,7 +76,8 @@ export class SettingsComponent {
     slot_interval_minutes: this.fb.nonNullable.control(15),
     booking_lead_minutes: this.fb.nonNullable.control(60),
     booking_horizon_days: this.fb.nonNullable.control(60),
-    cancellation_hours: this.fb.nonNullable.control(24),
+    booking_min_days_ahead: this.fb.nonNullable.control(1),
+    cancellation_days_before: this.fb.nonNullable.control(1),
     allow_guest_booking: this.fb.nonNullable.control(true),
     notify_booking_received: this.fb.nonNullable.control(true),
     notify_booking_confirmed: this.fb.nonNullable.control(true),
@@ -106,6 +107,17 @@ export class SettingsComponent {
   readonly testing = signal<'mail' | 'whatsapp' | null>(null);
 
   readonly intervals = [5, 10, 15, 20, 30, 45, 60];
+  readonly minDaysOptions = [
+    { value: 0, label: 'Isti dan (danas za danas)' },
+    { value: 1, label: 'Najranije za sutra' },
+    { value: 2, label: 'Najranije za 2 dana' },
+  ];
+  readonly cancellationOptions = [
+    { value: 0, label: 'Do početka termina' },
+    { value: 1, label: 'Najkasnije dan pre termina' },
+    { value: 2, label: 'Najkasnije 2 dana pre' },
+    { value: 3, label: 'Najkasnije 3 dana pre' },
+  ];
   readonly leadOptions = [
     { value: 0, label: 'Bez ograničenja' },
     { value: 30, label: '30 minuta' },
@@ -289,7 +301,8 @@ export class SettingsComponent {
       slot_interval_minutes: settings.slot_interval_minutes,
       booking_lead_minutes: settings.booking_lead_minutes,
       booking_horizon_days: settings.booking_horizon_days,
-      cancellation_hours: settings.cancellation_hours,
+      booking_min_days_ahead: settings.booking_min_days_ahead,
+      cancellation_days_before: settings.cancellation_days_before,
       allow_guest_booking: settings.allow_guest_booking,
       notify_booking_received: settings.notify_booking_received,
       notify_booking_confirmed: settings.notify_booking_confirmed,
