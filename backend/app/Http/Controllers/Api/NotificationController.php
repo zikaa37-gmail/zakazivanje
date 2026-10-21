@@ -37,7 +37,16 @@ class NotificationController extends Controller
             throw ValidationException::withMessages(['channel' => ['U profilu nema ispravnog broja telefona.']]);
         }
 
-        $user->notifyNow(new TestNotification($data['channel']));
+        try {
+            $user->notifyNow(new TestNotification($data['channel']));
+        } catch (\Throwable $e) {
+            report($e);
+            $reason = str_contains($e->getMessage(), '535') || str_contains($e->getMessage(), 'authenticate')
+                ? 'mejl server je odbio prijavu — proveri MAIL_USERNAME i MAIL_PASSWORD u .env na serveru'
+                : mb_substr($e->getMessage(), 0, 200);
+
+            throw ValidationException::withMessages(['channel' => ['Slanje nije uspelo: '.$reason.'.']]);
+        }
 
         return [
             'message' => $data['channel'] === 'mail'

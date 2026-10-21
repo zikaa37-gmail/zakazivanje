@@ -29,6 +29,14 @@ specifične za ovu aplikaciju.
   ```
 - **Slike** (logo biznisa, avatar): base64 u bazi, bez `storage:link`.
 
+## Stanje na serveru
+
+- **Prvi deploy: 21.10.2026.** (`python deploy/deploy.py --with-db`) — demo podaci iz lokalne baze
+  (Salon Lepota, 3 zaposlena, 5 usluga, akcije, admin `zakazivanje@fiskultura.rs`, test klijent).
+  `.htaccess` u korenu poddomena = cPanel blok (PHP log) + `deploy/htaccess-production`; prethodna
+  verzija je `.htaccess.bak`. FTP i baza su isti nalog kao `kosarkaska-evidencija`.
+- Sledeći deploy-i idu **bez** `--with-db` dok se ne dogovori drugačije (server će imati prave termine).
+
 ## Prvi deploy (jednom)
 
 1. `deploy/env.production.example` → kopiraj u `deploy/.env` i popuni: FTP pristup, `DEPLOY_SECRET`
