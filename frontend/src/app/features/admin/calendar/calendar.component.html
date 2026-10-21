@@ -1,0 +1,164 @@
+<div class="page-header">
+  <h1 class="page-title">Kalendar</h1>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" appBtn theme="secondary" (click)="openBlock()" data-testid="calendar-block">
+      <span appIcon="lock" aria-hidden="true"></span> Blokiraj vreme
+    </button>
+    <button type="button" appBtn (click)="openNew()" data-testid="calendar-new">
+      <span appIcon="plus" aria-hidden="true"></span> Novi termin
+    </button>
+  </div>
+</div>
+
+<div class="flex flex-wrap items-center gap-2 mb-3">
+  <button type="button" class="btn-icon" aria-label="Prethodno" (click)="step(-1)" data-testid="calendar-prev"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+  <button type="button" class="btn-icon" aria-label="Sledeće" (click)="step(1)" data-testid="calendar-next"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+  <button type="button" appBtn theme="secondary" size="s" (click)="goToday()">Danas</button>
+  <h2 class="text-base md:text-lg font-semibold mr-auto" data-testid="calendar-title">{{ title() }}</h2>
+
+  <div class="chip-group">
+    <button type="button" class="chip" [class.selected]="view() === 'day'" (click)="setView('day')" data-testid="view-day">Dan</button>
+    <button type="button" class="chip" [class.selected]="view() === 'week'" (click)="setView('week')" data-testid="view-week">Nedelja</button>
+    <button type="button" class="chip" [class.selected]="view() === 'month'" (click)="setView('month')" data-testid="view-month">Mesec</button>
+  </div>
+  <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni" data-testid="calendar-staff">
+    <option value="">Svi zaposleni</option>
+    @for (m of staff(); track m.id) {
+      <option [value]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+    }
+  </select>
+  <app-toggle [checked]="showCancelled()" label="Otkazani" (checkedChange)="showCancelled.set($event)" />
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (view() === 'month') {
+  <app-month-calendar [month]="date()" [items]="monthItems()" [selected]="null" (dayClicked)="openDay($event)" data-testid="month" />
+} @else {
+  <div class="cal" data-testid="calendar-grid">
+    <div class="cal-scroll">
+      <div class="cal-inner" [style.--cols]="columns().length">
+        <div class="cal-head">
+          <div class="cal-gutter"></div>
+          @for (col of columns(); track col.key) {
+            <div class="cal-head-cell" [class.is-today]="view() === 'week' && col.date === todayIso">
+              @if (col.staff && view() === 'day') {
+                <span class="color-dot" [style.background]="col.staff.color || 'var(--color-primary)'"></span>
+              }
+              <span class="font-semibold truncate">{{ col.label }}</span>
+              @if (col.sublabel) {
+                <span class="text-xs muted truncate hidden md:inline">{{ col.sublabel }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="cal-body" [style.height.px]="gridHeight()">
+          <div class="cal-gutter">
+            @for (h of hours().list; track h) {
+              <div class="cal-hour-label" [style.height.px]="hourPx">{{ h < 10 ? '0' + h : h }}:00</div>
+            }
+          </div>
+
+          @for (col of columns(); track col.key; let ci = $index) {
+            <div class="cal-col" (click)="onGridClick(col, $event)" [attr.data-testid]="'col-' + col.key">
+              @for (h of hours().list; track h) {
+                <div class="cal-hour-line" [style.height.px]="hourPx"></div>
+              }
+              @for (o of col.off; track $index) {
+                <div class="cal-off" [style.top.px]="o.top" [style.height.px]="o.height"></div>
+              }
+              @for (b of col.blocks; track b.block.id) {
+                <button type="button" class="cal-block" [style.top.px]="b.top" [style.height.px]="b.height" (click)="removeBlock(b.block, $event)" [title]="blockLabel(b.block) + ' — klikni za uklanjanje'" [attr.data-testid]="'block-' + b.block.id">
+                  <span appIcon="lock" [iconSize]="11" aria-hidden="true"></span> {{ blockLabel(b.block) }}
+                </button>
+              }
+              @for (e of col.events; track e.appointment.id) {
+                <div
+                  [class]="eventClass(e.appointment)"
+                  [ngStyle]="eventStyle(e)"
+                  cdkDrag
+                  [cdkDragDisabled]="!canDrag(e.appointment)"
+                  cdkDragBoundary=".cal-body"
+                  (cdkDragStarted)="onDragStarted()"
+                  (cdkDragEnded)="onDragEnded(e, col, $event)"
+                  (click)="openEvent(e.appointment, $event)"
+                  [attr.data-testid]="'event-' + e.appointment.id"
+                  role="button"
+                  tabindex="0"
+                  (keydown.enter)="openEvent(e.appointment, $event)"
+                >
+                  <div class="event-title">{{ eventTitle(e.appointment) }}</div>
+                  @if (e.height > 34) {
+                    <div class="event-sub">{{ eventServices(e.appointment) }}{{ view() === 'week' && !col.staff ? ' · ' + e.appointment.staff_member?.first_name : '' }}</div>
+                  }
+                </div>
+              }
+              @if (nowLine(); as line) {
+                @if (line.column === -1 || line.column === ci) {
+                  <div class="cal-now" [style.top.px]="line.top"></div>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3 mt-3 text-xs muted">
+    @for (s of legend; track s.key) {
+      <span class="flex items-center gap-1"><span [class]="'legend-swatch event event-' + s.key"></span>{{ s.label }}</span>
+    }
+    <span class="flex items-center gap-1"><span class="legend-swatch cal-block-swatch"></span>Blokirano</span>
+    @if (view() === 'day') {
+      <span>· Prevuci termin da ga pomeriš, klikni na prazno polje za novi termin.</span>
+    }
+  </div>
+}
+
+@if (formPrefill(); as prefill) {
+  <app-appointment-form [prefill]="prefill" (saved)="onFormSaved()" (closed)="formPrefill.set(null)" />
+}
+
+@if (selected(); as appointment) {
+  <app-appointment-details [appointment]="appointment" [staff]="staff()" (changed)="onDetailsChanged()" (closed)="selected.set(null)" />
+}
+
+@if (blockOpen()) {
+  <app-modal title="Blokiraj vreme" footerMode="custom" (cancelled)="blockOpen.set(false)" testId="block-modal">
+    <app-error-message [message]="blockError()" />
+    <p class="text-sm muted">U blokiranom vremenu se ne mogu zakazati termini (pauza, sastanak, godišnji odmor).</p>
+    <div class="form-grid">
+      <div class="field">
+        <label for="b-staff">Za koga</label>
+        <select id="b-staff" appInput size="m" [formControl]="blockStaff" data-testid="block-staff">
+          <option [ngValue]="null">Ceo salon</option>
+          @for (m of staff(); track m.id) {
+            <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="b-date">Datum</label>
+        <input id="b-date" appInput size="m" type="date" [formControl]="blockDate" data-testid="block-date" />
+      </div>
+    </div>
+    <app-toggle [checked]="blockAllDay()" label="Ceo dan" (checkedChange)="blockAllDay.set($event)" />
+    @if (!blockAllDay()) {
+      <div class="field mt-3">
+        <label>Od – do</label>
+        <div class="flex items-center gap-2">
+          <app-time-picker [control]="blockFrom" data-testid="block-from" />
+          <span class="muted">–</span>
+          <app-time-picker [control]="blockTo" data-testid="block-to" />
+        </div>
+      </div>
+    }
+    <div class="field">
+      <label for="b-reason">Razlog</label>
+      <input id="b-reason" appInput size="m" [formControl]="blockReason" placeholder="npr. Pauza" data-testid="block-reason" />
+    </div>
+    <app-button modal-footer size="s" [loading]="blockSaving()" (click)="saveBlock()" data-testid="block-save">Blokiraj</app-button>
+  </app-modal>
+}

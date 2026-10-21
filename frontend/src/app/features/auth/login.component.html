@@ -30,7 +30,7 @@
     </form>
 
     <a class="auth-link" routerLink="/forgot-password" data-testid="login-forgot">Zaboravljena lozinka?</a>
-    <a class="auth-link !mt-1" routerLink="/register" data-testid="login-register">Nemaš nalog? Registruj se</a>
+    <a class="auth-link !mt-1" routerLink="/register" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}" data-testid="login-register">Nemaš nalog? Registruj se</a>
     <a class="auth-link !mt-1" routerLink="/">Nazad na početnu</a>
 
     @if (devLogins.length) {

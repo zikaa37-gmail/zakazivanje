@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
-import { AdminAppointmentPayload, Appointment, AppointmentStatus, Recurrence } from '../models/appointment.model';
+import { AdminAppointmentPayload, Appointment, AppointmentStatus, BlockedTime, Recurrence } from '../models/appointment.model';
 
 export interface AppointmentFilters {
   from: string;
@@ -44,6 +44,22 @@ export class AppointmentService {
     return this.http
       .post<{ message: string }>(`${this.api}/${id}/cancel`, { scope })
       .pipe(tap(() => this.refreshPendingCount()));
+  }
+
+  reschedule(id: number, staffMemberId: number, startsAt: string): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.api}/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
+  }
+
+  blockedTimes(from: string, to: string): Observable<BlockedTime[]> {
+    return this.http.post<BlockedTime[]>(`${environment.apiUrl}/blocked-times/list`, { from, to });
+  }
+
+  createBlockedTime(payload: { staff_member_id: number | null; starts_at: string; ends_at: string; reason: string | null }): Observable<BlockedTime> {
+    return this.http.post<BlockedTime>(`${environment.apiUrl}/blocked-times`, payload);
+  }
+
+  deleteBlockedTime(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/blocked-times/${id}`);
   }
 
   recurrences(): Observable<Recurrence[]> {

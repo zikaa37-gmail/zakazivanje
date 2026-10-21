@@ -31,6 +31,15 @@ export interface Appointment {
   can_cancel?: boolean;
 }
 
+export interface BlockedTime {
+  id: number;
+  staff_member_id: number | null;
+  starts_at: string;
+  ends_at: string;
+  reason: string | null;
+  staff_member: { id: number; first_name: string; last_name: string; color: string | null } | null;
+}
+
 export interface Slot {
   time: string;
   staff_member_ids: number[];

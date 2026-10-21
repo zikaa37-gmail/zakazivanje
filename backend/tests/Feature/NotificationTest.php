@@ -30,7 +30,7 @@ class NotificationTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-19 08:00:00');
 
-        BusinessSetting::current()->update(['booking_confirmation' => 'manual', 'reminder_hours' => 24, 'booking_lead_minutes' => 60]);
+        BusinessSetting::current()->update(['booking_confirmation' => 'manual', 'reminder_hours' => 24, 'booking_lead_minutes' => 60, 'allow_guest_booking' => true]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 30, 'price' => 1500]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Jovanović']);
         $this->ana->services()->sync([$this->cut->id]);

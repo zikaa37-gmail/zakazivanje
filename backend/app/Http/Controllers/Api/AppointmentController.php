@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentRecurrence;
+use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
@@ -12,6 +13,7 @@ use App\Services\BookingService;
 use App\Services\RecurrenceService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -144,6 +146,52 @@ class AppointmentController extends Controller
         $this->notifier->statusChanged($appointment, $previous);
 
         return $appointment;
+    }
+
+    public function reschedule(Request $request, Appointment $appointment)
+    {
+        $data = $request->validate([
+            'staff_member_id' => ['required', 'integer', 'exists:staff_members,id'],
+            'starts_at' => ['required', 'date_format:Y-m-d H:i'],
+            'notify' => ['sometimes', 'boolean'],
+        ]);
+
+        if (! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)) {
+            throw ValidationException::withMessages(['appointment' => ['Pomera se samo termin koji je na čekanju ili potvrđen.']]);
+        }
+
+        $serviceIds = $appointment->items->pluck('service_id')->filter()->values()->all();
+        $staff = $this->availability->eligibleStaff($this->availability->servicesInOrder($serviceIds), $data['staff_member_id'])->first();
+        if (! $staff) {
+            throw ValidationException::withMessages(['staff_member_id' => ['Taj zaposleni ne radi ove usluge.']]);
+        }
+
+        $start = CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']);
+        $end = $start->addMinutes($appointment->items->sum('duration_minutes'));
+
+        $moved = DB::transaction(function () use ($appointment, $staff, $start, $end) {
+            StaffMember::whereKey($staff->id)->lockForUpdate()->first();
+
+            if (! $this->availability->isFree($staff->id, $start, $end, $appointment->id)) {
+                throw ValidationException::withMessages(['starts_at' => ['U tom terminu je već zauzeto.']]);
+            }
+
+            $changed = $appointment->staff_member_id !== $staff->id || ! CarbonImmutable::parse($appointment->starts_at)->equalTo($start);
+            $appointment->update([
+                'staff_member_id' => $staff->id,
+                'starts_at' => $start,
+                'ends_at' => $end,
+                'reminder_sent_at' => null,
+            ]);
+
+            return $changed;
+        });
+
+        if ($moved && ($data['notify'] ?? true)) {
+            $this->notifier->rescheduled($appointment);
+        }
+
+        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
     }
 
     public function cancel(Request $request, Appointment $appointment)

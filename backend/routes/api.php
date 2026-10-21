@@ -74,6 +74,7 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+    Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
 
     Route::post('/notification-logs/list', [NotificationController::class, 'logs']);

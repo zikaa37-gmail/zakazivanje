@@ -31,6 +31,9 @@
     <span class="avatar avatar-initials">{{ initials() }}</span>
     <div class="min-w-0 flex-1">
       <div class="shell-user-name">{{ auth.currentUser()?.first_name }} {{ auth.currentUser()?.last_name }}</div>
+      <a routerLink="/profile" class="shell-logout mr-3" data-testid="admin-profile">
+        <span appIcon="user" [iconSize]="14" aria-hidden="true"></span> Profil
+      </a>
       <button type="button" class="shell-logout" (click)="logout()" data-testid="logout">
         <span appIcon="logout" [iconSize]="14" aria-hidden="true"></span> Odjavi se
       </button>

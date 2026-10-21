@@ -1,4 +1,4 @@
--- Tabela `zk_promotions`: šema i podaci iz lokalne baze (20.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_promotions`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -29,6 +29,6 @@ CREATE TABLE `zk_promotions` (
   KEY `zk_promotions_type_index` (`type`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_promotions` VALUES (1,'Šišanje + feniranje','package',NULL,NULL,NULL,3200.00,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-10-20 13:03:07','2026-10-20 13:03:07'),(2,'Srećni utorak −15%','discount_percent',NULL,15.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[2]',1,'2026-10-20 13:03:07','2026-10-20 13:03:07'),(3,'Muško šišanje 2+1','bundle',NULL,NULL,NULL,NULL,2,1,NULL,NULL,NULL,NULL,1,'2026-10-20 13:03:07','2026-10-20 13:03:07'),(4,'Svaka 10. poseta −50%','loyalty',NULL,50.00,NULL,NULL,NULL,NULL,10,NULL,NULL,NULL,1,'2026-10-20 13:03:07','2026-10-20 13:03:07');
+INSERT INTO `zk_promotions` VALUES (1,'Šišanje + feniranje','package',NULL,NULL,NULL,3200.00,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-10-21 08:59:47','2026-10-21 08:59:47'),(2,'Srećni utorak −15%','discount_percent',NULL,15.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[2]',1,'2026-10-21 08:59:47','2026-10-21 08:59:47'),(3,'Muško šišanje 2+1','bundle',NULL,NULL,NULL,NULL,2,1,NULL,NULL,NULL,NULL,1,'2026-10-21 08:59:47','2026-10-21 08:59:47'),(4,'Svaka 10. poseta −50%','loyalty',NULL,50.00,NULL,NULL,NULL,NULL,10,NULL,NULL,NULL,1,'2026-10-21 08:59:47','2026-10-21 08:59:47');
 
 SET FOREIGN_KEY_CHECKS=1;

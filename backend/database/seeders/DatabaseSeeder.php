@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
             'theme_secondary' => '#b45309',
             'theme_tertiary' => '#7c3aed',
             'booking_confirmation' => BusinessSetting::CONFIRMATION_MANUAL,
+            'allow_guest_booking' => false,
         ]);
 
         $services = collect([

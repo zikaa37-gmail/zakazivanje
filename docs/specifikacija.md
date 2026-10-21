@@ -14,7 +14,7 @@ drugi biznis.
 
 | Uloga | Ko | Može |
 | --- | --- | --- |
-| gost | bilo ko | vidi početnu (usluge, cene, radno vreme, kontakt), započinje zakazivanje |
+| gost | bilo ko | vidi početnu (usluge, cene, radno vreme, kontakt) i slobodne termine; za zakazivanje mora da se prijavi ili registruje (može se uključiti zakazivanje bez naloga u Podešavanjima) |
 | `client` | registrovan klijent | zakazuje, vidi i otkazuje svoje termine, menja profil |
 | `admin` | vlasnik / osoblje | kalendar, termini, usluge, zaposleni, klijenti, podešavanja |
 
@@ -27,7 +27,7 @@ drugi biznis.
 | Usluge (CRUD: naziv, trajanje, cena) | #15 | gotovo |
 | Zaposleni (usluge koje radi, radno vreme) | #16 | gotovo |
 | Zakazivanje termina (slobodni termini, potvrda, ponavljanje) | #17 | gotovo |
-| Kalendar termina (admin dnevni / nedeljni prikaz) | #18 | — |
+| Kalendar termina (admin dan / nedelja / mesec, prevlačenje, blokade; klijent mesečni prikaz) | #18 | gotovo |
 | Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Recenzije | #21 | kasnije |
 | Pregled / statistika za admina | #23 | kasnije |

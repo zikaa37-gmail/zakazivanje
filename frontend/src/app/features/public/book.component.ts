@@ -220,6 +220,10 @@ export class BookComponent {
     this.router.navigate(['/login'], { queryParams: { returnUrl: '/book' } });
   }
 
+  registerToBook(): void {
+    this.router.navigate(['/register'], { queryParams: { returnUrl: '/book' } });
+  }
+
   submit(): void {
     const d = this.draft();
     if (!d.date || !d.time) return;

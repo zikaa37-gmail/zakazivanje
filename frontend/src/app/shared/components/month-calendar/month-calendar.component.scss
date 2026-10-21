@@ -1,0 +1,133 @@
+@use 'themes/breakpoints' as bp;
+
+.month {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.month-head,
+.month-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.month-head div {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+}
+
+.month-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 3.25rem;
+  padding: 0.35rem 0.25rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+
+  &:first-child {
+    border-left: 0;
+  }
+
+  &:hover {
+    background: var(--color-bg);
+  }
+
+  &.outside {
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+  }
+
+  &.selected {
+    box-shadow: inset 0 0 0 2px var(--color-primary);
+  }
+}
+
+.month-day-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.month-day.today .month-day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.month-dot-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.month-items {
+  display: none;
+}
+
+.month-item {
+  display: block;
+  width: 100%;
+  padding: 0.1rem 0.35rem;
+  border-left: 3px solid var(--color-primary);
+  border-radius: 3px;
+  background: var(--color-bg);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &.muted-item {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
+}
+
+.month-more {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+@include bp.md-up {
+  .month-day {
+    align-items: stretch;
+    min-height: 6.5rem;
+  }
+
+  .month-dot-mobile {
+    display: none;
+  }
+
+  .month-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+}

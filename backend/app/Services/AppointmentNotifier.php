@@ -48,6 +48,13 @@ class AppointmentNotifier
         }
     }
 
+    public function rescheduled(Appointment $appointment): void
+    {
+        if (BusinessSetting::current()->notify_booking_confirmed && $appointment->starts_at->isFuture()) {
+            $this->toClient($appointment, AppointmentNotification::RESCHEDULED);
+        }
+    }
+
     public function reminder(Appointment $appointment): void
     {
         $this->toClient($appointment, AppointmentNotification::REMINDER);

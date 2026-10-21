@@ -50,7 +50,7 @@
         <app-button type="submit" size="l" [block]="true" [loading]="loading()" data-testid="register-submit">Registruj se</app-button>
       </form>
 
-      <a routerLink="/login" class="auth-link">Već imaš nalog? Prijavi se</a>
+      <a routerLink="/login" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}" class="auth-link">Već imaš nalog? Prijavi se</a>
       <a routerLink="/" class="auth-link !mt-1">Nazad na početnu</a>
     }
   </div>

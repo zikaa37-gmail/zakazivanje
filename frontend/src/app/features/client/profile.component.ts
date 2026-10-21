@@ -24,6 +24,16 @@ export class ProfileComponent {
   readonly communication = COMMUNICATION_OPTIONS;
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
+  readonly resending = signal(false);
+  readonly passwordOpen = signal(false);
+  readonly passwordSaving = signal(false);
+  readonly passwordError = signal<string | null>(null);
+
+  readonly passwordForm = this.fb.nonNullable.group({
+    current_password: ['', Validators.required],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    password_confirmation: ['', Validators.required],
+  });
   readonly initials = computed(() => {
     const user = this.auth.currentUser();
     return user ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase() : '';
@@ -38,6 +48,7 @@ export class ProfileComponent {
   });
 
   constructor() {
+    this.auth.loadMe().subscribe({ error: () => undefined });
     const user = this.auth.currentUser();
     if (user) {
       this.form.reset({
@@ -48,6 +59,44 @@ export class ProfileComponent {
         preferred_communication: user.preferred_communication,
       });
     }
+  }
+
+  resendVerification(): void {
+    const email = this.auth.currentUser()?.email;
+    if (!email) return;
+    this.resending.set(true);
+    this.auth.resendVerification(email).subscribe({
+      next: (res) => {
+        this.resending.set(false);
+        this.toast.success(res.message);
+      },
+      error: (err) => {
+        this.resending.set(false);
+        this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.'));
+      },
+    });
+  }
+
+  changePassword(): void {
+    const value = this.passwordForm.getRawValue();
+    if (this.passwordForm.invalid || value.password !== value.password_confirmation) {
+      this.passwordError.set(value.password.length < 8 ? 'Nova lozinka mora imati bar 8 karaktera.' : 'Nove lozinke se ne poklapaju.');
+      return;
+    }
+
+    this.passwordSaving.set(true);
+    this.passwordError.set(null);
+    this.auth.changePassword(value).subscribe({
+      next: (res) => {
+        this.passwordSaving.set(false);
+        this.toast.success(res.message);
+        this.auth.clearSession('/login');
+      },
+      error: (err) => {
+        this.passwordSaving.set(false);
+        this.passwordError.set(apiErrorMessage(err, 'Promena lozinke nije uspela.'));
+      },
+    });
   }
 
   save(): void {

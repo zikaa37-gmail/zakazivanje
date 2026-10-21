@@ -1,0 +1,216 @@
+@use 'themes/breakpoints' as bp;
+
+$gutter: 3.25rem;
+
+.cal {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.cal-scroll {
+  overflow-x: auto;
+  max-height: calc(100dvh - 15rem);
+  overflow-y: auto;
+}
+
+.cal-inner {
+  min-width: calc(#{$gutter} + var(--cols, 1) * 8.5rem);
+}
+
+.cal-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: $gutter repeat(var(--cols, 1), minmax(0, 1fr));
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cal-head-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.6rem 0.6rem;
+  border-left: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.cal-head-cell.is-today {
+  color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+
+.cal-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: $gutter repeat(var(--cols, 1), minmax(0, 1fr));
+}
+
+.cal-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  background: var(--color-surface);
+}
+
+.cal-hour-label {
+  padding: 0.15rem 0.4rem 0 0;
+  text-align: right;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  transform: translateY(-0.45rem);
+
+  &:first-child {
+    transform: none;
+  }
+}
+
+.cal-col {
+  position: relative;
+  border-left: 1px solid var(--color-border);
+  cursor: copy;
+}
+
+.cal-hour-line {
+  border-top: 1px solid var(--color-bg);
+  box-sizing: border-box;
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.cal-off {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(135deg, var(--color-bg), var(--color-bg) 6px, transparent 6px, transparent 12px);
+  pointer-events: none;
+}
+
+.cal-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px dashed var(--color-border-dark);
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, var(--color-bg), var(--color-bg) 5px, var(--color-surface) 5px, var(--color-surface) 10px);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.event {
+  position: absolute;
+  z-index: 2;
+  padding: 0.2rem 0.4rem 0.2rem 0.55rem;
+  border-radius: 6px;
+  border-left: 4px solid var(--event-color);
+  background: color-mix(in srgb, var(--event-color) 16%, var(--color-surface));
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 1px 2px var(--shadow-color);
+
+  &.cdk-drag-dragging {
+    z-index: 10;
+    opacity: 0.85;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    cursor: grabbing;
+  }
+}
+
+.event-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-sub {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-pending {
+  border-left-style: dashed;
+  background: var(--color-warning-tint);
+  outline: 1px dashed var(--color-warning);
+  outline-offset: -1px;
+}
+
+.event-completed {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.event-cancelled {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.event-no_show {
+  background: var(--color-danger-tint);
+  border-left-color: var(--color-danger);
+}
+
+.cal-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 2px;
+  background: var(--color-danger);
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-danger);
+  }
+}
+
+.legend-swatch {
+  position: static;
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  padding: 0;
+  border-radius: 3px;
+  --event-color: var(--color-primary);
+  box-shadow: none;
+}
+
+.cal-block-swatch {
+  border: 1px dashed var(--color-border-dark);
+  background: var(--color-bg);
+}
+
+@include bp.md-up {
+  .cal-scroll {
+    max-height: calc(100dvh - 13rem);
+  }
+}

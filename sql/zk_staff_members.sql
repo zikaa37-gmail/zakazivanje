@@ -1,4 +1,4 @@
--- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (20.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -25,6 +25,6 @@ CREATE TABLE `zk_staff_members` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Ana','Jovanović','Frizer',NULL,NULL,'#0f766e',NULL,NULL,1,0,'2026-10-20 13:03:07','2026-10-20 13:03:07'),(2,'Milica','Petrović','Frizer, kolorista',NULL,NULL,'#b45309','automatic',NULL,1,1,'2026-10-20 13:03:07','2026-10-20 13:03:07'),(3,'Jelena','Ilić','Manikir',NULL,NULL,'#7c3aed',NULL,NULL,1,2,'2026-10-20 13:03:07','2026-10-20 13:03:07');
+INSERT INTO `zk_staff_members` VALUES (1,'Ana','Jovanović','Frizer',NULL,NULL,'#0f766e',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-10-21 08:59:46'),(2,'Milica','Petrović','Frizer, kolorista',NULL,NULL,'#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-10-21 08:59:46'),(3,'Jelena','Ilić','Manikir',NULL,NULL,'#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-10-21 08:59:46');
 
 SET FOREIGN_KEY_CHECKS=1;
