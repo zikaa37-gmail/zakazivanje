@@ -83,7 +83,7 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Seed nalozi: admin `zakazivanje@fiskultura.rs` / `zakazivanje`, klijent Petar Petrović
+Seed nalozi: admin `zakazivanje@fiskultura.rs` / `zakazivanje2026`, klijent Petar Petrović
 `devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Admin / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
 `environment.ts` i `environment.development.ts`) — dok su podaci test; ukloniti pre pravih klijenata.
 

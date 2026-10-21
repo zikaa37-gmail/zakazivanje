@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'Admin',
             'last_name' => 'Zakazivanje',
             'email' => 'zakazivanje@fiskultura.rs',
-            'password' => Hash::make('zakazivanje'),
+            'password' => Hash::make('zakazivanje2026'),
             'role' => User::ROLE_ADMIN,
         ]);
 
