@@ -29,12 +29,14 @@ class BookingController extends Controller
             'service_ids.*' => ['integer', 'distinct'],
             'staff_member_id' => ['nullable', 'integer'],
             'date' => ['required', 'date_format:Y-m-d'],
+            'ignore_appointment_id' => ['nullable', 'integer'],
         ]);
 
         return $this->availability->slots(
             $this->availability->servicesInOrder($data['service_ids']),
             $data['staff_member_id'] ?? null,
             CarbonImmutable::parse($data['date']),
+            $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
         );
     }
 
@@ -46,6 +48,7 @@ class BookingController extends Controller
             'staff_member_id' => ['nullable', 'integer'],
             'from' => ['required', 'date_format:Y-m-d'],
             'days' => ['nullable', 'integer', 'min:1', 'max:31'],
+            'ignore_appointment_id' => ['nullable', 'integer'],
         ]);
 
         return $this->availability->days(
@@ -53,6 +56,7 @@ class BookingController extends Controller
             $data['staff_member_id'] ?? null,
             CarbonImmutable::parse($data['from']),
             $data['days'] ?? 14,
+            $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
         );
     }
 
@@ -105,6 +109,15 @@ class BookingController extends Controller
         $this->notifier->booked($appointment);
 
         return response()->json($appointment, 201);
+    }
+
+    private function ownAppointmentId(Request $request, ?int $id): ?int
+    {
+        if (! $id || ! $request->user()) {
+            return null;
+        }
+
+        return Appointment::whereKey($id)->where('client_id', $request->user()->id)->exists() ? $id : null;
     }
 
     private function guestClient(array $guest): User

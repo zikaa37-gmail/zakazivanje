@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Services\AppointmentNotifier;
 use App\Services\BookingService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -43,6 +44,30 @@ class MyAppointmentController extends Controller
         $notifier->cancelledByClient($appointment);
 
         return $appointment;
+    }
+
+    public function reschedule(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier)
+    {
+        abort_unless($appointment->client_id === $request->user()->id, 404);
+
+        $data = $request->validate([
+            'staff_member_id' => ['nullable', 'integer', 'exists:staff_members,id'],
+            'starts_at' => ['required', 'date_format:Y-m-d H:i'],
+        ]);
+
+        if (! $this->canCancel($appointment)) {
+            $label = BusinessSetting::current()->cancellationLabel();
+            throw ValidationException::withMessages(['appointment' => ["Promena termina je moguća {$label} — pozovi salon."]]);
+        }
+
+        $previous = $appointment->starts_at->format('Y-m-d H:i');
+        $moved = $bookings->moveByClient($appointment, $data['staff_member_id'] ?? null, CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']));
+
+        if ($previous !== $moved->starts_at->format('Y-m-d H:i') || $moved->wasChanged('staff_member_id')) {
+            $notifier->rescheduledByClient($moved, $previous);
+        }
+
+        return [...$moved->toArray(), 'can_cancel' => $this->canCancel($moved)];
     }
 
     private function canCancel(Appointment $appointment): bool

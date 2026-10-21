@@ -55,6 +55,20 @@ class AppointmentNotifier
         }
     }
 
+    public function rescheduledByClient(Appointment $appointment, string $previousStart): void
+    {
+        $settings = BusinessSetting::current();
+        $pending = $appointment->status === Appointment::STATUS_PENDING;
+
+        if ($pending ? $settings->notify_booking_received : $settings->notify_booking_confirmed) {
+            $this->toClient($appointment, $pending ? AppointmentNotification::RECEIVED : AppointmentNotification::RESCHEDULED);
+        }
+
+        if ($settings->notify_admin_new_booking) {
+            Notification::send($this->admins(), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart));
+        }
+    }
+
     public function reminder(Appointment $appointment): void
     {
         $this->toClient($appointment, AppointmentNotification::REMINDER);

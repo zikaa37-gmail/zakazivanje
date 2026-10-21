@@ -34,7 +34,10 @@
             <div class="flex items-center justify-between mt-2">
               <span [class]="'badge ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
               @if (a.can_cancel) {
-                <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)">Otkaži termin</button>
+                <span class="flex gap-3">
+                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)">Promeni</button>
+                  <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)">Otkaži</button>
+                </span>
               }
             </div>
           </div>
@@ -74,7 +77,10 @@
           </div>
           <div class="flex items-center justify-between border-t border-[var(--color-border)] mt-3 pt-3">
             @if (a.can_cancel) {
-              <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži termin</button>
+              <span class="flex gap-4">
+                <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
+                <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži</button>
+              </span>
             } @else {
               <span></span>
             }
@@ -90,9 +96,13 @@
     </div>
     @if (scope() === 'upcoming') {
       <div class="card mt-3 text-sm" style="background: var(--color-info-tint); color: var(--color-info); border-color: transparent">
-        Otkazivanje je moguće {{ cancellationText() }}. Posle toga pozovi salon.
+        Promena i otkazivanje termina mogući su {{ cancellationText() }}. Posle toga pozovi salon.
       </div>
     }
   }
   }
 </div>
+
+@if (rescheduling(); as appointment) {
+  <app-reschedule [appointment]="appointment" (moved)="onMoved()" (closed)="rescheduling.set(null)" />
+}
