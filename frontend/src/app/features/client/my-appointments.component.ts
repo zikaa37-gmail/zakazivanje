@@ -6,8 +6,9 @@ import { BusinessSettingService } from '../../core/services/business-setting.ser
 import { ConfirmService } from '../../core/services/confirm.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
-import { monthShort, parseDate, timeOf, weekdayShort } from '../../core/utils/dates';
+import { isoDate, monthLabel, monthShort, parseDate, timeOf, today, weekdayShort } from '../../core/utils/dates';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
+import { MonthCalendarComponent, MonthCalendarItem } from '../../shared/components/month-calendar/month-calendar.component';
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
@@ -15,7 +16,7 @@ import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, RsdPipe],
+  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, RsdPipe],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -29,10 +30,60 @@ export class MyAppointmentsComponent {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly appointments = signal<Appointment[]>([]);
+  readonly mode = signal<'list' | 'calendar'>('list');
+  readonly visibleMonth = signal(today());
+  readonly selectedDay = signal<string | null>(null);
+  readonly allAppointments = signal<Appointment[]>([]);
+  readonly monthTitle = computed(() => monthLabel(this.visibleMonth()));
+  readonly monthItems = computed<MonthCalendarItem[]>(() =>
+    this.allAppointments().map((a) => ({
+      date: a.starts_at.slice(0, 10),
+      label: `${timeOf(a.starts_at)} ${a.items[0]?.name ?? ''}`,
+      muted: a.status === 'cancelled' || a.status === 'no_show',
+    })),
+  );
+  readonly dayAppointments = computed(() => {
+    const day = this.selectedDay();
+    return day ? this.allAppointments().filter((a) => a.starts_at.startsWith(day)) : [];
+  });
   readonly cancellationHours = computed(() => this.business.settings()?.cancellation_hours ?? 24);
 
   constructor() {
     this.load();
+  }
+
+  setMode(mode: 'list' | 'calendar'): void {
+    this.mode.set(mode);
+    if (mode === 'calendar') this.loadAll();
+  }
+
+  stepMonth(direction: 1 | -1): void {
+    const date = parseDate(this.visibleMonth().slice(0, 7) + '-01');
+    date.setMonth(date.getMonth() + direction);
+    this.visibleMonth.set(isoDate(date));
+    this.selectedDay.set(null);
+  }
+
+  loadAll(): void {
+    this.loading.set(true);
+    let pending = 2;
+    const merged: Appointment[] = [];
+    const done = (list: Appointment[]) => {
+      merged.push(...list);
+      if (--pending === 0) {
+        this.allAppointments.set(merged.sort((a, b) => a.starts_at.localeCompare(b.starts_at)));
+        this.loading.set(false);
+        if (!this.selectedDay()) {
+          const next = merged.find((a) => a.starts_at.slice(0, 10) >= today() && a.status !== 'cancelled');
+          if (next) {
+            this.selectedDay.set(next.starts_at.slice(0, 10));
+            this.visibleMonth.set(next.starts_at.slice(0, 10));
+          }
+        }
+      }
+    };
+    this.booking.mine('upcoming').subscribe({ next: done, error: () => done([]) });
+    this.booking.mine('past').subscribe({ next: done, error: () => done([]) });
   }
 
   setScope(scope: 'upcoming' | 'past'): void {
@@ -89,6 +140,7 @@ export class MyAppointmentsComponent {
       next: () => {
         this.toast.success('Termin je otkazan.');
         this.load();
+        if (this.mode() === 'calendar') this.loadAll();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Otkazivanje nije uspelo.')),
     });

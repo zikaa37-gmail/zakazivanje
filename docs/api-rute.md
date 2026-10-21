@@ -55,6 +55,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series}` — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
+| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
 | POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom adminu |

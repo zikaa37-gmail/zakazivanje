@@ -5,6 +5,14 @@
     <p class="muted">{{ auth.currentUser()?.email }}</p>
   </div>
 
+  @if (auth.currentUser() && !auth.currentUser()!.email_verified_at) {
+    <div class="card mb-4 flex flex-wrap items-center gap-3" style="background: var(--color-warning-tint); color: var(--color-warning); border-color: transparent" data-testid="unverified-notice">
+      <span appIcon="mail" aria-hidden="true"></span>
+      <span class="flex-1 text-sm">Email adresa još nije potvrđena. Proveri poštu (i spam).</span>
+      <app-button theme="secondary" size="s" [loading]="resending()" (click)="resendVerification()" data-testid="resend-verification">Pošalji ponovo</app-button>
+    </div>
+  }
+
   <div class="card">
     <h2 class="text-base font-semibold">Lični podaci</h2>
     <app-error-message [message]="error()" />
@@ -35,6 +43,34 @@
         <app-button type="submit" size="s" [loading]="saving()">Sačuvaj</app-button>
       </div>
     </form>
+  </div>
+
+  <div class="card mt-4">
+    <button type="button" class="flex items-center gap-2 w-full font-semibold text-left" (click)="passwordOpen.set(!passwordOpen())" data-testid="change-password-toggle">
+      <span appIcon="lock" aria-hidden="true"></span>
+      <span class="flex-1">Promeni lozinku</span>
+      <span appIcon="chevron-down" aria-hidden="true"></span>
+    </button>
+    @if (passwordOpen()) {
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="mt-3" novalidate>
+        <app-error-message [message]="passwordError()" />
+        <div class="field">
+          <label for="p-current">Trenutna lozinka</label>
+          <input id="p-current" appInput size="m" type="password" autocomplete="current-password" formControlName="current_password" data-testid="current-password" />
+        </div>
+        <div class="field">
+          <label for="p-new">Nova lozinka (bar 8 karaktera)</label>
+          <input id="p-new" appInput size="m" type="password" autocomplete="new-password" formControlName="password" data-testid="new-password" />
+        </div>
+        <div class="field">
+          <label for="p-new2">Ponovi novu lozinku</label>
+          <input id="p-new2" appInput size="m" type="password" autocomplete="new-password" formControlName="password_confirmation" data-testid="new-password-confirmation" />
+        </div>
+        <div class="flex justify-end">
+          <app-button type="submit" size="s" [loading]="passwordSaving()" data-testid="change-password-save">Promeni lozinku</app-button>
+        </div>
+      </form>
+    }
   </div>
 
   <div class="card mt-4">

@@ -92,3 +92,10 @@
 .toast-info .toast-icon {
   color: var(--color-info);
 }
+
+@media (max-width: 767px) {
+  .toast-stack-bottom-left,
+  .toast-stack-bottom-right {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}

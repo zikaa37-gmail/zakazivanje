@@ -26,6 +26,7 @@
           <a routerLink="/my-appointments" appBtn size="l" data-testid="go-my-appointments">Moji termini</a>
         } @else {
           <p class="text-sm muted">Napravi nalog istim emailom da bi video i otkazivao svoje termine.</p>
+          <a routerLink="/register" appBtn size="l">Napravi nalog</a>
         }
         <button type="button" appBtn theme="secondary" size="l" (click)="bookAnother()">Zakaži još jedan termin</button>
       </div>
@@ -176,17 +177,21 @@
         </div>
 
         @if (!auth.isAuthenticated()) {
-          <div class="chip-group mt-4" role="tablist">
-            <button type="button" class="chip" [class.selected]="!asGuest()" (click)="asGuest.set(false)">Imam nalog</button>
-            @if (business.settings()?.allow_guest_booking !== false) {
+          @if (business.settings()?.allow_guest_booking) {
+            <div class="chip-group mt-4" role="tablist">
+              <button type="button" class="chip" [class.selected]="!asGuest()" (click)="asGuest.set(false)">Imam nalog</button>
               <button type="button" class="chip" [class.selected]="asGuest()" (click)="asGuest.set(true)" data-testid="book-as-guest">Nastavi kao gost</button>
-            }
-          </div>
+            </div>
+          }
 
-          @if (!asGuest() || business.settings()?.allow_guest_booking === false) {
+          @if (!asGuest() || !business.settings()?.allow_guest_booking) {
             <div class="card mt-3 text-center">
-              <p class="muted text-sm">Prijavi se — izbor termina ostaje sačuvan.</p>
-              <button type="button" appBtn class="w-full" (click)="loginToBook()" data-testid="book-login">Prijavi se</button>
+              <p class="font-semibold">Za zakazivanje je potreban nalog</p>
+              <p class="muted text-sm">Prijavi se ili napravi nalog za minut — izbor termina ostaje sačuvan.</p>
+              <div class="flex flex-col gap-2">
+                <button type="button" appBtn class="w-full" (click)="loginToBook()" data-testid="book-login">Prijavi se</button>
+                <button type="button" appBtn theme="secondary" class="w-full" (click)="registerToBook()" data-testid="book-register">Registruj se</button>
+              </div>
             </div>
           } @else {
             <form [formGroup]="guestForm" class="mt-3" novalidate>
@@ -212,7 +217,7 @@
           }
         }
 
-        @if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking !== false)) {
+        @if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking)) {
           <div class="field mt-3">
             <label for="b-note">Napomena (opciono)</label>
             <textarea id="b-note" appInput size="m" rows="2" [value]="draft().note" (input)="setNote($event)" placeholder="npr. alergija na..."></textarea>
@@ -225,7 +230,7 @@
       <div class="text-xs muted mb-2 truncate">{{ summary() || 'Izaberi uslugu' }}</div>
       @if (draft().step < 3) {
         <button type="button" appBtn size="l" class="w-full" [disabled]="stepDisabled()" (click)="next()" data-testid="book-next">Dalje</button>
-      } @else if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking !== false)) {
+      } @else if (auth.isAuthenticated() || (asGuest() && business.settings()?.allow_guest_booking)) {
         <app-button size="l" [block]="true" [loading]="saving()" (click)="submit()" data-testid="book-submit">Zakaži termin</app-button>
       }
     </div>

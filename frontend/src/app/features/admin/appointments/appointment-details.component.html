@@ -1,0 +1,88 @@
+<app-modal [title]="appointment().client?.first_name + ' ' + appointment().client?.last_name" footerMode="none" (cancelled)="closed.emit()" testId="appointment-details">
+  <div class="flex flex-col gap-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <span [class]="'badge ' + statuses[appointment().status].badge">{{ statuses[appointment().status].label }}</span>
+      @if (appointment().recurrence_id) {
+        <span class="badge badge-neutral"><span appIcon="rotate-ccw" [iconSize]="12" class="mr-1"></span>Ponavlja se</span>
+      }
+      @if (appointment().source === 'online') {
+        <span class="badge badge-neutral">Online</span>
+      }
+    </div>
+
+    <div>
+      <div class="font-semibold">{{ when() }}</div>
+      <div class="text-sm muted flex items-center gap-2">
+        <span class="color-dot" [style.background]="appointment().staff_member?.color || 'var(--color-primary)'"></span>
+        {{ appointment().staff_member?.first_name }} {{ appointment().staff_member?.last_name }}
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3 text-sm">
+      @if (phoneHref()) {
+        <a [href]="phoneHref()" class="flex items-center gap-1"><span appIcon="phone" aria-hidden="true"></span>{{ appointment().client?.phone }}</a>
+      }
+      @if (appointment().client?.email) {
+        <a [href]="'mailto:' + appointment().client?.email" class="flex items-center gap-1"><span appIcon="mail" aria-hidden="true"></span>{{ appointment().client?.email }}</a>
+      }
+    </div>
+
+    <div class="rounded-lg bg-[var(--color-bg)] p-3 text-sm">
+      @for (item of appointment().items; track item.id) {
+        <div class="flex justify-between gap-2">
+          <span>{{ item.name }} <span class="muted">{{ item.duration_minutes }} min</span></span>
+          <span>{{ item.price | rsd }}</span>
+        </div>
+        @if (item.discount > 0) {
+          <div class="flex justify-between gap-2 text-[var(--color-secondary)]">
+            <span>{{ item.promotion_name }}</span><span>−{{ item.discount | rsd }}</span>
+          </div>
+        }
+      }
+      <div class="flex justify-between gap-2 font-bold border-t border-[var(--color-border)] mt-2 pt-2">
+        <span>Ukupno</span><span>{{ appointment().total | rsd }}</span>
+      </div>
+    </div>
+
+    @if (appointment().note) {
+      <div class="text-sm"><span class="muted">Napomena klijenta:</span> {{ appointment().note }}</div>
+    }
+    @if (appointment().admin_note) {
+      <div class="text-sm"><span class="muted">Interna napomena:</span> {{ appointment().admin_note }}</div>
+    }
+
+    <div class="flex flex-wrap gap-2">
+      @if (appointment().status === 'pending') {
+        <button type="button" appBtn size="s" (click)="act('confirmed')" data-testid="details-confirm">Potvrdi</button>
+      }
+      @if (active()) {
+        <button type="button" appBtn theme="secondary" size="s" (click)="act('completed')" data-testid="details-completed">Završen</button>
+        <button type="button" appBtn theme="secondary" size="s" (click)="act('no_show')">Nije došao</button>
+        <button type="button" appBtn theme="secondary" size="s" (click)="moving.set(!moving())" data-testid="details-move">Pomeri</button>
+        <button type="button" appBtn theme="danger" size="s" (click)="act('cancel')" data-testid="details-cancel">Otkaži</button>
+        @if (appointment().recurrence?.active) {
+          <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="act('cancel-series')">Otkaži i sve sledeće</button>
+        }
+      } @else {
+        <button type="button" appBtn theme="secondary" size="s" (click)="act('confirmed')">Vrati na potvrđen</button>
+      }
+    </div>
+
+    @if (moving() && active()) {
+      <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-2" data-testid="details-move-form">
+        <div class="text-sm font-semibold">Novo vreme</div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select appInput class="!w-auto" [formControl]="moveStaff" aria-label="Zaposleni">
+            @for (m of eligibleStaff(); track m.id) {
+              <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+            }
+          </select>
+          <input appInput class="!w-auto" type="date" [formControl]="moveDate" aria-label="Datum" data-testid="details-move-date" />
+          <app-time-picker [control]="moveTime" data-testid="details-move-time" />
+          <app-button size="s" [loading]="saving()" (click)="move()" data-testid="details-move-save">Sačuvaj</app-button>
+        </div>
+        <span class="text-xs muted">Klijent dobija obaveštenje o novom vremenu. U kalendaru termin možeš i da prevučeš mišem.</span>
+      </div>
+    }
+  </div>
+</app-modal>

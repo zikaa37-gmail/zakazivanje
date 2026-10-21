@@ -125,7 +125,13 @@ beleži u `notification_logs` (mejl preko `NotificationSent` / `NotificationFail
 po vrsti i vreme podsetnika u Podešavanjima → Obaveštenja; ponavljanje šalje jednu poruku za ceo niz.
 Obaveštenja idu kroz red (`ShouldQueue`, `afterCommit`); lokalno je `QUEUE_CONNECTION=sync` i
 `MAIL_MAILER=log` (mejlovi u `backend/storage/logs/laravel.log`). Frontend: `/forgot-password`,
-`/reset-password`. Sledeće: kalendar (#18, uključuje UI za `blocked_times`).
+`/reset-password`. Kalendar (#18): `/admin/calendar` — dan (kolona po zaposlenom, prevlačenje termina
+= `reschedule`, klik na prazno = novi termin), nedelja (kolona po danu, preklapanja u trake), mesec
+(`<app-month-calendar>`, deljena komponenta; koristi je i klijent u „Moji termini → Kalendar"),
+blokade vremena, boje po statusu; modal novog termina je `AppointmentFormComponent`, detalji
+`AppointmentDetailsComponent`, akcije `AppointmentActionsService` (koriste ih lista i kalendar).
+Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
+(`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

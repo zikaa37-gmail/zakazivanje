@@ -1,0 +1,35 @@
+<div class="month" [attr.data-testid]="testId() || null">
+  <div class="month-head">
+    @for (w of weekdays; track w) {
+      <div>{{ w }}</div>
+    }
+  </div>
+  @for (week of weeks(); track $index) {
+    <div class="month-week">
+      @for (day of week; track day.date) {
+        <button
+          type="button"
+          class="month-day"
+          [class.outside]="!day.inMonth"
+          [class.today]="day.date === todayIso"
+          [class.selected]="day.date === selected()"
+          (click)="dayClicked.emit(day.date)"
+          [attr.data-testid]="testId() ? testId() + '-' + day.date : null"
+        >
+          <span class="month-day-number">{{ day.day }}</span>
+          @if (day.count > 0) {
+            <span class="month-dot-mobile">{{ day.count }}</span>
+          }
+          <span class="month-items">
+            @for (item of day.items; track $index) {
+              <span class="month-item" [class.muted-item]="item.muted" [style.border-left-color]="item.color || 'var(--color-primary)'">{{ item.label }}</span>
+            }
+            @if (day.more > 0) {
+              <span class="month-more">+{{ day.more }} još</span>
+            }
+          </span>
+        </button>
+      }
+    </div>
+  }
+</div>

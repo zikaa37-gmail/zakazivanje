@@ -25,6 +25,8 @@ class AppointmentNotification extends Notification implements ShouldQueue
 
     public const REMINDER = 'appointment_reminder';
 
+    public const RESCHEDULED = 'appointment_rescheduled';
+
     public function __construct(
         public Appointment $appointment,
         public string $type,
@@ -73,7 +75,7 @@ class AppointmentNotification extends Notification implements ShouldQueue
             $message->action('Moji termini', rtrim(config('app.frontend_url'), '/').'/my-appointments');
         }
 
-        if ($this->type === self::CONFIRMED || $this->type === self::REMINDER || $this->type === self::CANCELLED) {
+        if (in_array($this->type, [self::CONFIRMED, self::REMINDER, self::CANCELLED, self::RESCHEDULED], true)) {
             $message->attachData(IcsCalendar::forAppointment($a, $this->type === self::CANCELLED), 'termin.ics', ['mime' => 'text/calendar']);
         }
 
@@ -107,6 +109,7 @@ class AppointmentNotification extends Notification implements ShouldQueue
             self::CONFIRMED => 'termin je potvrđen',
             self::CANCELLED => 'termin je otkazan',
             self::REMINDER => 'podsetnik za termin',
+            self::RESCHEDULED => 'termin je pomeren',
         };
     }
 
@@ -117,6 +120,7 @@ class AppointmentNotification extends Notification implements ShouldQueue
             self::CONFIRMED => $this->appointment->source === Appointment::SOURCE_ONLINE ? 'Tvoj termin je potvrđen. Vidimo se!' : 'Zakazali smo ti termin.',
             self::CANCELLED => 'Nažalost, termin je otkazan. Izaberi novi termin kad ti odgovara.',
             self::REMINDER => 'Podsećamo te na termin:',
+            self::RESCHEDULED => 'Tvoj termin je pomeren. Novo vreme:',
         };
     }
 

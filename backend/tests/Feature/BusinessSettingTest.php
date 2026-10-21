@@ -15,6 +15,11 @@ class BusinessSettingTest extends TestCase
         $this->getJson('/api/public/business')->assertOk()->assertJsonStructure(['name', 'category', 'opening_hours' => [['weekday', 'opens_at', 'closes_at']]]);
     }
 
+    public function test_guest_booking_is_off_by_default(): void
+    {
+        $this->getJson('/api/public/business')->assertOk()->assertJsonPath('allow_guest_booking', false);
+    }
+
     public function test_only_admin_updates_business_settings(): void
     {
         $payload = ['name' => 'Berbernica Mika', 'category' => 'barber', 'city' => 'Novi Sad', 'booking_confirmation' => 'automatic', 'theme_primary' => '#123abc'];

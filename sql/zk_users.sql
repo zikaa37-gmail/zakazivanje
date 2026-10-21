@@ -1,4 +1,4 @@
--- Tabela `zk_users`: šema i podaci iz lokalne baze (20.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_users`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -33,6 +33,6 @@ CREATE TABLE `zk_users` (
   KEY `zk_users_role_index` (`role`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_users` VALUES (1,'Admin','Zakazivanje','zakazivanje@fiskultura.rs','+381 60 384 8336',NULL,NULL,'admin','email',1,'2026-10-20 13:03:06',NULL,'$2y$12$x91hKoI7ODnMtEzJoMD6PuFifP7AysHpUtp1yNst0VTWUTML8cm/i',NULL,NULL,'IJ9ufWch96','2026-10-20 13:03:07','2026-10-20 13:03:07'),(2,'Petar','Petrović','devtestzikaa@gmail.com','+381 64 123 4567',NULL,NULL,'client','email',1,'2026-10-20 13:03:07',NULL,'$2y$12$W8IumXG4bqMF3vgZlDczbeJFwUsCa3hOsEGqzpV8z6tJugFde8rDO',NULL,NULL,'dLs84orWJD','2026-10-20 13:03:07','2026-10-20 13:03:07'),(3,'Ivana','Mitić',NULL,'+381 65 444 5555',NULL,NULL,'client','email',1,'2026-10-20 13:03:07',NULL,NULL,'Zakazuje telefonom.',NULL,'7Z07ug1jDX','2026-10-20 13:03:07','2026-10-20 13:03:07');
+INSERT INTO `zk_users` VALUES (1,'Admin','Zakazivanje','zakazivanje@fiskultura.rs','+381 60 939 9065',NULL,NULL,'admin','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$G./3lB.C0.PGpy0YW0SS0uPWIbTz7NucHSPjftL8pKfKZ/PdOWxJm',NULL,NULL,'azeMnVBaLT','2026-10-21 08:59:46','2026-10-21 08:59:46'),(2,'Petar','Petrović','devtestzikaa@gmail.com','+381 64 123 4567',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$zpkbMytanjbtFvI4pXNn9u5jCl/vJFjIWhjDMKcRBFa/fvvFxgKBe',NULL,NULL,'0PO2SqGggr','2026-10-21 08:59:46','2026-10-21 08:59:46'),(3,'Ivana','Mitić',NULL,'+381 65 444 5555',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,NULL,'Zakazuje telefonom.',NULL,'h0s66wt0Pf','2026-10-21 08:59:46','2026-10-21 08:59:46');
 
 SET FOREIGN_KEY_CHECKS=1;

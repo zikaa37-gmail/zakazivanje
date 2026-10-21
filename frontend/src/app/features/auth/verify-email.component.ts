@@ -1,13 +1,17 @@
 import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
+import { ToastService } from '../../core/services/toast.service';
+import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconDirective } from '../../shared/directives/icon.directive';
+import { InputDirective } from '../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-verify-email',
   standalone: true,
-  imports: [RouterLink, IconDirective],
+  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, IconDirective, InputDirective],
   template: `
     <div class="auth-page">
       <div class="auth-card">
@@ -22,6 +26,15 @@ import { IconDirective } from '../../shared/directives/icon.directive';
           </span>
           <h1 class="text-xl font-bold">{{ status() === 'ok' ? 'Email je potvrđen' : 'Potvrda nije uspela' }}</h1>
           <p class="muted">{{ message() }}</p>
+          @if (status() === 'error') {
+            <form class="mt-4 text-left" (submit)="$event.preventDefault(); resend()" novalidate>
+              <div class="field">
+                <label for="v-email">Pošalji novi link na</label>
+                <input id="v-email" appInput size="m" type="email" [formControl]="email" placeholder="tvoj@email.rs" data-testid="verify-resend-email" />
+              </div>
+              <app-button type="submit" [block]="true" [loading]="resending()" data-testid="verify-resend">Pošalji novi link</app-button>
+            </form>
+          }
           <a routerLink="/login" class="auth-link">Prijavi se</a>
         }
       </div>
@@ -32,9 +45,31 @@ export class VerifyEmailComponent implements OnInit {
   readonly token = input<string>();
 
   private auth = inject(AuthService);
+  private toast = inject(ToastService);
+
+  readonly email = new FormControl(this.auth.currentUser()?.email ?? '', { nonNullable: true, validators: [Validators.required, Validators.email] });
+  readonly resending = signal(false);
 
   readonly status = signal<'loading' | 'ok' | 'error'>('loading');
   readonly message = signal('');
+
+  resend(): void {
+    if (this.email.invalid) {
+      this.toast.error('Unesi ispravan email.');
+      return;
+    }
+    this.resending.set(true);
+    this.auth.resendVerification(this.email.value.trim()).subscribe({
+      next: (res) => {
+        this.resending.set(false);
+        this.toast.success(res.message);
+      },
+      error: (err) => {
+        this.resending.set(false);
+        this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.'));
+      },
+    });
+  }
 
   ngOnInit(): void {
     const token = this.token();
@@ -48,6 +83,7 @@ export class VerifyEmailComponent implements OnInit {
       next: (res) => {
         this.status.set('ok');
         this.message.set(res.message);
+        if (this.auth.isAuthenticated()) this.auth.loadMe().subscribe({ error: () => undefined });
       },
       error: (err) => {
         this.status.set('error');

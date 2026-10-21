@@ -4,12 +4,49 @@
     <a routerLink="/book" appBtn size="s" data-testid="my-book-new"><span appIcon="plus" aria-hidden="true"></span> Zakaži</a>
   </div>
 
-  <div class="chip-group mb-4" role="tablist">
-    <button type="button" class="chip" [class.selected]="scope() === 'upcoming'" (click)="setScope('upcoming')">Predstojeći</button>
-    <button type="button" class="chip" [class.selected]="scope() === 'past'" (click)="setScope('past')" data-testid="my-past">Prošli i otkazani</button>
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+    @if (mode() === 'list') {
+      <div class="chip-group" role="tablist">
+        <button type="button" class="chip" [class.selected]="scope() === 'upcoming'" (click)="setScope('upcoming')">Predstojeći</button>
+        <button type="button" class="chip" [class.selected]="scope() === 'past'" (click)="setScope('past')" data-testid="my-past">Prošli i otkazani</button>
+      </div>
+    } @else {
+      <div class="flex items-center gap-2">
+        <button type="button" class="btn-icon" aria-label="Prethodni mesec" (click)="stepMonth(-1)"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+        <span class="font-semibold">{{ monthTitle() }}</span>
+        <button type="button" class="btn-icon" aria-label="Sledeći mesec" (click)="stepMonth(1)"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+      </div>
+    }
+    <div class="chip-group">
+      <button type="button" class="chip" [class.selected]="mode() === 'list'" (click)="setMode('list')">Lista</button>
+      <button type="button" class="chip" [class.selected]="mode() === 'calendar'" (click)="setMode('calendar')" data-testid="my-calendar">Kalendar</button>
+    </div>
   </div>
 
+  @if (mode() === 'calendar') {
+    <app-month-calendar [month]="visibleMonth()" [items]="monthItems()" [maxPerDay]="2" [selected]="selectedDay()" (dayClicked)="selectedDay.set($event)" data-testid="my-month" />
+    @if (selectedDay()) {
+      <div class="flex flex-col gap-3 mt-4">
+        @for (a of dayAppointments(); track a.id) {
+          <div class="card">
+            <div class="font-semibold">{{ serviceNames(a) }}</div>
+            <div class="text-sm muted">{{ time(a) }} · {{ a.staff_member?.first_name }} {{ a.staff_member?.last_name }}</div>
+            <div class="flex items-center justify-between mt-2">
+              <span [class]="'badge ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
+              @if (a.can_cancel) {
+                <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)">Otkaži termin</button>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="card empty-state">Tog dana nemaš termin.</div>
+        }
+      </div>
+    }
+  } @else {
+
   <app-error-message [message]="error()" />
+
 
   @if (loading() && appointments().length === 0) {
   } @else if (appointments().length === 0) {
@@ -52,9 +89,10 @@
       }
     </div>
     @if (scope() === 'upcoming') {
-      <div class="card mt-3 text-sm bg-[var(--color-info-tint)] text-[var(--color-info)] border-0">
+      <div class="card mt-3 text-sm" style="background: var(--color-info-tint); color: var(--color-info); border-color: transparent">
         Otkazivanje je moguće najkasnije {{ cancellationHours() }} h pre termina. Posle toga pozovi salon.
       </div>
     }
+  }
   }
 </div>
