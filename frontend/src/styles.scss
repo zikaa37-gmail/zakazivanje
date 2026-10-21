@@ -64,16 +64,16 @@ p {
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--color-primary-dark);
+  color: var(--color-primary-text);
 }
 
 a:active {
-  color: var(--color-primary-active);
+  color: var(--color-primary-text);
 }
 
 a:focus-visible {
@@ -291,7 +291,7 @@ button.badge:focus-visible {
   align-items: center;
   justify-content: center;
   background: var(--color-primary-tint);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   border: none;
   font-weight: 700;
   font-size: 0.85rem;
@@ -338,7 +338,7 @@ button.badge:focus-visible {
 .chip.selected {
   background: var(--color-primary-tint);
   border-color: var(--color-primary);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 600;
 }
 
@@ -357,7 +357,7 @@ button.badge:focus-visible {
 
 .day-dot.on {
   background: var(--color-primary-tint);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
 }
 
 .color-dot {
@@ -402,7 +402,7 @@ button.badge:focus-visible {
   padding: 0.7rem 1.25rem;
   border-radius: var(--radius);
   background: var(--color-surface);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-weight: 700;
 
   &:hover {
@@ -552,7 +552,7 @@ button.badge:focus-visible {
   }
 
   span.current {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     font-weight: 600;
   }
 }
@@ -583,7 +583,7 @@ button.badge:focus-visible {
   flex-shrink: 0;
   border-radius: 10px;
   background: var(--color-primary-tint);
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   line-height: 1.1;
 
   small {
