@@ -213,6 +213,12 @@
           <app-toggle [checked]="form.controls.allow_guest_booking.value" label="Gost može da zakaže bez naloga (ime + telefon)" (checkedChange)="form.controls.allow_guest_booking.setValue($event)" />
         </div>
 
+        <div class="card max-w-2xl mb-4">
+          <h2 class="text-base font-semibold">Recenzije</h2>
+          <p class="text-sm muted mb-2">Klijenti ocenjuju završene termine (1–5 zvezdica i komentar); prosek i utisci se vide na sajtu.</p>
+          <app-toggle [checked]="form.controls.reviews_enabled.value" label="Klijenti mogu da ocene posetu" (checkedChange)="form.controls.reviews_enabled.setValue($event)" data-testid="settings-reviews" />
+        </div>
+
         <div class="card max-w-2xl">
           <h2 class="text-base font-semibold">Potvrda termina</h2>
           <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>

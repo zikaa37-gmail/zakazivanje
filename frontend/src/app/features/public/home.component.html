@@ -29,6 +29,23 @@
     }
   </section>
 
+  @if (reviews(); as r) {
+    @if (r.enabled && r.summary.count > 0) {
+      <section data-testid="home-reviews">
+        <div class="flex items-baseline justify-between mb-2">
+          <h2 class="text-lg font-semibold">Utisci klijenata</h2>
+          <a routerLink="/reviews" class="text-sm font-semibold text-[var(--color-primary-text)]">Svi utisci</a>
+        </div>
+        <div class="card flex flex-col gap-4">
+          <app-review-summary [summary]="r.summary" [showDistribution]="false" />
+          @for (review of latestReviews(); track review.id) {
+            <div class="border-t border-[var(--color-border)] pt-4"><app-review-card [review]="review" /></div>
+          }
+        </div>
+      </section>
+    }
+  }
+
   @if (photos().length > 0) {
     <section data-testid="home-gallery">
       <div class="flex items-baseline justify-between mb-2">

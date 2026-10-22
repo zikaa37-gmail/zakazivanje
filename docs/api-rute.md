@@ -9,6 +9,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/health` | provera da backend radi |
 | GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) |
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
+| GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
 | GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, width, height, url}]` (bez sadržaja slike) |
 | GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available}]` |
@@ -36,6 +37,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
 | POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; adminu mejl sa starim vremenom |
+| POST | `/my-appointments/{id}/review` | `{rating 1–5, comment?}` — samo završen termin; izmena do 30 dana |
 | POST | `/my-appointments/{id}/payment` | IPS podaci za uplatu `{amount, account, payee, payment_code, model, reference, purpose, payload, qr}` — samo ako je uključeno plaćanje unapred |
 | POST | `/my-appointments/{id}/slip` | PDF uplatnica |
 | POST | `/my-appointments/{id}/cancel` | otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina) |
@@ -64,6 +66,8 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
 | POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (admin, i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |
+| POST | `/reviews/list` | `{rating?, staff_member_id?, visible?}` → `{summary, staff (prosek po zaposlenom), items}` |
+| PUT | `/reviews/{id}` | `{visible?, reply?}` — sakrivanje sa sajta, odgovor salona |
 | POST | `/share/qr` | `{url}` (http/https) → `{url, png (data URL), svg}` za štampu |
 | POST | `/gallery/list` | sve slike galerije (i skrivene) |
 | POST | `/gallery` | `{data (data URL JPG/PNG/WEBP, do ~4 MB), width, height, caption?, service_id?}` — jedna slika po pozivu, nova ide na početak |

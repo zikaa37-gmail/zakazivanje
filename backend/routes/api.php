@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
@@ -21,6 +22,7 @@ Route::get('/health', fn () => ['status' => 'ok']);
 Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:public');
 Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
+Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
 
 Route::middleware(['jwt.optional', 'throttle:public'])->group(function () {
@@ -49,6 +51,7 @@ Route::middleware('jwt')->group(function () {
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
+    Route::post('/my-appointments/{appointment}/review', [ReviewController::class, 'store'])->middleware('throttle:booking');
     Route::post('/my-appointments/{appointment}/payment', [AppointmentPaymentController::class, 'clientDetails']);
     Route::post('/my-appointments/{appointment}/slip', [AppointmentPaymentController::class, 'clientSlip']);
     Route::post('/my-appointments/{appointment}/reschedule', [MyAppointmentController::class, 'reschedule'])->middleware('throttle:booking');
@@ -75,6 +78,9 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/promotions', [PromotionController::class, 'store']);
     Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
     Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
+
+    Route::post('/reviews/list', [ReviewController::class, 'index']);
+    Route::put('/reviews/{review}', [ReviewController::class, 'update']);
 
     Route::post('/share/qr', [ShareController::class, 'qr']);
 

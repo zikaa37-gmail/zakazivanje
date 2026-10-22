@@ -148,6 +148,11 @@ Plaćanje (kao u košarkaškoj): Podešavanja → Plaćanje (`bank_account`, pri
 mod 97 od id termina) i PDF uplatnicu (`barryvdh/laravel-dompdf`, `pdf/payment-slip`); klijent „Plati" u
 Moji termini (`<app-payment-dialog>`), admin u detaljima termina beleži gotovina / kartica / račun (`paid_at`,
 `payment_method`) ili pokazuje IPS QR na kasi. Kartično plaćanje preko interneta nije uključeno (treba ugovor sa bankom).
+Recenzije (#21): `Review` (jedna po terminu, izmena do 30 dana), `ReviewService`; kad admin označi termin
+„Završen", `AppointmentNotifier` šalje `ReviewRequestNotification` (link `/my-appointments?review={id}`,
+samo klijentu sa nalogom; `notify_review_request`); javno `/reviews` i blok na početnoj (`<app-review-summary>`,
+`<app-review-card>`, `<app-stars>`), admin `/admin/reviews` (prosek po zaposlenom, odgovor, sakrivanje);
+unos ocene `<app-star-input>` (prima `FormControl`). Prekidač `reviews_enabled` u Podešavanja → Zakazivanje.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'paid_at', 'payment_method'])]
 class Appointment extends Model
@@ -60,6 +61,11 @@ class Appointment extends Model
     public function recurrence(): BelongsTo
     {
         return $this->belongsTo(AppointmentRecurrence::class, 'recurrence_id');
+    }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
     }
 
     public function items(): HasMany

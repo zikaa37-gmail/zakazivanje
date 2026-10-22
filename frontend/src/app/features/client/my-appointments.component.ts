@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, STATUS_LABELS } from '../../core/models/appointment.model';
 import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
@@ -13,12 +13,14 @@ import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 import { PaymentDialogComponent } from '../../shared/components/payment-dialog/payment-dialog.component';
+import { StarsComponent } from '../../shared/components/stars/stars.component';
 import { RescheduleComponent } from './reschedule.component';
+import { ReviewFormComponent } from './review-form.component';
 
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, PaymentDialogComponent, RescheduleComponent, RsdPipe],
+  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -35,6 +37,10 @@ export class MyAppointmentsComponent {
   readonly mode = signal<'list' | 'calendar'>('list');
   readonly rescheduling = signal<Appointment | null>(null);
   readonly paying = signal<Appointment | null>(null);
+  readonly reviewing = signal<Appointment | null>(null);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private reviewTarget = Number(this.route.snapshot.queryParamMap.get('review')) || null;
   readonly visibleMonth = signal(today());
   readonly selectedDay = signal<string | null>(null);
   readonly allAppointments = signal<Appointment[]>([]);
@@ -56,6 +62,12 @@ export class MyAppointmentsComponent {
   });
 
   constructor() {
+    if (this.reviewTarget) this.scope.set('past');
+    this.load();
+  }
+
+  onReviewed(): void {
+    this.reviewing.set(null);
     this.load();
   }
 
@@ -112,12 +124,22 @@ export class MyAppointmentsComponent {
       next: (list) => {
         this.appointments.set(list);
         this.loading.set(false);
+        this.openReviewTarget(list);
       },
       error: (err) => {
         this.error.set(apiErrorMessage(err, 'Učitavanje termina nije uspelo.'));
         this.loading.set(false);
       },
     });
+  }
+
+  private openReviewTarget(list: Appointment[]): void {
+    if (!this.reviewTarget) return;
+    const target = list.find((a) => a.id === this.reviewTarget);
+    this.reviewTarget = null;
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    if (target?.can_review) this.reviewing.set(target);
+    else if (target?.review) this.toast.success('Ovaj termin je već ocenjen — hvala!');
   }
 
   weekday(a: Appointment): string {

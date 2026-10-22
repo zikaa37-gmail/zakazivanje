@@ -1,0 +1,103 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Recenzije</h1>
+    <p class="page-subtitle">Ocene klijenata posle završenih termina</p>
+  </div>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (data(); as d) {
+  <div class="grid gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] mb-4">
+    <div class="card">
+      <h2 class="text-base font-semibold mb-3">Ukupno</h2>
+      <app-review-summary [summary]="d.summary" />
+    </div>
+    <div class="card" data-testid="staff-ratings">
+      <h2 class="text-base font-semibold mb-3">Po zaposlenom</h2>
+      @for (m of d.staff; track m.id) {
+        <button type="button" class="flex w-full items-center gap-3 py-2 text-left" [class.font-semibold]="staffId() === m.id" (click)="staffId.set(staffId() === m.id ? null : m.id)">
+          <span class="color-dot" [style.background]="m.color || 'var(--color-primary)'"></span>
+          <span class="flex-1 min-w-0 truncate">{{ m.name }}</span>
+          <app-stars [value]="m.average ?? 0" [size]="14" />
+          <span class="w-8 text-right text-sm font-semibold">{{ ratingLabel(m.average) }}</span>
+          <span class="w-8 text-right text-xs muted">{{ m.count }}</span>
+        </button>
+      } @empty {
+        <p class="text-sm muted">Još nema ocena.</p>
+      }
+    </div>
+  </div>
+}
+
+<div class="flex flex-wrap items-center gap-2 mb-4">
+  <div class="chip-group" data-testid="review-rating-filter">
+    <button type="button" class="chip" [class.selected]="rating() === null" (click)="rating.set(null)">Sve ocene</button>
+    @for (r of ratings; track r) {
+      <button type="button" class="chip" [class.selected]="rating() === r" (click)="rating.set(r)">{{ r }} ★</button>
+    }
+  </div>
+  <select appInput class="!w-auto" [value]="visibility()" (change)="visibility.set($any($event.target).value)" aria-label="Vidljivost">
+    <option value="all">Sve</option>
+    <option value="visible">Na sajtu</option>
+    <option value="hidden">Sakrivene</option>
+  </select>
+  @if (staffId()) {
+    <button type="button" appBtn theme="ghost" size="s" (click)="staffId.set(null)"><span appIcon="close" aria-hidden="true"></span> Svi zaposleni</button>
+  }
+</div>
+
+@if (loading() && items().length === 0) {
+} @else if (items().length === 0) {
+  <div class="card empty-state">Nema recenzija za izabrane filtere.</div>
+} @else {
+  <div class="flex flex-col gap-3">
+    @for (review of items(); track review.id) {
+      <div class="card" [class.opacity-60]="!review.visible" [attr.data-testid]="'admin-review-' + review.id">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="flex items-center gap-2">
+            <app-stars [value]="review.rating" />
+            @if (!review.visible) {
+              <span class="badge badge-neutral">Sakrivena</span>
+            }
+          </span>
+          <span class="text-xs muted">{{ review.created_at | srDate }}</span>
+        </div>
+        @if (review.comment) {
+          <p class="mt-2 whitespace-pre-line">{{ review.comment }}</p>
+        } @else {
+          <p class="mt-2 text-sm muted">Bez komentara</p>
+        }
+        <p class="text-sm muted mt-1">
+          {{ review.client?.first_name }} {{ review.client?.last_name }} · {{ services(review) }}
+          @if (review.staff_member) {
+            · {{ review.staff_member.first_name }}
+          }
+          @if (review.appointment) {
+            · termin {{ review.appointment.starts_at | srDate }}
+          }
+        </p>
+        @if (review.reply) {
+          <p class="mt-2 text-sm rounded-lg p-2 bg-[var(--color-primary-tint)]"><strong>Odgovor:</strong> {{ review.reply }}</p>
+        }
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button type="button" appBtn theme="secondary" size="s" (click)="openReply(review)" [attr.data-testid]="'review-reply-' + review.id"><span appIcon="message-square" aria-hidden="true"></span> {{ review.reply ? 'Izmeni odgovor' : 'Odgovori' }}</button>
+          <button type="button" appBtn theme="ghost" size="s" (click)="toggleVisible(review)" [attr.data-testid]="'review-visible-' + review.id">
+            <span [appIcon]="review.visible ? 'lock' : 'eye'" aria-hidden="true"></span> {{ review.visible ? 'Sakrij sa sajta' : 'Prikaži na sajtu' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (replying(); as review) {
+  <app-modal title="Odgovor salona" footerMode="custom" (cancelled)="replying.set(null)" testId="review-reply-modal">
+    <p class="text-sm muted mb-2">Odgovor se prikazuje ispod recenzije na sajtu. Ostavi prazno da ga ukloniš.</p>
+    <div class="field">
+      <label for="review-reply">Odgovor</label>
+      <textarea id="review-reply" appInput size="m" rows="4" maxlength="1000" [formControl]="reply" data-testid="review-reply-text"></textarea>
+    </div>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="saveReply()" data-testid="review-reply-save">Sačuvaj</app-button>
+  </app-modal>
+}

@@ -68,6 +68,8 @@ class BusinessSettingController extends Controller
             'payee_address' => ['nullable', 'string', 'max:120'],
             'payment_code' => ['sometimes', 'regex:/^\d{3}$/'],
             'online_payment_enabled' => ['sometimes', 'boolean'],
+            'reviews_enabled' => ['sometimes', 'boolean'],
+            'notify_review_request' => ['sometimes', 'boolean'],
         ], [
             'bank_account.regex' => 'Račun upiši u obliku 160-0000000000000-00.',
             'payment_code.regex' => 'Šifra plaćanja ima tri cifre (npr. 289).',
