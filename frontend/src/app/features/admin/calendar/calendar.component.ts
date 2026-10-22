@@ -5,11 +5,13 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment, BlockedTime, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { addDays, isoDate, longDate, monthLabel, parseDate, timeOf, today, weekdayShort } from '../../../core/utils/dates';
+import { hoursOn } from '../../../core/utils/schedule';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
@@ -79,6 +81,7 @@ export class CalendarComponent {
   private actionsService = inject(AppointmentActionsService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
+  private businessSettings = inject(BusinessSettingService);
 
   readonly hourPx = HOUR_PX;
   readonly todayIso = today();
@@ -145,8 +148,8 @@ export class CalendarComponent {
 
   readonly hours = computed(() => {
     const days = this.view() === 'day' ? [this.date()] : Array.from({ length: 7 }, (_, i) => addDays(this.range().from, i));
-    const weekdays = new Set(days.map((d) => ((parseDate(d).getDay() + 6) % 7) + 1));
-    const shifts = this.visibleStaff().flatMap((s) => s.working_hours.filter((h) => weekdays.has(h.weekday)));
+    const opening = this.businessSettings.settings()?.opening_hours;
+    const shifts = this.visibleStaff().flatMap((s) => days.flatMap((d) => hoursOn(s, d, opening)));
     let start = shifts.length ? Math.min(...shifts.map((h) => minutesOf(`0000-00-00 ${h.starts_at}`))) : 8 * 60;
     let end = shifts.length ? Math.max(...shifts.map((h) => minutesOf(`0000-00-00 ${h.ends_at}`))) : 20 * 60;
     for (const a of this.visibleAppointments()) {
@@ -391,11 +394,10 @@ export class CalendarComponent {
     const startMinute = this.hours().from * 60;
     const endMinute = this.hours().to * 60;
     const px = (minutes: number) => ((minutes - startMinute) / 60) * HOUR_PX;
-    const weekday = ((parseDate(date).getDay() + 6) % 7) + 1;
 
     const relevantStaff = staff ? [staff] : this.visibleStaff();
     const working = relevantStaff
-      .flatMap((s) => s.working_hours.filter((h) => h.weekday === weekday))
+      .flatMap((s) => hoursOn(s, date, this.businessSettings.settings()?.opening_hours))
       .map((h) => [minutesOf(`0000-00-00 ${h.starts_at}`), minutesOf(`0000-00-00 ${h.ends_at}`)] as const)
       .sort((a, b) => a[0] - b[0]);
     const off: { top: number; height: number }[] = [];

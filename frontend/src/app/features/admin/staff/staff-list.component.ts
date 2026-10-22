@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
+import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../core/models/business-setting.model';
 import { SalonService } from '../../../core/models/service.model';
 import { StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
@@ -9,6 +9,8 @@ import { ServiceCatalogService } from '../../../core/services/service-catalog.se
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
+import { isoDate, today } from '../../../core/utils/dates';
+import { shiftName } from '../../../core/utils/schedule';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
@@ -21,6 +23,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 
 interface ShiftRow {
   weekday: number;
+  week: number;
   start: FormControl<string | null>;
   end: FormControl<string | null>;
 }
@@ -54,6 +57,24 @@ export class StaffListComponent {
   readonly formError = signal<string | null>(null);
   readonly selectedServices = signal<Set<number>>(new Set());
   readonly shifts = signal<ShiftRow[]>([]);
+  readonly rotationWeeks = signal(1);
+  readonly rotationStart = signal<string>(this.monday(today()));
+  readonly activeWeek = signal(0);
+  readonly rotationOptions = [
+    { value: 1, label: 'Isto svake nedelje' },
+    { value: 2, label: 'Smenski, 2 nedelje' },
+    { value: 3, label: 'Smenski, 3 nedelje' },
+    { value: 4, label: 'Smenski, 4 nedelje' },
+  ];
+  readonly salonShifts = computed<ShiftTemplate[]>(() => this.business.settings()?.shifts ?? []);
+  readonly openingHours = computed(() => this.business.settings()?.opening_hours ?? []);
+  readonly weekTabs = computed(() => Array.from({ length: this.rotationWeeks() }, (_, i) => i));
+  readonly thisWeekIndex = computed(() => {
+    const weeks = this.rotationWeeks();
+    if (weeks === 1) return 0;
+    const diff = Math.round((Date.parse(this.monday(today())) - Date.parse(this.rotationStart())) / (7 * 86400000));
+    return ((diff % weeks) + weeks) % weeks;
+  });
 
   readonly defaultModeLabel = computed(() => {
     const mode = this.business.settings()?.booking_confirmation ?? 'manual';
@@ -98,15 +119,67 @@ export class StaffListComponent {
     });
   }
 
+  currentHours(member: StaffMember) {
+    return member.working_hours.filter((h) => (h.week ?? 0) === (member.current_week ?? 0));
+  }
+
   workDays(member: StaffMember): Set<number> {
-    return new Set(member.working_hours.map((h) => h.weekday));
+    return new Set(this.currentHours(member).map((h) => h.weekday));
   }
 
   hoursSummary(member: StaffMember): string {
-    if (!member.working_hours.length) return 'Nije uneto';
-    const first = member.working_hours[0];
-    const same = member.working_hours.every((h) => h.starts_at === first.starts_at && h.ends_at === first.ends_at);
-    return same ? `${first.starts_at} – ${first.ends_at}` : 'Različito po danima';
+    const hours = this.currentHours(member);
+    if (!hours.length) return member.rotation_weeks > 1 ? `Smenski (${member.rotation_weeks} ned.) · ove nedelje ne radi` : 'Nije uneto';
+    const byDay = [...new Set(hours.map((h) => h.weekday))].map((d) => shiftName(hours.filter((h) => h.weekday === d), this.salonShifts()));
+    const label = byDay.every((l) => l === byDay[0]) ? byDay[0] : 'različito po danima';
+    return member.rotation_weeks > 1 ? `Smenski (${member.rotation_weeks} ned.) · ove nedelje: ${label}` : label;
+  }
+
+  salonHours(weekday: number): string {
+    const day = this.openingHours().find((h) => h.weekday === weekday);
+    return day?.opens_at && day.closes_at ? `salon ${day.opens_at}–${day.closes_at}` : 'salon ne radi';
+  }
+
+  salonOpen(weekday: number): boolean {
+    const day = this.openingHours().find((h) => h.weekday === weekday);
+    return !this.openingHours().length || !!(day?.opens_at && day.closes_at);
+  }
+
+  dayShiftName(weekday: number): string | null {
+    const rows = this.shiftsFor(weekday);
+    if (rows.length !== 1) return null;
+    return this.salonShifts().find((s) => s.starts_at === rows[0].start.value && s.ends_at === rows[0].end.value)?.name ?? null;
+  }
+
+  setRotation(weeks: number): void {
+    this.rotationWeeks.set(weeks);
+    this.shifts.update((rows) => {
+      const kept = rows.filter((r) => r.week < weeks);
+      const missing = Array.from({ length: weeks }, (_, w) => w).filter((w) => !kept.some((r) => r.week === w) && w > 0);
+      const base = kept.filter((r) => r.week === 0);
+      return [...kept, ...missing.flatMap((w) => this.swapped(base).map((r) => ({ ...r, week: w })))];
+    });
+    if (this.activeWeek() >= weeks) this.activeWeek.set(0);
+  }
+
+  setRotationStart(value: string): void {
+    if (value) this.rotationStart.set(this.monday(value));
+  }
+
+  applyShift(weekday: number, shift: ShiftTemplate): void {
+    const week = this.activeWeek();
+    this.shifts.update((rows) => [...rows.filter((r) => !(r.weekday === weekday && r.week === week)), this.shift(weekday, shift.starts_at, shift.ends_at, week)]);
+  }
+
+  setCustom(weekday: number): void {
+    if (!this.shiftsFor(weekday).length) this.addShift(weekday);
+  }
+
+  fillFromPrevious(): void {
+    const week = this.activeWeek();
+    if (week === 0) return;
+    const previous = this.shifts().filter((r) => r.week === week - 1);
+    this.shifts.update((rows) => [...rows.filter((r) => r.week !== week), ...this.swapped(previous).map((r) => ({ ...r, week }))]);
   }
 
   modeLabel(member: StaffMember): string {
@@ -137,8 +210,12 @@ export class StaffListComponent {
       active: member?.active ?? true,
     });
     this.selectedServices.set(new Set(member?.services.map((s) => s.id) ?? []));
-    const hours = member?.working_hours ?? [1, 2, 3, 4, 5].map((weekday) => ({ weekday, starts_at: '09:00', ends_at: '17:00' }));
-    this.shifts.set(hours.map((h) => this.shift(h.weekday, h.starts_at, h.ends_at)));
+    const first = this.salonShifts()[0];
+    const hours = member?.working_hours ?? [1, 2, 3, 4, 5].map((weekday) => ({ weekday, week: 0, starts_at: first?.starts_at ?? '09:00', ends_at: first?.ends_at ?? '17:00' }));
+    this.rotationWeeks.set(member?.rotation_weeks ?? 1);
+    this.rotationStart.set(member?.rotation_starts_on ?? this.monday(today()));
+    this.activeWeek.set(member?.current_week ?? 0);
+    this.shifts.set(hours.map((h) => this.shift(h.weekday, h.starts_at, h.ends_at, h.week ?? 0)));
     this.modalOpen.set(true);
   }
 
@@ -156,17 +233,21 @@ export class StaffListComponent {
   }
 
   shiftsFor(weekday: number): ShiftRow[] {
-    return this.shifts().filter((s) => s.weekday === weekday);
+    const week = this.activeWeek();
+    return this.shifts().filter((s) => s.weekday === weekday && s.week === week);
   }
 
   toggleDay(weekday: number, on: boolean): void {
+    const week = this.activeWeek();
     if (on) this.addShift(weekday);
-    else this.shifts.update((rows) => rows.filter((r) => r.weekday !== weekday));
+    else this.shifts.update((rows) => rows.filter((r) => !(r.weekday === weekday && r.week === week)));
   }
 
   addShift(weekday: number): void {
+    const week = this.activeWeek();
     const last = this.shiftsFor(weekday).at(-1);
-    const row = last ? this.shift(weekday, last.end.value ?? '13:00', '20:00') : this.shift(weekday, '09:00', '17:00');
+    const fallback = this.salonShifts()[0];
+    const row = last ? this.shift(weekday, last.end.value ?? '13:00', '20:00', week) : this.shift(weekday, fallback?.starts_at ?? '09:00', fallback?.ends_at ?? '17:00', week);
     this.shifts.update((rows) => [...rows, row]);
   }
 
@@ -177,8 +258,9 @@ export class StaffListComponent {
   copyMondayToWeekdays(): void {
     const monday = this.shiftsFor(1);
     if (!monday.length) return;
-    const others = [2, 3, 4, 5].flatMap((weekday) => monday.map((m) => this.shift(weekday, m.start.value, m.end.value)));
-    this.shifts.update((rows) => [...rows.filter((r) => r.weekday === 1 || r.weekday > 5), ...others]);
+    const week = this.activeWeek();
+    const others = [2, 3, 4, 5].filter((d) => this.salonOpen(d)).flatMap((weekday) => monday.map((m) => this.shift(weekday, m.start.value, m.end.value, week)));
+    this.shifts.update((rows) => [...rows.filter((r) => r.week !== week || r.weekday === 1 || r.weekday > 5), ...others]);
   }
 
   save(): void {
@@ -195,9 +277,11 @@ export class StaffListComponent {
       phone: value.phone || null,
       email: value.email || null,
       service_ids: [...this.selectedServices()],
+      rotation_weeks: this.rotationWeeks(),
+      rotation_starts_on: this.rotationWeeks() > 1 ? this.rotationStart() : null,
       working_hours: this.shifts()
-        .filter((s) => s.start.value && s.end.value)
-        .map((s) => ({ weekday: s.weekday, starts_at: s.start.value!, ends_at: s.end.value! })),
+        .filter((s) => s.start.value && s.end.value && s.week < this.rotationWeeks())
+        .map((s) => ({ weekday: s.weekday, week: s.week, starts_at: s.start.value!, ends_at: s.end.value! })),
     };
 
     const member = this.editing();
@@ -234,7 +318,23 @@ export class StaffListComponent {
     });
   }
 
-  private shift(weekday: number, start: string | null, end: string | null): ShiftRow {
-    return { weekday, start: new FormControl(start), end: new FormControl(end) };
+  private shift(weekday: number, start: string | null, end: string | null, week = this.activeWeek()): ShiftRow {
+    return { weekday, week, start: new FormControl(start), end: new FormControl(end) };
+  }
+
+  private swapped(rows: ShiftRow[]): ShiftRow[] {
+    const [a, b] = this.salonShifts();
+    return rows.map((r) => {
+      const isA = a && r.start.value === a.starts_at && r.end.value === a.ends_at;
+      const isB = b && r.start.value === b.starts_at && r.end.value === b.ends_at;
+      const target = isA ? b : isB ? a : null;
+      return this.shift(r.weekday, target?.starts_at ?? r.start.value, target?.ends_at ?? r.end.value, r.week);
+    });
+  }
+
+  private monday(date: string): string {
+    const d = new Date(`${date}T12:00:00`);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return isoDate(d);
   }
 }

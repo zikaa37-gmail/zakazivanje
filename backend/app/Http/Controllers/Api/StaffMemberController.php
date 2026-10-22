@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
+use App\Models\OpeningHour;
 use App\Models\StaffMember;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -62,22 +64,40 @@ class StaffMemberController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'service_ids' => ['array'],
             'service_ids.*' => ['integer', 'exists:services,id'],
+            'rotation_weeks' => ['sometimes', 'integer', 'between:1,4'],
+            'rotation_starts_on' => ['nullable', 'date_format:Y-m-d'],
             'working_hours' => ['array'],
             'working_hours.*.weekday' => ['required', 'integer', 'between:1,7'],
+            'working_hours.*.week' => ['sometimes', 'integer', 'between:0,3'],
             'working_hours.*.starts_at' => ['required', 'date_format:H:i'],
             'working_hours.*.ends_at' => ['required', 'date_format:H:i', 'after:working_hours.*.starts_at'],
         ], [
             'working_hours.*.ends_at.after' => 'Kraj radnog vremena mora biti posle početka.',
         ]);
 
-        $this->ensureNoOverlap($data['working_hours'] ?? []);
+        $weeks = $data['rotation_weeks'] ?? 1;
+        $data['working_hours'] = collect($data['working_hours'] ?? [])
+            ->map(fn ($h) => [...$h, 'week' => $weeks > 1 ? (int) ($h['week'] ?? 0) : 0])
+            ->all();
+        if (collect($data['working_hours'])->contains(fn ($h) => $h['week'] >= $weeks)) {
+            throw ValidationException::withMessages(['working_hours' => ['Smena je u nedelji koja nije deo rasporeda.']]);
+        }
+        if ($weeks > 1 && empty($data['rotation_starts_on'])) {
+            $data['rotation_starts_on'] = now()->startOfWeek()->toDateString();
+        }
+        if (isset($data['rotation_starts_on'])) {
+            $data['rotation_starts_on'] = CarbonImmutable::parse($data['rotation_starts_on'])->startOfWeek()->toDateString();
+        }
+
+        $this->ensureNoOverlap($data['working_hours']);
+        $this->ensureWithinOpeningHours($data['working_hours']);
 
         return $data;
     }
 
     private function ensureNoOverlap(array $hours): void
     {
-        $byDay = collect($hours)->groupBy('weekday');
+        $byDay = collect($hours)->groupBy(fn ($h) => $h['week'].'-'.$h['weekday']);
 
         foreach ($byDay as $intervals) {
             $sorted = $intervals->sortBy('starts_at')->values();
@@ -88,6 +108,22 @@ class StaffMemberController extends Controller
                         'working_hours' => ['Smene u istom danu se preklapaju.'],
                     ]);
                 }
+            }
+        }
+    }
+
+    private function ensureWithinOpeningHours(array $hours): void
+    {
+        $days = ['', 'Ponedeljak', 'Utorak', 'Sreda', 'Četvrtak', 'Petak', 'Subota', 'Nedelja'];
+        $week = OpeningHour::week();
+
+        foreach ($hours as $h) {
+            $opening = $week->get($h['weekday']);
+            if (! $opening?->isOpen()) {
+                throw ValidationException::withMessages(['working_hours' => ["{$days[$h['weekday']]}: salon tog dana ne radi."]]);
+            }
+            if ($h['starts_at'] < $opening->opens_at || $h['ends_at'] > $opening->closes_at) {
+                throw ValidationException::withMessages(['working_hours' => ["{$days[$h['weekday']]}: smena {$h['starts_at']}–{$h['ends_at']} je van radnog vremena salona ({$opening->opens_at}–{$opening->closes_at})."]]);
             }
         }
     }

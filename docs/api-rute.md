@@ -7,7 +7,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/health` | provera da backend radi |
-| GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) |
+| GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) + `opening_hours` (radno vreme salona) i `shifts` (smene) |
 | GET | `/public/business/cover` | naslovna fotografija salona (fajl, keš 7 dana; `cover_url` u `/public/business`) |
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |

@@ -11,6 +11,7 @@
 <div class="chip-group mb-4" role="tablist">
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'business'" (click)="openTab('business')" data-testid="tab-business">Biznis</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'look'" (click)="openTab('look')" data-testid="tab-look">Logo i boje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'hours'" (click)="openTab('hours')" data-testid="tab-hours">Radno vreme</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="openTab('booking')" data-testid="tab-booking">Zakazivanje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'payments'" (click)="openTab('payments')" data-testid="tab-payments">Plaćanje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'notifications'" (click)="openTab('notifications')" data-testid="tab-notifications">Obaveštenja</button>
@@ -194,6 +195,47 @@
         </div>
       }
 
+      @case ('hours') {
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="card" data-testid="opening-hours">
+            <h2 class="text-base font-semibold">Radno vreme salona</h2>
+            <p class="text-sm muted mb-2">Zaposleni se uklapaju u ovo vreme — smena van njega se ne nudi klijentima.</p>
+            @for (row of days(); track row.weekday) {
+              <div class="flex flex-wrap items-center gap-2 py-2 border-b border-[var(--color-bg)]">
+                <label class="checkbox-field w-32 shrink-0">
+                  <input type="checkbox" [checked]="row.open" (change)="setDayOpen(row, $any($event.target).checked)" [attr.data-testid]="'opening-day-' + row.weekday" />
+                  {{ dayLabel(row.weekday) }}
+                </label>
+                @if (row.open) {
+                  <app-time-picker [control]="row.opens" />
+                  <span class="muted">–</span>
+                  <app-time-picker [control]="row.closes" />
+                } @else {
+                  <span class="text-sm muted">Zatvoreno</span>
+                }
+              </div>
+            }
+          </div>
+          <div class="card" data-testid="shift-templates">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-base font-semibold">Smene</h2>
+              <button type="button" appBtn theme="ghost" size="s" (click)="addShiftTemplate()" data-testid="shift-add"><span appIcon="plus" aria-hidden="true"></span> Smena</button>
+            </div>
+            <p class="text-sm muted mb-2">Brzi izbor u rasporedu zaposlenih. Prve dve se menjaju u smenskom rasporedu (pre podne ↔ popodne).</p>
+            @for (row of shiftRows(); track row) {
+              <div class="flex flex-wrap items-center gap-2 py-2 border-b border-[var(--color-bg)]">
+                <input appInput class="!w-36" [formControl]="row.name" aria-label="Naziv smene" />
+                <app-time-picker [control]="row.starts" />
+                <span class="muted">–</span>
+                <app-time-picker [control]="row.ends" />
+                <button type="button" class="btn-icon" aria-label="Ukloni smenu" (click)="removeShiftTemplate(row)"><span appIcon="close" [iconSize]="14" aria-hidden="true"></span></button>
+              </div>
+            } @empty {
+              <p class="text-sm muted">Nema smena — dodaj npr. „Pre podne 08–14".</p>
+            }
+          </div>
+        </div>
+      }
       @case ('booking') {
         <div class="card max-w-2xl mb-4">
           <h2 class="text-base font-semibold">Pravila online zakazivanja</h2>

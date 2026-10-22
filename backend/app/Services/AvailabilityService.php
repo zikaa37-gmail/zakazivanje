@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\BusinessSetting;
+use App\Models\OpeningHour;
 use App\Models\Service;
 use App\Models\StaffMember;
 use Carbon\CarbonImmutable;
@@ -41,14 +42,15 @@ class AvailabilityService
 
         $earliest = $settings->earliestOnlineStart();
         $duration = $this->duration($services);
+        $openingHours = OpeningHour::week();
         $slots = [];
 
         foreach ($this->eligibleStaff($services, $staffMemberId) as $staff) {
             $busy = $this->busyIntervals($staff->id, $date, $date->endOfDay(), $ignoreAppointmentId);
 
-            foreach ($staff->workingHours->where('weekday', $date->isoWeekday()) as $hours) {
-                $start = $date->setTimeFromTimeString($hours->starts_at);
-                $end = $date->setTimeFromTimeString($hours->ends_at);
+            foreach ($staff->hoursOn($date, $openingHours) as $hours) {
+                $start = $date->setTimeFromTimeString($hours['starts_at']);
+                $end = $date->setTimeFromTimeString($hours['ends_at']);
 
                 for ($t = $start; $t->addMinutes($duration)->lte($end); $t = $t->addMinutes($settings->slot_interval_minutes)) {
                     $slotEnd = $t->addMinutes($duration);
@@ -78,9 +80,8 @@ class AvailabilityService
 
     public function withinWorkingHours(StaffMember $staff, CarbonImmutable $start, CarbonImmutable $end): bool
     {
-        return $staff->workingHours
-            ->where('weekday', $start->isoWeekday())
-            ->contains(fn ($hours) => $start->gte($start->setTimeFromTimeString($hours->starts_at)) && $end->lte($start->setTimeFromTimeString($hours->ends_at)));
+        return $staff->hoursOn($start, OpeningHour::week())
+            ->contains(fn ($hours) => $start->gte($start->setTimeFromTimeString($hours['starts_at'])) && $end->lte($start->setTimeFromTimeString($hours['ends_at'])));
     }
 
     public function isFree(int $staffMemberId, CarbonImmutable $start, CarbonImmutable $end, ?int $ignoreAppointmentId = null): bool

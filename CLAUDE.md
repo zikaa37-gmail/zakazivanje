@@ -160,6 +160,12 @@ Za muškarce" dok pol nije poznat.
 Naslovna fotografija: Podešavanja → Logo i boje, `<app-image-cropper>` (pomeranje, zum, 16:9 → JPEG do 1600 px),
 `business_settings.cover_image` (skriveno iz JSON-a, servira se kao fajl preko `cover_url`); početna prikazuje
 fotografiju sa imenom i „Zakaži termin", a bez nje samo kompaktnu traku.
+Radno vreme: `opening_hours` (salon po danima, podrazumevano pon–sub 08–20) i `shifts` (Pre podne / Popodne / Ceo dan)
+u Podešavanja → Radno vreme (šalju se uz `PUT /business-settings`). Zaposleni: `rotation_weeks` (1 = isto svake
+nedelje, 2–4 = smenski) + `rotation_starts_on` (ponedeljak 1. nedelje), `staff_working_hours.week`;
+`StaffMember::hoursOn($date, OpeningHour::week())` je jedini izvor radnog vremena za dan (nedelja rotacije ∩ salon) —
+koriste ga dostupnost, pregled i (kao `hoursOn()` u `core/utils/schedule.ts`) kalendar. Smena mora biti u radnom
+vremenu salona (validacija), a kad se salon skrati, sati zaposlenih se seku.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
