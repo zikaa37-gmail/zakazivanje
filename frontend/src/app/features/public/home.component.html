@@ -29,6 +29,22 @@
     }
   </section>
 
+  @if (photos().length > 0) {
+    <section data-testid="home-gallery">
+      <div class="flex items-baseline justify-between mb-2">
+        <h2 class="text-lg font-semibold">Galerija</h2>
+        <a routerLink="/gallery" class="text-sm font-semibold text-[var(--color-primary-text)]">Sve slike</a>
+      </div>
+      <div class="home-photos">
+        @for (photo of photos(); track photo.id) {
+          <a routerLink="/gallery" class="home-photo" [attr.aria-label]="photo.caption || 'Galerija'">
+            <img [src]="photoSrc(photo)" [alt]="photo.caption || ''" loading="lazy" />
+          </a>
+        }
+      </div>
+    </section>
+  }
+
   <section>
     <h2 class="text-lg font-semibold mb-2">Radno vreme i kontakt</h2>
     <div class="card">

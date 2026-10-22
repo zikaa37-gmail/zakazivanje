@@ -1,0 +1,36 @@
+<div #dialog class="viewer" role="dialog" aria-modal="true" aria-label="Slika iz galerije" tabindex="-1" (click)="onBackdrop($event)" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)" data-testid="gallery-viewer">
+  <div class="viewer-top">
+    <span class="viewer-counter">{{ counter() }}</span>
+    <span class="flex gap-2">
+      @if (image(); as current) {
+        <button type="button" appBtn theme="neutral" size="s" (click)="shared.emit(current)" data-testid="viewer-share">
+          <span appIcon="share" aria-hidden="true"></span> Podeli
+        </button>
+      }
+      <button type="button" appBtn theme="neutral" size="s" (click)="closed.emit()" aria-label="Zatvori" data-testid="viewer-close">
+        <span appIcon="close" aria-hidden="true"></span>
+      </button>
+    </span>
+  </div>
+
+  @if (image(); as current) {
+    <figure class="viewer-figure" (click)="onBackdrop($event)">
+      <img [src]="src()(current)" [alt]="current.caption || ''" [width]="current.width" [height]="current.height" />
+      @if (current.caption || current.service_name) {
+        <figcaption>
+          @if (current.caption) {
+            <span>{{ current.caption }}</span>
+          }
+          @if (current.service_name) {
+            <span class="viewer-service">{{ current.service_name }}</span>
+          }
+        </figcaption>
+      }
+    </figure>
+  }
+
+  @if (images().length > 1) {
+    <button type="button" class="viewer-nav viewer-prev" (click)="step(-1)" aria-label="Prethodna" data-testid="viewer-prev"><span appIcon="arrow-left" [iconSize]="22" aria-hidden="true"></span></button>
+    <button type="button" class="viewer-nav viewer-next" (click)="step(1)" aria-label="Sledeća" data-testid="viewer-next"><span appIcon="arrow-right" [iconSize]="22" aria-hidden="true"></span></button>
+  }
+</div>

@@ -47,6 +47,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/public/book.component').then((m) => m.BookComponent),
       },
       {
+        path: 'gallery',
+        title: 'Galerija',
+        loadComponent: () => import('./features/public/gallery.component').then((m) => m.GalleryComponent),
+      },
+      {
         path: 'my-appointments',
         title: 'Moji termini',
         canActivate: [authGuard],
@@ -95,6 +100,11 @@ export const routes: Routes = [
         path: 'promotions',
         title: 'Cene i akcije',
         loadComponent: () => import('./features/admin/promotions/promotion-list.component').then((m) => m.PromotionListComponent),
+      },
+      {
+        path: 'gallery',
+        title: 'Galerija',
+        loadComponent: () => import('./features/admin/gallery/gallery-admin.component').then((m) => m.GalleryAdminComponent),
       },
       {
         path: 'clients',

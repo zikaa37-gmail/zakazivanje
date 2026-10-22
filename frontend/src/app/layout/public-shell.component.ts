@@ -30,6 +30,7 @@ export class PublicShellComponent {
   readonly nav = computed<NavItem[]>(() => [
     { path: '/', label: 'Početna', icon: 'home', exact: true },
     { path: '/book', label: 'Zakaži', icon: 'calendar', exact: false },
+    { path: '/gallery', label: 'Galerija', icon: 'image', exact: false },
     ...(this.auth.isAuthenticated()
       ? [
           { path: '/my-appointments', label: 'Moji termini', icon: 'check-square' as IconName, exact: false },

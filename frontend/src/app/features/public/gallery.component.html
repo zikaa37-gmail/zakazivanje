@@ -1,0 +1,35 @@
+<div class="content-container py-4 md:py-8 flex flex-col gap-4">
+  <div>
+    <h1 class="page-title">Galerija</h1>
+    <p class="page-subtitle">Naši radovi i salon</p>
+  </div>
+
+  <app-error-message [message]="error()" />
+
+  @if (services().length > 1) {
+    <div class="chip-group" data-testid="gallery-filter">
+      <button type="button" class="chip" [class.selected]="filter() === null" (click)="filter.set(null)">Sve</button>
+      @for (name of services(); track name) {
+        <button type="button" class="chip" [class.selected]="filter() === name" (click)="filter.set(name)">{{ name }}</button>
+      }
+    </div>
+  }
+
+  @if (loading() && images().length === 0) {
+  } @else if (images().length === 0) {
+    <div class="card empty-state">Galerija je još prazna.</div>
+  } @else {
+    <div class="gallery-grid" data-testid="gallery-grid">
+      @for (image of shown(); track image.id; let i = $index) {
+        <button type="button" class="gallery-cell" (click)="open.set(i)" [attr.aria-label]="image.caption || 'Otvori sliku'" [attr.data-testid]="'gallery-' + image.id">
+          <img [src]="src(image)" [alt]="image.caption || ''" loading="lazy" [width]="image.width" [height]="image.height" />
+        </button>
+      }
+    </div>
+    <a routerLink="/book" class="hero-cta self-center" data-testid="gallery-book">Zakaži termin</a>
+  }
+</div>
+
+@if (open() !== null) {
+  <app-gallery-viewer [images]="shown()" [index]="open()!" [src]="imageSrc" (indexChange)="open.set($event)" (closed)="open.set(null)" (shared)="share($event)" />
+}
