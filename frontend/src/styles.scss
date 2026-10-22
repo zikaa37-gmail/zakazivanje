@@ -85,6 +85,22 @@ button {
   font-family: inherit;
 }
 
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+[role='tab'],
+[role='radio'],
+label:has(> input[type='checkbox']),
+label:has(> input[type='radio']),
+select:not(:disabled),
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 input,
 select,
 textarea {
