@@ -17,6 +17,6 @@ CREATE TABLE `zk_service_staff_member` (
   CONSTRAINT `zk_service_staff_member_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_service_staff_member` VALUES (1,1),(2,1),(3,1),(4,1),(1,2),(4,2),(5,3);
+INSERT INTO `zk_service_staff_member` VALUES (1,1),(2,1),(3,1),(4,1),(2,2),(1,3),(3,3),(4,3);
 
 SET FOREIGN_KEY_CHECKS=1;
