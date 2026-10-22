@@ -32,6 +32,8 @@ export interface BusinessSetting {
   pib: string | null;
   registration_number: string | null;
   logo: string | null;
+  cover_url: string | null;
+  cover_image?: string | null;
   theme_primary: string | null;
   theme_secondary: string | null;
   theme_tertiary: string | null;

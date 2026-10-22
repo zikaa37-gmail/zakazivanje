@@ -12,6 +12,10 @@ export class BusinessSettingService {
   private theme = inject(ThemeService);
 
   readonly settings = signal<BusinessSetting | null>(null);
+  readonly coverSrc = computed(() => {
+    const url = this.settings()?.cover_url;
+    return url ? `${environment.apiUrl}${url}` : null;
+  });
   readonly name = computed(() => this.settings()?.name ?? 'Zakazivanje');
   readonly logo = computed(() => this.settings()?.logo ?? null);
 

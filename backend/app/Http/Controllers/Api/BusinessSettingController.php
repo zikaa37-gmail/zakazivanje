@@ -29,6 +29,17 @@ class BusinessSettingController extends Controller
         return [...BusinessSetting::current()->toArray(), 'opening_hours' => $openingHours];
     }
 
+    public function cover()
+    {
+        $data = BusinessSetting::current()->cover_image;
+        abort_unless($data && preg_match('/^data:(image\/[a-z]+);base64,(.+)$/s', $data, $match), 404);
+
+        return response(base64_decode($match[2]), 200, [
+            'Content-Type' => $match[1],
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
     public function update(Request $request)
     {
         $data = $request->validate([
@@ -48,6 +59,7 @@ class BusinessSettingController extends Controller
             'pib' => ['nullable', 'string', 'max:20'],
             'registration_number' => ['nullable', 'string', 'max:50'],
             'logo' => ['nullable', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpeg|webp|svg\+xml);base64,/'],
+            'cover_image' => ['sometimes', 'nullable', 'string', 'max:4000000', 'regex:/^data:image\/(jpeg|webp|png);base64,/'],
             'theme_primary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'theme_secondary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'theme_tertiary' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -73,6 +85,8 @@ class BusinessSettingController extends Controller
         ], [
             'bank_account.regex' => 'Račun upiši u obliku 160-0000000000000-00.',
             'payment_code.regex' => 'Šifra plaćanja ima tri cifre (npr. 289).',
+            'cover_image.max' => 'Fotografija je prevelika.',
+            'cover_image.regex' => 'Fotografija mora biti JPG, PNG ili WEBP.',
         ]);
 
         $account = array_key_exists('bank_account', $data) ? $data['bank_account'] : BusinessSetting::current()->bank_account;

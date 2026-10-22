@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
 Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:public');
+Route::get('/public/business/cover', [BusinessSettingController::class, 'cover']);
 Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');

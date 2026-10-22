@@ -1,0 +1,28 @@
+<app-modal [title]="title()" size="l" footerMode="custom" [closeOnBackdrop]="false" (cancelled)="cancelled.emit()" testId="cropper">
+  <p class="text-sm muted mb-3">Prevuci fotografiju da izabereš deo koji se vidi, a klizačem je uvećaj.</p>
+  <div
+    #frame
+    class="crop-frame"
+    [style.aspect-ratio]="aspect()"
+    tabindex="0"
+    role="application"
+    aria-label="Izbor dela fotografije — strelice pomeraju, točkić uvećava"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp()"
+    (pointercancel)="onPointerUp()"
+    (wheel)="onWheel($event)"
+    (keydown)="onKey($event)"
+    data-testid="crop-frame"
+  >
+    @if (ready()) {
+      <img [src]="src()" alt="" draggable="false" [style.width.px]="natural().width" [style.height.px]="natural().height" [style.transform]="transform()" />
+    }
+    <span class="crop-grid" aria-hidden="true"></span>
+  </div>
+  <label class="flex items-center gap-3 mt-3 text-sm">
+    <span class="muted">Uvećanje</span>
+    <input type="range" min="1" max="4" step="0.01" class="flex-1" [value]="zoom()" (input)="setZoom(+$any($event.target).value)" data-testid="crop-zoom" />
+  </label>
+  <button modal-footer type="button" appBtn size="s" [disabled]="!ready()" (click)="save()" data-testid="crop-save">Iseci i sačuvaj</button>
+</app-modal>

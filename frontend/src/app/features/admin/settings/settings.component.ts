@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
@@ -10,6 +10,7 @@ import { extractPalette, isHexColor, readableTextOn } from '../../../core/utils/
 import { resizeImage } from '../../../core/utils/resize-image';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
+import { ImageCropperComponent } from '../../../shared/components/image-cropper/image-cropper.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
@@ -28,7 +29,7 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
@@ -51,6 +52,12 @@ export class SettingsComponent {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly logo = signal<string | null>(null);
+  readonly coverFile = signal<File | null>(null);
+  readonly coverData = signal<string | null | undefined>(undefined);
+  readonly coverPreview = computed(() => {
+    const changed = this.coverData();
+    return changed === undefined ? this.business.coverSrc() : changed;
+  });
   readonly suggested = signal<string[]>([]);
   readonly extracting = signal(false);
 
@@ -218,6 +225,27 @@ export class SettingsComponent {
     }
   }
 
+  onCoverSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/') || file.type === 'image/svg+xml') {
+      this.toast.error('Izaberi fotografiju (JPG, PNG ili WEBP).');
+      return;
+    }
+    this.coverFile.set(file);
+  }
+
+  onCoverCropped(data: string): void {
+    this.coverData.set(data);
+    this.coverFile.set(null);
+  }
+
+  removeCover(): void {
+    this.coverData.set(null);
+  }
+
   removeLogo(): void {
     this.logo.set(null);
     this.suggested.set([]);
@@ -279,6 +307,7 @@ export class SettingsComponent {
       payee_name: clean(value.payee_name),
       payee_address: clean(value.payee_address),
       logo: this.logo(),
+      ...(this.coverData() !== undefined ? { cover_image: this.coverData() } : {}),
     };
 
     this.saving.set(true);
@@ -287,6 +316,7 @@ export class SettingsComponent {
       next: (settings) => {
         this.saving.set(false);
         this.saved = settings;
+        this.coverData.set(undefined);
         this.toast.success('Podešavanja su sačuvana.');
       },
       error: (err) => {

@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Attributes\Appends;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request'])]
+#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request', 'cover_image'])]
+#[Hidden(['cover_image'])]
+#[Appends(['cover_url'])]
 class BusinessSetting extends Model
 {
     public const CATEGORIES = [
@@ -39,6 +44,11 @@ class BusinessSetting extends Model
             'reviews_enabled' => 'boolean',
             'notify_review_request' => 'boolean',
         ];
+    }
+
+    protected function coverUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->cover_image ? '/public/business/cover?v='.$this->updated_at?->timestamp : null);
     }
 
     public function earliestOnlineStart(): CarbonImmutable
