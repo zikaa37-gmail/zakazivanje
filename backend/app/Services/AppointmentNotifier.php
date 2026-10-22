@@ -7,6 +7,7 @@ use App\Models\BusinessSetting;
 use App\Models\User;
 use App\Notifications\AdminAppointmentNotification;
 use App\Notifications\AppointmentNotification;
+use App\Notifications\ReviewRequestNotification;
 use Illuminate\Support\Facades\Notification;
 
 class AppointmentNotifier
@@ -31,6 +32,21 @@ class AppointmentNotifier
 
         if ($appointment->status === Appointment::STATUS_CONFIRMED && $previousStatus === Appointment::STATUS_PENDING && $settings->notify_booking_confirmed) {
             $this->toClient($appointment, AppointmentNotification::CONFIRMED);
+        }
+
+        if ($appointment->status === Appointment::STATUS_COMPLETED && $previousStatus !== Appointment::STATUS_COMPLETED) {
+            $this->askForReview($appointment, $settings);
+        }
+    }
+
+    private function askForReview(Appointment $appointment, BusinessSetting $settings): void
+    {
+        if (! $settings->reviews_enabled || ! $settings->notify_review_request || $appointment->review()->exists()) {
+            return;
+        }
+        $client = User::find($appointment->client_id);
+        if ($client && $client->password !== null && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
+            $client->notify(new ReviewRequestNotification($appointment));
         }
     }
 

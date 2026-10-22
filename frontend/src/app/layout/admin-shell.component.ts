@@ -41,6 +41,7 @@ export class AdminShellComponent {
     { path: '/admin/services', label: 'Usluge', icon: 'scissors' },
     { path: '/admin/promotions', label: 'Cene i akcije', icon: 'percent' },
     { path: '/admin/clients', label: 'Klijenti', icon: 'user' },
+    { path: '/admin/reviews', label: 'Recenzije', icon: 'star' },
     { path: '/admin/gallery', label: 'Galerija', icon: 'image' },
     { path: '/admin/share', label: 'Podeli', icon: 'share' },
     { path: '/admin/settings', label: 'Podešavanja', icon: 'sliders' },

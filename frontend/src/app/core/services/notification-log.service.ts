@@ -21,6 +21,8 @@ export const NOTIFICATION_TYPES: Record<string, string> = {
   appointment_confirmed: 'Termin potvrđen',
   appointment_cancelled: 'Termin otkazan',
   appointment_reminder: 'Podsetnik',
+  appointment_rescheduled: 'Termin pomeren',
+  review_request: 'Molba za ocenu',
   admin_new_booking: 'Admin: novi termin',
   admin_client_cancelled: 'Admin: klijent otkazao',
   email_verification: 'Potvrda emaila',

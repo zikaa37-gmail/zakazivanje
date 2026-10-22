@@ -52,6 +52,8 @@ export interface BusinessSetting {
   payee_address: string | null;
   payment_code: string;
   online_payment_enabled: boolean;
+  reviews_enabled: boolean;
+  notify_review_request: boolean;
   opening_hours?: { weekday: number; opens_at: string | null; closes_at: string | null }[];
 }
 

@@ -16,7 +16,7 @@ import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
 type Tab = 'business' | 'look' | 'booking' | 'payments' | 'notifications';
-type NotifyKey = 'notify_booking_received' | 'notify_booking_confirmed' | 'notify_booking_cancelled' | 'notify_admin_new_booking';
+type NotifyKey = 'notify_booking_received' | 'notify_booking_confirmed' | 'notify_booking_cancelled' | 'notify_admin_new_booking' | 'notify_review_request';
 type ColorKey = 'theme_primary' | 'theme_secondary' | 'theme_tertiary';
 
 const DEFAULT_COLORS: Record<ColorKey, string> = {
@@ -92,12 +92,15 @@ export class SettingsComponent {
     payee_address: this.fb.control<string | null>(null),
     payment_code: this.fb.nonNullable.control('289', Validators.pattern(/^\d{3}$/)),
     online_payment_enabled: this.fb.nonNullable.control(false),
+    reviews_enabled: this.fb.nonNullable.control(true),
+    notify_review_request: this.fb.nonNullable.control(true),
   });
 
   readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
     { key: 'notify_booking_received', label: 'Termin primljen', hint: 'Klijentu, kad zakaže termin koji čeka potvrdu' },
     { key: 'notify_booking_confirmed', label: 'Termin potvrđen', hint: 'Klijentu, kad potvrdiš termin ili ga sam zakažeš (sa .ics za kalendar)' },
     { key: 'notify_booking_cancelled', label: 'Termin otkazan', hint: 'Klijentu, kad salon otkaže termin' },
+    { key: 'notify_review_request', label: 'Molba za ocenu', hint: 'Klijentu, kad označiš termin kao završen — link za ocenu posete' },
     { key: 'notify_admin_new_booking', label: 'Obaveštenja za admina', hint: 'Mejl adminu za novi online termin i kad klijent otkaže' },
   ];
   readonly reminderOptions = [
@@ -332,6 +335,8 @@ export class SettingsComponent {
       payee_address: settings.payee_address,
       payment_code: settings.payment_code || '289',
       online_payment_enabled: settings.online_payment_enabled,
+      reviews_enabled: settings.reviews_enabled,
+      notify_review_request: settings.notify_review_request,
     });
   }
 

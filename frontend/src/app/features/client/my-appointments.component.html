@@ -81,6 +81,15 @@
                 <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
                 <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži</button>
               </span>
+            } @else if (a.review) {
+              <span class="flex items-center gap-2" [attr.data-testid]="'my-review-' + a.id">
+                <app-stars [value]="a.review.rating" />
+                @if (a.can_review) {
+                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="reviewing.set(a)">Izmeni</button>
+                }
+              </span>
+            } @else if (a.can_review) {
+              <button type="button" appBtn theme="secondary" size="s" (click)="reviewing.set(a)" [attr.data-testid]="'my-rate-' + a.id"><span appIcon="star" aria-hidden="true"></span> Oceni posetu</button>
             } @else {
               <span></span>
             }
@@ -107,6 +116,10 @@
   }
   }
 </div>
+
+@if (reviewing(); as appointment) {
+  <app-review-form [appointment]="appointment" (saved)="onReviewed()" (closed)="reviewing.set(null)" />
+}
 
 @if (paying(); as appointment) {
   <app-payment-dialog [appointmentId]="appointment.id" [asClient]="true" (closed)="paying.set(null)" />

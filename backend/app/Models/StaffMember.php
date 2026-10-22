@@ -28,6 +28,11 @@ class StaffMember extends Model
         return $this->hasMany(StaffWorkingHour::class)->orderBy('weekday')->orderBy('starts_at');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class);
