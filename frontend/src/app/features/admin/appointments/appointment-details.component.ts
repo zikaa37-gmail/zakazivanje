@@ -1,21 +1,28 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
+import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
 import { StaffMember } from '../../../core/models/staff.model';
+import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { PaymentService } from '../../../core/services/payment.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { apiErrorMessage } from '../../../core/utils/api-error';
 import { longDate, timeOf } from '../../../core/utils/dates';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { PaymentDialogComponent } from '../../../shared/components/payment-dialog/payment-dialog.component';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
+import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { AppointmentActionsService } from './appointment-actions.service';
 
 @Component({
   selector: 'app-appointment-details',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, RsdPipe, TimePickerComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SrDateTimePipe, TimePickerComponent],
   templateUrl: './appointment-details.component.html',
 })
 export class AppointmentDetailsComponent implements OnInit {
@@ -25,6 +32,15 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly closed = output<void>();
 
   private actionsService = inject(AppointmentActionsService);
+  private payments = inject(PaymentService);
+  private toast = inject(ToastService);
+  private business = inject(BusinessSettingService);
+
+  readonly paymentMethods = PAYMENT_METHODS;
+  readonly paymentLabel = (method: PaymentMethod | null) => PAYMENT_METHODS.find((m) => m.value === method)?.label ?? '';
+  readonly showIps = signal(false);
+  readonly canTakePayment = computed(() => this.appointment().total > 0 && !['cancelled', 'no_show'].includes(this.appointment().status));
+  readonly hasBankAccount = computed(() => !!this.business.settings()?.bank_account);
 
   readonly statuses = STATUS_LABELS;
   readonly moving = signal(false);
@@ -49,6 +65,16 @@ export class AppointmentDetailsComponent implements OnInit {
     this.moveStaff.setValue(a.staff_member_id);
     this.moveDate.setValue(a.starts_at.slice(0, 10));
     this.moveTime.setValue(timeOf(a.starts_at));
+  }
+
+  markPaid(method: PaymentMethod | null): void {
+    this.payments.markPaid(this.appointment().id, method).subscribe({
+      next: () => {
+        this.toast.success(method ? `Naplaćeno: ${this.paymentLabel(method).toLowerCase()}.` : 'Plaćanje je poništeno.');
+        this.changed.emit();
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Čuvanje plaćanja nije uspelo.')),
+    });
   }
 
   async act(action: string): Promise<void> {

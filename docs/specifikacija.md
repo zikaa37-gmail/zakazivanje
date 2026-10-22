@@ -30,6 +30,7 @@ drugi biznis.
 | Kalendar termina (admin dan / nedelja / mesec, prevlačenje, blokade; klijent mesečni prikaz) | #18 | gotovo |
 | Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Instagram i deljenje (linkovi ka mrežama, slike za objavu / story, QR kodovi) | — | gotovo |
+| Plaćanje (IPS QR i PDF uplatnica za klijenta, beleženje naplate gotovina / kartica / račun) | — | gotovo |
 | Recenzije | #21 | kasnije |
 | Pregled / statistika za admina (danas, zahtevi, termini i prihod po danu, usluge, popunjenost) | #23 | gotovo |
 | Slike (logo, galerija: upload više slika, opis, usluga, redosled, skrivanje, deljenje) | #24 | gotovo |

@@ -7,6 +7,7 @@ use App\Models\BusinessSetting;
 use App\Models\StaffWorkingHour;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BusinessSettingController extends Controller
 {
@@ -62,7 +63,20 @@ class BusinessSettingController extends Controller
             'notify_booking_cancelled' => ['sometimes', 'boolean'],
             'reminder_hours' => ['sometimes', 'integer', Rule::in([0, 2, 3, 6, 12, 24, 48])],
             'notify_admin_new_booking' => ['sometimes', 'boolean'],
+            'bank_account' => ['nullable', 'string', 'regex:/^\d{3}-\d{1,13}-\d{2}$/'],
+            'payee_name' => ['nullable', 'string', 'max:70'],
+            'payee_address' => ['nullable', 'string', 'max:120'],
+            'payment_code' => ['sometimes', 'regex:/^\d{3}$/'],
+            'online_payment_enabled' => ['sometimes', 'boolean'],
+        ], [
+            'bank_account.regex' => 'Račun upiši u obliku 160-0000000000000-00.',
+            'payment_code.regex' => 'Šifra plaćanja ima tri cifre (npr. 289).',
         ]);
+
+        $account = array_key_exists('bank_account', $data) ? $data['bank_account'] : BusinessSetting::current()->bank_account;
+        if (($data['online_payment_enabled'] ?? false) && ! $account) {
+            throw ValidationException::withMessages(['bank_account' => ['Za plaćanje unapred upiši tekući račun.']]);
+        }
 
         $settings = BusinessSetting::current();
         $settings->update($data);

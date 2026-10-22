@@ -47,6 +47,11 @@ export interface BusinessSetting {
   notify_booking_cancelled: boolean;
   reminder_hours: number;
   notify_admin_new_booking: boolean;
+  bank_account: string | null;
+  payee_name: string | null;
+  payee_address: string | null;
+  payment_code: string;
+  online_payment_enabled: boolean;
   opening_hours?: { weekday: number; opens_at: string | null; closes_at: string | null }[];
 }
 

@@ -1,0 +1,42 @@
+<app-modal title="Plaćanje IPS QR kodom" footerMode="none" testId="payment-dialog" (cancelled)="closed.emit()">
+  <app-error-message [message]="error()" />
+  @if (details(); as d) {
+    <p class="text-sm mb-3">{{ d.services }} · {{ d.starts_at | srDateTime }} · <strong>{{ d.amount | rsd }}</strong></p>
+    <div class="payment-layout">
+      <div class="payment-qr">
+        <img [src]="d.qr" alt="IPS QR kod za uplatu" width="200" height="200" data-testid="payment-qr" />
+        <span class="text-xs muted">Otvori m-banking → „IPS skeniraj" i skeniraj kod. Svi podaci se popune sami.</span>
+      </div>
+      <dl class="payment-details">
+        <div>
+          <dt>Račun primaoca</dt>
+          <dd><button type="button" class="copy-value" (click)="copy(d.account)" data-testid="payment-account">{{ d.account }} <span appIcon="copy" [iconSize]="13" aria-hidden="true"></span></button></dd>
+        </div>
+        <div>
+          <dt>Primalac</dt>
+          <dd class="whitespace-pre-line">{{ d.payee }}</dd>
+        </div>
+        <div>
+          <dt>Iznos</dt>
+          <dd>{{ d.amount | rsd }}</dd>
+        </div>
+        <div>
+          <dt>Šifra plaćanja</dt>
+          <dd>{{ d.payment_code }}</dd>
+        </div>
+        <div>
+          <dt>Model / poziv na broj</dt>
+          <dd><button type="button" class="copy-value" (click)="copy(d.reference)">{{ d.model }} / {{ d.reference }} <span appIcon="copy" [iconSize]="13" aria-hidden="true"></span></button></dd>
+        </div>
+        <div>
+          <dt>Svrha</dt>
+          <dd>{{ d.purpose }}</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="flex flex-wrap gap-2 mt-4">
+      <button type="button" appBtn theme="secondary" size="s" [disabled]="downloading()" (click)="slip()" data-testid="payment-slip"><span appIcon="file-text" aria-hidden="true"></span> Uplatnica (PDF)</button>
+    </div>
+    <p class="text-xs muted mt-3">Termin se vodi kao plaćen kad salon vidi uplatu na izvodu. U salonu možeš da platiš i gotovinom ili karticom.</p>
+  }
+</app-modal>

@@ -1,9 +1,11 @@
-import { AfterViewInit, Component, ElementRef, input, output, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, input, output, viewChild } from '@angular/core';
 import { ButtonDirective } from '../../directives/button.directive';
 import { IconDirective, IconName } from '../../directives/icon.directive';
 
 export type ModalSize = 's' | 'm' | 'l' | 'xl';
 export type ModalFooterMode = 'default' | 'custom' | 'none';
+
+const openModals: ModalComponent[] = [];
 
 @Component({
   selector: 'app-modal',
@@ -32,8 +34,13 @@ export class ModalComponent implements AfterViewInit {
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
+  constructor() {
+    openModals.push(this);
+    inject(DestroyRef).onDestroy(() => openModals.splice(openModals.indexOf(this), 1));
+  }
+
   onEscape(): void {
-    this.cancelled.emit();
+    if (openModals.at(-1) === this) this.cancelled.emit();
   }
 
   ngAfterViewInit(): void {

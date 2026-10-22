@@ -1,3 +1,5 @@
+import { PaymentMethod } from './payment.model';
+
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 export interface AppointmentItem {
@@ -28,7 +30,10 @@ export interface Appointment {
   staff_member?: { id: number; first_name: string; last_name: string; title?: string | null; color: string | null };
   client?: { id: number; first_name: string; last_name: string; phone: string | null; email: string | null };
   recurrence?: { id: number; interval_weeks: number; active: boolean } | null;
+  paid_at: string | null;
+  payment_method: PaymentMethod | null;
   can_cancel?: boolean;
+  can_pay?: boolean;
 }
 
 export interface BlockedTime {

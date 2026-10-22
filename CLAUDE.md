@@ -143,6 +143,11 @@ Deljenje (kao u košarkaškoj): mreže `instagram` / `facebook` / `tiktok` / `yo
 link, `socialLinks()` u `core/utils/social.ts` pravi URL), ikonice `<app-social-links>` u dnu javnih stranica;
 admin `/admin/share` — slika za Instagram na canvasu (`share-image.ts`: zakaži online sa QR, akcija, cenovnik,
 slika iz galerije; 4:5, kvadrat, story) i QR kod za štampu (`POST /share/qr`, `chillerlan/php-qrcode`).
+Plaćanje (kao u košarkaškoj): Podešavanja → Plaćanje (`bank_account`, primalac, šifra 289,
+`online_payment_enabled`); `PaymentService` pravi NBS IPS QR (`K:PR|V:01|C:1|R:…|RO:97…`, poziv na broj
+mod 97 od id termina) i PDF uplatnicu (`barryvdh/laravel-dompdf`, `pdf/payment-slip`); klijent „Plati" u
+Moji termini (`<app-payment-dialog>`), admin u detaljima termina beleži gotovina / kartica / račun (`paid_at`,
+`payment_method`) ili pokazuje IPS QR na kasi. Kartično plaćanje preko interneta nije uključeno (treba ugovor sa bankom).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

@@ -84,11 +84,16 @@
             } @else {
               <span></span>
             }
-            <span class="font-semibold">
+            <span class="flex items-center gap-2 font-semibold">
               @if (a.discount > 0) {
-                <s class="muted text-sm font-normal mr-1">{{ a.price | rsd }}</s>
+                <s class="muted text-sm font-normal">{{ a.price | rsd }}</s>
               }
               {{ a.total | rsd }}
+              @if (a.paid_at) {
+                <span class="badge badge-success" [attr.data-testid]="'my-paid-' + a.id">Plaćeno</span>
+              } @else if (a.can_pay) {
+                <button type="button" appBtn size="s" (click)="paying.set(a)" [attr.data-testid]="'my-pay-' + a.id">Plati</button>
+              }
             </span>
           </div>
         </div>
@@ -102,6 +107,10 @@
   }
   }
 </div>
+
+@if (paying(); as appointment) {
+  <app-payment-dialog [appointmentId]="appointment.id" [asClient]="true" (closed)="paying.set(null)" />
+}
 
 @if (rescheduling(); as appointment) {
   <app-reschedule [appointment]="appointment" (moved)="onMoved()" (closed)="rescheduling.set(null)" />

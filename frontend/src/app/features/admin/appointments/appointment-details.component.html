@@ -44,6 +44,23 @@
       </div>
     </div>
 
+    @if (appointment().paid_at) {
+      <div class="flex flex-wrap items-center justify-between gap-2 text-sm" data-testid="details-paid">
+        <span><span class="badge badge-success">Plaćeno</span> {{ paymentLabel(appointment().payment_method) }} · {{ appointment().paid_at! | srDateTime }}</span>
+        <button type="button" appBtn theme="ghost" size="s" (click)="markPaid(null)" data-testid="details-unpay">Poništi</button>
+      </div>
+    } @else if (canTakePayment()) {
+      <div class="flex flex-wrap items-center gap-2" data-testid="details-payment">
+        <span class="text-sm muted">Naplaćeno:</span>
+        @for (m of paymentMethods; track m.value) {
+          <button type="button" appBtn theme="secondary" size="s" (click)="markPaid(m.value)" [attr.data-testid]="'details-paid-' + m.value">{{ m.label }}</button>
+        }
+        @if (hasBankAccount()) {
+          <button type="button" appBtn theme="ghost" size="s" (click)="showIps.set(true)" data-testid="details-ips"><span appIcon="qr" aria-hidden="true"></span> IPS QR</button>
+        }
+      </div>
+    }
+
     @if (appointment().note) {
       <div class="text-sm"><span class="muted">Napomena klijenta:</span> {{ appointment().note }}</div>
     }
@@ -86,3 +103,7 @@
     }
   </div>
 </app-modal>
+
+@if (showIps()) {
+  <app-payment-dialog [appointmentId]="appointment().id" (closed)="showIps.set(false)" />
+}

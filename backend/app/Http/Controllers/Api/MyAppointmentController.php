@@ -28,7 +28,7 @@ class MyAppointmentController extends Controller
             ->orderBy('starts_at', $upcoming ? 'asc' : 'desc')
             ->limit(100)
             ->get()
-            ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a)]);
+            ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a), 'can_pay' => $this->canPay($a)]);
     }
 
     public function cancel(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier)
@@ -67,7 +67,16 @@ class MyAppointmentController extends Controller
             $notifier->rescheduledByClient($moved, $previous);
         }
 
-        return [...$moved->toArray(), 'can_cancel' => $this->canCancel($moved)];
+        return [...$moved->toArray(), 'can_cancel' => $this->canCancel($moved), 'can_pay' => $this->canPay($moved)];
+    }
+
+    private function canPay(Appointment $appointment): bool
+    {
+        return BusinessSetting::current()->online_payment_enabled
+            && ! $appointment->paid_at
+            && $appointment->total > 0
+            && in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)
+            && $appointment->ends_at->isFuture();
     }
 
     private function canCancel(Appointment $appointment): bool
