@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['weekday', 'starts_at', 'ends_at'])]
+#[Fillable(['weekday', 'week', 'starts_at', 'ends_at'])]
 #[Hidden(['created_at', 'updated_at'])]
 class StaffWorkingHour extends Model
 {
     protected function casts(): array
     {
-        return ['weekday' => 'integer'];
+        return ['weekday' => 'integer', 'week' => 'integer'];
     }
 
     public function staffMember(): BelongsTo

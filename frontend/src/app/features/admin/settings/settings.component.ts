@@ -1,5 +1,5 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { NOTIFICATION_TYPES, NotificationLogEntry, NotificationLogService } from '../../../core/services/notification-log.service';
@@ -10,13 +10,28 @@ import { extractPalette, isHexColor, readableTextOn } from '../../../core/utils/
 import { resizeImage } from '../../../core/utils/resize-image';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
+import { WEEKDAYS } from '../../../core/models/staff.model';
 import { ImageCropperComponent } from '../../../shared/components/image-cropper/image-cropper.component';
+import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
-type Tab = 'business' | 'look' | 'booking' | 'payments' | 'notifications';
+type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'notifications';
+
+interface DayRow {
+  weekday: number;
+  open: boolean;
+  opens: FormControl<string | null>;
+  closes: FormControl<string | null>;
+}
+
+interface ShiftRow {
+  name: FormControl<string>;
+  starts: FormControl<string | null>;
+  ends: FormControl<string | null>;
+}
 type NotifyKey = 'notify_booking_received' | 'notify_booking_confirmed' | 'notify_booking_cancelled' | 'notify_admin_new_booking' | 'notify_review_request';
 type ColorKey = 'theme_primary' | 'theme_secondary' | 'theme_tertiary';
 
@@ -29,7 +44,7 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, TimePickerComponent, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
@@ -53,6 +68,9 @@ export class SettingsComponent {
   readonly error = signal<string | null>(null);
   readonly logo = signal<string | null>(null);
   readonly coverFile = signal<File | null>(null);
+  readonly weekdayList = WEEKDAYS;
+  readonly days = signal<DayRow[]>([]);
+  readonly shiftRows = signal<ShiftRow[]>([]);
   readonly coverData = signal<string | null | undefined>(undefined);
   readonly coverPreview = computed(() => {
     const changed = this.coverData();
@@ -166,6 +184,10 @@ export class SettingsComponent {
     });
   }
 
+  private shiftRow(name: string, starts: string, ends: string): ShiftRow {
+    return { name: new FormControl(name, { nonNullable: true }), starts: new FormControl(starts), ends: new FormControl(ends) };
+  }
+
   openTab(tab: Tab): void {
     this.tab.set(tab);
     if (tab === 'notifications') this.loadLogs();
@@ -242,6 +264,22 @@ export class SettingsComponent {
     this.coverFile.set(null);
   }
 
+  setDayOpen(row: DayRow, open: boolean): void {
+    this.days.update((rows) => rows.map((r) => (r === row ? { ...r, open } : r)));
+  }
+
+  dayLabel(weekday: number): string {
+    return WEEKDAYS.find((d) => d.value === weekday)?.label ?? '';
+  }
+
+  addShiftTemplate(): void {
+    this.shiftRows.update((rows) => [...rows, this.shiftRow('Nova smena', '11:00', '18:00')]);
+  }
+
+  removeShiftTemplate(row: ShiftRow): void {
+    this.shiftRows.update((rows) => rows.filter((r) => r !== row));
+  }
+
   removeCover(): void {
     this.coverData.set(null);
   }
@@ -308,6 +346,10 @@ export class SettingsComponent {
       payee_address: clean(value.payee_address),
       logo: this.logo(),
       ...(this.coverData() !== undefined ? { cover_image: this.coverData() } : {}),
+      opening_hours: this.days().map((d) => ({ weekday: d.weekday, opens_at: d.open ? d.opens.value : null, closes_at: d.open ? d.closes.value : null })),
+      shifts: this.shiftRows()
+        .filter((r) => r.name.value.trim() && r.starts.value && r.ends.value)
+        .map((r) => ({ name: r.name.value.trim(), starts_at: r.starts.value!, ends_at: r.ends.value! })),
     };
 
     this.saving.set(true);
@@ -327,6 +369,14 @@ export class SettingsComponent {
   }
 
   private fill(settings: BusinessSetting): void {
+    this.days.set(
+      WEEKDAYS.map((d) => {
+        const day = settings.opening_hours?.find((h) => h.weekday === d.value);
+        const open = !!(day?.opens_at && day.closes_at);
+        return { weekday: d.value, open, opens: new FormControl(day?.opens_at ?? '08:00'), closes: new FormControl(day?.closes_at ?? '20:00') };
+      }),
+    );
+    this.shiftRows.set((settings.shifts ?? []).map((s) => this.shiftRow(s.name, s.starts_at, s.ends_at)));
     this.saved = settings;
     this.logo.set(settings.logo);
     this.form.reset({

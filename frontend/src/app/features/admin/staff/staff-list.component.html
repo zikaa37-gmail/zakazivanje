@@ -129,17 +129,54 @@
       </div>
 
       <div class="field">
-        <div class="flex items-center justify-between gap-2">
-          <label>Radno vreme</label>
-          <button type="button" appBtn theme="ghost" size="s" (click)="copyMondayToWeekdays()">Kopiraj ponedeljak na radne dane</button>
+        <label>Raspored</label>
+        <div class="chip-group" role="radiogroup" aria-label="Raspored" data-testid="staff-rotation">
+          @for (o of rotationOptions; track o.value) {
+            <button type="button" role="radio" class="chip" [class.selected]="rotationWeeks() === o.value" [attr.aria-checked]="rotationWeeks() === o.value" (click)="setRotation(o.value)" [attr.data-testid]="'staff-rotation-' + o.value">{{ o.label }}</button>
+          }
+        </div>
+        @if (rotationWeeks() > 1) {
+          <div class="flex flex-wrap items-center gap-2 mt-2">
+            <label for="staff-rotation-start" class="text-sm muted">1. nedelja počinje (ponedeljak)</label>
+            <input id="staff-rotation-start" appInput class="!w-auto" type="date" [value]="rotationStart()" (change)="setRotationStart($any($event.target).value)" data-testid="staff-rotation-start" />
+          </div>
+          <div class="chip-group mt-2" role="tablist" aria-label="Nedelja u rasporedu">
+            @for (w of weekTabs(); track w) {
+              <button type="button" role="tab" class="chip" [class.selected]="activeWeek() === w" [attr.aria-selected]="activeWeek() === w" (click)="activeWeek.set(w)" [attr.data-testid]="'staff-week-' + w">{{ w + 1 }}. nedelja{{ thisWeekIndex() === w ? ' (ova)' : '' }}</button>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="field">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <label>Radno vreme{{ rotationWeeks() > 1 ? ' · ' + (activeWeek() + 1) + '. nedelja' : '' }}</label>
+          <span class="flex flex-wrap gap-1">
+            @if (rotationWeeks() > 1 && activeWeek() > 0) {
+              <button type="button" appBtn theme="ghost" size="s" (click)="fillFromPrevious()" data-testid="staff-swap-week">Kao {{ activeWeek() }}. nedelja, pre podne ↔ popodne</button>
+            }
+            <button type="button" appBtn theme="ghost" size="s" (click)="copyMondayToWeekdays()">Kopiraj ponedeljak na radne dane</button>
+          </span>
         </div>
         <div class="flex flex-col gap-2">
           @for (day of weekdays; track day.value) {
-            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 py-1 border-b border-[var(--color-bg)]">
-              <label class="checkbox-field w-32 shrink-0">
-                <input type="checkbox" [checked]="shiftsFor(day.value).length > 0" (change)="toggleDay(day.value, $any($event.target).checked)" [attr.data-testid]="'staff-day-' + day.value" />
-                {{ day.label }}
-              </label>
+            <div class="flex flex-col gap-2 py-2 border-b border-[var(--color-bg)]" [class.opacity-50]="!salonOpen(day.value)">
+              <div class="flex flex-wrap items-center gap-2">
+                <label class="checkbox-field w-28 shrink-0">
+                  <input type="checkbox" [disabled]="!salonOpen(day.value)" [checked]="shiftsFor(day.value).length > 0" (change)="toggleDay(day.value, $any($event.target).checked)" [attr.data-testid]="'staff-day-' + day.value" />
+                  {{ day.label }}
+                </label>
+                @if (salonOpen(day.value)) {
+                  <span class="chip-group">
+                    @for (s of salonShifts(); track s.name) {
+                      <button type="button" class="chip" [class.selected]="dayShiftName(day.value) === s.name" (click)="applyShift(day.value, s)" [attr.data-testid]="'staff-shift-' + day.value + '-' + $index">{{ s.name }}</button>
+                    }
+                    <button type="button" class="chip" [class.selected]="shiftsFor(day.value).length > 0 && !dayShiftName(day.value)" (click)="setCustom(day.value)">Drugo vreme</button>
+                  </span>
+                }
+                <span class="text-xs muted ml-auto">{{ salonHours(day.value) }}</span>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 pl-0 sm:pl-30">
               @for (row of shiftsFor(day.value); track row) {
                 <div class="flex items-center gap-1">
                   <app-time-picker [control]="row.start" />
@@ -155,6 +192,7 @@
               @if (shiftsFor(day.value).length > 0) {
                 <button type="button" appBtn theme="ghost" size="s" (click)="addShift(day.value)">+ smena</button>
               }
+              </div>
             </div>
           }
         </div>

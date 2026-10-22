@@ -2,6 +2,7 @@ import { ConfirmationMode } from './business-setting.model';
 
 export interface WorkingHour {
   weekday: number;
+  week?: number;
   starts_at: string;
   ends_at: string;
 }
@@ -18,6 +19,9 @@ export interface StaffMember {
   avatar: string | null;
   active: boolean;
   sort_order: number;
+  rotation_weeks: number;
+  rotation_starts_on: string | null;
+  current_week: number;
   working_hours: WorkingHour[];
   services: { id: number; name: string }[];
 }
@@ -32,6 +36,8 @@ export interface StaffMemberPayload {
   booking_confirmation: ConfirmationMode | null;
   active: boolean;
   service_ids: number[];
+  rotation_weeks: number;
+  rotation_starts_on: string | null;
   working_hours: WorkingHour[];
 }
 

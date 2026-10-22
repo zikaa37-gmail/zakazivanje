@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\AppointmentItem;
 use App\Models\BlockedTime;
+use App\Models\OpeningHour;
 use App\Models\StaffMember;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -33,19 +34,20 @@ class DashboardService
             ->limit(10)
             ->get();
 
+        $openingHours = OpeningHour::week();
         $staff = StaffMember::query()
             ->where('active', true)
             ->with('workingHours')
             ->orderBy('sort_order')
             ->get()
-            ->map(function (StaffMember $s) use ($date, $appointments) {
-                $hours = $s->workingHours->where('weekday', $date->isoWeekday())->values();
+            ->map(function (StaffMember $s) use ($date, $appointments, $openingHours) {
+                $hours = $s->hoursOn($date, $openingHours);
 
                 return [
                     'id' => $s->id,
                     'name' => trim($s->first_name.' '.$s->last_name),
                     'color' => $s->color,
-                    'hours' => $hours->map(fn ($h) => $h->starts_at.' – '.$h->ends_at)->join(', '),
+                    'hours' => $hours->map(fn ($h) => $h['starts_at'].' – '.$h['ends_at'])->join(', '),
                     'appointments' => $appointments->where('staff_member_id', $s->id)->count(),
                 ];
             })
@@ -130,18 +132,19 @@ class DashboardService
     private function utilization(CarbonImmutable $from, CarbonImmutable $to, $appointments): array
     {
         $blocks = BlockedTime::query()->where('starts_at', '<', $to->endOfDay())->where('ends_at', '>', $from->startOfDay())->get();
+        $openingHours = OpeningHour::week();
 
         return StaffMember::query()
             ->where('active', true)
             ->with('workingHours')
             ->orderBy('sort_order')
             ->get()
-            ->map(function (StaffMember $staff) use ($from, $to, $appointments, $blocks) {
+            ->map(function (StaffMember $staff) use ($from, $to, $appointments, $blocks, $openingHours) {
                 $available = 0;
                 foreach (CarbonPeriod::create($from, $to) as $day) {
-                    foreach ($staff->workingHours->where('weekday', $day->isoWeekday()) as $hours) {
-                        $start = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours->starts_at);
-                        $end = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours->ends_at);
+                    foreach ($staff->hoursOn(CarbonImmutable::parse($day), $openingHours) as $hours) {
+                        $start = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['starts_at']);
+                        $end = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['ends_at']);
                         $blocked = $blocks
                             ->filter(fn ($b) => $b->staff_member_id === null || $b->staff_member_id === $staff->id)
                             ->sum(fn ($b) => max(0, min($end->getTimestamp(), $b->ends_at->getTimestamp()) - max($start->getTimestamp(), $b->starts_at->getTimestamp())) / 60);

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
-use App\Models\StaffWorkingHour;
+use App\Models\OpeningHour;
+use App\Models\Shift;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -15,18 +17,22 @@ class BusinessSettingController extends Controller
 
     public function show()
     {
-        $hours = StaffWorkingHour::query()
-            ->whereHas('staffMember', fn ($q) => $q->where('active', true))
-            ->get()
-            ->groupBy('weekday');
+        return $this->present(BusinessSetting::current());
+    }
 
-        $openingHours = collect(range(1, 7))->map(fn ($day) => [
-            'weekday' => $day,
-            'opens_at' => $hours->get($day)?->min('starts_at'),
-            'closes_at' => $hours->get($day)?->max('ends_at'),
-        ]);
+    private function present(BusinessSetting $settings): array
+    {
+        $week = OpeningHour::week();
 
-        return [...BusinessSetting::current()->toArray(), 'opening_hours' => $openingHours];
+        return [
+            ...$settings->toArray(),
+            'opening_hours' => collect(range(1, 7))->map(fn ($day) => [
+                'weekday' => $day,
+                'opens_at' => $week->get($day)?->opens_at,
+                'closes_at' => $week->get($day)?->closes_at,
+            ])->all(),
+            'shifts' => Shift::query()->orderBy('sort_order')->orderBy('starts_at')->get(['id', 'name', 'starts_at', 'ends_at', 'sort_order']),
+        ];
     }
 
     public function cover()
@@ -82,11 +88,22 @@ class BusinessSettingController extends Controller
             'online_payment_enabled' => ['sometimes', 'boolean'],
             'reviews_enabled' => ['sometimes', 'boolean'],
             'notify_review_request' => ['sometimes', 'boolean'],
+            'opening_hours' => ['sometimes', 'array', 'size:7'],
+            'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
+            'opening_hours.*.opens_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.closes_at'],
+            'opening_hours.*.closes_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.opens_at', 'after:opening_hours.*.opens_at'],
+            'shifts' => ['sometimes', 'array', 'max:10'],
+            'shifts.*.name' => ['required', 'string', 'max:50'],
+            'shifts.*.starts_at' => ['required', 'date_format:H:i'],
+            'shifts.*.ends_at' => ['required', 'date_format:H:i', 'after:shifts.*.starts_at'],
         ], [
             'bank_account.regex' => 'Račun upiši u obliku 160-0000000000000-00.',
             'payment_code.regex' => 'Šifra plaćanja ima tri cifre (npr. 289).',
             'cover_image.max' => 'Fotografija je prevelika.',
             'cover_image.regex' => 'Fotografija mora biti JPG, PNG ili WEBP.',
+            'opening_hours.*.closes_at.after' => 'Zatvaranje mora biti posle otvaranja.',
+            'shifts.*.ends_at.after' => 'Kraj smene mora biti posle početka.',
+            'shifts.*.name.required' => 'Upiši naziv smene.',
         ]);
 
         $account = array_key_exists('bank_account', $data) ? $data['bank_account'] : BusinessSetting::current()->bank_account;
@@ -95,8 +112,21 @@ class BusinessSettingController extends Controller
         }
 
         $settings = BusinessSetting::current();
-        $settings->update($data);
+        DB::transaction(function () use ($settings, $data) {
+            $settings->update(collect($data)->except(['opening_hours', 'shifts'])->all());
 
-        return $settings;
+            foreach ($data['opening_hours'] ?? [] as $day) {
+                OpeningHour::updateOrCreate(['weekday' => $day['weekday']], ['opens_at' => $day['opens_at'] ?? null, 'closes_at' => $day['closes_at'] ?? null]);
+            }
+
+            if (array_key_exists('shifts', $data)) {
+                Shift::query()->delete();
+                foreach (array_values($data['shifts']) as $i => $shift) {
+                    Shift::create([...$shift, 'sort_order' => $i]);
+                }
+            }
+        });
+
+        return $this->present($settings->refresh());
     }
 }

@@ -14,6 +14,19 @@ export type BusinessCategory =
 
 export type ConfirmationMode = 'manual' | 'automatic';
 
+export interface OpeningHour {
+  weekday: number;
+  opens_at: string | null;
+  closes_at: string | null;
+}
+
+export interface ShiftTemplate {
+  id?: number;
+  name: string;
+  starts_at: string;
+  ends_at: string;
+}
+
 export interface BusinessSetting {
   id: number;
   name: string;
@@ -56,7 +69,8 @@ export interface BusinessSetting {
   online_payment_enabled: boolean;
   reviews_enabled: boolean;
   notify_review_request: boolean;
-  opening_hours?: { weekday: number; opens_at: string | null; closes_at: string | null }[];
+  opening_hours?: OpeningHour[];
+  shifts?: ShiftTemplate[];
 }
 
 export const CONFIRMATION_OPTIONS: { value: ConfirmationMode; label: string; hint: string }[] = [
