@@ -1,4 +1,4 @@
--- Tabela `zk_notification_logs`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_notification_logs`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -24,7 +24,8 @@ CREATE TABLE `zk_notification_logs` (
   KEY `zk_notification_logs_created_at_index` (`created_at`),
   CONSTRAINT `zk_notification_logs_appointment_id_foreign` FOREIGN KEY (`appointment_id`) REFERENCES `zk_appointments` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_notification_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_notification_logs` VALUES (1,2,2,'appointment_received','mail','devtestzikaa@gmail.com','sent',NULL,'2026-10-21 11:14:30'),(2,1,2,'admin_client_rescheduled','mail','zakazivanje@fiskultura.rs','sent',NULL,'2026-10-21 11:14:30');
 
 SET FOREIGN_KEY_CHECKS=1;

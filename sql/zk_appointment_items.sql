@@ -1,4 +1,4 @@
--- Tabela `zk_appointment_items`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_appointment_items`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -25,8 +25,8 @@ CREATE TABLE `zk_appointment_items` (
   CONSTRAINT `zk_appointment_items_appointment_id_foreign` FOREIGN KEY (`appointment_id`) REFERENCES `zk_appointments` (`id`) ON DELETE CASCADE,
   CONSTRAINT `zk_appointment_items_promotion_id_foreign` FOREIGN KEY (`promotion_id`) REFERENCES `zk_promotions` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_appointment_items_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `zk_services` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_appointment_items` VALUES (1,1,2,NULL,'Muško šišanje',30,1500.00,0.00,NULL);
+INSERT INTO `zk_appointment_items` VALUES (1,1,2,NULL,'Muško šišanje',30,1500.00,0.00,NULL),(2,2,3,NULL,'Feniranje',30,1200.00,0.00,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
