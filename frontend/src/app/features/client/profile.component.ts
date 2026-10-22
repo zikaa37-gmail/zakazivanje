@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { COMMUNICATION_OPTIONS, CommunicationChannel } from '../../core/models/user.model';
+import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
@@ -39,12 +39,15 @@ export class ProfileComponent {
     return user ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase() : '';
   });
 
+  readonly genders = GENDER_OPTIONS;
+
   readonly form = this.fb.nonNullable.group({
     first_name: ['', [Validators.required, Validators.minLength(2)]],
     last_name: ['', [Validators.required, Validators.minLength(2)]],
     phone: ['', Validators.required],
     whatsapp_number: [''],
     preferred_communication: ['email' as CommunicationChannel],
+    gender: [null as Gender | null],
   });
 
   constructor() {
@@ -57,6 +60,7 @@ export class ProfileComponent {
         phone: user.phone ?? '',
         whatsapp_number: user.whatsapp_number ?? '',
         preferred_communication: user.preferred_communication,
+        gender: user.gender ?? null,
       });
     }
   }

@@ -8,6 +8,7 @@ use App\Services\PriceQuoteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ServiceController extends Controller
 {
@@ -27,7 +28,7 @@ class ServiceController extends Controller
             ->with(['staffMembers' => fn ($q) => $q->where('active', true)->select('staff_members.id', 'first_name', 'last_name', 'title')])
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get(['id', 'name', 'description', 'category', 'duration_minutes', 'price']);
+            ->get(['id', 'name', 'description', 'category', 'audience', 'duration_minutes', 'price']);
     }
 
     public function store(Request $request)
@@ -78,6 +79,7 @@ class ServiceController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
             'category' => ['nullable', 'string', 'max:100'],
+            'audience' => ['sometimes', Rule::in(Service::AUDIENCES)],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:720'],
             'price' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'active' => ['boolean'],

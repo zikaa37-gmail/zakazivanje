@@ -42,7 +42,7 @@
   <div class="field">
     <label>Usluge <span class="required-mark">*</span></label>
     <div class="chip-group">
-      @for (s of services(); track s.id) {
+      @for (s of availableServices(); track s.id) {
         <button type="button" class="chip" [class.selected]="selectedServices().includes(s.id)" (click)="toggleService(s.id)" [attr.data-testid]="'appointment-service-' + s.id">
           {{ s.name }} <span class="muted">{{ s.duration_minutes }} min</span>
         </button>

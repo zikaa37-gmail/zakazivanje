@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\AppointmentItem;
 use App\Models\BusinessSetting;
+use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -32,6 +33,7 @@ class BookingService
         if ($services->isEmpty()) {
             throw ValidationException::withMessages(['service_ids' => ['Izaberi bar jednu uslugu.']]);
         }
+        $this->ensureAudience($client, $services);
 
         return DB::transaction(function () use ($client, $services, $staffMemberId, $start, $source, $note, $adminNote, $recurrenceId) {
             $online = $source === Appointment::SOURCE_ONLINE;
@@ -120,6 +122,22 @@ class BookingService
 
             return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color']);
         });
+    }
+
+    public function ensureAudience(User $client, Collection $services): void
+    {
+        $audiences = $services->pluck('audience')->reject(fn ($a) => $a === Service::AUDIENCE_ALL)->unique();
+        if ($audiences->count() > 1) {
+            throw ValidationException::withMessages(['service_ids' => ['Muške i ženske usluge ne mogu u isti termin.']]);
+        }
+        $mismatch = $services->first(fn (Service $s) => ! $s->suits($client->gender));
+        if ($mismatch) {
+            $for = $mismatch->audience === User::GENDER_FEMALE ? 'žene' : 'muškarce';
+            throw ValidationException::withMessages(['service_ids' => ["Usluga „{$mismatch->name}\" je samo za {$for}."]]);
+        }
+        if ($client->gender === null && $audiences->isNotEmpty()) {
+            $client->update(['gender' => $audiences->first()]);
+        }
     }
 
     public function quoteFor(User $client, Collection $services, CarbonImmutable $date): array

@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'first_name' => 'Petar',
             'last_name' => 'Petrović',
+            'gender' => User::GENDER_MALE,
             'email' => 'devtestzikaa@gmail.com',
             'password' => Hash::make('test'),
             'phone' => '+381 64 123 4567',
@@ -55,13 +56,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $services = collect([
-            ['Žensko šišanje', 45, 2500, 'Šišanje'],
-            ['Muško šišanje', 30, 1500, 'Šišanje'],
-            ['Feniranje', 30, 1200, 'Stilizovanje'],
-            ['Farbanje', 90, 4500, 'Boja'],
-            ['Manikir', 60, 2000, 'Nokti'],
+            ['Žensko šišanje', 45, 2500, 'Šišanje', User::GENDER_FEMALE],
+            ['Muško šišanje', 30, 1500, 'Šišanje', User::GENDER_MALE],
+            ['Feniranje', 30, 1200, 'Stilizovanje', Service::AUDIENCE_ALL],
+            ['Farbanje', 90, 4500, 'Boja', Service::AUDIENCE_ALL],
+            ['Manikir', 60, 2000, 'Nokti', Service::AUDIENCE_ALL],
         ])->map(fn ($s, $i) => Service::create([
-            'name' => $s[0], 'duration_minutes' => $s[1], 'price' => $s[2], 'category' => $s[3], 'sort_order' => $i,
+            'name' => $s[0], 'duration_minutes' => $s[1], 'price' => $s[2], 'category' => $s[3], 'audience' => $s[4], 'sort_order' => $i,
         ]))->keyBy('name');
 
         $weekdays = fn (array $days, string $from, string $to) => collect($days)

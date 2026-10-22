@@ -7,13 +7,22 @@
   </section>
 
   <section>
-    <h2 class="text-lg font-semibold mb-2">Usluge</h2>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+      <h2 class="text-lg font-semibold">Usluge</h2>
+      @if (hasGendered()) {
+        <div class="chip-group" role="radiogroup" aria-label="Usluge za" data-testid="home-audience">
+          @for (a of audiences; track a.value) {
+            <button type="button" role="radio" class="chip" [class.selected]="audienceFilter() === a.value" [attr.aria-checked]="audienceFilter() === a.value" (click)="audienceFilter.set(a.value)">{{ a.label }}</button>
+          }
+        </div>
+      }
+    </div>
     @if (loading() && services().length === 0) {
     } @else if (services().length === 0) {
       <div class="card empty-state">Usluge još nisu unete.</div>
     } @else {
       <div class="card !p-0 overflow-hidden">
-        @for (service of services(); track service.id) {
+        @for (service of shownServices(); track service.id) {
           <a routerLink="/book" (click)="startWith(service)" class="service-row" [attr.data-testid]="'home-service-' + service.id">
             <div class="min-w-0 flex-1">
               <div class="font-semibold text-[var(--color-text)]">{{ service.name }}</div>

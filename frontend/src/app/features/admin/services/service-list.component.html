@@ -24,7 +24,7 @@
             @for (service of group.items; track service.id) {
               <app-data-row [columns]="columns" [attr.data-testid]="'service-' + service.id">
                 <div class="min-w-0">
-                  <div class="font-semibold truncate">{{ service.name }}</div>
+                  <div class="font-semibold truncate">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}</div>
                   @if (service.description) {
                     <div class="text-xs muted truncate">{{ service.description }}</div>
                   }
@@ -43,7 +43,7 @@
           @for (service of group.items; track service.id) {
             <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.opacity-60]="!service.active">
               <div class="min-w-0 flex-1">
-                <div class="font-semibold">{{ service.name }}</div>
+                <div class="font-semibold">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}</div>
                 <div class="text-sm muted">{{ service.duration_minutes | duration }} · {{ staffNames(service) }}</div>
               </div>
               <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
@@ -76,6 +76,14 @@
         <div class="field">
           <label for="service-price">Cena (din.) <span class="required-mark">*</span></label>
           <input id="service-price" appInput size="m" type="number" min="0" step="50" inputmode="numeric" formControlName="price" data-testid="service-price" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Za koga</label>
+        <div class="chip-group" role="radiogroup" aria-label="Za koga">
+          @for (a of audiences; track a.value) {
+            <button type="button" role="radio" class="chip" [class.selected]="form.controls.audience.value === a.value" [attr.aria-checked]="form.controls.audience.value === a.value" (click)="form.controls.audience.setValue(a.value)" [attr.data-testid]="'service-audience-' + a.value">{{ a.label }}</button>
+          }
         </div>
       </div>
       <div class="field">
