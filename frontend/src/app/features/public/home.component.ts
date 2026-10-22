@@ -1,9 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { GalleryImage } from '../../core/models/gallery.model';
 import { PublicService } from '../../core/models/service.model';
 import { WEEKDAYS } from '../../core/models/staff.model';
 import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
+import { GalleryService } from '../../core/services/gallery.service';
 import { BookingDraftService } from './booking-draft.service';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { DurationPipe } from '../../shared/pipes/duration.pipe';
@@ -18,10 +20,12 @@ import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 export class HomeComponent {
   private booking = inject(BookingService);
   private draft = inject(BookingDraftService);
+  private gallery = inject(GalleryService);
   protected business = inject(BusinessSettingService);
 
   readonly loading = signal(true);
   readonly services = signal<PublicService[]>([]);
+  readonly photos = signal<GalleryImage[]>([]);
 
   readonly hours = computed(() =>
     (this.business.settings()?.opening_hours ?? []).map((h) => ({
@@ -50,6 +54,11 @@ export class HomeComponent {
       },
       error: () => this.loading.set(false),
     });
+    this.gallery.publicList().subscribe({ next: (images) => this.photos.set(images.slice(0, 6)), error: () => this.photos.set([]) });
+  }
+
+  photoSrc(image: GalleryImage): string {
+    return this.gallery.src(image);
   }
 
   startWith(service: PublicService): void {

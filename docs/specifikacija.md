@@ -31,7 +31,7 @@ drugi biznis.
 | Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Recenzije | #21 | kasnije |
 | Pregled / statistika za admina (danas, zahtevi, termini i prihod po danu, usluge, popunjenost) | #23 | gotovo |
-| Slike (logo, galerija) | #24 | kasnije |
+| Slike (logo, galerija: upload više slika, opis, usluga, redosled, skrivanje, deljenje) | #24 | gotovo |
 
 Zastareli issue-i iz marketplace modela (više biznisa): #13 (kreiranje biznisa pri registraciji
 pružaoca), #20 (pretraga biznisa), #22 (omiljeni biznisi).

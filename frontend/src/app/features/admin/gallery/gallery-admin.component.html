@@ -1,0 +1,87 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Galerija</h1>
+    <p class="page-subtitle">{{ images().length }} slika · prevuci da promeniš redosled</p>
+  </div>
+  <label appBtn class="cursor-pointer" [class.pointer-events-none]="uploading()" data-testid="gallery-add">
+    <span appIcon="upload" aria-hidden="true"></span> Dodaj slike
+    <input type="file" accept="image/*" multiple class="sr-only" (change)="onFiles($event)" data-testid="gallery-input" />
+  </label>
+</div>
+
+<app-error-message [message]="error()" />
+
+<div
+  class="drop-zone mb-4"
+  [class.is-over]="dragOver()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragOver.set(false)"
+  (drop)="onDrop($event)"
+  data-testid="gallery-drop"
+>
+  @if (uploading(); as state) {
+    <span class="font-semibold">Šaljem slike… {{ state.done }} / {{ state.total }}</span>
+    <span class="progress"><span [style.width.%]="(state.done / state.total) * 100"></span></span>
+  } @else {
+    <span appIcon="image" [iconSize]="22" class="muted" aria-hidden="true"></span>
+    <span class="text-sm muted">Prevuci slike ovde ili izaberi „Dodaj slike". Sa telefona možeš da slikaš direktno.</span>
+  }
+</div>
+
+@if (loading() && images().length === 0) {
+} @else if (images().length === 0) {
+  <div class="card empty-state">Galerija je prazna. Dodaj fotografije radova, salona ili tima.</div>
+} @else {
+  <div class="gallery-admin-grid" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="images()" (cdkDropListDropped)="drop($event)">
+    @for (image of images(); track image.id; let first = $first; let last = $last) {
+      <figure class="gallery-tile card" cdkDrag [cdkDragStartDelay]="{ touch: 300, mouse: 0 }" [class.is-hidden]="!image.visible" [attr.data-testid]="'gallery-item-' + image.id">
+        <div class="gallery-thumb">
+          <img [src]="src(image)" [alt]="image.caption || 'Slika iz galerije'" loading="lazy" [width]="image.width" [height]="image.height" />
+          @if (!image.visible) {
+            <span class="badge badge-neutral gallery-flag">Skrivena</span>
+          }
+          <app-row-actions class="gallery-menu" [actions]="actions" (selected)="onAction(image, $event)" [attr.data-testid]="'gallery-actions-' + image.id" />
+        </div>
+        <figcaption class="gallery-meta">
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm truncate" [class.muted]="!image.caption">{{ image.caption || 'Bez opisa' }}</span>
+            @if (image.service_name) {
+              <span class="block text-xs muted truncate">{{ image.service_name }}</span>
+            }
+          </span>
+          <span class="flex shrink-0">
+            <button type="button" appBtn theme="ghost" size="s" [disabled]="first" (click)="move(image, -1)" aria-label="Pomeri levo"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+            <button type="button" appBtn theme="ghost" size="s" [disabled]="last" (click)="move(image, 1)" aria-label="Pomeri desno"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+            <button type="button" appBtn theme="ghost" size="s" (click)="toggleVisible(image)" [attr.aria-label]="image.visible ? 'Sakrij' : 'Prikaži'" [title]="image.visible ? 'Sakrij sa sajta' : 'Prikaži na sajtu'" [attr.data-testid]="'gallery-visible-' + image.id">
+              <span [appIcon]="image.visible ? 'eye' : 'lock'" aria-hidden="true"></span>
+            </button>
+          </span>
+        </figcaption>
+      </figure>
+    }
+  </div>
+}
+
+@if (editing(); as image) {
+  <app-modal title="Slika" footerMode="custom" (cancelled)="editing.set(null)" testId="gallery-modal">
+    <app-error-message [message]="formError()" />
+    <img class="gallery-preview" [src]="src(image)" alt="" />
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="field">
+        <label for="gallery-caption">Opis</label>
+        <input id="gallery-caption" appInput size="m" formControlName="caption" maxlength="200" placeholder="npr. Balayage, pre i posle" data-testid="gallery-caption" />
+      </div>
+      <div class="field">
+        <label for="gallery-service">Usluga</label>
+        <select id="gallery-service" appInput size="m" formControlName="service_id" data-testid="gallery-service">
+          <option [ngValue]="null">Bez usluge</option>
+          @for (service of services(); track service.id) {
+            <option [ngValue]="service.id">{{ service.name }}</option>
+          }
+        </select>
+      </div>
+      <app-toggle [checked]="form.controls.visible.value" label="Vidljiva na sajtu" (checkedChange)="form.controls.visible.setValue($event)" />
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="gallery-save">Sačuvaj</app-button>
+  </app-modal>
+}

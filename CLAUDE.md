@@ -135,6 +135,10 @@ Pregled (#23): `/admin/dashboard` je početna admina — danas (raspored, slede�
 ko radi), statistika za 7 / 30 / 90 dana ili tekući mesec u odnosu na prethodni period (`DashboardService`:
 prihod samo od završenih, popunjenost = zauzeto / radno vreme bez blokada), stubičasti grafikon
 `<app-column-chart>` (deljena komponenta, boje `--color-chart*` izvedene iz primarne boje).
+Galerija (#24): admin `/admin/gallery` (više slika odjednom, smanjuju se u pregledaču na 1600 px i šalju
+jedna po jedna, opis, usluga, skrivanje, prevlačenje za redosled), javno `/gallery` (filter po usluzi,
+`<app-gallery-viewer>` preko celog ekrana, „Podeli" = Web Share sa fajlom — Instagram / WhatsApp na
+telefonu) i poslednjih 6 na početnoj; slika je data URL u `gallery_images.data`, servira se kao fajl.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

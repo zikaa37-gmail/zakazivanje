@@ -9,6 +9,8 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/health` | provera da backend radi |
 | GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) |
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
+| GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, width, height, url}]` (bez sadržaja slike) |
+| GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available}]` |
 | POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
 | POST | `/bookings/quote` | cena sa akcijama (za prijavljenog klijenta računa i loyalty / N+M) |
@@ -58,6 +60,10 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
+| POST | `/gallery/list` | sve slike galerije (i skrivene) |
+| POST | `/gallery` | `{data (data URL JPG/PNG/WEBP, do ~4 MB), width, height, caption?, service_id?}` — jedna slika po pozivu, nova ide na početak |
+| PUT / DELETE | `/gallery/{id}` | `{caption?, service_id?, visible?}` / brisanje |
+| POST | `/gallery/reorder` | `{ids}` — redosled kao na ekranu |
 | POST | `/dashboard/today` | `{date?}` → termini dana, sledeći termin, zahtevi na čekanju, ko radi i očekivani prihod |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |

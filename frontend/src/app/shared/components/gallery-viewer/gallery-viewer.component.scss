@@ -1,0 +1,98 @@
+@use 'themes/breakpoints' as bp;
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-viewer-bg);
+  outline: none;
+}
+
+.viewer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+}
+
+.viewer-counter {
+  color: var(--color-viewer-text);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer-figure {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0 0.5rem 1rem;
+
+  img {
+    max-width: 100%;
+    max-height: calc(100% - 3rem);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    max-width: 40rem;
+    color: var(--color-viewer-text);
+    text-align: center;
+    font-size: 0.95rem;
+  }
+}
+
+.viewer-service {
+  font-size: 0.78rem;
+  opacity: 0.75;
+}
+
+.viewer-nav {
+  position: absolute;
+  top: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-viewer-control);
+  color: var(--color-viewer-text);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-viewer-control-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-viewer-text);
+    outline-offset: 2px;
+  }
+
+  @include bp.md-up {
+    display: flex;
+  }
+}
+
+.viewer-prev {
+  left: 1rem;
+}
+
+.viewer-next {
+  right: 1rem;
+}
