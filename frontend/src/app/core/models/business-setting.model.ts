@@ -26,6 +26,9 @@ export interface BusinessSetting {
   email: string | null;
   website: string | null;
   instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
+  youtube: string | null;
   pib: string | null;
   registration_number: string | null;
   logo: string | null;

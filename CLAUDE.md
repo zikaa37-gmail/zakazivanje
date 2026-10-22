@@ -139,6 +139,10 @@ Galerija (#24): admin `/admin/gallery` (više slika odjednom, smanjuju se u preg
 jedna po jedna, opis, usluga, skrivanje, prevlačenje za redosled), javno `/gallery` (filter po usluzi,
 `<app-gallery-viewer>` preko celog ekrana, „Podeli" = Web Share sa fajlom — Instagram / WhatsApp na
 telefonu) i poslednjih 6 na početnoj; slika je data URL u `gallery_images.data`, servira se kao fajl.
+Deljenje (kao u košarkaškoj): mreže `instagram` / `facebook` / `tiktok` / `youtube` u Podešavanjima (ime ili ceo
+link, `socialLinks()` u `core/utils/social.ts` pravi URL), ikonice `<app-social-links>` u dnu javnih stranica;
+admin `/admin/share` — slika za Instagram na canvasu (`share-image.ts`: zakaži online sa QR, akcija, cenovnik,
+slika iz galerije; 4:5, kvadrat, story) i QR kod za štampu (`POST /share/qr`, `chillerlan/php-qrcode`).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

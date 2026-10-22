@@ -81,6 +81,14 @@
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
 }
 
+.public-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem 1rem;
+}
+
 .public-bottom-nav {
   position: fixed;
   inset: auto 0 0 0;

@@ -1,0 +1,115 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Podeli</h1>
+    <p class="page-subtitle">Slike za Instagram i QR kodovi za štampu</p>
+  </div>
+</div>
+
+<div class="share-grid">
+  <section class="card" data-testid="share-instagram">
+    <h2 class="text-base font-semibold mb-1">Slika za Instagram</h2>
+    <p class="text-sm muted mb-3">U bojama i sa logom salona. Na telefonu „Podeli" šalje sliku direktno u Instagram, WhatsApp ili Viber.</p>
+
+    <div class="field">
+      <span class="text-sm font-semibold">Šta prikazuje</span>
+      <div class="chip-group">
+        @for (t of templates; track t.id) {
+          <button type="button" class="chip" [class.selected]="template() === t.id" (click)="template.set(t.id)" [attr.data-testid]="'share-template-' + t.id">{{ t.label }}</button>
+        }
+      </div>
+    </div>
+
+    @switch (template()) {
+      @case ('promotion') {
+        @if (activePromotions().length === 0) {
+          <p class="text-sm muted mb-3">Nema aktivnih akcija — dodaj ih u Cene i akcije.</p>
+        } @else {
+          <div class="field">
+            <label for="share-promotion">Akcija</label>
+            <select id="share-promotion" appInput size="m" [value]="promotionId()" (change)="promotionId.set(+$any($event.target).value)" data-testid="share-promotion">
+              @for (p of activePromotions(); track p.id) {
+                <option [value]="p.id">{{ p.name }}</option>
+              }
+            </select>
+          </div>
+        }
+      }
+      @case ('prices') {
+        <div class="field">
+          <label for="share-category">Kategorija</label>
+          <select id="share-category" appInput size="m" [value]="category()" (change)="category.set($any($event.target).value)" data-testid="share-category">
+            <option value="">Sve usluge</option>
+            @for (c of categories(); track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </div>
+      }
+      @case ('photo') {
+        @if (photos().length === 0) {
+          <p class="text-sm muted mb-3">Galerija je prazna — dodaj slike u Galeriju.</p>
+        } @else {
+          <div class="photo-picker mb-3" data-testid="share-photos">
+            @for (p of photos(); track p.id) {
+              <button type="button" class="photo-option" [class.selected]="photoId() === p.id" (click)="selectPhoto(p.id)" [attr.aria-label]="p.caption || 'Slika ' + p.id">
+                <img [src]="gallerySrc(p)" alt="" loading="lazy" />
+              </button>
+            }
+          </div>
+          <div class="field">
+            <label for="share-caption">Tekst na slici</label>
+            <input id="share-caption" appInput size="m" maxlength="80" [value]="caption()" (input)="caption.set($any($event.target).value)" placeholder="npr. Balayage" data-testid="share-caption" />
+          </div>
+        }
+      }
+    }
+
+    <div class="field">
+      <span class="text-sm font-semibold">Format</span>
+      <div class="chip-group">
+        @for (f of formats; track f.id) {
+          <button type="button" class="chip" [class.selected]="format() === f.id" (click)="format.set(f.id)" [attr.data-testid]="'share-format-' + f.id">{{ f.label }}</button>
+        }
+      </div>
+    </div>
+
+    <div class="share-preview" [class.is-story]="format() === 'story'">
+      <canvas #canvas data-testid="share-canvas"></canvas>
+    </div>
+    <div class="flex flex-wrap gap-2 mt-3">
+      <button type="button" appBtn size="s" (click)="shareImage()" data-testid="share-image"><span appIcon="share" aria-hidden="true"></span> Podeli</button>
+      <button type="button" appBtn theme="secondary" size="s" (click)="downloadImage()" data-testid="share-download"><span appIcon="download" aria-hidden="true"></span> Preuzmi PNG</button>
+    </div>
+  </section>
+
+  <section class="card" data-testid="share-qr-card">
+    <h2 class="text-base font-semibold mb-1">QR kod za štampu</h2>
+    <p class="text-sm muted mb-3">Za izlog, recepciju, vizit karte i letke: skeniranjem telefonom otvara se izabrana stranica.</p>
+    <div class="field">
+      <label for="share-target">Kuda vodi</label>
+      <select id="share-target" appInput size="m" [value]="target()" (change)="setTarget($any($event.target).value)" data-testid="share-target">
+        @for (t of targets(); track t.value) {
+          <option [value]="t.value">{{ t.label }}</option>
+        }
+      </select>
+    </div>
+    @if (target() === 'custom') {
+      <div class="flex gap-2 mb-3">
+        <input appInput size="m" type="url" placeholder="https://..." [value]="customUrl()" (input)="customUrl.set($any($event.target).value)" aria-label="Link" data-testid="share-custom-url" />
+        <button type="button" appBtn theme="secondary" (click)="makeQr()" [disabled]="!customUrl().trim()">Napravi</button>
+      </div>
+    }
+    <app-error-message [message]="qrError()" />
+    @if (qr(); as code) {
+      <div class="share-qr">
+        <img [src]="code.png" alt="QR kod" width="220" height="220" data-testid="share-qr" />
+        <span class="text-xs muted break-all">{{ code.url }}</span>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" appBtn size="s" (click)="downloadQr('png')" data-testid="share-qr-png"><span appIcon="download" aria-hidden="true"></span> PNG</button>
+        <button type="button" appBtn theme="secondary" size="s" (click)="downloadQr('svg')"><span appIcon="download" aria-hidden="true"></span> SVG za štampu</button>
+        <button type="button" appBtn theme="ghost" size="s" (click)="copyLink()"><span appIcon="copy" aria-hidden="true"></span> Kopiraj link</button>
+      </div>
+    }
+  </section>
+</div>

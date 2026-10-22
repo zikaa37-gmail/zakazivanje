@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +72,8 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/promotions', [PromotionController::class, 'store']);
     Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
     Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
+
+    Route::post('/share/qr', [ShareController::class, 'qr']);
 
     Route::post('/gallery/list', [GalleryController::class, 'index']);
     Route::post('/gallery', [GalleryController::class, 'store']);

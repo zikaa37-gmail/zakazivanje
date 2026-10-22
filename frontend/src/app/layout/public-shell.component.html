@@ -26,6 +26,10 @@
 
 <main class="public-main">
   <router-outlet />
+  <footer class="public-footer">
+    <app-social-links />
+    <span class="text-xs muted">{{ business.name() }}</span>
+  </footer>
 </main>
 
 <nav class="public-bottom-nav" aria-label="Meni">
