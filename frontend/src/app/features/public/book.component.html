@@ -119,19 +119,36 @@
         </div>
         <div class="day-strip mb-4">
           @for (day of days(); track day.date) {
-            <button type="button" class="day-pill" [class.selected]="day.date === draft().date" [disabled]="!day.available" (click)="chooseDay(day)" [attr.data-testid]="'book-day-' + day.date">
+            <button type="button" class="day-pill" [class.selected]="day.date === draft().date" [class.full]="!day.available && dayOpen(day)" [disabled]="!dayOpen(day)" [title]="!day.available && dayOpen(day) ? 'Popunjeno' : ''" (click)="chooseDay(day)" [attr.data-testid]="'book-day-' + day.date">
               <small>{{ weekday(day.date) }}</small>
               <strong>{{ dayOfMonth(day.date) }}</strong>
             </button>
           }
         </div>
 
-        @if (!daysLoading() && noneAvailable()) {
-          <div class="card empty-state">Nema slobodnih termina u ove dve nedelje. Pogledaj sledeće.</div>
+        @if (!daysLoading() && noneAvailable() && !draft().date) {
+          <div class="card empty-state">Nema slobodnih termina u ove dve nedelje. Pogledaj sledeće{{ waitlistEnabled() ? ' ili izaberi popunjen dan i prijavi se na listu čekanja' : '' }}.</div>
         } @else if (draft().date) {
           @if (slotsLoading() && slots().length === 0) {
           } @else if (slots().length === 0) {
             <div class="card empty-state">Za ovaj dan nema slobodnih termina.</div>
+            @if (waitlistEnabled()) {
+              <div class="card mt-3" data-testid="book-waitlist">
+                @if (waitlistJoined()) {
+                  <p class="font-semibold">Na listi čekanja si za {{ dateLabelFor(waitlistJoined()!) }}</p>
+                  <p class="text-sm muted">Javićemo ti čim se oslobodi termin. Prijave vidiš u Moji termini.</p>
+                } @else {
+                  <p class="font-semibold">Javi mi ako se oslobodi termin</p>
+                  <p class="text-sm muted mb-2">Ako neko otkaže, dobijaš poruku sa linkom — prvi koji zakaže dobija termin.</p>
+                  <div class="chip-group mb-3" role="radiogroup" aria-label="Deo dana">
+                    @for (p of waitlistParts; track p.value) {
+                      <button type="button" role="radio" class="chip" [class.selected]="waitlistPart() === p.value" [attr.aria-checked]="waitlistPart() === p.value" (click)="waitlistPart.set(p.value)" [attr.data-testid]="'book-waitlist-' + p.value">{{ p.label }}</button>
+                    }
+                  </div>
+                  <button type="button" appBtn size="s" [disabled]="waitlistSaving()" (click)="joinWaitlist()" data-testid="book-waitlist-join"><span appIcon="bell" aria-hidden="true"></span> {{ auth.isAuthenticated() ? 'Prijavi me na listu čekanja' : 'Prijavi se da uđeš na listu čekanja' }}</button>
+                }
+              </div>
+            }
           } @else {
             @for (group of slotGroups(); track group.label) {
               <div class="text-xs font-semibold muted mb-2 mt-3">{{ group.label }}</div>

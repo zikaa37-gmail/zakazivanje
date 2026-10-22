@@ -74,8 +74,20 @@ class AvailabilityService
             ->map(fn (CarbonImmutable $day) => [
                 'date' => $day->toDateString(),
                 'available' => count($this->slots($services, $staffMemberId, $day, $ignoreAppointmentId)) > 0,
+                'open' => $this->isOpenDay($services, $staffMemberId, $day),
             ])
             ->all();
+    }
+
+    public function isOpenDay(Collection $services, ?int $staffMemberId, CarbonImmutable $date): bool
+    {
+        $settings = BusinessSetting::current();
+        if ($date->lt($settings->earliestOnlineStart()->startOfDay()) || $date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days))) {
+            return false;
+        }
+        $openingHours = OpeningHour::week();
+
+        return $this->eligibleStaff($services, $staffMemberId)->contains(fn (StaffMember $staff) => $staff->hoursOn($date, $openingHours)->isNotEmpty());
     }
 
     public function withinWorkingHours(StaffMember $staff, CarbonImmutable $start, CarbonImmutable $end): bool

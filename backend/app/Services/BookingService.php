@@ -8,6 +8,7 @@ use App\Models\BusinessSetting;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,7 @@ class BookingService
             ]);
 
             $appointment->items()->saveMany($this->items($services, $quote));
+            WaitlistEntry::query()->active()->where('client_id', $client->id)->whereDate('date', $start->toDateString())->update(['fulfilled_at' => now()]);
 
             return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color', 'client:id,first_name,last_name,phone,email']);
         });

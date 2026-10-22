@@ -88,6 +88,7 @@ class BusinessSettingController extends Controller
             'online_payment_enabled' => ['sometimes', 'boolean'],
             'reviews_enabled' => ['sometimes', 'boolean'],
             'notify_review_request' => ['sometimes', 'boolean'],
+            'waitlist_enabled' => ['sometimes', 'boolean'],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
             'opening_hours.*.opens_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.closes_at'],

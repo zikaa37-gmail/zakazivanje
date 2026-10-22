@@ -11,6 +11,7 @@ use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
 use App\Services\RecurrenceService;
+use App\Services\WaitlistService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class AppointmentController extends Controller
         private BookingService $bookings,
         private RecurrenceService $recurrences,
         private AppointmentNotifier $notifier,
+        private WaitlistService $waitlist,
     ) {}
 
     public function index(Request $request)
@@ -124,6 +126,7 @@ class AppointmentController extends Controller
         if ($data['status'] === Appointment::STATUS_CANCELLED) {
             $this->bookings->cancel($appointment, 'admin');
             $this->notifier->cancelledBySalon($appointment);
+            $this->waitlist->slotFreed($appointment);
 
             return $appointment;
         }
@@ -168,6 +171,8 @@ class AppointmentController extends Controller
 
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']);
         $end = $start->addMinutes($appointment->items->sum('duration_minutes'));
+        $previousDate = CarbonImmutable::parse($appointment->starts_at)->toDateString();
+        $previousStaff = $appointment->staff_member_id;
 
         $moved = DB::transaction(function () use ($appointment, $staff, $start, $end) {
             StaffMember::whereKey($staff->id)->lockForUpdate()->first();
@@ -190,6 +195,9 @@ class AppointmentController extends Controller
         if ($moved && ($data['notify'] ?? true)) {
             $this->notifier->rescheduled($appointment);
         }
+        if ($moved) {
+            $this->waitlist->slotFreedAt($previousDate, $previousStaff, $appointment->client_id);
+        }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
     }
@@ -200,12 +208,14 @@ class AppointmentController extends Controller
 
         if ($data['scope'] === 'series' && $appointment->recurrence) {
             $count = $this->recurrences->stop($appointment->recurrence, CarbonImmutable::parse($appointment->starts_at));
+            $this->waitlist->slotFreed($appointment);
 
             return ['message' => "Otkazano termina: {$count}. Ponavljanje je zaustavljeno."];
         }
 
         $this->bookings->cancel($appointment, 'admin');
         $this->notifier->cancelledBySalon($appointment);
+        $this->waitlist->slotFreed($appointment);
 
         return ['message' => 'Termin je otkazan.'];
     }

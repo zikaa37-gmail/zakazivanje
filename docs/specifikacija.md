@@ -31,6 +31,7 @@ drugi biznis.
 | Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Instagram i deljenje (linkovi ka mrežama, slike za objavu / story, QR kodovi) | — | gotovo |
 | Plaćanje (IPS QR i PDF uplatnica za klijenta, beleženje naplate gotovina / kartica / račun) | — | gotovo |
+| Lista čekanja (pun dan → obaveštenje kad se termin oslobodi, uključuje se u Podešavanjima) | #49 | gotovo |
 | Radno vreme salona i smene (pre podne / popodne / custom, smenski raspored 2–4 nedelje) | — | gotovo |
 | Omiljeni frizer klijenta (profil, „Zapamti" pri zakazivanju, unapred izabran) | — | gotovo |
 | Usluge za žene / muškarce (`services.audience`, `users.gender`; zakazivanje nudi samo odgovarajuće) | — | gotovo |

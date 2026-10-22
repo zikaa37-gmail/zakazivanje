@@ -6,6 +6,7 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { DashboardService, DashboardStats, DashboardToday } from '../../../core/services/dashboard.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { WaitlistEntry, WaitlistService } from '../../../core/services/waitlist.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { addDays, longDate, parseDate, timeOf, today, weekdayShort } from '../../../core/utils/dates';
 import { ColumnChartComponent, ColumnPoint } from '../../../shared/components/column-chart/column-chart.component';
@@ -55,6 +56,8 @@ export class DashboardComponent {
   readonly statsLoading = signal(true);
   readonly error = signal<string | null>(null);
   readonly selected = signal<Appointment | null>(null);
+  private waitlistService = inject(WaitlistService);
+  readonly waitlist = signal<WaitlistEntry[]>([]);
   readonly staff = signal<StaffMember[]>([]);
 
   readonly range = computed(() => {
@@ -176,6 +179,12 @@ export class DashboardComponent {
       error: (err) => this.error.set(apiErrorMessage(err, 'Učitavanje pregleda nije uspelo.')),
     });
     this.appointmentService.refreshPendingCount();
+    this.waitlistService.list().subscribe({ next: (list) => this.waitlist.set(list), error: () => this.waitlist.set([]) });
+  }
+
+  waitlistDay(entry: WaitlistEntry): string {
+    const d = parseDate(entry.date);
+    return `${weekdayShort(entry.date)} ${d.getDate()}.${d.getMonth() + 1}.`;
   }
 
   private loadStats(from: string, to: string): void {

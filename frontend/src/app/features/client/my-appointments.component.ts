@@ -13,6 +13,7 @@ import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 import { PaymentDialogComponent } from '../../shared/components/payment-dialog/payment-dialog.component';
+import { WaitlistEntry, WaitlistService } from '../../core/services/waitlist.service';
 import { StarsComponent } from '../../shared/components/stars/stars.component';
 import { RescheduleComponent } from './reschedule.component';
 import { ReviewFormComponent } from './review-form.component';
@@ -38,6 +39,8 @@ export class MyAppointmentsComponent {
   readonly rescheduling = signal<Appointment | null>(null);
   readonly paying = signal<Appointment | null>(null);
   readonly reviewing = signal<Appointment | null>(null);
+  private waitlist = inject(WaitlistService);
+  readonly waitlistEntries = signal<WaitlistEntry[]>([]);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private reviewTarget = Number(this.route.snapshot.queryParamMap.get('review')) || null;
@@ -64,6 +67,28 @@ export class MyAppointmentsComponent {
   constructor() {
     if (this.reviewTarget) this.scope.set('past');
     this.load();
+    this.loadWaitlist();
+  }
+
+  loadWaitlist(): void {
+    this.waitlist.mine().subscribe({ next: (entries) => this.waitlistEntries.set(entries), error: () => this.waitlistEntries.set([]) });
+  }
+
+  waitlistDay(entry: WaitlistEntry): string {
+    const d = parseDate(entry.date);
+    return `${weekdayShort(entry.date)} ${d.getDate()}.${d.getMonth() + 1}.`;
+  }
+
+  async leaveWaitlist(entry: WaitlistEntry): Promise<void> {
+    const ok = await this.confirm.confirm({ title: 'Lista čekanja', message: `Ukloniti prijavu za ${this.waitlistDay(entry)}?`, confirmLabel: 'Ukloni' });
+    if (!ok) return;
+    this.waitlist.leave(entry.id).subscribe({
+      next: () => {
+        this.waitlistEntries.update((list) => list.filter((e) => e.id !== entry.id));
+        this.toast.success('Uklonjeno sa liste čekanja.');
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Uklanjanje nije uspelo.')),
+    });
   }
 
   onReviewed(): void {

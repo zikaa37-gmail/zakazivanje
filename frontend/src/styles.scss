@@ -623,6 +623,11 @@ button.badge:focus-visible {
     cursor: not-allowed;
   }
 
+  &.full:not(.selected) {
+    border-style: dashed;
+    color: var(--color-text-muted);
+  }
+
   &.selected {
     background: var(--color-primary);
     border-color: var(--color-primary);

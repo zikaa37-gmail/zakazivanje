@@ -1,10 +1,11 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, DayAvailability, Quote, Slot } from '../../core/models/appointment.model';
 import { audienceLabel, PublicService, suitsAudience } from '../../core/models/service.model';
 import { AuthService } from '../../core/services/auth.service';
 import { GENDER_OPTIONS, Gender } from '../../core/models/user.model';
+import { WAITLIST_PARTS, WaitlistPart, WaitlistService } from '../../core/services/waitlist.service';
 import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
@@ -47,6 +48,14 @@ export class BookComponent {
   readonly services = signal<PublicService[]>([]);
   readonly servicesLoading = signal(true);
   readonly windowStart = signal(today());
+  private route = inject(ActivatedRoute);
+  private waitlist = inject(WaitlistService);
+  readonly waitlistParts = WAITLIST_PARTS;
+  readonly waitlistPart = signal<WaitlistPart>('any');
+  readonly waitlistSaving = signal(false);
+  readonly waitlistJoined = signal<string | null>(null);
+  readonly waitlistEnabled = computed(() => this.business.settings()?.waitlist_enabled ?? false);
+  readonly selectedDay = computed(() => this.days().find((d) => d.date === this.draft().date) ?? null);
   readonly days = signal<DayAvailability[]>([]);
   readonly daysLoading = signal(false);
   readonly slots = signal<Slot[]>([]);
@@ -127,6 +136,17 @@ export class BookComponent {
   });
 
   constructor() {
+    const query = this.route.snapshot.queryParamMap;
+    const prefillServices = (query.get('services') ?? '').split(',').map(Number).filter(Boolean);
+    const prefillDate = query.get('date');
+    if (prefillServices.length && prefillDate && prefillDate >= today()) {
+      const staff = Number(query.get('staff')) || null;
+      this.draftService.start(prefillServices);
+      this.draftService.patch({ staffMemberId: staff, staffChosen: true, date: prefillDate, time: null, step: 2 });
+      this.windowStart.set(prefillDate);
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
+
     this.booking.services().subscribe({
       next: (services) => {
         this.services.set(services);
@@ -220,9 +240,40 @@ export class BookComponent {
     this.draftService.patch({ staffMemberId: id, staffChosen: true, date: null, time: null });
   }
 
+  dateLabelFor(date: string): string {
+    const d = parseDate(date);
+    return `${weekdayShort(date).toLowerCase()} ${d.getDate()}.${d.getMonth() + 1}.`;
+  }
+
+  dayOpen(day: DayAvailability): boolean {
+    return day.available || (day.open ?? false);
+  }
+
   chooseDay(day: DayAvailability): void {
-    if (!day.available) return;
+    if (!this.dayOpen(day)) return;
+    this.waitlistJoined.set(null);
     this.draftService.patch({ date: day.date, time: null });
+  }
+
+  joinWaitlist(): void {
+    const d = this.draft();
+    if (!d.date) return;
+    if (!this.auth.isAuthenticated()) {
+      this.loginToBook();
+      return;
+    }
+    this.waitlistSaving.set(true);
+    this.error.set(null);
+    this.waitlist.join({ service_ids: d.serviceIds, staff_member_id: d.staffMemberId, date: d.date, part: this.waitlistPart() }).subscribe({
+      next: (entry) => {
+        this.waitlistSaving.set(false);
+        this.waitlistJoined.set(entry.date);
+      },
+      error: (err) => {
+        this.waitlistSaving.set(false);
+        this.error.set(apiErrorMessage(err, 'Prijava na listu čekanja nije uspela.'));
+      },
+    });
   }
 
   chooseTime(time: string): void {

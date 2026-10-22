@@ -118,6 +118,7 @@ export class SettingsComponent {
     payment_code: this.fb.nonNullable.control('289', Validators.pattern(/^\d{3}$/)),
     online_payment_enabled: this.fb.nonNullable.control(false),
     reviews_enabled: this.fb.nonNullable.control(true),
+    waitlist_enabled: this.fb.nonNullable.control(true),
     notify_review_request: this.fb.nonNullable.control(true),
   });
 
@@ -416,6 +417,7 @@ export class SettingsComponent {
       payment_code: settings.payment_code || '289',
       online_payment_enabled: settings.online_payment_enabled,
       reviews_enabled: settings.reviews_enabled,
+      waitlist_enabled: settings.waitlist_enabled,
       notify_review_request: settings.notify_review_request,
     });
   }

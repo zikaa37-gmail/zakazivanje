@@ -69,6 +69,20 @@
         }
       </div>
 
+      @if (waitlist().length > 0) {
+        <div class="card" data-testid="dashboard-waitlist">
+          <h2 class="text-base font-semibold mb-2">Lista čekanja <span class="text-sm muted font-normal">· {{ waitlist().length }}</span></h2>
+          @for (entry of waitlist().slice(0, 6); track entry.id) {
+            <div class="flex items-center gap-3 py-2 border-t border-[var(--color-bg)] text-sm">
+              <span class="w-20 shrink-0 font-semibold">{{ waitlistDay(entry) }}</span>
+              <span class="min-w-0 flex-1 truncate">{{ entry.client?.first_name }} {{ entry.client?.last_name }} · {{ entry.services }}</span>
+              <span class="muted shrink-0">{{ entry.part_label }}</span>
+            </div>
+          }
+          <p class="text-xs muted mt-2">Kad otkažeš ili pomeriš termin tog dana, javljamo im automatski.</p>
+        </div>
+      }
+
       <div class="card">
         <h2 class="text-base font-semibold mb-2">Ko radi danas</h2>
         @if (t.staff.length === 0) {

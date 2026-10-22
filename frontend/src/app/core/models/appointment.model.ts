@@ -55,6 +55,7 @@ export interface Slot {
 export interface DayAvailability {
   date: string;
   available: boolean;
+  open?: boolean;
 }
 
 export interface Quote {
