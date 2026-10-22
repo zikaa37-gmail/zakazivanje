@@ -389,27 +389,93 @@ button.badge:focus-visible {
 }
 
 .hero {
-  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border-radius: 14px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: var(--color-on-primary);
 }
 
-.hero-kicker {
-  margin: 0;
-  opacity: 0.85;
-}
-
 .hero-title {
-  font-size: 1.75rem;
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 800;
-  margin: 0.1rem 0 0.4rem;
 }
 
 .hero-text {
+  margin: 0.15rem 0 0;
+  font-size: 0.875rem;
   opacity: 0.85;
+}
+
+.hero-cover {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  max-height: 22rem;
+  width: 100%;
+  border-radius: 14px;
+  background: var(--color-primary-dark);
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--color-cover-shade), transparent 65%);
+  }
+}
+
+.hero-cover-content {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 1rem 1.1rem;
+  color: var(--color-viewer-text);
+}
+
+.hero-cover-title {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 1px 8px var(--color-cover-shade);
+}
+
+.hero-cover-text {
+  display: none;
+  flex-basis: 100%;
+  order: 2;
+  margin: 0;
   font-size: 0.9rem;
-  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+@include bp.md-up {
+  .hero-cover-title {
+    font-size: 1.9rem;
+  }
+
+  .hero-cover-text {
+    display: block;
+  }
 }
 
 .hero-cta {

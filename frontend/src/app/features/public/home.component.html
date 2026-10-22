@@ -1,10 +1,26 @@
 <div class="content-container py-4 md:py-8 flex flex-col gap-6 max-w-3xl">
-  <section class="hero">
-    <p class="hero-kicker">Zakaži termin za</p>
-    <h1 class="hero-title">manje od minut</h1>
-    <p class="hero-text">{{ business.settings()?.description || 'Bez poziva, i van radnog vremena.' }}</p>
-    <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
-  </section>
+  @if (business.coverSrc(); as cover) {
+    <section class="hero-cover" data-testid="home-cover">
+      <img [src]="cover" [alt]="business.name()" fetchpriority="high" />
+      <div class="hero-cover-content">
+        <h1 class="hero-cover-title">{{ business.name() }}</h1>
+        @if (business.settings()?.description; as description) {
+          <p class="hero-cover-text">{{ description }}</p>
+        }
+        <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
+      </div>
+    </section>
+  } @else {
+    <section class="hero">
+      <div class="min-w-0">
+        <h1 class="hero-title">{{ business.name() }}</h1>
+        @if (business.settings()?.description; as description) {
+          <p class="hero-text">{{ description }}</p>
+        }
+      </div>
+      <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
+    </section>
+  }
 
   <section>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">

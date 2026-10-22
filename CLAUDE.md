@@ -157,6 +157,9 @@ Usluge za žene / muškarce: `services.audience` (`all` / `female` / `male`), `u
 admin → klijenti); `BookingService::ensureAudience()` odbija uslugu za drugi pol i mešanje muških i ženskih u istom
 terminu (važi i za admina), a nepoznat pol klijenta upisuje po prvoj takvoj usluzi; `/book` korak 1 nudi „Za žene /
 Za muškarce" dok pol nije poznat.
+Naslovna fotografija: Podešavanja → Logo i boje, `<app-image-cropper>` (pomeranje, zum, 16:9 → JPEG do 1600 px),
+`business_settings.cover_image` (skriveno iz JSON-a, servira se kao fajl preko `cover_url`); početna prikazuje
+fotografiju sa imenom i „Zakaži termin", a bez nje samo kompaktnu traku.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
