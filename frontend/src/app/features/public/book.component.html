@@ -39,11 +39,11 @@
       <h1 class="text-xl font-bold">Zakazivanje</h1>
     </div>
 
-    <div class="stepper" aria-hidden="true">
+    <nav class="stepper" aria-label="Koraci zakazivanja">
       @for (label of steps; track label; let i = $index) {
-        <span [class.done]="i < draft().step" [class.current]="i === draft().step">{{ i + 1 }}. {{ label }}</span>
+        <button type="button" [class.done]="i < draft().step" [class.current]="i === draft().step" [disabled]="!canOpen(i) && i !== draft().step" [attr.aria-current]="i === draft().step ? 'step' : null" (click)="open(i)" [attr.data-testid]="'book-step-' + i">{{ i + 1 }}. {{ label }}</button>
       }
-    </div>
+    </nav>
 
     <app-error-message [message]="error()" data-testid="book-error" />
 
@@ -151,10 +151,12 @@
               }
               <div class="text-sm muted">{{ totalDuration() | duration }}</div>
             </div>
+            <button type="button" class="summary-edit" (click)="goTo(0)" data-testid="book-edit-services">Izmeni</button>
           </div>
           <div class="flex items-center gap-3">
             <span class="avatar avatar-initials avatar-sm"><span appIcon="user" [iconSize]="14"></span></span>
-            <div class="font-semibold">{{ staffLabel() }}</div>
+            <div class="font-semibold flex-1">{{ staffLabel() }}</div>
+            <button type="button" class="summary-edit" (click)="goTo(1)" data-testid="book-edit-staff">Izmeni</button>
           </div>
           <div class="flex items-center gap-3">
             <span class="avatar avatar-initials avatar-sm"><span appIcon="calendar" [iconSize]="14"></span></span>
@@ -162,6 +164,7 @@
               <div class="font-semibold">{{ dateLabel() }}</div>
               <div class="text-sm muted">u {{ draft().time }}</div>
             </div>
+            <button type="button" class="summary-edit" (click)="goTo(2)" data-testid="book-edit-time">Izmeni</button>
           </div>
           <hr class="border-[var(--color-border)]" />
           @if (quote(); as q) {
