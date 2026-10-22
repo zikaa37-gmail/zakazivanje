@@ -7,6 +7,7 @@ import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { GalleryService } from '../../core/services/gallery.service';
 import { BookingDraftService } from './booking-draft.service';
+import { SocialLinksComponent } from '../../shared/components/social-links/social-links.component';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { DurationPipe } from '../../shared/pipes/duration.pipe';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
@@ -14,7 +15,7 @@ import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, DurationPipe, IconDirective, RsdPipe],
+  imports: [RouterLink, DurationPipe, IconDirective, RsdPipe, SocialLinksComponent],
   templateUrl: './home.component.html',
 })
 export class HomeComponent {
@@ -38,12 +39,6 @@ export class HomeComponent {
   readonly phoneHref = computed(() => {
     const phone = this.business.settings()?.phone;
     return phone ? `tel:${phone.replace(/\s/g, '')}` : null;
-  });
-
-  readonly instagramHref = computed(() => {
-    const handle = this.business.settings()?.instagram?.trim();
-    if (!handle) return null;
-    return handle.startsWith('http') ? handle : `https://instagram.com/${handle.replace(/^@/, '')}`;
   });
 
   constructor() {

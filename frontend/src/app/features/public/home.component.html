@@ -62,9 +62,7 @@
         @if (phoneHref()) {
           <a [href]="phoneHref()" class="flex items-center gap-2"><span appIcon="phone" aria-hidden="true"></span>{{ business.settings()?.phone }}</a>
         }
-        @if (instagramHref()) {
-          <a [href]="instagramHref()" target="_blank" rel="noopener" class="flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span>{{ business.settings()?.instagram }}</a>
-        }
+        <app-social-links [showHandle]="true" />
       </div>
     </div>
   </section>

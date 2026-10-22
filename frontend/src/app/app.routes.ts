@@ -107,6 +107,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/gallery/gallery-admin.component').then((m) => m.GalleryAdminComponent),
       },
       {
+        path: 'share',
+        title: 'Podeli',
+        loadComponent: () => import('./features/admin/share/share.component').then((m) => m.ShareComponent),
+      },
+      {
         path: 'clients',
         title: 'Klijenti',
         loadComponent: () => import('./features/admin/clients/client-list.component').then((m) => m.ClientListComponent),
