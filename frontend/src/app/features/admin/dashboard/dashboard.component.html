@@ -1,0 +1,182 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Pregled</h1>
+    <p class="page-subtitle">{{ todayLabel }}</p>
+  </div>
+  <a routerLink="/admin/calendar" appBtn theme="secondary" data-testid="dashboard-calendar">
+    <span appIcon="calendar" aria-hidden="true"></span> Kalendar
+  </a>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (todayData(); as t) {
+  <section class="today-grid mb-6" data-testid="dashboard-today">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-base font-semibold">Danas</h2>
+        <span class="text-sm muted">{{ t.appointments.length }} · očekivano {{ t.expected_revenue | rsd }}</span>
+      </div>
+      @if (t.next) {
+        <button type="button" class="next-up" (click)="selected.set(t.next)" data-testid="dashboard-next">
+          <span class="text-xs muted">Sledeći</span>
+          <span class="font-semibold">{{ t.next.client?.first_name }} {{ t.next.client?.last_name }}</span>
+          <span class="text-sm">{{ when(t.next) }} · {{ services(t.next) }}</span>
+        </button>
+      }
+      @if (t.appointments.length === 0) {
+        <div class="empty-state">Danas nema zakazanih termina.</div>
+      } @else {
+        @for (a of t.appointments; track a.id) {
+          <button type="button" class="today-row" (click)="selected.set(a)" [attr.data-testid]="'today-' + a.id">
+            <span class="w-14 shrink-0 text-left">
+              <span class="block font-bold">{{ time(a) }}</span>
+              <span class="block text-xs muted">{{ endTime(a) }}</span>
+            </span>
+            <span class="w-1 self-stretch rounded" [style.background]="a.staff_member?.color || 'var(--color-primary)'"></span>
+            <span class="min-w-0 flex-1 text-left">
+              <span class="block font-semibold truncate">{{ a.client?.first_name }} {{ a.client?.last_name }}</span>
+              <span class="block text-sm muted truncate">{{ services(a) }} · {{ a.staff_member?.first_name }}</span>
+            </span>
+            <span class="badge" [class]="statuses[a.status].badge">{{ statuses[a.status].label }}</span>
+          </button>
+        }
+      }
+    </div>
+
+    <div class="flex flex-col gap-4">
+      <div class="card">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-semibold">Čeka potvrdu</h2>
+          @if (t.pending.length > 0) {
+            <a routerLink="/admin/appointments" class="text-sm font-semibold text-[var(--color-primary-text)]">Svi termini</a>
+          }
+        </div>
+        @if (t.pending.length === 0) {
+          <p class="text-sm muted">Nema zahteva na čekanju.</p>
+        } @else {
+          @for (a of t.pending; track a.id) {
+            <div class="pending-row" [attr.data-testid]="'pending-' + a.id">
+              <button type="button" class="min-w-0 flex-1 text-left" (click)="selected.set(a)">
+                <span class="block font-semibold truncate">{{ a.client?.first_name }} {{ a.client?.last_name }}</span>
+                <span class="block text-sm muted truncate">{{ when(a) }} · {{ services(a) }}</span>
+              </button>
+              <button type="button" appBtn size="s" (click)="confirm(a, $event)" [attr.data-testid]="'pending-confirm-' + a.id">
+                <span appIcon="check" aria-hidden="true"></span> Potvrdi
+              </button>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="card">
+        <h2 class="text-base font-semibold mb-2">Ko radi danas</h2>
+        @if (t.staff.length === 0) {
+          <p class="text-sm muted">Danas niko nema radno vreme.</p>
+        } @else {
+          @for (m of t.staff; track m.id) {
+            <div class="flex items-center gap-3 py-2">
+              <span class="color-dot" [style.background]="m.color || 'var(--color-primary)'"></span>
+              <span class="flex-1 min-w-0 truncate font-medium">{{ m.name }}</span>
+              <span class="text-sm muted">{{ m.hours }}</span>
+              <span class="text-sm font-semibold w-6 text-right">{{ m.appointments }}</span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<section data-testid="dashboard-stats">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+    <div>
+      <h2 class="text-lg font-semibold">Statistika</h2>
+      <p class="text-sm muted">{{ rangeLabel() }}, poređenje sa prethodnim periodom iste dužine</p>
+    </div>
+    <div class="chip-group">
+      @for (p of periods; track p.value) {
+        <button type="button" class="chip" [class.selected]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'stats-period-' + p.value">{{ p.label }}</button>
+      }
+    </div>
+  </div>
+
+  @if (stats(); as s) {
+    <div class="stat-tiles mb-4" [class.opacity-60]="statsLoading()">
+      @for (tile of tiles(); track tile.key) {
+        <div class="card stat-tile" [attr.data-testid]="'tile-' + tile.key">
+          <span class="text-sm muted">{{ tile.label }}</span>
+          <span class="stat-value">{{ tile.value }}</span>
+          @if (tile.delta) {
+            <span class="stat-delta" [class.good]="tile.tone === 'good'" [class.bad]="tile.tone === 'bad'">{{ tile.delta }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="chart-grid mb-4" [class.opacity-60]="statsLoading()">
+      <div class="card">
+        <h3 class="font-semibold mb-1">Termini po danu</h3>
+        <app-column-chart [points]="appointmentPoints()" [format]="countFormat" ariaLabel="Broj termina po danu" data-testid="chart-appointments" />
+      </div>
+      <div class="card">
+        <h3 class="font-semibold mb-1">Prihod po danu</h3>
+        <p class="text-xs muted mb-1">Samo završeni termini</p>
+        <app-column-chart [points]="revenuePoints()" [format]="moneyFormat" [tickFormat]="moneyTick" ariaLabel="Prihod po danu" data-testid="chart-revenue" />
+      </div>
+    </div>
+
+    <div class="chart-grid" [class.opacity-60]="statsLoading()">
+      <div class="card" data-testid="top-services">
+        <h3 class="font-semibold mb-3">Najtraženije usluge</h3>
+        @if (s.top_services.length === 0) {
+          <p class="text-sm muted">Nema termina u ovom periodu.</p>
+        } @else {
+          <div class="flex flex-col gap-3">
+            @for (item of s.top_services; track item.name) {
+              <div>
+                <div class="flex items-baseline justify-between gap-2 text-sm">
+                  <span class="truncate">{{ item.name }}</span>
+                  <span class="muted shrink-0">{{ item.revenue | rsd }}</span>
+                </div>
+                <div class="hbar-row">
+                  <span class="hbar" [style.width.%]="(item.count / topMax()) * 100"></span>
+                  <span class="text-sm font-semibold">{{ item.count }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="card" data-testid="staff-utilization">
+        <h3 class="font-semibold mb-1">Popunjenost zaposlenih</h3>
+        <p class="text-xs muted mb-3">Zauzeto vreme u odnosu na radno vreme</p>
+        @if (s.staff_utilization.length === 0) {
+          <p class="text-sm muted">Nema zaposlenih sa radnim vremenom.</p>
+        } @else {
+          <div class="flex flex-col gap-3">
+            @for (m of s.staff_utilization; track m.id) {
+              <div>
+                <div class="flex items-baseline justify-between gap-2 text-sm">
+                  <span class="flex items-center gap-2 min-w-0">
+                    <span class="color-dot" [style.background]="m.color || 'var(--color-primary)'"></span>
+                    <span class="truncate">{{ m.name }}</span>
+                  </span>
+                  <span class="shrink-0"><strong>{{ percent(m.rate) }}</strong><span class="muted"> · {{ hours(m.booked_minutes) }} od {{ hours(m.available_minutes) }}</span></span>
+                </div>
+                <div class="meter" role="meter" [attr.aria-valuenow]="m.rate" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Popunjenost: ' + m.name">
+                  <span [style.width.%]="m.rate > 100 ? 100 : m.rate"></span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>
+
+@if (selected(); as appointment) {
+  <app-appointment-details [appointment]="appointment" [staff]="staff()" (changed)="onChanged()" (closed)="selected.set(null)" />
+}

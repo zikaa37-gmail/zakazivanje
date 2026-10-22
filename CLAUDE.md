@@ -131,6 +131,10 @@ Obaveštenja idu kroz red (`ShouldQueue`, `afterCommit`); lokalno je `QUEUE_CONN
 (`<app-month-calendar>`, deljena komponenta; koristi je i klijent u „Moji termini → Kalendar"),
 blokade vremena, boje po statusu; modal novog termina je `AppointmentFormComponent`, detalji
 `AppointmentDetailsComponent`, akcije `AppointmentActionsService` (koriste ih lista i kalendar).
+Pregled (#23): `/admin/dashboard` je početna admina — danas (raspored, sledeći klijent, potvrda zahteva,
+ko radi), statistika za 7 / 30 / 90 dana ili tekući mesec u odnosu na prethodni period (`DashboardService`:
+prihod samo od završenih, popunjenost = zauzeto / radno vreme bez blokada), stubičasti grafikon
+`<app-column-chart>` (deljena komponenta, boje `--color-chart*` izvedene iz primarne boje).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

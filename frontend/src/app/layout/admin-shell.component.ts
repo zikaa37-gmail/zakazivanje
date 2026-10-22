@@ -34,6 +34,7 @@ export class AdminShellComponent {
   });
 
   readonly nav: NavItem[] = [
+    { path: '/admin/dashboard', label: 'Pregled', icon: 'activity' },
     { path: '/admin/calendar', label: 'Kalendar', icon: 'calendar' },
     { path: '/admin/appointments', label: 'Termini', icon: 'check-square' },
     { path: '/admin/staff', label: 'Zaposleni', icon: 'users' },
