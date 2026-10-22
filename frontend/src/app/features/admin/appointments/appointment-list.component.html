@@ -71,6 +71,9 @@
               }
             </div>
             <span [class]="'badge shrink-0 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
+            @if (a.paid_at) {
+              <span class="badge badge-success shrink-0" title="Plaćeno">Plaćeno</span>
+            }
             @if (a.status === 'pending') {
               <button type="button" appBtn size="s" class="hidden md:inline-flex" (click)="onAction(a, 'confirmed')" [attr.data-testid]="'confirm-' + a.id">Potvrdi</button>
             }

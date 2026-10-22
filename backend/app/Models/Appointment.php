@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'paid_at', 'payment_method'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -25,6 +25,8 @@ class Appointment extends Model
 
     public const BLOCKING_STATUSES = [self::STATUS_PENDING, self::STATUS_CONFIRMED];
 
+    public const PAYMENT_METHODS = ['cash', 'card', 'bank'];
+
     public const SOURCE_ONLINE = 'online';
 
     public const SOURCE_ADMIN = 'admin';
@@ -38,6 +40,7 @@ class Appointment extends Model
             'ends_at' => 'datetime:Y-m-d H:i',
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'paid_at' => 'datetime',
             'price' => 'float',
             'discount' => 'float',
             'total' => 'float',

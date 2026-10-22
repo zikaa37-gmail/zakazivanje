@@ -15,7 +15,7 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
-type Tab = 'business' | 'look' | 'booking' | 'notifications';
+type Tab = 'business' | 'look' | 'booking' | 'payments' | 'notifications';
 type NotifyKey = 'notify_booking_received' | 'notify_booking_confirmed' | 'notify_booking_cancelled' | 'notify_admin_new_booking';
 type ColorKey = 'theme_primary' | 'theme_secondary' | 'theme_tertiary';
 
@@ -87,6 +87,11 @@ export class SettingsComponent {
     notify_booking_cancelled: this.fb.nonNullable.control(true),
     reminder_hours: this.fb.nonNullable.control(24),
     notify_admin_new_booking: this.fb.nonNullable.control(true),
+    bank_account: this.fb.control<string | null>(null, Validators.pattern(/^\d{3}-\d{1,13}-\d{2}$/)),
+    payee_name: this.fb.control<string | null>(null),
+    payee_address: this.fb.control<string | null>(null),
+    payment_code: this.fb.nonNullable.control('289', Validators.pattern(/^\d{3}$/)),
+    online_payment_enabled: this.fb.nonNullable.control(false),
   });
 
   readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
@@ -244,8 +249,9 @@ export class SettingsComponent {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.tab.set('business');
-      this.error.set('Proveri naziv i email.');
+      const payments = this.form.controls.bank_account.invalid || this.form.controls.payment_code.invalid;
+      this.tab.set(payments ? 'payments' : 'business');
+      this.error.set(payments ? 'Proveri tekući račun i šifru plaćanja.' : 'Proveri naziv i email.');
       return;
     }
 
@@ -266,6 +272,9 @@ export class SettingsComponent {
       youtube: clean(value.youtube),
       pib: clean(value.pib),
       registration_number: clean(value.registration_number),
+      bank_account: clean(value.bank_account),
+      payee_name: clean(value.payee_name),
+      payee_address: clean(value.payee_address),
       logo: this.logo(),
     };
 
@@ -318,6 +327,11 @@ export class SettingsComponent {
       notify_booking_cancelled: settings.notify_booking_cancelled,
       reminder_hours: settings.reminder_hours,
       notify_admin_new_booking: settings.notify_admin_new_booking,
+      bank_account: settings.bank_account,
+      payee_name: settings.payee_name,
+      payee_address: settings.payee_address,
+      payment_code: settings.payment_code || '289',
+      online_payment_enabled: settings.online_payment_enabled,
     });
   }
 

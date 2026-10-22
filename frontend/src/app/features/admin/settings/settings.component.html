@@ -12,6 +12,7 @@
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'business'" (click)="openTab('business')" data-testid="tab-business">Biznis</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'look'" (click)="openTab('look')" data-testid="tab-look">Logo i boje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="openTab('booking')" data-testid="tab-booking">Zakazivanje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'payments'" (click)="openTab('payments')" data-testid="tab-payments">Plaćanje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'notifications'" (click)="openTab('notifications')" data-testid="tab-notifications">Obaveštenja</button>
 </div>
 
@@ -228,6 +229,36 @@
               </label>
             }
           </div>
+        </div>
+      }
+      @case ('payments') {
+        <div class="card max-w-2xl">
+          <h2 class="text-base font-semibold">Uplata na račun (IPS QR)</h2>
+          <p class="text-sm muted">Klijent u „Moji termini" skenira NBS IPS QR kod u m-bankingu ili preuzme popunjenu uplatnicu. Poziv na broj označava termin, pa uplatu lako prepoznaš na izvodu.</p>
+          <div class="form-grid mt-3">
+            <div class="field">
+              <label for="s-account">Tekući račun</label>
+              <input id="s-account" appInput size="m" formControlName="bank_account" placeholder="160-0000000000000-00" inputmode="numeric" data-testid="settings-bank-account" />
+              @if (form.controls.bank_account.invalid && form.controls.bank_account.touched) {
+                <span class="field-error">Račun upiši u obliku 160-0000000000000-00.</span>
+              }
+            </div>
+            <div class="field">
+              <label for="s-payment-code">Šifra plaćanja</label>
+              <input id="s-payment-code" appInput size="m" formControlName="payment_code" maxlength="3" inputmode="numeric" />
+              <span class="text-xs muted">289 — transakcije po nalogu građana (podrazumevano)</span>
+            </div>
+            <div class="field">
+              <label for="s-payee">Primalac</label>
+              <input id="s-payee" appInput size="m" formControlName="payee_name" [placeholder]="form.controls.name.value" data-testid="settings-payee" />
+            </div>
+            <div class="field">
+              <label for="s-payee-address">Adresa primaoca</label>
+              <input id="s-payee-address" appInput size="m" formControlName="payee_address" placeholder="Ulica i broj, mesto" />
+            </div>
+          </div>
+          <app-toggle [checked]="form.controls.online_payment_enabled.value" label="Klijenti mogu da plate unapred (IPS QR i uplatnica)" (checkedChange)="form.controls.online_payment_enabled.setValue($event)" data-testid="settings-online-payment" />
+          <p class="text-xs muted mt-2">Plaćanje karticom preko interneta zahteva ugovor sa bankom ili procesorom plaćanja — dok ga nema, u salonu beležiš gotovinu, karticu ili uplatu na račun u detaljima termina.</p>
         </div>
       }
       @case ('notifications') {

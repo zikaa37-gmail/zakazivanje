@@ -1,0 +1,62 @@
+@use 'themes/breakpoints' as bp;
+
+.payment-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  @include bp.md-up {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.payment-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 220px;
+  text-align: center;
+
+  img {
+    padding: 6px;
+    border-radius: 6px;
+    background: var(--color-qr-plate);
+  }
+}
+
+.payment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+
+  dt {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}
+
+.copy-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}

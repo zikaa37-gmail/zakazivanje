@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\AppointmentPaymentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockedTimeController;
 use App\Http\Controllers\Api\BookingController;
@@ -48,6 +49,8 @@ Route::middleware('jwt')->group(function () {
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
+    Route::post('/my-appointments/{appointment}/payment', [AppointmentPaymentController::class, 'clientDetails']);
+    Route::post('/my-appointments/{appointment}/slip', [AppointmentPaymentController::class, 'clientSlip']);
     Route::post('/my-appointments/{appointment}/reschedule', [MyAppointmentController::class, 'reschedule'])->middleware('throttle:booking');
 });
 
@@ -90,6 +93,9 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+    Route::post('/appointments/{appointment}/payment', [AppointmentPaymentController::class, 'details']);
+    Route::post('/appointments/{appointment}/slip', [AppointmentPaymentController::class, 'slip']);
+    Route::post('/appointments/{appointment}/paid', [AppointmentPaymentController::class, 'markPaid']);
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
