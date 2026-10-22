@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { BookingService } from '../../core/services/booking.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -20,6 +21,8 @@ export class ProfileComponent {
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
   protected auth = inject(AuthService);
+  private booking = inject(BookingService);
+  readonly stylists = signal<{ id: number; first_name: string; last_name: string }[]>([]);
 
   readonly communication = COMMUNICATION_OPTIONS;
   readonly saving = signal(false);
@@ -48,9 +51,14 @@ export class ProfileComponent {
     whatsapp_number: [''],
     preferred_communication: ['email' as CommunicationChannel],
     gender: [null as Gender | null],
+    favorite_staff_member_id: [null as number | null],
   });
 
   constructor() {
+    this.booking.services().subscribe((services) => {
+      const byId = new Map(services.flatMap((service) => service.staff_members).map((m) => [m.id, m]));
+      this.stylists.set([...byId.values()]);
+    });
     this.auth.loadMe().subscribe({ error: () => undefined });
     const user = this.auth.currentUser();
     if (user) {
@@ -61,6 +69,7 @@ export class ProfileComponent {
         whatsapp_number: user.whatsapp_number ?? '',
         preferred_communication: user.preferred_communication,
         gender: user.gender ?? null,
+        favorite_staff_member_id: user.favorite_staff_member_id ?? null,
       });
     }
   }

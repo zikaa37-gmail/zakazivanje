@@ -107,11 +107,23 @@ class AuthController extends Controller
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],
             'preferred_communication' => ['required', Rule::in(User::COMMUNICATION_CHANNELS)],
             'gender' => ['nullable', Rule::in(User::GENDERS)],
+            'favorite_staff_member_id' => ['sometimes', 'nullable', 'integer', Rule::exists('staff_members', 'id')->where('active', true)],
         ]);
 
         $user->update($data);
 
         return $user;
+    }
+
+    public function favoriteStaff(Request $request)
+    {
+        $data = $request->validate([
+            'staff_member_id' => ['nullable', 'integer', Rule::exists('staff_members', 'id')->where('active', true)],
+        ]);
+
+        $request->user()->update(['favorite_staff_member_id' => $data['staff_member_id'] ?? null]);
+
+        return $request->user();
     }
 
     public function verifyEmail(Request $request)

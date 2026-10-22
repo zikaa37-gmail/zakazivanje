@@ -14,6 +14,7 @@ export interface User {
   first_name: string;
   last_name: string;
   gender: Gender | null;
+  favorite_staff_member_id: number | null;
   email: string;
   phone: string | null;
   whatsapp_number: string | null;

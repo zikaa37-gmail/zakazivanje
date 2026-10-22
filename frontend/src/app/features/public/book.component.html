@@ -92,13 +92,18 @@
                 }
               </span>
               <div class="min-w-0 flex-1">
-                <div class="font-semibold">{{ option.name }}</div>
+                <div class="font-semibold">{{ option.name }}@if (option.favorite) {<span class="badge badge-success ml-2" data-testid="book-favorite-badge">Tvoj frizer</span>}</div>
                 <div class="text-sm muted">{{ option.title }}</div>
               </div>
               <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>
             </button>
           }
         </div>
+        @if (canRemember()) {
+          <button type="button" appBtn theme="ghost" size="s" class="mt-3" [disabled]="remembering()" (click)="rememberStaff()" data-testid="book-remember-staff"><span appIcon="star" aria-hidden="true"></span> Zapamti kao mog frizera</button>
+        } @else if (favoriteId() !== null && draft().staffMemberId === favoriteId()) {
+          <p class="text-sm muted mt-3">Nudimo termine kod tvog frizera. Možeš da izabereš i nekog drugog.</p>
+        }
       }
 
       @case (2) {
