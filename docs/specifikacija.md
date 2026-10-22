@@ -30,7 +30,7 @@ drugi biznis.
 | Kalendar termina (admin dan / nedelja / mesec, prevlačenje, blokade; klijent mesečni prikaz) | #18 | gotovo |
 | Obaveštenja (mejl + WhatsApp: primljen, potvrđen, otkazan, podsetnik, admin; reset lozinke) | #19 | gotovo |
 | Recenzije | #21 | kasnije |
-| Pregled / statistika za admina | #23 | kasnije |
+| Pregled / statistika za admina (danas, zahtevi, termini i prihod po danu, usluge, popunjenost) | #23 | gotovo |
 | Slike (logo, galerija) | #24 | kasnije |
 
 Zastareli issue-i iz marketplace modela (više biznisa): #13 (kreiranje biznisa pri registraciji

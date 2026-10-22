@@ -63,6 +63,17 @@ export class ThemeService {
       style.setProperty(`--color-${token}-tint`, tint);
       style.setProperty(`--color-${token}-text`, readableAccent(color, surfaces, dark ? '#ffffff' : '#000000'));
       style.setProperty(`--color-on-${token}`, readableTextOn(color, hover, active));
+
+      if (token === 'primary') {
+        const chart = readableAccent(color, [surfaces[0]], toward, 3);
+        style.setProperty('--color-chart', chart);
+        style.setProperty('--color-chart-active', mix(chart, toward, 0.22));
+        style.setProperty('--color-chart-track', tint);
+      }
+    }
+
+    if (!isHexColor(this.brand.primary)) {
+      ['--color-chart', '--color-chart-active', '--color-chart-track'].forEach((name) => style.removeProperty(name));
     }
   }
 

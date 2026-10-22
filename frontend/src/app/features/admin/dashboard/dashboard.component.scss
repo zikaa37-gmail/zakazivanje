@@ -1,0 +1,133 @@
+@use 'themes/breakpoints' as bp;
+
+.today-grid,
+.chart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+
+  @include bp.md-up {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.chart-grid {
+  @include bp.md-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.next-up {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-bg);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pending-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--color-bg);
+
+  > button:first-child {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @include bp.md-up {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.stat-delta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+
+  &.good {
+    color: var(--color-success);
+  }
+
+  &.bad {
+    color: var(--color-danger);
+  }
+}
+
+.hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.hbar {
+  display: block;
+  height: 10px;
+  min-width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--color-chart);
+}
+
+.meter {
+  height: 10px;
+  margin-top: 0.3rem;
+  border-radius: 999px;
+  background: var(--color-chart-track);
+  overflow: hidden;
+
+  > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-chart);
+  }
+}

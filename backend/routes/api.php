@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BlockedTimeController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
@@ -48,6 +49,9 @@ Route::middleware('jwt')->group(function () {
 
 Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::put('/business-settings', [BusinessSettingController::class, 'update']);
+
+    Route::post('/dashboard/today', [DashboardController::class, 'today']);
+    Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
 
     Route::post('/staff/list', [StaffMemberController::class, 'index']);
     Route::post('/staff', [StaffMemberController::class, 'store']);
