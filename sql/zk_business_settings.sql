@@ -1,4 +1,4 @@
--- Tabela `zk_business_settings`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_business_settings`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -20,6 +20,9 @@ CREATE TABLE `zk_business_settings` (
   `email` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `website` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `instagram` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `facebook` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tiktok` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `youtube` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `pib` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `registration_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `logo` longtext COLLATE utf8mb4_unicode_ci,
@@ -40,9 +43,14 @@ CREATE TABLE `zk_business_settings` (
   `notify_admin_new_booking` tinyint(1) NOT NULL DEFAULT '1',
   `booking_min_days_ahead` tinyint unsigned NOT NULL DEFAULT '1',
   `cancellation_days_before` tinyint unsigned NOT NULL DEFAULT '1',
+  `bank_account` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payee_name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payee_address` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `payment_code` varchar(3) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '289',
+  `online_payment_enabled` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_business_settings` VALUES (1,'Salon Lepota','beauty_salon','Salon u centru grada, radimo od 2015.','Glavna 1','Beograd','+381 60 123 4567',NULL,'zakazivanje@fiskultura.rs',NULL,NULL,NULL,NULL,NULL,'#0f766e','#b45309','#7c3aed','manual','2026-10-21 08:59:44','2026-10-21 10:37:22',15,60,60,0,1,1,1,24,1,1,1);
+INSERT INTO `zk_business_settings` VALUES (1,'Salon Lepota','beauty_salon','Salon u centru grada, radimo od 2015.','Glavna 1','Beograd','+381 60 123 4567',NULL,'zakazivanje@fiskultura.rs',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'#0f766e','#b45309','#7c3aed','manual','2026-10-21 08:59:44','2026-10-22 11:41:24',15,60,60,0,1,1,1,24,1,1,1,NULL,NULL,NULL,'289',0);
 
 SET FOREIGN_KEY_CHECKS=1;

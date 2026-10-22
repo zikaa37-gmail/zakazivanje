@@ -1,4 +1,4 @@
--- Tabela `zk_users`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_users`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -33,6 +33,6 @@ CREATE TABLE `zk_users` (
   KEY `zk_users_role_index` (`role`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_users` VALUES (1,'Admin','Zakazivanje','zakazivanje@fiskultura.rs','+381 60 939 9065',NULL,NULL,'admin','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$yg.EFtISXgAOinA3uDBF4OkGnx.9p1/R0jDbcJSrbHm4rPaN.XELa',NULL,'2026-10-21 10:42:28','azeMnVBaLT','2026-10-21 08:59:46','2026-10-21 10:42:28'),(2,'Petar','Petrović','devtestzikaa@gmail.com','+381 64 123 4567',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$zpkbMytanjbtFvI4pXNn9u5jCl/vJFjIWhjDMKcRBFa/fvvFxgKBe',NULL,'2026-10-21 10:42:20','0PO2SqGggr','2026-10-21 08:59:46','2026-10-21 10:42:20'),(3,'Ivana','Mitić',NULL,'+381 65 444 5555',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,NULL,'Zakazuje telefonom.',NULL,'h0s66wt0Pf','2026-10-21 08:59:46','2026-10-21 08:59:46');
+INSERT INTO `zk_users` VALUES (1,'Admin','Zakazivanje','zakazivanje@fiskultura.rs','+381 60 939 9065',NULL,NULL,'admin','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$yg.EFtISXgAOinA3uDBF4OkGnx.9p1/R0jDbcJSrbHm4rPaN.XELa',NULL,'2026-10-22 11:40:40','azeMnVBaLT','2026-10-21 08:59:46','2026-10-22 11:40:40'),(2,'Petar','Petrović','devtestzikaa@gmail.com','+381 64 123 4567',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,'$2y$12$zpkbMytanjbtFvI4pXNn9u5jCl/vJFjIWhjDMKcRBFa/fvvFxgKBe',NULL,'2026-10-22 11:40:49','0PO2SqGggr','2026-10-21 08:59:46','2026-10-22 11:40:49'),(3,'Ivana','Mitić',NULL,'+381 65 444 5555',NULL,NULL,'client','email',1,'2026-10-21 08:59:46',NULL,NULL,'Zakazuje telefonom.',NULL,'h0s66wt0Pf','2026-10-21 08:59:46','2026-10-21 08:59:46');
 
 SET FOREIGN_KEY_CHECKS=1;

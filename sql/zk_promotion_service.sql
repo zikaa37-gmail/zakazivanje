@@ -1,4 +1,4 @@
--- Tabela `zk_promotion_service`: šema i podaci iz lokalne baze (21.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_promotion_service`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
