@@ -8,6 +8,7 @@ use App\Models\BusinessSetting;
 use App\Services\AppointmentNotifier;
 use App\Services\BookingService;
 use App\Services\ReviewService;
+use App\Services\WaitlistService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -32,7 +33,7 @@ class MyAppointmentController extends Controller
             ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a), 'can_pay' => $this->canPay($a), 'can_review' => $reviews->canReview($a)]);
     }
 
-    public function cancel(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier)
+    public function cancel(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier, WaitlistService $waitlist)
     {
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
@@ -43,11 +44,12 @@ class MyAppointmentController extends Controller
 
         $bookings->cancel($appointment, 'client');
         $notifier->cancelledByClient($appointment);
+        $waitlist->slotFreed($appointment);
 
         return $appointment;
     }
 
-    public function reschedule(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier)
+    public function reschedule(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier, WaitlistService $waitlist)
     {
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
@@ -62,10 +64,12 @@ class MyAppointmentController extends Controller
         }
 
         $previous = $appointment->starts_at->format('Y-m-d H:i');
+        $previousStaff = $appointment->staff_member_id;
         $moved = $bookings->moveByClient($appointment, $data['staff_member_id'] ?? null, CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']));
 
         if ($previous !== $moved->starts_at->format('Y-m-d H:i') || $moved->wasChanged('staff_member_id')) {
             $notifier->rescheduledByClient($moved, $previous);
+            $waitlist->slotFreedAt(substr($previous, 0, 10), $previousStaff, $moved->client_id);
         }
 
         return [...$moved->toArray(), 'can_cancel' => $this->canCancel($moved), 'can_pay' => $this->canPay($moved)];

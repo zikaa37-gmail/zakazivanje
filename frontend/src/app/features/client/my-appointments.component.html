@@ -50,6 +50,27 @@
 
   <app-error-message [message]="error()" />
 
+  @if (scope() === 'upcoming' && waitlistEntries().length > 0) {
+    <div class="card mb-3" data-testid="my-waitlist">
+      <div class="flex items-center gap-2 mb-1">
+        <span appIcon="bell" aria-hidden="true"></span>
+        <h2 class="text-base font-semibold">Lista čekanja</h2>
+      </div>
+      @for (entry of waitlistEntries(); track entry.id) {
+        <div class="flex items-center gap-3 py-2 border-t border-[var(--color-border)]" [attr.data-testid]="'my-waitlist-' + entry.id">
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold">{{ waitlistDay(entry) }} · {{ entry.part_label }}</div>
+            <div class="text-sm muted truncate">{{ entry.services }}{{ entry.staff_member ? ' · ' + entry.staff_member.first_name : '' }}</div>
+          </div>
+          @if (entry.notified_at) {
+            <span class="badge badge-success">Javili smo ti</span>
+          }
+          <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="leaveWaitlist(entry)" [attr.data-testid]="'my-waitlist-leave-' + entry.id">Ukloni</button>
+        </div>
+      }
+    </div>
+  }
+
 
   @if (loading() && appointments().length === 0) {
   } @else if (appointments().length === 0) {

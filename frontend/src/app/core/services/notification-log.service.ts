@@ -23,6 +23,7 @@ export const NOTIFICATION_TYPES: Record<string, string> = {
   appointment_reminder: 'Podsetnik',
   appointment_rescheduled: 'Termin pomeren',
   review_request: 'Molba za ocenu',
+  waitlist_slot: 'Lista čekanja: oslobodio se termin',
   admin_new_booking: 'Admin: novi termin',
   admin_client_cancelled: 'Admin: klijent otkazao',
   email_verification: 'Potvrda emaila',

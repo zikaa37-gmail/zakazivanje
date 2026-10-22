@@ -69,6 +69,7 @@ export interface BusinessSetting {
   online_payment_enabled: boolean;
   reviews_enabled: boolean;
   notify_review_request: boolean;
+  waitlist_enabled: boolean;
   opening_hours?: OpeningHour[];
   shifts?: ShiftTemplate[];
 }

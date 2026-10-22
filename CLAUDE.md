@@ -169,6 +169,10 @@ vremenu salona (validacija), a kad se salon skrati, sati zaposlenih se seku.
 Omiljeni frizer: `users.favorite_staff_member_id` (profil, admin → klijenti, „Zapamti kao mog frizera" u koraku
 „Kod koga?" → `PUT /auth/favorite-staff`); `/book` ga stavlja prvog sa oznakom „Tvoj frizer" i unapred bira, pa se
 nude samo njegovi termini (klijent može da promeni).
+Lista čekanja (#49): `WaitlistEntry` (klijent, dan, opciono zaposleni, deo dana pre podne < 14:00 / popodne),
+`WaitlistService::slotFreed*()` posle otkazivanja / pomeranja (admin i klijent) šalje `WaitlistNotification` svima
+kojima sada postoji slobodan termin (najviše na 30 min), link `/book?services=&staff=&date=` otvara korak „Termin";
+zakazivanje tog dana gasi prijavu. Pun dan je u `/book` isprekidan i može se izabrati; prekidač `waitlist_enabled`.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

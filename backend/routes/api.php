@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
+use App\Http\Controllers\Api\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
@@ -51,6 +52,10 @@ Route::middleware('jwt')->group(function () {
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::put('/auth/favorite-staff', [AuthController::class, 'favoriteStaff']);
 
+    Route::post('/my-waitlist/list', [WaitlistController::class, 'mine']);
+    Route::post('/my-waitlist', [WaitlistController::class, 'store'])->middleware('throttle:booking');
+    Route::delete('/my-waitlist/{entry}', [WaitlistController::class, 'destroy']);
+
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
     Route::post('/my-appointments/{appointment}/review', [ReviewController::class, 'store'])->middleware('throttle:booking');
@@ -80,6 +85,9 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/promotions', [PromotionController::class, 'store']);
     Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
     Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
+
+    Route::post('/waitlist/list', [WaitlistController::class, 'index']);
+    Route::delete('/waitlist/{entry}', [WaitlistController::class, 'adminDestroy']);
 
     Route::post('/reviews/list', [ReviewController::class, 'index']);
     Route::put('/reviews/{review}', [ReviewController::class, 'update']);

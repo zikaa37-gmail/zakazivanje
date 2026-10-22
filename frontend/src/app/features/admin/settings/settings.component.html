@@ -287,6 +287,12 @@
           <app-toggle [checked]="form.controls.reviews_enabled.value" label="Klijenti mogu da ocene posetu" (checkedChange)="form.controls.reviews_enabled.setValue($event)" data-testid="settings-reviews" />
         </div>
 
+        <div class="card max-w-2xl mb-4">
+          <h2 class="text-base font-semibold">Lista čekanja</h2>
+          <p class="text-sm muted mb-2">Kad je dan pun, klijent se prijavljuje na listu; kad neko otkaže ili pomeri termin, svi kojima to vreme odgovara dobijaju obaveštenje, a prvi koji zakaže dobija termin.</p>
+          <app-toggle [checked]="form.controls.waitlist_enabled.value" label="Uključena lista čekanja" (checkedChange)="form.controls.waitlist_enabled.setValue($event)" data-testid="settings-waitlist" />
+        </div>
+
         <div class="card max-w-2xl">
           <h2 class="text-base font-semibold">Potvrda termina</h2>
           <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>
