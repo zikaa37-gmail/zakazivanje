@@ -35,6 +35,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | GET | `/auth/me` | trenutni korisnik |
 | PUT | `/auth/profile` | ime, prezime, telefon, WhatsApp, kanal obaveštenja |
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
+| PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
 | POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; adminu mejl sa starim vremenom |

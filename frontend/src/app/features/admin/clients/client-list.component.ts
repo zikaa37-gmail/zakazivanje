@@ -6,6 +6,8 @@ import { Client, ClientPayload } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
+import { StaffMember } from '../../../core/models/staff.model';
+import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
@@ -29,6 +31,8 @@ export class ClientListComponent {
   private clientService = inject(ClientService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
+  private staffService = inject(StaffService);
+  readonly stylists = signal<StaffMember[]>([]);
 
   readonly columns = 'minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.6fr) 6.5rem 2.5rem';
   readonly communication = COMMUNICATION_OPTIONS;
@@ -55,6 +59,7 @@ export class ClientListComponent {
     whatsapp_number: this.fb.control<string | null>(null),
     preferred_communication: this.fb.nonNullable.control<CommunicationChannel>('whatsapp'),
     gender: this.fb.control<Gender | null>(null),
+    favorite_staff_member_id: this.fb.control<number | null>(null),
     note: this.fb.control<string | null>(null),
   });
 
@@ -65,6 +70,7 @@ export class ClientListComponent {
   ];
 
   constructor() {
+    this.staffService.list().subscribe((staff) => this.stylists.set(staff.filter((m) => m.active)));
     this.load();
     this.search.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(inject(DestroyRef)))
@@ -110,6 +116,7 @@ export class ClientListComponent {
       whatsapp_number: client?.whatsapp_number ?? null,
       preferred_communication: client?.preferred_communication ?? 'whatsapp',
       gender: client?.gender ?? null,
+      favorite_staff_member_id: client?.favorite_staff_member_id ?? null,
       note: client?.note ?? null,
     });
     this.modalOpen.set(true);

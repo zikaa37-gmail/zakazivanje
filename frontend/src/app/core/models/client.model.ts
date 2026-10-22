@@ -5,6 +5,7 @@ export interface Client {
   first_name: string;
   last_name: string;
   gender: Gender | null;
+  favorite_staff_member_id: number | null;
   email: string | null;
   phone: string | null;
   whatsapp_number: string | null;
@@ -19,6 +20,7 @@ export interface ClientPayload {
   first_name: string;
   last_name: string;
   gender: Gender | null;
+  favorite_staff_member_id: number | null;
   email: string | null;
   phone: string;
   whatsapp_number: string | null;

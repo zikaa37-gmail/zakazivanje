@@ -105,6 +105,16 @@
           </select>
         </div>
         <div class="field">
+          <label for="client-favorite">Omiljeni frizer</label>
+          <select id="client-favorite" appInput size="m" formControlName="favorite_staff_member_id" data-testid="client-favorite">
+            <option [ngValue]="null">Bilo ko</option>
+            @for (m of stylists(); track m.id) {
+              <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+            }
+          </select>
+          <span class="text-xs muted">Klijentu se pri online zakazivanju odmah nude termini kod ovog frizera.</span>
+        </div>
+        <div class="field">
           <label for="client-channel">Obaveštenja preko</label>
           <select id="client-channel" appInput size="m" formControlName="preferred_communication">
             @for (option of communication; track option.value) {

@@ -168,7 +168,7 @@ export class AppointmentFormComponent implements OnInit {
       try {
         const client = await new Promise<Client>((resolve, reject) =>
           this.clientService
-            .create({ ...this.newClientForm.getRawValue(), gender: null, email: null, whatsapp_number: null, preferred_communication: 'whatsapp', note: null })
+            .create({ ...this.newClientForm.getRawValue(), gender: null, favorite_staff_member_id: null, email: null, whatsapp_number: null, preferred_communication: 'whatsapp', note: null })
             .subscribe({ next: resolve, error: reject }),
         );
         clientId = client.id;

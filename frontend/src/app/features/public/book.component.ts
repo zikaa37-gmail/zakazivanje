@@ -22,6 +22,7 @@ interface StaffOption {
   id: number | null;
   name: string;
   title: string;
+  favorite?: boolean;
 }
 
 const STEPS = ['Usluga', 'Zaposleni', 'Termin', 'Potvrda'];
@@ -82,11 +83,20 @@ export class BookComponent {
     const selected = this.selectedServices();
     if (!selected.length) return [];
     const common = selected[0].staff_members.filter((m) => selected.every((s) => s.staff_members.some((x) => x.id === m.id)));
-    return [
-      { id: null, name: 'Bilo ko', title: 'Prvi slobodan termin' },
-      ...common.map((m) => ({ id: m.id, name: `${m.first_name} ${m.last_name}`, title: m.title ?? '' })),
-    ];
+    const favorite = this.favoriteId();
+    const people = common
+      .map((m) => ({ id: m.id, name: `${m.first_name} ${m.last_name}`, title: m.title ?? '', favorite: m.id === favorite }))
+      .sort((a, b) => Number(b.favorite) - Number(a.favorite));
+    return [{ id: null, name: 'Bilo ko', title: 'Prvi slobodan termin' }, ...people];
   });
+
+  readonly favoriteId = computed(() => this.auth.currentUser()?.favorite_staff_member_id ?? null);
+  readonly favoriteAvailable = computed(() => this.staffOptions().some((o) => o.favorite));
+  readonly canRemember = computed(() => {
+    const id = this.draft().staffMemberId;
+    return this.auth.isAuthenticated() && this.draft().staffChosen && id !== null && id !== this.favoriteId();
+  });
+  readonly remembering = signal(false);
 
   readonly staffLabel = computed(() => this.staffOptions().find((o) => o.id === this.draft().staffMemberId)?.name ?? 'Bilo ko');
 
@@ -196,6 +206,16 @@ export class BookComponent {
     });
   }
 
+  rememberStaff(): void {
+    const id = this.draft().staffMemberId;
+    if (id === null) return;
+    this.remembering.set(true);
+    this.auth.setFavoriteStaff(id).subscribe({
+      next: () => this.remembering.set(false),
+      error: () => this.remembering.set(false),
+    });
+  }
+
   chooseStaff(id: number | null): void {
     this.draftService.patch({ staffMemberId: id, staffChosen: true, date: null, time: null });
   }
@@ -222,7 +242,11 @@ export class BookComponent {
 
   next(): void {
     const d = this.draft();
-    if (d.step === 0 && d.serviceIds.length) this.goTo(1);
+    if (d.step === 0 && d.serviceIds.length) {
+      const favorite = this.favoriteId();
+      if (!d.staffChosen && favorite !== null && this.favoriteAvailable()) this.chooseStaff(favorite);
+      this.goTo(1);
+    }
     else if (d.step === 1 && d.staffChosen) this.goTo(2);
     else if (d.step === 2 && d.date && d.time) this.goTo(3);
   }

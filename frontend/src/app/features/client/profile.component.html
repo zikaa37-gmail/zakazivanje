@@ -41,6 +41,16 @@
           </select>
       </div>
       <div class="field">
+        <label for="p-favorite">Omiljeni frizer</label>
+        <select id="p-favorite" appInput size="m" formControlName="favorite_staff_member_id" data-testid="profile-favorite">
+          <option [ngValue]="null">Bilo ko</option>
+          @for (m of stylists(); track m.id) {
+            <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+          }
+        </select>
+        <span class="text-xs muted">Pri zakazivanju se odmah nude termini kod njega/nje.</span>
+      </div>
+      <div class="field">
         <label for="p-channel">Obaveštenja preko</label>
         <select id="p-channel" appInput size="m" formControlName="preferred_communication">
           @for (option of communication; track option.value) {

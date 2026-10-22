@@ -76,6 +76,10 @@ export class AuthService {
     return this.http.put<User>(`${this.api}/profile`, payload).pipe(tap((user) => this.storeUser(user)));
   }
 
+  setFavoriteStaff(staffMemberId: number | null): Observable<User> {
+    return this.http.put<User>(`${this.api}/favorite-staff`, { staff_member_id: staffMemberId }).pipe(tap((user) => this.storeUser(user)));
+  }
+
   loadMe(): Observable<User> {
     return this.http.get<User>(`${this.api}/me`).pipe(tap((user) => this.storeUser(user)));
   }
