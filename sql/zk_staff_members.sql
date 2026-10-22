@@ -22,9 +22,11 @@ CREATE TABLE `zk_staff_members` (
   `sort_order` smallint unsigned NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `rotation_weeks` tinyint unsigned NOT NULL DEFAULT '1',
+  `rotation_starts_on` date DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Ana','Jovanović','Frizer',NULL,NULL,'#0f766e',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-10-21 08:59:46'),(2,'Milica','Petrović','Frizer, kolorista',NULL,NULL,'#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-10-21 08:59:46'),(3,'Jelena','Ilić','Manikir',NULL,NULL,'#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-10-21 08:59:46');
+INSERT INTO `zk_staff_members` VALUES (1,'Jelena','Matović','Frizer (muški i ženski)',NULL,NULL,'#15803d',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-10-22 13:01:42',1,NULL),(2,'Marko','Matović','Muški frizer',NULL,NULL,'#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-10-22 13:18:06',1,NULL),(3,'Sandra','Afrika','Ženski frizer',NULL,NULL,'#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-10-22 13:01:42',1,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
