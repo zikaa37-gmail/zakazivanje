@@ -6,9 +6,18 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'description', 'category', 'duration_minutes', 'price', 'active', 'sort_order'])]
+#[Fillable(['name', 'description', 'category', 'audience', 'duration_minutes', 'price', 'active', 'sort_order'])]
 class Service extends Model
 {
+    public const AUDIENCE_ALL = 'all';
+
+    public const AUDIENCES = [self::AUDIENCE_ALL, User::GENDER_FEMALE, User::GENDER_MALE];
+
+    public function suits(?string $gender): bool
+    {
+        return $this->audience === self::AUDIENCE_ALL || $gender === null || $this->audience === $gender;
+    }
+
     protected function casts(): array
     {
         return [

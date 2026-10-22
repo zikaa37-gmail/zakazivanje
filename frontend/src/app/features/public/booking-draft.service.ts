@@ -1,4 +1,5 @@
 import { Injectable, effect, signal } from '@angular/core';
+import { Gender } from '../../core/models/user.model';
 
 export interface BookingDraft {
   step: number;
@@ -8,11 +9,12 @@ export interface BookingDraft {
   date: string | null;
   time: string | null;
   note: string;
+  audience: Gender | null;
 }
 
 const KEY = 'zk_booking_draft';
 
-const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '' };
+const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '', audience: null };
 
 @Injectable({ providedIn: 'root' })
 export class BookingDraftService {
@@ -29,7 +31,7 @@ export class BookingDraftService {
   }
 
   start(serviceIds: number[]): void {
-    this.draft.set({ ...EMPTY, serviceIds, step: serviceIds.length ? 1 : 0 });
+    this.draft.update((draft) => ({ ...EMPTY, audience: draft.audience, serviceIds, step: serviceIds.length ? 1 : 0 }));
   }
 
   patch(changes: Partial<BookingDraft>): void {

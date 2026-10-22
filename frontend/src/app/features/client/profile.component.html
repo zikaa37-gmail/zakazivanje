@@ -32,6 +32,15 @@
         <input id="p-phone" appInput size="m" type="tel" formControlName="phone" />
       </div>
       <div class="field">
+          <label for="p-gender">Usluge za</label>
+          <select id="p-gender" appInput size="m" formControlName="gender" data-testid="profile-gender">
+            <option [ngValue]="null">Nije izabrano</option>
+            @for (option of genders; track option.value) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
+          </select>
+      </div>
+      <div class="field">
         <label for="p-channel">Obaveštenja preko</label>
         <select id="p-channel" appInput size="m" formControlName="preferred_communication">
           @for (option of communication; track option.value) {

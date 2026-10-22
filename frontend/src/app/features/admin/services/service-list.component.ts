@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DURATION_OPTIONS, SalonService, SalonServicePayload } from '../../../core/models/service.model';
+import { AUDIENCE_OPTIONS, DURATION_OPTIONS, SalonService, SalonServicePayload, ServiceAudience, audienceLabel } from '../../../core/models/service.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
@@ -35,6 +35,8 @@ export class ServiceListComponent {
 
   readonly columns = 'minmax(0, 2.2fr) 6rem 7rem minmax(0, 1.6fr) 6.5rem 2.5rem';
   readonly durations = DURATION_OPTIONS;
+  readonly audiences = AUDIENCE_OPTIONS;
+  readonly audienceLabel = audienceLabel;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly services = signal<SalonService[]>([]);
@@ -60,6 +62,7 @@ export class ServiceListComponent {
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     category: this.fb.control<string | null>(null),
+    audience: this.fb.nonNullable.control<ServiceAudience>('all'),
     description: this.fb.control<string | null>(null),
     duration_minutes: this.fb.nonNullable.control(30, [Validators.required, Validators.min(5)]),
     price: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
@@ -108,6 +111,7 @@ export class ServiceListComponent {
     this.form.reset({
       name: service?.name ?? '',
       category: service?.category ?? null,
+      audience: service?.audience ?? 'all',
       description: service?.description ?? null,
       duration_minutes: service?.duration_minutes ?? 30,
       price: service?.price ?? null,

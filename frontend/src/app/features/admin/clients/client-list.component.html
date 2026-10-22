@@ -96,6 +96,15 @@
           <input id="client-email" appInput size="m" type="email" formControlName="email" />
         </div>
         <div class="field">
+          <label for="client-gender">Usluge za</label>
+          <select id="client-gender" appInput size="m" formControlName="gender" data-testid="client-gender">
+            <option [ngValue]="null">Nije izabrano</option>
+            @for (option of genders; track option.value) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
           <label for="client-channel">Obaveštenja preko</label>
           <select id="client-channel" appInput size="m" formControlName="preferred_communication">
             @for (option of communication; track option.value) {

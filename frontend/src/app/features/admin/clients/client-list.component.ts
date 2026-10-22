@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Client, ClientPayload } from '../../../core/models/client.model';
-import { COMMUNICATION_OPTIONS, CommunicationChannel } from '../../../core/models/user.model';
+import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,6 +45,8 @@ export class ClientListComponent {
   readonly saving = signal(false);
   readonly formError = signal<string | null>(null);
 
+  readonly genders = GENDER_OPTIONS;
+
   readonly form = this.fb.group({
     first_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     last_name: this.fb.nonNullable.control('', Validators.required),
@@ -52,6 +54,7 @@ export class ClientListComponent {
     email: this.fb.control<string | null>(null, Validators.email),
     whatsapp_number: this.fb.control<string | null>(null),
     preferred_communication: this.fb.nonNullable.control<CommunicationChannel>('whatsapp'),
+    gender: this.fb.control<Gender | null>(null),
     note: this.fb.control<string | null>(null),
   });
 
@@ -106,6 +109,7 @@ export class ClientListComponent {
       email: client?.email ?? null,
       whatsapp_number: client?.whatsapp_number ?? null,
       preferred_communication: client?.preferred_communication ?? 'whatsapp',
+      gender: client?.gender ?? null,
       note: client?.note ?? null,
     });
     this.modalOpen.set(true);

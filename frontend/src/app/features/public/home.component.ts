@@ -2,7 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GalleryImage } from '../../core/models/gallery.model';
 import { PublicReviews } from '../../core/models/review.model';
-import { PublicService } from '../../core/models/service.model';
+import { AUDIENCE_OPTIONS, PublicService, ServiceAudience } from '../../core/models/service.model';
+import { AuthService } from '../../core/services/auth.service';
 import { WEEKDAYS } from '../../core/models/staff.model';
 import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
@@ -31,6 +32,14 @@ export class HomeComponent {
 
   readonly loading = signal(true);
   readonly services = signal<PublicService[]>([]);
+  private auth = inject(AuthService);
+  readonly audiences = AUDIENCE_OPTIONS;
+  readonly audienceFilter = signal<ServiceAudience>(this.auth.currentUser()?.gender ?? 'all');
+  readonly hasGendered = computed(() => this.services().some((s) => s.audience !== 'all'));
+  readonly shownServices = computed(() => {
+    const filter = this.audienceFilter();
+    return filter === 'all' ? this.services() : this.services().filter((s) => s.audience === 'all' || s.audience === filter);
+  });
   readonly photos = signal<GalleryImage[]>([]);
   readonly reviews = signal<PublicReviews | null>(null);
   readonly latestReviews = computed(() => (this.reviews()?.items ?? []).filter((r) => r.comment).slice(0, 3));

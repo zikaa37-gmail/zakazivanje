@@ -106,6 +106,7 @@ class AuthController extends Controller
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],
             'preferred_communication' => ['required', Rule::in(User::COMMUNICATION_CHANNELS)],
+            'gender' => ['nullable', Rule::in(User::GENDERS)],
         ]);
 
         $user->update($data);
@@ -205,6 +206,7 @@ class AuthController extends Controller
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],
             'preferred_communication' => ['nullable', Rule::in(User::COMMUNICATION_CHANNELS)],
+            'gender' => ['nullable', Rule::in(User::GENDERS)],
         ];
     }
 

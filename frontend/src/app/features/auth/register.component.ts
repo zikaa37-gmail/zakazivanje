@@ -1,7 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { COMMUNICATION_OPTIONS, CommunicationChannel } from '../../core/models/user.model';
+import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -31,12 +31,15 @@ export class RegisterComponent {
   readonly error = signal<string | null>(null);
   readonly done = signal<string | null>(null);
 
+  readonly genders = GENDER_OPTIONS;
+
   readonly form = this.fb.nonNullable.group({
     first_name: ['', [Validators.required, Validators.minLength(2)]],
     last_name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
     preferred_communication: ['email' as CommunicationChannel],
+    gender: [null as Gender | null],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
 

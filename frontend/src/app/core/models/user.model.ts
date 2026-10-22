@@ -2,10 +2,18 @@ export type UserRole = 'client' | 'admin';
 
 export type CommunicationChannel = 'email' | 'whatsapp' | 'both';
 
+export type Gender = 'female' | 'male';
+
+export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: 'female', label: 'Žene' },
+  { value: 'male', label: 'Muškarce' },
+];
+
 export interface User {
   id: number;
   first_name: string;
   last_name: string;
+  gender: Gender | null;
   email: string;
   phone: string | null;
   whatsapp_number: string | null;

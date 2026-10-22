@@ -36,6 +36,15 @@
           <input id="r-phone" appInput size="m" type="tel" formControlName="phone" autocomplete="tel" data-testid="register-phone" />
         </div>
         <div class="field">
+          <label for="r-gender">Usluge za</label>
+          <select id="r-gender" appInput size="m" formControlName="gender" data-testid="register-gender">
+            <option [ngValue]="null">Nije izabrano</option>
+            @for (option of genders; track option.value) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
           <label for="r-channel">Obaveštenja preko</label>
           <select id="r-channel" appInput size="m" formControlName="preferred_communication">
             @for (option of communication; track option.value) {

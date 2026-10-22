@@ -70,6 +70,7 @@ class ClientController extends Controller
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],
             'preferred_communication' => ['nullable', Rule::in(User::COMMUNICATION_CHANNELS)],
+            'gender' => ['nullable', Rule::in(User::GENDERS)],
             'note' => ['nullable', 'string', 'max:2000'],
             'active' => ['boolean'],
         ]);

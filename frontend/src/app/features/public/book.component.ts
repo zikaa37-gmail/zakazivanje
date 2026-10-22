@@ -2,8 +2,9 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Appointment, DayAvailability, Quote, Slot } from '../../core/models/appointment.model';
-import { PublicService } from '../../core/models/service.model';
+import { audienceLabel, PublicService, suitsAudience } from '../../core/models/service.model';
 import { AuthService } from '../../core/services/auth.service';
+import { GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { BookingService } from '../../core/services/booking.service';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
@@ -60,6 +61,17 @@ export class BookComponent {
     last_name: ['', Validators.required],
     phone: ['', Validators.required],
     email: ['', Validators.email],
+  });
+
+  readonly genders = GENDER_OPTIONS;
+  readonly audienceLabel = audienceLabel;
+  readonly accountGender = computed(() => this.auth.currentUser()?.gender ?? null);
+  readonly audience = computed(() => this.accountGender() ?? this.draft().audience);
+  readonly hasGendered = computed(() => this.services().some((s) => s.audience !== 'all'));
+  readonly visibleServices = computed(() => {
+    const audience = this.audience();
+    const chosen = (this.services().filter((s) => this.draft().serviceIds.includes(s.id)).find((s) => s.audience !== 'all')?.audience ?? null) as Gender | null;
+    return this.services().filter((s) => suitsAudience(s.audience, audience ?? chosen));
   });
 
   readonly selectedServices = computed(() => this.services().filter((s) => this.draft().serviceIds.includes(s.id)));
@@ -162,9 +174,20 @@ export class BookComponent {
     return parseDate(date).getDate();
   }
 
+  chooseAudience(audience: Gender): void {
+    const keep = this.draft().serviceIds.filter((id) => {
+      const service = this.services().find((s) => s.id === id);
+      return !service || suitsAudience(service.audience, audience);
+    });
+    this.draftService.patch({ audience, serviceIds: keep, staffMemberId: null, staffChosen: false, date: null, time: null });
+  }
+
   toggleService(id: number): void {
     const ids = this.draft().serviceIds;
+    const service = this.services().find((s) => s.id === id);
+    const audience = !this.audience() && service && service.audience !== 'all' && !ids.includes(id) ? service.audience : this.draft().audience;
     this.draftService.patch({
+      audience,
       serviceIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
       staffMemberId: null,
       staffChosen: false,

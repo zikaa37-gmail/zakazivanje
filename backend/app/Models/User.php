@@ -14,10 +14,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
+#[Fillable(['first_name', 'last_name', 'gender', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
 #[Hidden(['password', 'remember_token', 'email_verification_token'])]
 class User extends Authenticatable
 {
+    public const GENDER_FEMALE = 'female';
+
+    public const GENDER_MALE = 'male';
+
+    public const GENDERS = [self::GENDER_FEMALE, self::GENDER_MALE];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

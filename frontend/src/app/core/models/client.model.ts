@@ -1,9 +1,10 @@
-import { CommunicationChannel } from './user.model';
+import { CommunicationChannel, Gender } from './user.model';
 
 export interface Client {
   id: number;
   first_name: string;
   last_name: string;
+  gender: Gender | null;
   email: string | null;
   phone: string | null;
   whatsapp_number: string | null;
@@ -17,6 +18,7 @@ export interface Client {
 export interface ClientPayload {
   first_name: string;
   last_name: string;
+  gender: Gender | null;
   email: string | null;
   phone: string;
   whatsapp_number: string | null;

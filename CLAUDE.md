@@ -153,6 +153,10 @@ Recenzije (#21): `Review` (jedna po terminu, izmena do 30 dana), `ReviewService`
 samo klijentu sa nalogom; `notify_review_request`); javno `/reviews` i blok na početnoj (`<app-review-summary>`,
 `<app-review-card>`, `<app-stars>`), admin `/admin/reviews` (prosek po zaposlenom, odgovor, sakrivanje);
 unos ocene `<app-star-input>` (prima `FormControl`). Prekidač `reviews_enabled` u Podešavanja → Zakazivanje.
+Usluge za žene / muškarce: `services.audience` (`all` / `female` / `male`), `users.gender` (registracija, profil,
+admin → klijenti); `BookingService::ensureAudience()` odbija uslugu za drugi pol i mešanje muških i ženskih u istom
+terminu (važi i za admina), a nepoznat pol klijenta upisuje po prvoj takvoj usluzi; `/book` korak 1 nudi „Za žene /
+Za muškarce" dok pol nije poznat.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

@@ -50,14 +50,25 @@
     @switch (draft().step) {
       @case (0) {
         <h2 class="text-lg font-semibold mb-3">Izaberi uslugu</h2>
+        @if (hasGendered()) {
+          @if (accountGender()) {
+            <p class="text-sm muted mb-3" data-testid="book-audience-fixed">Prikazane su usluge za {{ accountGender() === 'female' ? 'žene' : 'muškarce' }} i zajedničke usluge. <a routerLink="/profile" class="font-semibold">Promeni u profilu</a></p>
+          } @else {
+            <div class="chip-group mb-3" role="radiogroup" aria-label="Usluge za" data-testid="book-audience">
+              @for (g of genders; track g.value) {
+                <button type="button" role="radio" class="chip" [class.selected]="draft().audience === g.value" [attr.aria-checked]="draft().audience === g.value" (click)="chooseAudience(g.value)" [attr.data-testid]="'book-audience-' + g.value">Za {{ g.label.toLowerCase() }}</button>
+              }
+            </div>
+          }
+        }
         @if (servicesLoading() && services().length === 0) {
         } @else {
           <div class="flex flex-col gap-2">
-            @for (service of services(); track service.id) {
+            @for (service of visibleServices(); track service.id) {
               <button type="button" class="choice-card" [class.selected]="draft().serviceIds.includes(service.id)" (click)="toggleService(service.id)" [attr.data-testid]="'book-service-' + service.id">
                 <div class="min-w-0 flex-1">
                   <div class="font-semibold">{{ service.name }}</div>
-                  <div class="text-sm muted">{{ service.duration_minutes | duration }}</div>
+                  <div class="text-sm muted">{{ service.duration_minutes | duration }}@if (service.audience !== 'all' && !audience()) { · {{ audienceLabel(service.audience) }}}</div>
                 </div>
                 <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
                 <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>

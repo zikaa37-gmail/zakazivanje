@@ -4,7 +4,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { debounceTime, distinctUntilChanged, startWith } from 'rxjs';
 import { Slot } from '../../../core/models/appointment.model';
 import { Client } from '../../../core/models/client.model';
-import { SalonService } from '../../../core/models/service.model';
+import { SalonService, suitsAudience } from '../../../core/models/service.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { BookingService } from '../../../core/services/booking.service';
@@ -57,6 +57,7 @@ export class AppointmentFormComponent implements OnInit {
   readonly selectedClient = signal<Client | null>(null);
   readonly newClient = signal(false);
   readonly selectedServices = signal<number[]>([]);
+  readonly availableServices = computed(() => this.services().filter((s) => suitsAudience(s.audience, this.selectedClient()?.gender ?? null)));
   readonly suggestions = signal<Slot[]>([]);
   readonly repeat = signal(false);
   readonly repeatEnd = signal<'count' | 'date' | 'never'>('count');
@@ -116,6 +117,8 @@ export class AppointmentFormComponent implements OnInit {
 
   pickClient(client: Client): void {
     this.selectedClient.set(client);
+    const services = this.services();
+    this.selectedServices.update((ids) => ids.filter((id) => suitsAudience(services.find((x) => x.id === id)?.audience ?? 'all', client.gender ?? null)));
     this.clientResults.set([]);
   }
 
@@ -165,7 +168,7 @@ export class AppointmentFormComponent implements OnInit {
       try {
         const client = await new Promise<Client>((resolve, reject) =>
           this.clientService
-            .create({ ...this.newClientForm.getRawValue(), email: null, whatsapp_number: null, preferred_communication: 'whatsapp', note: null })
+            .create({ ...this.newClientForm.getRawValue(), gender: null, email: null, whatsapp_number: null, preferred_communication: 'whatsapp', note: null })
             .subscribe({ next: resolve, error: reject }),
         );
         clientId = client.id;
