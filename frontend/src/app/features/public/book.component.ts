@@ -222,16 +222,28 @@ export class BookComponent {
 
   next(): void {
     const d = this.draft();
-    if (d.step === 0 && d.serviceIds.length) this.goTo(this.staffOptions().length === 2 ? 2 : 1);
+    if (d.step === 0 && d.serviceIds.length) this.goTo(1);
     else if (d.step === 1 && d.staffChosen) this.goTo(2);
     else if (d.step === 2 && d.date && d.time) this.goTo(3);
   }
 
   back(): void {
     const d = this.draft();
-    if (d.step === 2 && this.staffOptions().length === 2) this.goTo(0);
-    else if (d.step > 0) this.goTo(d.step - 1);
+    if (d.step > 0) this.goTo(d.step - 1);
     else this.router.navigateByUrl('/');
+  }
+
+  canOpen(step: number): boolean {
+    const d = this.draft();
+    if (step === d.step) return false;
+    if (step === 0) return true;
+    if (step === 1) return d.serviceIds.length > 0;
+    if (step === 2) return d.serviceIds.length > 0 && d.staffChosen;
+    return d.serviceIds.length > 0 && d.staffChosen && !!d.date && !!d.time;
+  }
+
+  open(step: number): void {
+    if (this.canOpen(step)) this.goTo(step);
   }
 
   stepDisabled(): boolean {

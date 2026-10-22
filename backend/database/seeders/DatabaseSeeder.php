@@ -60,7 +60,6 @@ class DatabaseSeeder extends Seeder
             ['Muško šišanje', 30, 1500, 'Šišanje', User::GENDER_MALE],
             ['Feniranje', 30, 1200, 'Stilizovanje', Service::AUDIENCE_ALL],
             ['Farbanje', 90, 4500, 'Boja', Service::AUDIENCE_ALL],
-            ['Manikir', 60, 2000, 'Nokti', Service::AUDIENCE_ALL],
         ])->map(fn ($s, $i) => Service::create([
             'name' => $s[0], 'duration_minutes' => $s[1], 'price' => $s[2], 'category' => $s[3], 'audience' => $s[4], 'sort_order' => $i,
         ]))->keyBy('name');
@@ -69,9 +68,9 @@ class DatabaseSeeder extends Seeder
             ->map(fn ($d) => ['weekday' => $d, 'starts_at' => $from, 'ends_at' => $to])->all();
 
         $staff = [
-            ['Ana', 'Jovanović', 'Frizer', '#0f766e', null, $weekdays([1, 2, 3, 4, 5], '09:00', '17:00'), ['Žensko šišanje', 'Muško šišanje', 'Feniranje', 'Farbanje']],
-            ['Milica', 'Petrović', 'Frizer, kolorista', '#b45309', BusinessSetting::CONFIRMATION_AUTOMATIC, $weekdays([2, 3, 4, 5, 6], '10:00', '18:00'), ['Žensko šišanje', 'Farbanje']],
-            ['Jelena', 'Ilić', 'Manikir', '#7c3aed', null, $weekdays([1, 2, 3, 4, 5], '12:00', '20:00'), ['Manikir']],
+            ['Jelena', 'Matović', 'Frizer (muški i ženski)', '#0f766e', null, $weekdays([1, 2, 3, 4, 5], '09:00', '17:00'), ['Žensko šišanje', 'Muško šišanje', 'Feniranje', 'Farbanje']],
+            ['Marko', 'Matović', 'Muški frizer', '#b45309', BusinessSetting::CONFIRMATION_AUTOMATIC, $weekdays([2, 3, 4, 5, 6], '10:00', '18:00'), ['Muško šišanje']],
+            ['Sandra', 'Afrika', 'Ženski frizer', '#7c3aed', null, $weekdays([1, 2, 3, 4, 5], '12:00', '20:00'), ['Žensko šišanje', 'Feniranje', 'Farbanje']],
         ];
 
         foreach ($staff as $i => [$first, $last, $title, $color, $confirmation, $hours, $serviceNames]) {
@@ -87,7 +86,7 @@ class DatabaseSeeder extends Seeder
             ->services()->sync($services->only(['Žensko šišanje', 'Feniranje'])->pluck('id'));
 
         Promotion::create(['name' => 'Srećni utorak −15%', 'type' => Promotion::TYPE_PERCENT, 'discount_percent' => 15, 'weekdays' => [2]])
-            ->services()->sync($services->only(['Manikir'])->pluck('id'));
+            ->services()->sync($services->only(['Feniranje'])->pluck('id'));
 
         Promotion::create(['name' => 'Muško šišanje 2+1', 'type' => Promotion::TYPE_BUNDLE, 'buy_quantity' => 2, 'free_quantity' => 1])
             ->services()->sync($services->only(['Muško šišanje'])->pluck('id'));
