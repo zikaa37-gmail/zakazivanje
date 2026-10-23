@@ -12,6 +12,21 @@ export function suitsAudience(audience: ServiceAudience, gender: Gender | null):
   return audience === 'all' || gender === null || audience === gender;
 }
 
+export const OTHER_CATEGORY = 'Ostalo';
+
+export function categoryOf(service: { category: string | null }): string {
+  return service.category?.trim() || OTHER_CATEGORY;
+}
+
+export function categoriesOf(services: { category: string | null }[]): string[] {
+  const names = [...new Set(services.map(categoryOf))];
+  return names.includes(OTHER_CATEGORY) ? [...names.filter((n) => n !== OTHER_CATEGORY), OTHER_CATEGORY] : names;
+}
+
+export function groupByCategory<T extends { category: string | null }>(services: T[]): { category: string; items: T[] }[] {
+  return categoriesOf(services).map((category) => ({ category, items: services.filter((s) => categoryOf(s) === category) }));
+}
+
 export function audienceLabel(audience: ServiceAudience): string {
   return AUDIENCE_OPTIONS.find((o) => o.value === audience)?.short ?? '';
 }

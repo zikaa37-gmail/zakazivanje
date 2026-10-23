@@ -173,6 +173,8 @@ Lista čekanja (#49): `WaitlistEntry` (klijent, dan, opciono zaposleni, deo dana
 `WaitlistService::slotFreed*()` posle otkazivanja / pomeranja (admin i klijent) šalje `WaitlistNotification` svima
 kojima sada postoji slobodan termin (najviše na 30 min), link `/book?services=&staff=&date=` otvara korak „Termin";
 zakazivanje tog dana gasi prijavu. Pun dan je u `/book` isprekidan i može se izabrati; prekidač `waitlist_enabled`.
+Usluge su na početnoj i u `/book` grupisane po kategoriji (`groupByCategory()` u `service.model.ts`, bez
+kategorije → „Ostalo") sa filterom kategorija (`.chip-scroll`) — frizerske i kozmetičke usluge istog salona.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

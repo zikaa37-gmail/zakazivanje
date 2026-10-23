@@ -33,12 +33,24 @@
         </div>
       }
     </div>
+    @if (categories().length > 1) {
+      <div class="chip-scroll mb-3" role="radiogroup" aria-label="Kategorija" data-testid="home-category">
+        <button type="button" role="radio" class="chip" [class.selected]="activeCategory() === null" [attr.aria-checked]="activeCategory() === null" (click)="categoryFilter.set(null)">Sve</button>
+        @for (c of categories(); track c) {
+          <button type="button" role="radio" class="chip" [class.selected]="activeCategory() === c" [attr.aria-checked]="activeCategory() === c" (click)="categoryFilter.set(c)" [attr.data-testid]="'home-category-' + $index">{{ c }}</button>
+        }
+      </div>
+    }
     @if (loading() && services().length === 0) {
     } @else if (services().length === 0) {
       <div class="card empty-state">Usluge još nisu unete.</div>
     } @else {
-      <div class="card !p-0 overflow-hidden">
-        @for (service of shownServices(); track service.id) {
+      @for (group of serviceGroups(); track group.category) {
+      @if (serviceGroups().length > 1) {
+        <h3 class="service-group-title" [attr.data-testid]="'home-group-' + $index">{{ group.category }}</h3>
+      }
+      <div class="card !p-0 overflow-hidden mb-3">
+        @for (service of group.items; track service.id) {
           <a routerLink="/book" (click)="startWith(service)" class="service-row" [attr.data-testid]="'home-service-' + service.id">
             <div class="min-w-0 flex-1">
               <div class="font-semibold text-[var(--color-text)]">{{ service.name }}</div>
@@ -51,6 +63,7 @@
           </a>
         }
       </div>
+      }
     }
   </section>
 

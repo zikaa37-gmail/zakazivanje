@@ -61,10 +61,22 @@
             </div>
           }
         }
+        @if (categories().length > 1) {
+          <div class="chip-scroll mb-3" role="radiogroup" aria-label="Kategorija" data-testid="book-category">
+            <button type="button" role="radio" class="chip" [class.selected]="activeCategory() === null" [attr.aria-checked]="activeCategory() === null" (click)="categoryFilter.set(null)">Sve</button>
+            @for (c of categories(); track c) {
+              <button type="button" role="radio" class="chip" [class.selected]="activeCategory() === c" [attr.aria-checked]="activeCategory() === c" (click)="categoryFilter.set(c)" [attr.data-testid]="'book-category-' + $index">{{ c }}</button>
+            }
+          </div>
+        }
         @if (servicesLoading() && services().length === 0) {
         } @else {
-          <div class="flex flex-col gap-2">
-            @for (service of visibleServices(); track service.id) {
+          @for (group of serviceGroups(); track group.category) {
+          @if (serviceGroups().length > 1) {
+            <h3 class="service-group-title" [attr.data-testid]="'book-group-' + $index">{{ group.category }}</h3>
+          }
+          <div class="flex flex-col gap-2 mb-3">
+            @for (service of group.items; track service.id) {
               <button type="button" class="choice-card" [class.selected]="draft().serviceIds.includes(service.id)" (click)="toggleService(service.id)" [attr.data-testid]="'book-service-' + service.id">
                 <div class="min-w-0 flex-1">
                   <div class="font-semibold">{{ service.name }}</div>
@@ -75,6 +87,7 @@
               </button>
             }
           </div>
+          }
           <p class="text-xs muted mt-2">Možeš da izabereš i više usluga u istom terminu.</p>
         }
       }

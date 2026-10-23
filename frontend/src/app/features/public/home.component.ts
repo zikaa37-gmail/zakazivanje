@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GalleryImage } from '../../core/models/gallery.model';
 import { PublicReviews } from '../../core/models/review.model';
-import { AUDIENCE_OPTIONS, PublicService, ServiceAudience } from '../../core/models/service.model';
+import { AUDIENCE_OPTIONS, PublicService, ServiceAudience, categoriesOf, categoryOf, groupByCategory } from '../../core/models/service.model';
 import { AuthService } from '../../core/services/auth.service';
 import { WEEKDAYS } from '../../core/models/staff.model';
 import { BookingService } from '../../core/services/booking.service';
@@ -36,6 +36,16 @@ export class HomeComponent {
   readonly audiences = AUDIENCE_OPTIONS;
   readonly audienceFilter = signal<ServiceAudience>(this.auth.currentUser()?.gender ?? 'all');
   readonly hasGendered = computed(() => this.services().some((s) => s.audience !== 'all'));
+  readonly categoryFilter = signal<string | null>(null);
+  readonly categories = computed(() => categoriesOf(this.shownServices()));
+  readonly activeCategory = computed(() => {
+    const filter = this.categoryFilter();
+    return filter && this.categories().includes(filter) ? filter : null;
+  });
+  readonly serviceGroups = computed(() => {
+    const category = this.activeCategory();
+    return groupByCategory(category ? this.shownServices().filter((s) => categoryOf(s) === category) : this.shownServices());
+  });
   readonly shownServices = computed(() => {
     const filter = this.audienceFilter();
     return filter === 'all' ? this.services() : this.services().filter((s) => s.audience === 'all' || s.audience === filter);

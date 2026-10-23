@@ -508,6 +508,31 @@ button.badge:focus-visible {
   }
 }
 
+.chip-scroll {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0.15rem;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    flex-shrink: 0;
+  }
+}
+
+.service-group-title {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 .home-photos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
