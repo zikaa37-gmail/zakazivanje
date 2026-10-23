@@ -1,4 +1,4 @@
--- Tabela `zk_blocked_times`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_blocked_times`: šema i podaci iz lokalne baze (23.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -20,7 +20,7 @@ CREATE TABLE `zk_blocked_times` (
   KEY `zk_blocked_times_staff_member_id_foreign` (`staff_member_id`),
   KEY `zk_blocked_times_starts_at_ends_at_index` (`starts_at`,`ends_at`),
   CONSTRAINT `zk_blocked_times_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;
