@@ -1,4 +1,4 @@
--- Tabela `zk_appointments`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_appointments`: šema i podaci iz lokalne baze (23.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -38,7 +38,7 @@ CREATE TABLE `zk_appointments` (
   CONSTRAINT `zk_appointments_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `zk_appointments_recurrence_id_foreign` FOREIGN KEY (`recurrence_id`) REFERENCES `zk_appointment_recurrences` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_appointments_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO `zk_appointments` VALUES (1,2,1,NULL,'2026-10-21 13:00:00','2026-10-21 13:30:00','confirmed','admin',1500.00,0.00,1500.00,NULL,NULL,'2026-10-21 10:28:54',NULL,NULL,NULL,NULL,'2026-10-21 10:28:54','2026-10-22 11:41:24',NULL),(2,2,1,NULL,'2026-10-26 09:45:00','2026-10-26 10:15:00','confirmed','online',1200.00,0.00,1200.00,NULL,NULL,'2026-10-22 12:39:57',NULL,NULL,NULL,NULL,'2026-10-21 11:14:22','2026-10-22 12:39:57',NULL);
 

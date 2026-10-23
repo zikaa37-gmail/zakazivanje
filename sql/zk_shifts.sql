@@ -1,4 +1,4 @@
--- Tabela `zk_shifts`: šema i podaci iz lokalne baze (22.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_shifts`: šema i podaci iz lokalne baze (23.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -17,8 +17,8 @@ CREATE TABLE `zk_shifts` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_shifts` VALUES (1,'Pre podne','08:00:00','14:00:00',0,'2026-10-22 13:11:50','2026-10-22 13:11:50'),(2,'Popodne','14:00:00','20:00:00',1,'2026-10-22 13:11:50','2026-10-22 13:11:50'),(3,'Ceo dan','08:00:00','20:00:00',2,'2026-10-22 13:11:50','2026-10-22 13:11:50');
+INSERT INTO `zk_shifts` VALUES (7,'Pre podne','08:00:00','14:00:00',0,'2026-10-22 21:25:13','2026-10-22 21:25:13'),(8,'Popodne','14:00:00','20:00:00',1,'2026-10-22 21:25:13','2026-10-22 21:25:13'),(9,'Ceo dan','08:00:00','20:00:00',2,'2026-10-22 21:25:13','2026-10-22 21:25:13');
 
 SET FOREIGN_KEY_CHECKS=1;
