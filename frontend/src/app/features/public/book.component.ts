@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, DayAvailability, Quote, Slot } from '../../core/models/appointment.model';
-import { audienceLabel, PublicService, suitsAudience } from '../../core/models/service.model';
+import { audienceLabel, categoriesOf, categoryOf, groupByCategory, PublicService, suitsAudience } from '../../core/models/service.model';
 import { AuthService } from '../../core/services/auth.service';
 import { GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { WAITLIST_PARTS, WaitlistPart, WaitlistService } from '../../core/services/waitlist.service';
@@ -82,6 +82,17 @@ export class BookComponent {
     const audience = this.audience();
     const chosen = (this.services().filter((s) => this.draft().serviceIds.includes(s.id)).find((s) => s.audience !== 'all')?.audience ?? null) as Gender | null;
     return this.services().filter((s) => suitsAudience(s.audience, audience ?? chosen));
+  });
+
+  readonly categoryFilter = signal<string | null>(null);
+  readonly categories = computed(() => categoriesOf(this.visibleServices()));
+  readonly activeCategory = computed(() => {
+    const filter = this.categoryFilter();
+    return filter && this.categories().includes(filter) ? filter : null;
+  });
+  readonly serviceGroups = computed(() => {
+    const category = this.activeCategory();
+    return groupByCategory(category ? this.visibleServices().filter((s) => categoryOf(s) === category) : this.visibleServices());
   });
 
   readonly selectedServices = computed(() => this.services().filter((s) => this.draft().serviceIds.includes(s.id)));
