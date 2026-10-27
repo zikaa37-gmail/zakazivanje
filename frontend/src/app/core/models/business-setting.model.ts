@@ -46,6 +46,11 @@ export interface BusinessSetting {
   registration_number: string | null;
   logo: string | null;
   cover_url: string | null;
+  map_query: string | null;
+  instagram_connected: boolean;
+  instagram_username: string | null;
+  instagram_token_expires_at?: string | null;
+  instagram_feed_enabled?: boolean;
   cover_image?: string | null;
   theme_primary: string | null;
   theme_secondary: string | null;

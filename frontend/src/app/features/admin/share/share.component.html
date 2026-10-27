@@ -82,6 +82,39 @@
     </div>
   </section>
 
+  <section class="card" data-testid="share-instagram-links">
+    <h2 class="text-base font-semibold mb-1">Linkovi za Instagram</h2>
+    <p class="text-sm muted mb-3">Svaki link beleži odakle je posetilac došao — u Pregledu vidiš posete, registracije i termine po linku.</p>
+    <div class="field">
+      <span class="text-sm font-semibold">Gde ga stavljaš</span>
+      <div class="chip-group">
+        @for (p of placements; track p.value) {
+          <button type="button" class="chip" [class.selected]="igPlacement() === p.value" (click)="igPlacement.set(p.value)" [attr.data-testid]="'share-ig-' + p.value">{{ p.label }}</button>
+        }
+      </div>
+    </div>
+    <div class="field">
+      <label for="share-ig-campaign">Naziv kampanje (opciono)</label>
+      <input id="share-ig-campaign" appInput size="m" maxlength="40" [value]="igCampaign()" (input)="igCampaign.set($any($event.target).value)" placeholder="npr. jesenja akcija" data-testid="share-ig-campaign" />
+    </div>
+    <div class="field">
+      <span class="text-sm font-semibold">Vodi na</span>
+      <div class="chip-group">
+        <button type="button" class="chip" [class.selected]="igPage() === 'home'" (click)="igPage.set('home')">Početnu</button>
+        <button type="button" class="chip" [class.selected]="igPage() === 'book'" (click)="igPage.set('book')">Zakazivanje</button>
+      </div>
+    </div>
+    <div class="share-link" data-testid="share-ig-link">{{ igLink() }}</div>
+    <div class="flex flex-wrap gap-2 mt-3">
+      <button type="button" appBtn size="s" (click)="copyLink(igLink())" data-testid="share-ig-copy"><span appIcon="copy" aria-hidden="true"></span> Kopiraj link</button>
+    </div>
+    <ul class="text-sm muted mt-3 list-disc pl-5 flex flex-col gap-1">
+      <li><strong>Bio:</strong> Uredi profil → Linkovi → Dodaj spoljni link.</li>
+      <li><strong>Story:</strong> nalepnica „Link" i nalepi link.</li>
+      <li><strong>Objava:</strong> link u opisu nije klikabilan — napiši „Zakaži preko linka u biju" ili stavi QR na sliku.</li>
+    </ul>
+  </section>
+
   <section class="card" data-testid="share-qr-card">
     <h2 class="text-base font-semibold mb-1">QR kod za štampu</h2>
     <p class="text-sm muted mb-3">Za izlog, recepciju, vizit karte i letke: skeniranjem telefonom otvara se izabrana stranica.</p>

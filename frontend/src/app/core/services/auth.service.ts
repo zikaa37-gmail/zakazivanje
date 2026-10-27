@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
 import { CommunicationChannel, User } from '../models/user.model';
+import { MarketingService } from './marketing.service';
 
 const ACCESS_TOKEN_KEY = 'zk_access_token';
 const REFRESH_TOKEN_KEY = 'zk_refresh_token';
@@ -48,6 +49,7 @@ export class AuthService {
 
   private http = inject(HttpClient);
   private router = inject(Router);
+  private marketing = inject(MarketingService);
   private api = `${environment.apiUrl}/auth`;
 
   login(email: string, password: string): Observable<TokenResponse> {
@@ -57,7 +59,7 @@ export class AuthService {
   }
 
   register(payload: RegisterPayload): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.api}/register`, payload, quiet());
+    return this.http.post<MessageResponse>(`${this.api}/register`, { ...payload, referral: this.marketing.referral() }, quiet());
   }
 
   verifyEmail(token: string): Observable<MessageResponse> {

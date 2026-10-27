@@ -201,6 +201,13 @@ događaj `ClientActivity` → `client_activity_logs`; vlasnik dobija mejl kad kl
 pokušava (jednom dnevno). Vlasnik i radnik vide zonu i istorijat (Klijenti → Istorijat i zona, `?history={id}`); salon
 može da zakaže blokiranom uz upozorenje. Podešavanja discipline i izveštaja se ne vraćaju javno (`/public/business`
 samo osoblju). Klijenta u formi termina bira deljena `<app-select-search>` (prima `FormControl`, `remote` pretraga).
+Landing i Instagram (#65): početna je landing za sve (naslovna ili prva fotografija salona, ocena / danas radimo / grad / poziv, „Naš salon" slajder
+(`gallery_images.kind = salon`), „Naši radovi" (`featured`, inače poslednji radovi), usluge, objave sa Instagrama, „Kako do nas" (Google mapa
+iz `map_query` ili naziva i adrese, bez API ključa), utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
+Praćenje izvora: `?izvor=&kampanja=` (i `utm_*`, referrer instagram/facebook/tiktok/google) pamti `MarketingService.capture()` 30 dana;
+poseta → `marketing_visits`, registracija → `users.signup_source`, termin → `appointments.referral_source`; Pregled → „Odakle dolaze klijenti",
+Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Objave sa Instagrama su opcione (`InstagramService`, token iz Podešavanja →
+Biznis, šifrovan u bazi).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

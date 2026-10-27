@@ -1,7 +1,10 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
+import { InstagramState } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { MarketingService } from '../../../core/services/marketing.service';
 import { DashboardService } from '../../../core/services/dashboard.service';
 import { NOTIFICATION_TYPES, NotificationLogEntry, NotificationLogService } from '../../../core/services/notification-log.service';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -55,6 +58,12 @@ export class SettingsComponent {
   private toast = inject(ToastService);
   private notificationLogs = inject(NotificationLogService);
   private dashboard = inject(DashboardService);
+  private marketing = inject(MarketingService);
+  private confirm = inject(ConfirmService);
+  readonly instagram = signal<InstagramState | null>(null);
+  readonly instagramToken = new FormControl('', { nonNullable: true });
+  readonly instagramBusy = signal(false);
+  readonly instagramError = signal<string | null>(null);
   readonly offPeak = signal<{ hasHistory: boolean; rows: { day: string; ranges: string }[] } | null>(null);
 
   readonly categories = BUSINESS_CATEGORIES;
@@ -90,6 +99,8 @@ export class SettingsComponent {
     description: this.fb.control<string | null>(null),
     address: this.fb.control<string | null>(null),
     city: this.fb.control<string | null>(null),
+    map_query: this.fb.control<string | null>(null),
+    instagram_feed_enabled: this.fb.nonNullable.control(false),
     phone: this.fb.control<string | null>(null),
     whatsapp_number: this.fb.control<string | null>(null),
     email: this.fb.control<string | null>(null, Validators.email),
@@ -362,6 +373,39 @@ export class SettingsComponent {
     });
   }
 
+  connectInstagram(): void {
+    const token = this.instagramToken.value.trim();
+    if (!token) return;
+    this.instagramBusy.set(true);
+    this.instagramError.set(null);
+    this.marketing.connectInstagram(token).subscribe({
+      next: (state) => {
+        this.instagram.set(state);
+        this.instagramToken.reset();
+        this.form.controls.instagram_feed_enabled.setValue(state.instagram_feed_enabled);
+        this.instagramBusy.set(false);
+        this.toast.success(`Instagram @${state.instagram_username} je povezan.`);
+      },
+      error: (err) => {
+        this.instagramBusy.set(false);
+        this.instagramError.set(apiErrorMessage(err, 'Povezivanje nije uspelo.'));
+      },
+    });
+  }
+
+  async disconnectInstagram(): Promise<void> {
+    const ok = await this.confirm.confirm({ title: 'Prekid veze sa Instagramom', message: 'Objave sa Instagrama više se neće prikazivati na početnoj.', confirmLabel: 'Prekini vezu', danger: true });
+    if (!ok) return;
+    this.marketing.disconnectInstagram().subscribe({
+      next: (state) => {
+        this.instagram.set(state);
+        this.form.controls.instagram_feed_enabled.setValue(false);
+        this.toast.success('Veza sa Instagramom je prekinuta.');
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Prekid veze nije uspeo.')),
+    });
+  }
+
   resetColors(): void {
     this.form.patchValue(DEFAULT_COLORS);
   }
@@ -383,6 +427,8 @@ export class SettingsComponent {
       description: clean(value.description),
       address: clean(value.address),
       city: clean(value.city),
+      map_query: clean(value.map_query),
+      instagram_feed_enabled: value.instagram_feed_enabled,
       phone: clean(value.phone),
       whatsapp_number: clean(value.whatsapp_number),
       email: clean(value.email),
@@ -410,6 +456,7 @@ export class SettingsComponent {
       next: (settings) => {
         this.saving.set(false);
         this.saved = settings;
+    this.instagram.set({ instagram_connected: settings.instagram_connected, instagram_username: settings.instagram_username, instagram_token_expires_at: settings.instagram_token_expires_at ?? null, instagram_feed_enabled: settings.instagram_feed_enabled ?? false });
         this.coverData.set(undefined);
         if (this.tab() === 'booking') this.loadDemand();
         this.toast.success('Podešavanja su sačuvana.');
@@ -438,6 +485,8 @@ export class SettingsComponent {
       description: settings.description,
       address: settings.address,
       city: settings.city,
+      map_query: settings.map_query ?? null,
+      instagram_feed_enabled: settings.instagram_feed_enabled ?? false,
       phone: settings.phone,
       whatsapp_number: settings.whatsapp_number,
       email: settings.email,

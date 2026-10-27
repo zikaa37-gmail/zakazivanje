@@ -2,7 +2,7 @@ import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { GalleryImage } from '../../../core/models/gallery.model';
+import { GalleryImage, GalleryImageDetails, GalleryKind } from '../../../core/models/gallery.model';
 import { SalonService } from '../../../core/models/service.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -49,10 +49,12 @@ export class GalleryAdminComponent {
     caption: this.fb.control<string | null>(null),
     service_id: this.fb.control<number | null>(null),
     visible: this.fb.nonNullable.control(true),
+    kind: this.fb.nonNullable.control<GalleryKind>('work'),
+    featured: this.fb.nonNullable.control(false),
   });
 
   readonly actions: RowAction[] = [
-    { id: 'edit', label: 'Opis i usluga', icon: 'edit' },
+    { id: 'edit', label: 'Opis, vrsta i usluga', icon: 'edit' },
     { id: 'share', label: 'Podeli (Instagram...)', icon: 'share' },
     { id: 'delete', label: 'Obriši', icon: 'trash', danger: true },
   ];
@@ -150,7 +152,7 @@ export class GalleryAdminComponent {
 
   openForm(image: GalleryImage): void {
     this.formError.set(null);
-    this.form.reset({ caption: image.caption, service_id: image.service_id, visible: image.visible });
+    this.form.reset({ caption: image.caption, service_id: image.service_id, visible: image.visible, kind: image.kind, featured: image.featured });
     this.editing.set(image);
   }
 
@@ -159,7 +161,7 @@ export class GalleryAdminComponent {
     if (!image) return;
     const value = this.form.getRawValue();
     this.saving.set(true);
-    this.gallery.update(image.id, { caption: value.caption?.trim() || null, service_id: value.service_id ? Number(value.service_id) : null, visible: value.visible }).subscribe({
+    this.gallery.update(image.id, { caption: value.caption?.trim() || null, service_id: value.service_id ? Number(value.service_id) : null, visible: value.visible, kind: value.kind, featured: value.featured }).subscribe({
       next: (saved) => {
         this.replace(saved);
         this.saving.set(false);
@@ -174,7 +176,15 @@ export class GalleryAdminComponent {
   }
 
   toggleVisible(image: GalleryImage): void {
-    this.gallery.update(image.id, { caption: image.caption, service_id: image.service_id, visible: !image.visible }).subscribe({
+    this.patch(image, { visible: !image.visible });
+  }
+
+  toggleFeatured(image: GalleryImage): void {
+    this.patch(image, { featured: !image.featured });
+  }
+
+  private patch(image: GalleryImage, change: Partial<GalleryImageDetails>): void {
+    this.gallery.update(image.id, { caption: image.caption, service_id: image.service_id, visible: image.visible, kind: image.kind, featured: image.featured, ...change }).subscribe({
       next: (saved) => this.replace(saved),
       error: (err) => this.toast.error(apiErrorMessage(err, 'Izmena nije uspela.')),
     });

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
@@ -27,6 +28,8 @@ Route::get('/public/business/cover', [BusinessSettingController::class, 'cover']
 Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');
+Route::get('/public/instagram', [MarketingController::class, 'instagramPosts'])->middleware('throttle:public');
+Route::post('/public/visit', [MarketingController::class, 'visit'])->middleware(['jwt.optional', 'throttle:public']);
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
 Route::get('/public/reports/{file}', [ReportController::class, 'file'])->middleware('signed')->name('reports.file');
 
@@ -107,6 +110,10 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
 
     Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::post('/dashboard/demand', [DashboardController::class, 'demand']);
+    Route::post('/dashboard/sources', [MarketingController::class, 'report']);
+
+    Route::post('/instagram/connect', [MarketingController::class, 'connectInstagram'])->middleware('throttle:booking');
+    Route::delete('/instagram', [MarketingController::class, 'disconnectInstagram']);
 
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);

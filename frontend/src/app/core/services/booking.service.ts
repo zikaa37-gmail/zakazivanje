@@ -5,12 +5,14 @@ import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
 import { Appointment, BookingPayload, DayAvailability, Quote, Slot } from '../models/appointment.model';
 import { PublicService } from '../models/service.model';
+import { MarketingService } from './marketing.service';
 
 const quiet = () => ({ context: new HttpContext().set(SKIP_LOADER, true) });
 
 @Injectable({ providedIn: 'root' })
 export class BookingService {
   private http = inject(HttpClient);
+  private marketing = inject(MarketingService);
   private api = environment.apiUrl;
 
   services(): Observable<PublicService[]> {
@@ -38,7 +40,7 @@ export class BookingService {
   }
 
   book(payload: BookingPayload): Observable<Appointment> {
-    return this.http.post<Appointment>(`${this.api}/bookings`, payload);
+    return this.http.post<Appointment>(`${this.api}/bookings`, { ...payload, referral: this.marketing.referral() });
   }
 
   mine(scope: 'upcoming' | 'past'): Observable<Appointment[]> {

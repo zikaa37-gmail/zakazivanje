@@ -11,6 +11,7 @@ use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
 use App\Services\ClientDisciplineService;
+use App\Services\MarketingService;
 use App\Services\PriceQuoteService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -146,6 +147,10 @@ class BookingController extends Controller
         } catch (ValidationException $e) {
             ClientActivity::dispatch($client, ClientActivity::BOOKING_FAILED, ['starts_at' => $data['starts_at'], 'service_ids' => $data['service_ids'], 'reason' => collect($e->errors())->flatten()->first()]);
             throw $e;
+        }
+        $referral = app(MarketingService::class)->referral($request);
+        if ($referral['source']) {
+            $appointment->forceFill(['referral_source' => $referral['source'], 'referral_campaign' => $referral['campaign']])->save();
         }
         ClientActivity::dispatch($client, ClientActivity::BOOKED, ['appointment_id' => $appointment->id, 'starts_at' => $data['starts_at'], 'status' => $appointment->status]);
 

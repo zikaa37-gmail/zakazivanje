@@ -4,7 +4,9 @@ import { environment } from '../../../../environments/environment';
 import { GalleryImage } from '../../../core/models/gallery.model';
 import { Promotion } from '../../../core/models/promotion.model';
 import { SalonService } from '../../../core/models/service.model';
+import { INSTAGRAM_PLACEMENTS } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { MarketingService, slug } from '../../../core/services/marketing.service';
 import { GalleryService } from '../../../core/services/gallery.service';
 import { PromotionService } from '../../../core/services/promotion.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
@@ -43,6 +45,7 @@ export class ShareComponent {
   private promotionService = inject(PromotionService);
   private catalog = inject(ServiceCatalogService);
   private toast = inject(ToastService);
+  private marketing = inject(MarketingService);
   private rsd = new RsdPipe();
 
   private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
@@ -86,8 +89,16 @@ export class ShareComponent {
     const link = this.social().find((item) => item.network === target);
     if (link) return link.url;
     const paths: Record<string, string> = { book: '/book', home: '/', gallery: '/gallery' };
-    return this.origin + (paths[target] ?? '/');
+    return this.marketing.link(this.origin + (paths[target] ?? '/'), 'qr', target);
   });
+
+  readonly placements = INSTAGRAM_PLACEMENTS;
+  readonly igPlacement = signal('bio');
+  readonly igCampaign = signal('');
+  readonly igPage = signal<'home' | 'book'>('home');
+  readonly igLink = computed(() =>
+    this.marketing.link(this.origin + (this.igPage() === 'book' ? '/book' : '/'), 'instagram', [this.igPlacement(), slug(this.igCampaign(), 40)].filter(Boolean).join('-')),
+  );
 
   readonly categories = computed(() => [...new Set(this.services().filter((s) => s.active).map((s) => s.category || 'Ostalo'))]);
   readonly activePromotions = computed(() => this.promotions().filter((p) => p.active && (!p.ends_on || p.ends_on >= new Date().toISOString().slice(0, 10))));
@@ -178,9 +189,9 @@ export class ShareComponent {
     this.download(href, `qr-${this.target()}.${kind}`);
   }
 
-  async copyLink(): Promise<void> {
+  async copyLink(url = this.targetUrl()): Promise<void> {
     try {
-      await navigator.clipboard.writeText(this.targetUrl());
+      await navigator.clipboard.writeText(url);
       this.toast.success('Link je kopiran.');
     } catch {
       this.toast.error('Kopiranje nije uspelo.');
@@ -219,7 +230,7 @@ export class ShareComponent {
   }
 
   private loadBookQr(): void {
-    this.http.post<QrCode>(`${environment.apiUrl}/share/qr`, { url: `${this.origin}/book` }).subscribe({
+    this.http.post<QrCode>(`${environment.apiUrl}/share/qr`, { url: this.marketing.link(`${this.origin}/book`, 'instagram', 'slika') }).subscribe({
       next: (qr) => this.loadImage(qr.png).then((image) => this.images.update((all) => ({ ...all, bookQr: image }))),
     });
   }

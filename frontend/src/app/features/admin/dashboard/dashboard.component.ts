@@ -5,6 +5,8 @@ import { StaffMember } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { DashboardService, DashboardStats, DashboardToday } from '../../../core/services/dashboard.service';
+import { SourceRow, sourceLabel } from '../../../core/models/marketing.model';
+import { MarketingService } from '../../../core/services/marketing.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WaitlistEntry, WaitlistService } from '../../../core/services/waitlist.service';
@@ -56,6 +58,9 @@ export class DashboardComponent {
   readonly todayData = signal<DashboardToday | null>(null);
   readonly stats = signal<DashboardStats | null>(null);
   readonly statsLoading = signal(true);
+  readonly sources = signal<SourceRow[]>([]);
+  readonly sourceLabel = sourceLabel;
+  private marketing = inject(MarketingService);
   readonly error = signal<string | null>(null);
   readonly selected = signal<Appointment | null>(null);
   private waitlistService = inject(WaitlistService);
@@ -191,6 +196,7 @@ export class DashboardComponent {
 
   private loadStats(from: string, to: string): void {
     if (!this.isOwner()) return;
+    this.marketing.sources(from, to).subscribe({ next: (rows) => this.sources.set(rows), error: () => this.sources.set([]) });
     this.statsLoading.set(true);
     this.dashboard.stats(from, to).subscribe({
       next: (stats) => {

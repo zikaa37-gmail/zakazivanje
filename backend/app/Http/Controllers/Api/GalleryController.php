@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GalleryImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class GalleryController extends Controller
 {
@@ -97,6 +98,8 @@ class GalleryController extends Controller
         return [
             'caption' => ['nullable', 'string', 'max:200'],
             'service_id' => ['nullable', 'integer', 'exists:services,id'],
+            'kind' => ['sometimes', Rule::in(GalleryImage::KINDS)],
+            'featured' => ['sometimes', 'boolean'],
             'visible' => ['sometimes', 'boolean'],
         ];
     }

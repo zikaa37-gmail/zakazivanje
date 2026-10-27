@@ -1,13 +1,17 @@
-<div class="content-container py-4 md:py-8 flex flex-col gap-6 max-w-3xl">
-  @if (business.coverSrc(); as cover) {
-    <section class="hero-cover" data-testid="home-cover">
+<div class="content-container py-4 md:py-8 flex flex-col gap-7 max-w-3xl">
+  @if (heroSrc(); as cover) {
+    <section class="hero-cover landing-hero" data-testid="home-cover">
       <img [src]="cover" [alt]="business.name()" fetchpriority="high" />
       <div class="hero-cover-content">
-        <h1 class="hero-cover-title">{{ business.name() }}</h1>
-        @if (business.settings()?.description; as description) {
-          <p class="hero-cover-text">{{ description }}</p>
-        }
-        <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
+        <div class="landing-hero-text">
+          <h1 class="hero-cover-title">{{ business.name() }}</h1>
+          @if (business.settings()?.description; as description) {
+            <p class="landing-hero-description">{{ description }}</p>
+          }
+        </div>
+        <button type="button" class="hero-cta" (click)="book()" data-testid="home-book">
+          <span appIcon="calendar" aria-hidden="true"></span> Zakaži termin
+        </button>
       </div>
     </section>
   } @else {
@@ -18,13 +22,73 @@
           <p class="hero-text">{{ description }}</p>
         }
       </div>
-      <a routerLink="/book" class="hero-cta" (click)="startEmpty()" data-testid="home-book">Zakaži termin</a>
+      <button type="button" class="hero-cta" (click)="book()" data-testid="home-book">Zakaži termin</button>
+    </section>
+  }
+
+  <div class="landing-facts" data-testid="home-facts">
+    @if (rating(); as r) {
+      <a routerLink="/reviews" class="landing-fact"><span appIcon="star-solid" class="text-[var(--color-star)]" aria-hidden="true"></span><strong>{{ r.average }}</strong><span class="muted">({{ r.count }})</span></a>
+    }
+    @if (todayHours(); as h) {
+      <span class="landing-fact"><span appIcon="clock" aria-hidden="true"></span>{{ h.closed ? 'Danas zatvoreno' : 'Danas ' + h.value }}</span>
+    }
+    @if (business.settings()?.city || business.settings()?.address) {
+      <a href="#kako-do-nas" class="landing-fact"><span appIcon="map-pin" aria-hidden="true"></span>{{ business.settings()?.city || business.settings()?.address }}</a>
+    }
+    @if (phoneHref()) {
+      <a [href]="phoneHref()" class="landing-fact"><span appIcon="phone" aria-hidden="true"></span>Pozovi</a>
+    }
+  </div>
+
+  @if (!auth.isAuthenticated()) {
+    <div class="landing-account card" data-testid="home-account">
+      <div class="min-w-0">
+        <div class="font-semibold">Zakaži online za minut</div>
+        <div class="text-sm muted">Izaberi uslugu i slobodan termin — potvrdu i podsetnik dobijaš na mejl.</div>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <a routerLink="/login" [queryParams]="{ returnUrl: '/book' }" class="landing-link-btn" data-testid="home-login">Prijava</a>
+        <a routerLink="/register" [queryParams]="{ returnUrl: '/book' }" class="landing-link-btn is-primary" data-testid="home-register">Registracija</a>
+      </div>
+    </div>
+  }
+
+  @if (salonPhotos().length > 0) {
+    <section data-testid="home-salon">
+      <h2 class="text-lg font-semibold mb-2">Naš salon</h2>
+      <div class="landing-slider">
+        @for (photo of salonPhotos(); track photo.id) {
+          <figure class="landing-slide">
+            <img [src]="photoSrc(photo)" [alt]="photo.caption || business.name()" loading="lazy" />
+            @if (photo.caption) {
+              <figcaption>{{ photo.caption }}</figcaption>
+            }
+          </figure>
+        }
+      </div>
+    </section>
+  }
+
+  @if (works().length > 0) {
+    <section data-testid="home-gallery">
+      <div class="flex items-baseline justify-between mb-2">
+        <h2 class="text-lg font-semibold">Naši radovi</h2>
+        <a routerLink="/gallery" class="text-sm font-semibold text-[var(--color-primary-text)]">Sve slike</a>
+      </div>
+      <div class="home-photos">
+        @for (photo of works(); track photo.id) {
+          <a routerLink="/gallery" class="home-photo" [attr.aria-label]="photo.caption || 'Galerija'">
+            <img [src]="photoSrc(photo)" [alt]="photo.caption || ''" loading="lazy" />
+          </a>
+        }
+      </div>
     </section>
   }
 
   <section>
     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-      <h2 class="text-lg font-semibold">Usluge</h2>
+      <h2 class="text-lg font-semibold">Usluge i cene</h2>
       @if (hasGendered()) {
         <div class="chip-group" role="radiogroup" aria-label="Usluge za" data-testid="home-audience">
           @for (a of audiences; track a.value) {
@@ -46,25 +110,76 @@
       <div class="card empty-state">Usluge još nisu unete.</div>
     } @else {
       @for (group of serviceGroups(); track group.category) {
-      @if (serviceGroups().length > 1) {
-        <h3 class="service-group-title" [attr.data-testid]="'home-group-' + $index">{{ group.category }}</h3>
-      }
-      <div class="card !p-0 overflow-hidden mb-3">
-        @for (service of group.items; track service.id) {
-          <a routerLink="/book" (click)="startWith(service)" class="service-row" [attr.data-testid]="'home-service-' + service.id">
-            <div class="min-w-0 flex-1">
-              <div class="font-semibold text-[var(--color-text)]">{{ service.name }}</div>
-              <div class="text-sm muted flex items-center gap-1">
-                <span appIcon="clock" [iconSize]="13" aria-hidden="true"></span> {{ service.duration_minutes | duration }}
+        @if (serviceGroups().length > 1) {
+          <h3 class="service-group-title" [attr.data-testid]="'home-group-' + $index">{{ group.category }}</h3>
+        }
+        <div class="card !p-0 overflow-hidden mb-3">
+          @for (service of group.items; track service.id) {
+            <a routerLink="/book" (click)="startWith(service)" class="service-row" [attr.data-testid]="'home-service-' + service.id">
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-[var(--color-text)]">{{ service.name }}</div>
+                <div class="text-sm muted flex items-center gap-1">
+                  <span appIcon="clock" [iconSize]="13" aria-hidden="true"></span> {{ service.duration_minutes | duration }}
+                </div>
               </div>
-            </div>
-            <div class="font-semibold text-[var(--color-text)] whitespace-nowrap">{{ service.price | rsd }}</div>
-            <span appIcon="arrow-right" class="muted" aria-hidden="true"></span>
+              <div class="font-semibold text-[var(--color-text)] whitespace-nowrap">{{ service.price | rsd }}</div>
+              <span appIcon="arrow-right" class="muted" aria-hidden="true"></span>
+            </a>
+          }
+        </div>
+      }
+    }
+  </section>
+
+  @if (instagramPosts().length > 0) {
+    <section data-testid="home-instagram">
+      <div class="flex items-baseline justify-between mb-2">
+        <h2 class="text-lg font-semibold">Sa Instagrama</h2>
+        @if (instagramHandle(); as handle) {
+          <a [href]="'https://www.instagram.com/' + handle + '/'" target="_blank" rel="noopener" class="text-sm font-semibold text-[var(--color-primary-text)]">&#64;{{ handle }}</a>
+        }
+      </div>
+      <div class="home-photos">
+        @for (post of instagramPosts(); track post.id) {
+          <a [href]="post.permalink" target="_blank" rel="noopener" class="home-photo" [attr.aria-label]="post.caption || 'Instagram objava'">
+            <img [src]="post.image" [alt]="post.caption || ''" loading="lazy" referrerpolicy="no-referrer" />
           </a>
         }
       </div>
+    </section>
+  }
+
+  <section id="kako-do-nas" data-testid="home-location">
+    <h2 class="text-lg font-semibold mb-2">Kako do nas</h2>
+    <div class="card !p-0 overflow-hidden">
+      @if (mapEmbed(); as src) {
+        <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-testid="home-map"></iframe>
       }
-    }
+      <div class="p-4 flex flex-col gap-3">
+        @if (fullAddress()) {
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="flex items-center gap-2 text-sm"><span appIcon="map-pin" class="text-[var(--color-primary-text)]" aria-hidden="true"></span>{{ fullAddress() }}</span>
+            @if (directionsHref()) {
+              <a [href]="directionsHref()" target="_blank" rel="noopener" class="landing-link-btn is-primary" data-testid="home-directions"><span appIcon="navigation" [iconSize]="14" aria-hidden="true"></span> Navigacija</a>
+            }
+          </div>
+        }
+        <div>
+          @for (row of hours(); track row.label) {
+            <div class="flex justify-between py-1 text-sm" [class.font-semibold]="row.today">
+              <span [class.muted]="!row.today">{{ row.label }}</span>
+              <span [class.muted]="row.closed">{{ row.value }}</span>
+            </div>
+          }
+        </div>
+        <div class="flex flex-col gap-2 text-sm border-t border-[var(--color-border)] pt-3">
+          @if (phoneHref()) {
+            <a [href]="phoneHref()" class="flex items-center gap-2"><span appIcon="phone" aria-hidden="true"></span>{{ business.settings()?.phone }}</a>
+          }
+          <app-social-links [showHandle]="true" />
+        </div>
+      </div>
+    </div>
   </section>
 
   @if (reviews(); as r) {
@@ -83,42 +198,24 @@
       </section>
     }
   }
-
-  @if (photos().length > 0) {
-    <section data-testid="home-gallery">
-      <div class="flex items-baseline justify-between mb-2">
-        <h2 class="text-lg font-semibold">Galerija</h2>
-        <a routerLink="/gallery" class="text-sm font-semibold text-[var(--color-primary-text)]">Sve slike</a>
-      </div>
-      <div class="home-photos">
-        @for (photo of photos(); track photo.id) {
-          <a routerLink="/gallery" class="home-photo" [attr.aria-label]="photo.caption || 'Galerija'">
-            <img [src]="photoSrc(photo)" [alt]="photo.caption || ''" loading="lazy" />
-          </a>
-        }
-      </div>
-    </section>
-  }
-
-  <section>
-    <h2 class="text-lg font-semibold mb-2">Radno vreme i kontakt</h2>
-    <div class="card">
-      @for (row of hours(); track row.label) {
-        <div class="flex justify-between py-1 text-sm">
-          <span class="muted">{{ row.label }}</span>
-          <span class="font-semibold" [class.muted]="row.closed">{{ row.value }}</span>
-        </div>
-      }
-      <hr class="my-3 border-[var(--color-border)]" />
-      <div class="flex flex-col gap-2 text-sm">
-        @if (business.settings()?.address) {
-          <span class="flex items-center gap-2"><span appIcon="home" class="text-[var(--color-primary-text)]" aria-hidden="true"></span>{{ business.settings()?.address }}{{ business.settings()?.city ? ', ' + business.settings()?.city : '' }}</span>
-        }
-        @if (phoneHref()) {
-          <a [href]="phoneHref()" class="flex items-center gap-2"><span appIcon="phone" aria-hidden="true"></span>{{ business.settings()?.phone }}</a>
-        }
-        <app-social-links [showHandle]="true" />
-      </div>
-    </div>
-  </section>
 </div>
+
+@if (askAccount()) {
+  <app-modal title="Zakaži termin" footerMode="none" size="s" (cancelled)="askAccount.set(false)" testId="home-account-modal">
+    <p class="text-sm muted mb-4">Za zakazivanje ti treba nalog — tako ti šaljemo potvrdu i podsetnik, a termin možeš da pomeriš ili otkažeš sam.</p>
+    <div class="flex flex-col gap-2">
+      <button type="button" class="choice-card" (click)="goTo('/login', true)" data-testid="home-modal-login">
+        <span appIcon="user" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1"><span class="block font-semibold">Prijavi se</span><span class="block text-sm muted">Već imam nalog</span></span>
+      </button>
+      <button type="button" class="choice-card" (click)="goTo('/register', true)" data-testid="home-modal-register">
+        <span appIcon="plus" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1"><span class="block font-semibold">Registruj se</span><span class="block text-sm muted">Novi klijent — traje pola minuta</span></span>
+      </button>
+      <button type="button" class="choice-card" (click)="goTo('/book', false)" data-testid="home-modal-browse">
+        <span appIcon="calendar" aria-hidden="true"></span>
+        <span class="min-w-0 flex-1"><span class="block font-semibold">Prvo pogledaj slobodne termine</span><span class="block text-sm muted">Nalog ti treba tek na kraju</span></span>
+      </button>
+    </div>
+  </app-modal>
+}
