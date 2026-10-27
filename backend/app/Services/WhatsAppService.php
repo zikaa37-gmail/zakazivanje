@@ -14,7 +14,7 @@ class WhatsAppService
             && filled(config('whatsapp.from'));
     }
 
-    public function sendMessage(string $phoneNumber, string $text): ?string
+    public function sendMessage(string $phoneNumber, string $text, ?string $mediaUrl = null): ?string
     {
         if (! $this->isConfigured()) {
             Log::info('[WhatsApp] Twilio nije podešen, poruka nije poslata -> '.$phoneNumber.': '.$text);
@@ -31,6 +31,7 @@ class WhatsAppService
                     'From' => 'whatsapp:'.config('whatsapp.from'),
                     'To' => 'whatsapp:'.$phoneNumber,
                     'Body' => $text,
+                    ...($mediaUrl ? ['MediaUrl' => $mediaUrl] : []),
                 ]);
         } catch (\Throwable $e) {
             Log::warning('[WhatsApp] Greška pri slanju poruke: '.$e->getMessage(), ['to' => $phoneNumber]);

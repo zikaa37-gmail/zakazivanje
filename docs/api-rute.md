@@ -12,6 +12,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
 | GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, width, height, url}]` (bez sadržaja slike) |
+| GET | `/public/reports/{file}` | potpisan link (7 dana) na PDF izveštaja poslat preko WhatsApp-a |
 | GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available, open}]` (`open` = neko tog dana radi — pun dan je `open` ali ne `available`) |
 | POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
@@ -64,6 +65,9 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series}` — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
+| POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik-zaposleni dobija samo svoj |
+| POST | `/reports/pdf` | isti upit → PDF |
+| POST | `/reports/send` | isti upit + `{channel: mail \| whatsapp}` → PDF prijavljenom korisniku (mejl prilog ili WhatsApp sa linkom na PDF) |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
 | POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |

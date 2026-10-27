@@ -381,6 +381,26 @@
             </div>
             <p class="text-xs muted mt-3">WhatsApp ide preko Twilio-a (TWILIO_* u .env na serveru). Bez toga se poruke samo beleže kao „preskočeno".</p>
           </div>
+
+          <div class="card" data-testid="settings-auto-reports">
+            <h2 class="text-base font-semibold">Automatski izveštaji</h2>
+            <p class="text-sm muted">U 21h stiže PDF izveštaj: vlasniku i administrativnom radniku zbirni, zaposlenom njegov lični. Nedeljni se šalje nedeljom, mesečni poslednjeg dana u mesecu.</p>
+            <div class="flex flex-col gap-3 mt-3">
+              <app-toggle [checked]="form.controls.report_auto_enabled.value" label="Šalji izveštaje automatski" (checkedChange)="form.controls.report_auto_enabled.setValue($event)" data-testid="toggle-report-auto" />
+              @if (form.controls.report_auto_enabled.value) {
+                <app-toggle [checked]="form.controls.report_auto_daily.value" label="Dnevni" (checkedChange)="form.controls.report_auto_daily.setValue($event)" />
+                <app-toggle [checked]="form.controls.report_auto_weekly.value" label="Nedeljni" (checkedChange)="form.controls.report_auto_weekly.setValue($event)" />
+                <app-toggle [checked]="form.controls.report_auto_monthly.value" label="Mesečni" (checkedChange)="form.controls.report_auto_monthly.setValue($event)" />
+                <div class="field !mb-0">
+                  <label for="s-report-channel">Kanal</label>
+                  <select id="s-report-channel" appInput size="m" formControlName="report_auto_channel" data-testid="report-auto-channel">
+                    <option value="mail">Email (PDF u prilogu)</option>
+                    <option value="whatsapp">WhatsApp (PDF kao prilog)</option>
+                  </select>
+                </div>
+              }
+            </div>
+          </div>
         </div>
 
         <div class="card mt-4">

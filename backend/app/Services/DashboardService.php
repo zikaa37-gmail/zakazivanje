@@ -140,17 +140,7 @@ class DashboardService
             ->orderBy('sort_order')
             ->get()
             ->map(function (StaffMember $staff) use ($from, $to, $appointments, $blocks, $openingHours) {
-                $available = 0;
-                foreach (CarbonPeriod::create($from, $to) as $day) {
-                    foreach ($staff->hoursOn(CarbonImmutable::parse($day), $openingHours) as $hours) {
-                        $start = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['starts_at']);
-                        $end = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['ends_at']);
-                        $blocked = $blocks
-                            ->filter(fn ($b) => $b->staff_member_id === null || $b->staff_member_id === $staff->id)
-                            ->sum(fn ($b) => max(0, min($end->getTimestamp(), $b->ends_at->getTimestamp()) - max($start->getTimestamp(), $b->starts_at->getTimestamp())) / 60);
-                        $available += max(0, $start->diffInMinutes($end) - $blocked);
-                    }
-                }
+                $available = $this->availableMinutes($staff, $from, $to, $blocks, $openingHours);
 
                 $booked = $appointments
                     ->where('staff_member_id', $staff->id)
@@ -168,5 +158,22 @@ class DashboardService
             })
             ->values()
             ->all();
+    }
+
+    public function availableMinutes(StaffMember $staff, CarbonImmutable $from, CarbonImmutable $to, $blocks, $openingHours): float
+    {
+        $available = 0;
+        foreach (CarbonPeriod::create($from, $to) as $day) {
+            foreach ($staff->hoursOn(CarbonImmutable::parse($day), $openingHours) as $hours) {
+                $start = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['starts_at']);
+                $end = CarbonImmutable::parse($day->format('Y-m-d').' '.$hours['ends_at']);
+                $blocked = $blocks
+                    ->filter(fn ($b) => $b->staff_member_id === null || $b->staff_member_id === $staff->id)
+                    ->sum(fn ($b) => max(0, min($end->getTimestamp(), $b->ends_at->getTimestamp()) - max($start->getTimestamp(), $b->starts_at->getTimestamp())) / 60);
+                $available += max(0, $start->diffInMinutes($end) - $blocked);
+            }
+        }
+
+        return $available;
     }
 }

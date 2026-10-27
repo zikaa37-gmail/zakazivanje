@@ -120,6 +120,11 @@ export class SettingsComponent {
     reviews_enabled: this.fb.nonNullable.control(true),
     waitlist_enabled: this.fb.nonNullable.control(true),
     notify_review_request: this.fb.nonNullable.control(true),
+    report_auto_enabled: this.fb.nonNullable.control(false),
+    report_auto_daily: this.fb.nonNullable.control(true),
+    report_auto_weekly: this.fb.nonNullable.control(true),
+    report_auto_monthly: this.fb.nonNullable.control(true),
+    report_auto_channel: this.fb.nonNullable.control<'mail' | 'whatsapp'>('mail'),
   });
 
   readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
@@ -127,7 +132,7 @@ export class SettingsComponent {
     { key: 'notify_booking_confirmed', label: 'Termin potvrđen', hint: 'Klijentu, kad potvrdiš termin ili ga sam zakažeš (sa .ics za kalendar)' },
     { key: 'notify_booking_cancelled', label: 'Termin otkazan', hint: 'Klijentu, kad salon otkaže termin' },
     { key: 'notify_review_request', label: 'Molba za ocenu', hint: 'Klijentu, kad označiš termin kao završen — link za ocenu posete' },
-    { key: 'notify_admin_new_booking', label: 'Obaveštenja za admina', hint: 'Mejl adminu za novi online termin i kad klijent otkaže' },
+    { key: 'notify_admin_new_booking', label: 'Obaveštenja za salon', hint: 'Mejl vlasniku i radniku čiji je termin: novi online termin, klijent otkazao ili pomerio' },
   ];
   readonly reminderOptions = [
     { value: 0, label: 'Bez podsetnika' },
@@ -419,6 +424,11 @@ export class SettingsComponent {
       reviews_enabled: settings.reviews_enabled,
       waitlist_enabled: settings.waitlist_enabled,
       notify_review_request: settings.notify_review_request,
+      report_auto_enabled: settings.report_auto_enabled ?? false,
+      report_auto_daily: settings.report_auto_daily ?? true,
+      report_auto_weekly: settings.report_auto_weekly ?? true,
+      report_auto_monthly: settings.report_auto_monthly ?? true,
+      report_auto_channel: settings.report_auto_channel ?? 'mail',
     });
   }
 

@@ -18,7 +18,7 @@ class WhatsAppChannel
             return;
         }
 
-        $error = $this->whatsapp->sendMessage($phone, $notification->toWhatsApp($notifiable));
+        $error = $this->whatsapp->sendMessage($phone, $notification->toWhatsApp($notifiable), method_exists($notification, 'whatsAppMediaUrl') ? $notification->whatsAppMediaUrl() : null);
 
         NotificationLog::record(
             $notifiable,

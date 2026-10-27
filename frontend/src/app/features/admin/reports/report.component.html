@@ -1,0 +1,185 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Izveštaji</h1>
+    <p class="page-subtitle">{{ canChoose() ? 'Zbirni ili po zaposlenom, za dan, nedelju ili mesec' : 'Tvoj rad za dan, nedelju ili mesec' }}</p>
+  </div>
+</div>
+
+<div class="card mb-4 flex flex-col gap-3" data-testid="report-options">
+  @if (canChoose()) {
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="chip-group" role="radiogroup" aria-label="Vrsta izveštaja">
+        <button type="button" role="radio" class="chip" [class.selected]="scope() === 'summary'" [attr.aria-checked]="scope() === 'summary'" (click)="scope.set('summary')" data-testid="report-scope-summary">Zbirni</button>
+        <button type="button" role="radio" class="chip" [class.selected]="scope() === 'staff'" [attr.aria-checked]="scope() === 'staff'" (click)="scope.set('staff')" data-testid="report-scope-staff">Po zaposlenom</button>
+      </div>
+      @if (scope() === 'staff') {
+        <select appInput size="m" class="min-w-0 flex-1 sm:flex-none sm:w-60" aria-label="Zaposleni" [value]="staffId()" (change)="staffId.set(+$any($event.target).value)" data-testid="report-staff">
+          @for (m of staff(); track m.id) {
+            <option [value]="m.id" [selected]="m.id === staffId()">{{ m.first_name }} {{ m.last_name }}{{ m.active ? '' : ' (neaktivan)' }}</option>
+          }
+        </select>
+      }
+    </div>
+  }
+
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="chip-group" role="radiogroup" aria-label="Period">
+      @for (p of periods; track p.value) {
+        <button type="button" role="radio" class="chip" [class.selected]="period() === p.value" [attr.aria-checked]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'report-period-' + p.value">{{ p.label }}</button>
+      }
+    </div>
+    <div class="flex items-center gap-1">
+      <button type="button" appBtn theme="secondary" size="s" aria-label="Prethodni period" (click)="shift(-1)" data-testid="report-prev">
+        <span appIcon="arrow-left" aria-hidden="true"></span>
+      </button>
+      <input appInput size="m" type="date" class="w-40" aria-label="Datum" [value]="date()" (change)="setDate($any($event.target).value)" data-testid="report-date" />
+      <button type="button" appBtn theme="secondary" size="s" aria-label="Sledeći period" (click)="shift(1)" data-testid="report-next">
+        <span appIcon="arrow-right" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2 pt-1">
+    <app-button size="s" [loading]="busy() === 'pdf'" [disabled]="!report() || busy() !== null" (click)="openPdf()" data-testid="report-pdf">
+      <span appIcon="file-text" aria-hidden="true"></span> Otvori PDF
+    </app-button>
+    <app-button theme="secondary" size="s" [loading]="busy() === 'mail'" [disabled]="!report() || busy() !== null" (click)="send('mail')" data-testid="report-send-mail">
+      <span appIcon="mail" aria-hidden="true"></span> Pošalji na mejl
+    </app-button>
+    <app-button theme="secondary" size="s" [loading]="busy() === 'whatsapp'" [disabled]="!report() || busy() !== null" (click)="send('whatsapp')" data-testid="report-send-whatsapp">
+      <span appIcon="message-square" aria-hidden="true"></span> Pošalji na WhatsApp
+    </app-button>
+  </div>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (report(); as r) {
+  <div [class.opacity-60]="loading()" data-testid="report">
+    <div class="mb-3">
+      <h2 class="text-lg font-semibold">{{ r.title }}</h2>
+      <p class="text-sm muted">{{ r.period.label }}{{ r.staff_member && !r.staff_member.active ? ' · zaposleni nije aktivan' : '' }}</p>
+    </div>
+
+    <div class="stat-tiles stat-tiles-4 mb-4">
+      <div class="card stat-tile">
+        <span class="text-xs muted">Termini</span>
+        <span class="stat-value">{{ r.totals.appointments }}</span>
+        <span class="text-xs muted">završeno {{ r.totals.completed }} · zakazano {{ r.totals.upcoming }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Prihod (završeni)</span>
+        <span class="stat-value">{{ r.totals.revenue | rsd }}</span>
+        <span class="text-xs muted">prosečno {{ r.totals.average_ticket | rsd }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Naplaćeno</span>
+        <span class="stat-value">{{ r.totals.paid | rsd }}</span>
+        <span class="text-xs muted">nenaplaćeno {{ r.totals.unpaid | rsd }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Popunjenost</span>
+        <span class="stat-value">{{ r.totals.utilization }}%</span>
+        <span class="text-xs muted">{{ hours(r.totals.booked_minutes) }} od {{ hours(r.totals.available_minutes) }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Otkazano</span>
+        <span class="stat-value">{{ r.totals.cancelled }}</span>
+        <span class="text-xs muted">od toga klijent {{ r.totals.cancelled_by_client }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Nije došlo</span>
+        <span class="stat-value">{{ r.totals.no_shows }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Klijenti</span>
+        <span class="stat-value">{{ r.totals.clients }}</span>
+        <span class="text-xs muted">novih {{ r.totals.new_clients }}</span>
+      </div>
+      <div class="card stat-tile">
+        <span class="text-xs muted">Ocena</span>
+        <span class="stat-value">{{ r.totals.rating ?? '—' }}</span>
+        <span class="text-xs muted">recenzija: {{ r.totals.reviews }}</span>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <h3 class="font-semibold mb-2">Naplata</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+        <div><div class="text-xs muted">Gotovina</div>{{ r.totals.by_method.cash | rsd }}</div>
+        <div><div class="text-xs muted">Kartica</div>{{ r.totals.by_method.card | rsd }}</div>
+        <div><div class="text-xs muted">Račun</div>{{ r.totals.by_method.bank | rsd }}</div>
+        <div><div class="text-xs muted">Popusti</div>{{ r.totals.discount | rsd }}</div>
+      </div>
+    </div>
+
+    @if (r.staff.length > 0) {
+      <div class="card mb-4" data-testid="report-staff-rows">
+        <h3 class="font-semibold mb-2">Po zaposlenom</h3>
+        @for (s of r.staff; track s.id) {
+          <div class="flex items-center gap-3 py-2 border-t border-[var(--color-bg)] text-sm">
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold truncate">{{ s.name }}@if (!s.active) { <span class="badge badge-neutral ml-1">Neaktivan</span> }</div>
+              <div class="text-xs muted">{{ s.appointments }} termina · završeno {{ s.completed }} · otkazano {{ s.cancelled }} · nije došlo {{ s.no_shows }} · {{ s.utilization }}%</div>
+            </div>
+            <div class="font-semibold whitespace-nowrap">{{ s.revenue | rsd }}</div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (r.days.length > 0) {
+      <div class="card mb-4">
+        <h3 class="font-semibold mb-2">Po danima</h3>
+        @for (d of r.days; track d.date) {
+          <div class="flex items-center gap-3 py-1.5 border-t border-[var(--color-bg)] text-sm" [class.muted]="d.appointments === 0 && d.cancelled === 0">
+            <span class="w-20 shrink-0">{{ d.label }}</span>
+            <span class="flex-1 text-xs muted">{{ d.appointments }} termina · završeno {{ d.completed }}{{ d.cancelled ? ' · otkazano ' + d.cancelled : '' }}</span>
+            <span class="whitespace-nowrap">{{ d.revenue | rsd }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    @if (r.services.length > 0) {
+      <div class="card mb-4">
+        <h3 class="font-semibold mb-2">Usluge</h3>
+        @for (s of r.services; track s.name) {
+          <div class="flex items-center gap-3 py-1.5 border-t border-[var(--color-bg)] text-sm">
+            <span class="flex-1 min-w-0 truncate">{{ s.name }}</span>
+            <span class="muted">{{ s.count }}×</span>
+            <span class="w-24 text-right whitespace-nowrap">{{ s.revenue | rsd }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    @if (r.appointments.length > 0) {
+      <div class="card mb-4" data-testid="report-appointments">
+        <h3 class="font-semibold mb-2">Termini</h3>
+        @for (a of r.appointments; track a.id) {
+          <div class="flex items-start gap-3 py-2 border-t border-[var(--color-bg)] text-sm">
+            <div class="w-24 shrink-0">
+              @if (r.period.type !== 'day') {
+                <div class="text-xs muted">{{ a.date | srDate }}</div>
+              }
+              {{ a.time }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold truncate">{{ a.client }}</div>
+              <div class="text-xs muted truncate">{{ a.services }}{{ r.staff_member ? '' : ' · ' + a.staff }}</div>
+            </div>
+            <div class="text-right">
+              <span class="badge" [class]="statuses[a.status].badge">{{ a.status_label }}</span>
+              <div class="text-xs mt-1 whitespace-nowrap">{{ a.total | rsd }}{{ a.paid ? ' · plaćeno' : '' }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (r.totals.appointments === 0 && r.totals.cancelled === 0) {
+      <div class="card empty-state">U ovom periodu nema termina.</div>
+    }
+  </div>
+}

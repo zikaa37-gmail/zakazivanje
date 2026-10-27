@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\Shift;
+use App\Notifications\ReportNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -89,6 +90,11 @@ class BusinessSettingController extends Controller
             'reviews_enabled' => ['sometimes', 'boolean'],
             'notify_review_request' => ['sometimes', 'boolean'],
             'waitlist_enabled' => ['sometimes', 'boolean'],
+            'report_auto_enabled' => ['sometimes', 'boolean'],
+            'report_auto_daily' => ['sometimes', 'boolean'],
+            'report_auto_weekly' => ['sometimes', 'boolean'],
+            'report_auto_monthly' => ['sometimes', 'boolean'],
+            'report_auto_channel' => ['sometimes', Rule::in([ReportNotification::CHANNEL_MAIL, ReportNotification::CHANNEL_WHATSAPP])],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
             'opening_hours.*.opens_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.closes_at'],
