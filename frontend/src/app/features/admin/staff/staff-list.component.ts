@@ -96,10 +96,12 @@ export class StaffListComponent {
     active: this.fb.nonNullable.control(true),
   });
 
-  readonly rowActions: RowAction[] = [
-    { id: 'edit', label: 'Izmeni', icon: 'edit' },
-    { id: 'delete', label: 'Obriši', icon: 'trash', danger: true },
-  ];
+  rowActions(member: StaffMember): RowAction[] {
+    return [
+      { id: 'edit', label: 'Izmeni', icon: 'edit' },
+      member.active ? { id: 'deactivate', label: 'Deaktiviraj', icon: 'lock', danger: true } : { id: 'activate', label: 'Aktiviraj', icon: 'unlock' },
+    ];
+  }
 
   constructor() {
     this.load();
@@ -195,7 +197,8 @@ export class StaffListComponent {
 
   onAction(member: StaffMember, action: string): void {
     if (action === 'edit') this.openForm(member);
-    if (action === 'delete') this.remove(member);
+    if (action === 'deactivate') this.deactivate(member);
+    if (action === 'activate') this.setActive(member, true);
   }
 
   openForm(member: StaffMember | null = null): void {
@@ -303,20 +306,25 @@ export class StaffListComponent {
     });
   }
 
-  private async remove(member: StaffMember): Promise<void> {
+  private async deactivate(member: StaffMember): Promise<void> {
     const ok = await this.confirm.confirm({
-      title: 'Brisanje zaposlenog',
-      message: `Obrisati ${member.first_name} ${member.last_name}? Ako samo više ne radi, bolje ga označi kao neaktivnog.`,
-      confirmLabel: 'Obriši',
+      title: 'Deaktivacija zaposlenog',
+      message: `${member.first_name} ${member.last_name} se više neće nuditi za zakazivanje niti prikazivati u kalendaru, a nalog radnika se gasi. Termini i lična statistika ostaju sačuvani, a zaposlenog možeš ponovo da aktiviraš.`,
+      confirmLabel: 'Deaktiviraj',
     });
-    if (!ok) return;
+    if (ok) this.setActive(member, false);
+  }
 
-    this.staffService.delete(member.id).subscribe({
-      next: () => {
-        this.toast.success('Zaposleni je obrisan.');
+  private setActive(member: StaffMember, active: boolean): void {
+    this.staffService.setActive(member.id, active).subscribe({
+      next: (res) => {
+        this.toast.success(active ? 'Zaposleni je ponovo aktivan.' : 'Zaposleni je deaktiviran.');
+        if (!active && res.future_appointments > 0) {
+          this.toast.warning(`Ima ${res.future_appointments} zakazanih termina u budućnosti — prebaci ih na drugog zaposlenog ili otkaži.`, { duration: 10000 });
+        }
         this.load();
       },
-      error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Promena nije uspela.')),
     });
   }
 

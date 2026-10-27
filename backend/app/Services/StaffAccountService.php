@@ -54,18 +54,6 @@ class StaffAccountService
         return $account;
     }
 
-    public function removeFor(StaffMember $staff): void
-    {
-        $account = $staff->account()->first();
-
-        if ($account?->role === User::ROLE_WORKER) {
-            $account->refreshTokens()->delete();
-            $account->delete();
-        } else {
-            $account?->forceFill(['staff_member_id' => null])->save();
-        }
-    }
-
     public function invite(User $user): void
     {
         $user->notify(new StaffInviteNotification(Password::broker()->createToken($user)));

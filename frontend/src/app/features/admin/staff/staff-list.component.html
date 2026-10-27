@@ -23,7 +23,7 @@
             <div class="font-semibold truncate">{{ member.first_name }} {{ member.last_name }}</div>
             <div class="text-sm muted truncate">{{ member.title || '—' }}</div>
           </div>
-          <app-row-actions [actions]="rowActions" (selected)="onAction(member, $event)" [attr.data-testid]="'staff-actions-' + member.id" />
+          <app-row-actions [actions]="rowActions(member)" (selected)="onAction(member, $event)" [attr.data-testid]="'staff-actions-' + member.id" />
         </div>
         <hr class="border-[var(--color-border)]" />
         <div>

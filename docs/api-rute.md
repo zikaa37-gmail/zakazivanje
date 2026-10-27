@@ -75,7 +75,8 @@ Vlasnik i radnik — svakodnevni rad.
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`) |
-| POST / PUT / DELETE | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); sa `email` zaposleni automatski dobija nalog radnika (`users.staff_member_id`), brisanje gasi nalog |
+| POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); sa `email` zaposleni automatski dobija nalog radnika (`users.staff_member_id`) |
+| POST | `/staff/{id}/active` | `{active}` — deaktivacija umesto brisanja (termini i statistika ostaju, ne nudi se za zakazivanje, nalog radnika se gasi) → zaposleni + `future_appointments` |
 | POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `category`, `staff_member_ids` |
 | POST | `/promotions/list` | akcije |
 | POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays` |

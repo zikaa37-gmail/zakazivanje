@@ -21,7 +21,7 @@ export class StaffService {
     return this.http.put<StaffMember>(`${this.api}/${id}`, payload);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${id}`);
+  setActive(id: number, active: boolean): Observable<StaffMember & { future_appointments: number }> {
+    return this.http.post<StaffMember & { future_appointments: number }>(`${this.api}/${id}/active`, { active });
   }
 }

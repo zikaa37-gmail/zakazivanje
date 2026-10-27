@@ -135,7 +135,7 @@ class DashboardService
         $openingHours = OpeningHour::week();
 
         return StaffMember::query()
-            ->where('active', true)
+            ->where(fn ($q) => $q->where('active', true)->orWhereIn('id', $appointments->pluck('staff_member_id')->filter()->unique()))
             ->with('workingHours')
             ->orderBy('sort_order')
             ->get()
