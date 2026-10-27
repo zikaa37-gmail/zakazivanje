@@ -70,6 +70,11 @@ export interface BusinessSetting {
   reviews_enabled: boolean;
   notify_review_request: boolean;
   waitlist_enabled: boolean;
+  report_auto_enabled: boolean;
+  report_auto_daily: boolean;
+  report_auto_weekly: boolean;
+  report_auto_monthly: boolean;
+  report_auto_channel: 'mail' | 'whatsapp';
   opening_hours?: OpeningHour[];
   shifts?: ShiftTemplate[];
 }

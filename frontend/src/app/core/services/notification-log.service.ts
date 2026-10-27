@@ -29,6 +29,7 @@ export const NOTIFICATION_TYPES: Record<string, string> = {
   email_verification: 'Potvrda emaila',
   password_reset: 'Reset lozinke',
   staff_invite: 'Pozivnica osoblju',
+  report: 'Izveštaj',
   test: 'Probna poruka',
 };
 

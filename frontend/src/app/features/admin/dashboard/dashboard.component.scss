@@ -64,31 +64,6 @@
   }
 }
 
-.stat-tiles {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-
-  @include bp.md-up {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
-.stat-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-}
-
 .stat-delta {
   font-size: 0.75rem;
   color: var(--color-text-muted);

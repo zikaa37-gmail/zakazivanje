@@ -180,6 +180,11 @@ kojima sada postoji slobodan termin (najviše na 30 min), link `/book?services=&
 zakazivanje tog dana gasi prijavu. Pun dan je u `/book` isprekidan i može se izabrati; prekidač `waitlist_enabled`.
 Usluge su na početnoj i u `/book` grupisane po kategoriji (`groupByCategory()` u `service.model.ts`, bez
 kategorije → „Ostalo") sa filterom kategorija (`.chip-scroll`) — frizerske i kozmetičke usluge istog salona.
+Izveštaji (#58): `/admin/reports` (vlasnik i radnik; zaposleni-radnik vidi samo svoj) — zbirni ili po zaposlenom,
+dan / nedelja / mesec; `ReportService` (brojke, `pdf/report` blade), „Otvori PDF", „Pošalji na mejl / WhatsApp"
+(`ReportNotification`, WhatsApp dobija potpisan link na PDF u `storage/app/reports`, briše se posle 7 dana);
+automatsko slanje `reports:send-scheduled` u 21h (dnevni, nedeljni nedeljom, mesečni poslednjeg dana) uključuje se u
+Podešavanja → Obaveštenja (`report_auto_*`, podrazumevano isključeno).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

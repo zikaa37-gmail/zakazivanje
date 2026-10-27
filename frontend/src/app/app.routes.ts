@@ -92,6 +92,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/calendar/calendar.component').then((m) => m.CalendarComponent),
       },
       {
+        path: 'reports',
+        title: 'Izveštaji',
+        loadComponent: () => import('./features/admin/reports/report.component').then((m) => m.ReportComponent),
+      },
+      {
         path: 'staff',
         canActivate: [ownerGuard],
         title: 'Zaposleni',

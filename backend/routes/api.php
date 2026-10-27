@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
@@ -27,6 +28,7 @@ Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middl
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
+Route::get('/public/reports/{file}', [ReportController::class, 'file'])->middleware('signed')->name('reports.file');
 
 Route::middleware(['jwt.optional', 'throttle:public'])->group(function () {
     Route::post('/availability/slots', [BookingController::class, 'slots']);
@@ -89,6 +91,10 @@ Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
+
+    Route::post('/reports', [ReportController::class, 'show']);
+    Route::post('/reports/pdf', [ReportController::class, 'pdf']);
+    Route::post('/reports/send', [ReportController::class, 'send'])->middleware('throttle:booking');
 
     Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
     Route::post('/blocked-times', [BlockedTimeController::class, 'store']);

@@ -48,6 +48,7 @@ export class AdminShellComponent {
     { path: '/admin/services', label: 'Usluge', icon: 'scissors', ownerOnly: true },
     { path: '/admin/promotions', label: 'Cene i akcije', icon: 'percent', ownerOnly: true },
     { path: '/admin/clients', label: 'Klijenti', icon: 'user' },
+    { path: '/admin/reports', label: 'Izveštaji', icon: 'file-text' },
     { path: '/admin/reviews', label: 'Recenzije', icon: 'star', ownerOnly: true },
     { path: '/admin/gallery', label: 'Galerija', icon: 'image', ownerOnly: true },
     { path: '/admin/share', label: 'Podeli', icon: 'share', ownerOnly: true },
