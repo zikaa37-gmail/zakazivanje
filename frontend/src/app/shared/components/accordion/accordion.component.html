@@ -1,0 +1,32 @@
+<div class="accordion" [class.accordion-toolbar]="variant() === 'toolbar'" [class.accordion-static]="!collapsible()" [class.open]="isOpen()" [class.accordion-sticky]="stickyHeader()" [attr.data-testid]="testId() || null">
+  <div
+    class="accordion-header"
+    [attr.role]="collapsible() ? 'button' : null"
+    [attr.tabindex]="collapsible() ? 0 : null"
+    (click)="toggle()"
+    (keydown.enter)="onHeaderKey($event)"
+    (keydown.space)="onHeaderKey($event)"
+    [attr.aria-expanded]="collapsible() ? isOpen() : null"
+    [attr.data-testid]="testId() ? testId() + '-toggle' : null"
+  >
+    <span class="accordion-title-wrap">
+      @if (variant() === 'toolbar') {
+        <h1 class="accordion-title">{{ title() }}</h1>
+      } @else {
+        <span class="accordion-title">{{ title() }}</span>
+      }
+    </span>
+    <ng-content select="[accordion-header-extra]"></ng-content>
+    <span class="accordion-header-actions" (click)="$event.stopPropagation()">
+      <ng-content select="[accordion-header-actions]"></ng-content>
+    </span>
+    @if (collapsible() && hasArrow()) {
+      <span class="accordion-chevron" appIcon="chevron-down" aria-hidden="true"></span>
+    }
+  </div>
+  @if (isOpen()) {
+    <div class="accordion-body">
+      <ng-content></ng-content>
+    </div>
+  }
+</div>

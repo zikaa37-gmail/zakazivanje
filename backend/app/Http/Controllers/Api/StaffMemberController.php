@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\StaffMember;
@@ -45,14 +46,19 @@ class StaffMemberController extends Controller
         return DB::transaction(fn () => $this->persist($staffMember, $data));
     }
 
-    public function destroy(StaffMember $staffMember)
+    public function setActive(Request $request, StaffMember $staffMember)
     {
-        DB::transaction(function () use ($staffMember) {
-            $this->accounts->removeFor($staffMember);
-            $staffMember->delete();
+        $data = $request->validate(['active' => ['required', 'boolean']]);
+
+        DB::transaction(function () use ($staffMember, $data) {
+            $staffMember->update(['active' => $data['active']]);
+            $this->accounts->sync($staffMember);
         });
 
-        return response()->json(['message' => 'Zaposleni je obrisan.']);
+        return [
+            ...$staffMember->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active'])->toArray(),
+            'future_appointments' => Appointment::where('staff_member_id', $staffMember->id)->blocking()->where('starts_at', '>', now())->count(),
+        ];
     }
 
     private function validated(Request $request): array

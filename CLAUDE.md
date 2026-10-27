@@ -21,6 +21,7 @@ Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik, upravlja svime)
 pregled dana, kalendar, termini, blokade, klijenti bez brisanja, lista čekanja). Rute: `role:owner,worker`
 za svakodnevni rad, `role:owner` za ostalo; frontend `staffGuard` / `ownerGuard`, meni po `ownerOnly`.
 Svaki zaposleni sa emailom automatski ima nalog radnika (`users.staff_member_id`, `StaffAccountService::sync()`);
+zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu);
 administrativni radnik je nalog bez zaposlenog (Nalozi osoblja, `/admin/team`). Nove uloge idu u `User::ROLES`.
 
 ## Working conventions

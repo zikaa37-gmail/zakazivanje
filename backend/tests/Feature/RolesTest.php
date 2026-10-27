@@ -49,8 +49,14 @@ class RolesTest extends TestCase
         $this->assertSame('anica@salon.rs', $worker->email);
         $this->assertFalse($worker->active);
 
-        $this->actingAsJwt($this->owner)->deleteJson("/api/staff/{$id}")->assertOk();
-        $this->assertModelMissing($worker);
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => true])->assertOk()
+            ->assertJsonPath('active', true)->assertJsonPath('future_appointments', 0);
+        $this->assertTrue($worker->refresh()->active);
+
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();
+        $this->assertFalse($worker->refresh()->active);
+        $this->assertModelExists(StaffMember::find($id));
+        $this->actingAsJwt($this->owner)->deleteJson("/api/staff/{$id}")->assertStatus(405);
     }
 
     public function test_staff_email_of_client_is_rejected_and_owner_is_linked(): void
@@ -65,8 +71,10 @@ class RolesTest extends TestCase
         $this->assertSame($id, $this->owner->refresh()->staff_member_id);
         $this->assertSame(User::ROLE_OWNER, $this->owner->role);
 
-        $this->actingAsJwt($this->owner)->deleteJson("/api/staff/{$id}")->assertOk();
-        $this->assertNull($this->owner->refresh()->staff_member_id);
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();
+        $this->owner->refresh();
+        $this->assertTrue($this->owner->active);
+        $this->assertSame($id, $this->owner->staff_member_id);
     }
 
     public function test_worker_handles_daily_work_but_not_owner_pages(): void

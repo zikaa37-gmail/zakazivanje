@@ -102,7 +102,7 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
 
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
-    Route::delete('/staff/{staffMember}', [StaffMemberController::class, 'destroy']);
+    Route::post('/staff/{staffMember}/active', [StaffMemberController::class, 'setActive']);
 
     Route::post('/team/list', [TeamController::class, 'index']);
     Route::post('/team', [TeamController::class, 'store']);
