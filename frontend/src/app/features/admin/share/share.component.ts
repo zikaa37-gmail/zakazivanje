@@ -4,8 +4,9 @@ import { environment } from '../../../../environments/environment';
 import { GalleryImage } from '../../../core/models/gallery.model';
 import { Promotion } from '../../../core/models/promotion.model';
 import { SalonService } from '../../../core/models/service.model';
-import { INSTAGRAM_PLACEMENTS } from '../../../core/models/marketing.model';
+import { INSTAGRAM_PLACEMENTS, INSTAGRAM_POST_STATUS, InstagramPostKind, ScheduledInstagramPost } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
 import { MarketingService, slug } from '../../../core/services/marketing.service';
 import { GalleryService } from '../../../core/services/gallery.service';
 import { PromotionService } from '../../../core/services/promotion.service';
@@ -14,11 +15,14 @@ import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { isHexColor, mix, readableTextOn } from '../../../core/utils/color';
 import { socialLinks } from '../../../core/utils/social';
+import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
+import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { Brand, IMAGE_SIZES, ImageFormat, ShareTemplate, drawShareImage } from './share-image';
 
 type TemplateKind = ShareTemplate['kind'];
@@ -34,7 +38,7 @@ const DEFAULT_PRIMARY = '#0f766e';
 @Component({
   selector: 'app-share',
   standalone: true,
-  imports: [ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, SrDateTimePipe],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
 })
@@ -46,6 +50,7 @@ export class ShareComponent {
   private catalog = inject(ServiceCatalogService);
   private toast = inject(ToastService);
   private marketing = inject(MarketingService);
+  private confirm = inject(ConfirmService);
   private rsd = new RsdPipe();
 
   private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('canvas');
@@ -72,6 +77,17 @@ export class ShareComponent {
   readonly photos = signal<GalleryImage[]>([]);
   readonly photoId = signal<number | null>(null);
   readonly caption = signal('');
+  readonly postStatus = INSTAGRAM_POST_STATUS;
+  readonly canPublish = computed(() => !!this.business.settings()?.instagram_connected && !!this.business.settings()?.instagram_publishing_enabled);
+  readonly publishOpen = signal(false);
+  readonly publishKind = signal<InstagramPostKind>('post');
+  readonly publishCaption = signal('');
+  readonly publishLater = signal(false);
+  readonly publishAt = signal('');
+  readonly publishing = signal(false);
+  readonly publishError = signal<string | null>(null);
+  readonly posts = signal<ScheduledInstagramPost[]>([]);
+  readonly postsLoading = signal(false);
   private readonly images = signal<{ logo: HTMLImageElement | null; bookQr: HTMLImageElement | null; photo: HTMLImageElement | null }>({ logo: null, bookQr: null, photo: null });
 
   readonly social = computed(() => socialLinks(this.business.settings()));
@@ -153,6 +169,9 @@ export class ShareComponent {
       if (visible[0]) this.selectPhoto(visible[0].id);
     });
     effect(() => {
+      if (this.canPublish()) this.loadPosts();
+    });
+    effect(() => {
       const logo = this.business.logo();
       if (!logo) return;
       this.loadImage(logo).then((image) => this.images.update((all) => ({ ...all, logo: image })));
@@ -227,6 +246,100 @@ export class ShareComponent {
     }
     this.toast.success('Ovaj pregledač ne deli slike direktno — slika je preuzeta, objavi je iz galerije telefona.');
     this.downloadImage();
+  }
+
+  openPublish(): void {
+    this.publishKind.set(this.format() === 'story' ? 'story' : 'post');
+    this.publishCaption.set(this.publishCaption() || 'Zakaži termin online — link je u biju.');
+    this.publishLater.set(false);
+    this.publishAt.set(this.localDateTime(new Date(Date.now() + 60 * 60 * 1000)));
+    this.publishError.set(null);
+    this.publishOpen.set(true);
+  }
+
+  publish(): void {
+    const canvas = this.canvas()?.nativeElement;
+    if (!canvas) return;
+    const kind = this.publishKind();
+    if (kind === 'post' && this.format() === 'story') {
+      this.publishError.set('Za objavu izaberi format 4:5 ili kvadrat — format story ide samo kao story.');
+      return;
+    }
+    if (this.publishLater() && !this.publishAt()) {
+      this.publishError.set('Izaberi datum i vreme objave.');
+      return;
+    }
+    this.publishing.set(true);
+    this.publishError.set(null);
+    this.marketing
+      .publishToInstagram({
+        kind,
+        caption: kind === 'post' ? this.publishCaption().trim() || null : null,
+        image: canvas.toDataURL('image/jpeg', 0.92),
+        scheduled_at: this.publishLater() ? new Date(this.publishAt()).toISOString() : null,
+      })
+      .subscribe({
+        next: (post) => {
+          this.publishing.set(false);
+          this.loadPosts();
+          if (post.status === 'failed') {
+            this.publishError.set(post.error ?? 'Objava nije uspela.');
+            return;
+          }
+          this.publishOpen.set(false);
+          this.toast.success(post.status === 'published' ? 'Objavljeno na Instagramu.' : 'Objava je zakazana.');
+        },
+        error: (err) => {
+          this.publishing.set(false);
+          this.publishError.set(apiErrorMessage(err, 'Objava nije uspela.'));
+        },
+      });
+  }
+
+  retryPost(post: ScheduledInstagramPost): void {
+    this.marketing.retryInstagramPost(post.id).subscribe({
+      next: (updated) => {
+        this.posts.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+        if (updated.status === 'published') this.toast.success('Objavljeno na Instagramu.');
+        else this.toast.error(updated.error ?? 'Objava nije uspela.');
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Objava nije uspela.')),
+    });
+  }
+
+  async deletePost(post: ScheduledInstagramPost): Promise<void> {
+    const scheduled = post.status === 'scheduled';
+    const ok = await this.confirm.confirm({
+      title: scheduled ? 'Otkazivanje objave' : 'Brisanje iz spiska',
+      message: scheduled ? 'Zakazana objava neće biti objavljena.' : 'Objava se uklanja iz spiska.',
+      confirmLabel: scheduled ? 'Otkaži objavu' : 'Obriši',
+      danger: true,
+    });
+    if (!ok) return;
+    this.marketing.deleteInstagramPost(post.id).subscribe({
+      next: () => this.posts.update((list) => list.filter((p) => p.id !== post.id)),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
+    });
+  }
+
+  rangeLabel(range: { from: string; to: string }): string {
+    return range.from === range.to ? range.from : `${range.from}–${range.to}`;
+  }
+
+  private loadPosts(): void {
+    this.postsLoading.set(true);
+    this.marketing.scheduledPosts().subscribe({
+      next: (list) => {
+        this.posts.set(list);
+        this.postsLoading.set(false);
+      },
+      error: () => this.postsLoading.set(false),
+    });
+  }
+
+  private localDateTime(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   private loadBookQr(): void {

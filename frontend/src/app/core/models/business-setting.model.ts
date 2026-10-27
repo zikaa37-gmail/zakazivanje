@@ -53,6 +53,10 @@ export interface BusinessSetting {
   instagram_feed_enabled?: boolean;
   instagram_insights_enabled?: boolean;
   instagram_oauth_available?: boolean;
+  instagram_publishing_enabled?: boolean;
+  instagram_free_slots_enabled?: boolean;
+  instagram_free_slots_days?: number[] | null;
+  instagram_free_slots_time?: string;
   cover_image?: string | null;
   theme_primary: string | null;
   theme_secondary: string | null;

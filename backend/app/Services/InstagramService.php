@@ -205,7 +205,7 @@ class InstagramService
 
     public function connect(string $token, int $expiresIn = 5184000): BusinessSetting
     {
-        $response = Http::timeout(10)->get(self::API.'/me', ['fields' => 'username', 'access_token' => $token]);
+        $response = Http::timeout(10)->get(self::API.'/me', ['fields' => 'user_id,username', 'access_token' => $token]);
 
         if (! $response->successful() || ! $response->json('username')) {
             throw ValidationException::withMessages(['token' => ['Instagram nije prihvatio token. Proveri da li je token za poslovni (Business / Creator) nalog.']]);
@@ -215,6 +215,7 @@ class InstagramService
         $settings->forceFill([
             'instagram_token' => $token,
             'instagram_username' => $response->json('username'),
+            'instagram_user_id' => $response->json('user_id') ? (string) $response->json('user_id') : null,
             'instagram_token_expires_at' => now()->addSeconds($expiresIn),
             'instagram_feed_enabled' => true,
         ])->save();
@@ -226,7 +227,7 @@ class InstagramService
     public function disconnect(): BusinessSetting
     {
         $settings = BusinessSetting::current();
-        $settings->forceFill(['instagram_token' => null, 'instagram_username' => null, 'instagram_token_expires_at' => null, 'instagram_feed_enabled' => false])->save();
+        $settings->forceFill(['instagram_token' => null, 'instagram_username' => null, 'instagram_user_id' => null, 'instagram_publishing_enabled' => false, 'instagram_free_slots_enabled' => false, 'instagram_token_expires_at' => null, 'instagram_feed_enabled' => false])->save();
         $this->forget();
 
         return $settings;

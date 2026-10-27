@@ -12,6 +12,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
 | GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, kind: work|salon, featured, width, height, url}]` (bez sadržaja slike) |
+| GET | `/public/instagram-media/{token}` | JPEG slika objave koju Instagram preuzima pri objavljivanju (token od 40 znakova) |
 | GET | `/public/instagram` | poslednje objave sa povezanog Instagram naloga `[{id, caption, type, image, permalink, posted_at}]` (keš 1 h; prazno bez tokena ili kad je prikaz isključen) |
 | POST | `/public/visit` | `{source, campaign?}` — beleži posetu po izvoru (`?izvor=` / `?source=` / `utm_source`, `&kampanja=`); osoblje se ne broji. `login`, `register` i `bookings` primaju `referral: {source, campaign}` |
 | GET | `/public/reports/{file}` | potpisan link (7 dana) na PDF izveštaja poslat preko WhatsApp-a |
@@ -99,6 +100,10 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/dashboard/demand` | zauzetost po danu u nedelji i satu (poslednjih 90 dana) → `{has_history, buckets: [{weekday, hour, rate, off_peak}]}` — sati koji se nude klijentu u žutoj zoni |
 | POST | `/dashboard/sources` | `{from, to}` → `{rows: [{source, campaign, visits, registrations, logins, bookings, new_clients, completed, revenue}], instagram: {available, reach, profile_views, website_clicks, accounts_engaged, total_interactions, top_posts} \| null}` (vlasnik; Instagram samo kad je povezan i uključena statistika, keš 1 h) |
 | POST | `/instagram/authorize` | `{url}` — adresa za prijavu na Instagram (OAuth, vlasnik); posle odobrenja Instagram vraća na `GET /public/instagram/callback`, koji čuva dugotrajni token i preusmerava na `/admin/settings?tab=social&instagram=connected|error|cancelled` |
+| POST | `/instagram/posts/list` | poslednjih 30 objava iz aplikacije `[{id, kind, source, caption, status, scheduled_at, published_at, permalink, error, slots, image_url}]` (vlasnik) |
+| POST | `/instagram/posts` | `{kind: post\|story, caption?, image (data:image/jpeg), scheduled_at?}` — bez `scheduled_at` objavljuje odmah, inače čeka `instagram:publish-scheduled` (na 5 min); 422 dok objavljivanje nije uključeno (vlasnik) |
+| POST / DELETE | `/instagram/posts/{id}/publish`, `/instagram/posts/{id}` | ponovni pokušaj neuspele / otkazivanje zakazane (objavljena se briše samo u Instagramu) |
+| POST | `/instagram/free-slots/preview` | `{label, date, ranges: [{from, to}], image \| null}` — primer story-ja „Slobodni termini" za sutra (manje traženi slobodni termini, `DemandService`) |
 | POST / DELETE | `/instagram/connect`, `/instagram` | `{token}` — proverava token na Instagramu i čuva ga šifrovano / prekid veze (vlasnik); `instagram:refresh-token` ga obnavlja ponedeljkom u 04:00 |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |

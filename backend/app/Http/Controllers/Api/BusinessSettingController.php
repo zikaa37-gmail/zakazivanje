@@ -23,7 +23,7 @@ class BusinessSettingController extends Controller
 
         return $request->user()?->isStaff()
             ? $settings
-            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available'], true))->all();
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available', 'instagram_user_id', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'], true))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -68,6 +68,11 @@ class BusinessSettingController extends Controller
             'instagram' => ['nullable', 'string', 'max:255'],
             'instagram_feed_enabled' => ['sometimes', 'boolean'],
             'instagram_insights_enabled' => ['sometimes', 'boolean'],
+            'instagram_publishing_enabled' => ['sometimes', 'boolean'],
+            'instagram_free_slots_enabled' => ['sometimes', 'boolean'],
+            'instagram_free_slots_days' => ['sometimes', 'nullable', 'array'],
+            'instagram_free_slots_days.*' => ['integer', 'between:1,7'],
+            'instagram_free_slots_time' => ['sometimes', 'date_format:H:i'],
             'map_query' => ['nullable', 'string', 'max:255'],
             'facebook' => ['nullable', 'string', 'max:255'],
             'tiktok' => ['nullable', 'string', 'max:255'],
