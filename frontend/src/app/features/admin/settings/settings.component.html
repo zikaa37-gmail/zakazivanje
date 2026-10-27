@@ -45,6 +45,11 @@
               <label for="s-city">Grad</label>
               <input id="s-city" appInput size="m" formControlName="city" />
             </div>
+            <div class="field sm:col-span-2">
+              <label for="s-map">Pretraga na mapi (opciono)</label>
+              <input id="s-map" appInput size="m" formControlName="map_query" placeholder="npr. Frizerski salon Pink, Zagorska 8c, Zemun" data-testid="settings-map-query" />
+              <span class="text-xs muted">Mapa na početnoj traži naziv i adresu. Ako pokazuje pogrešno mesto, upiši tačan naziv sa Google mapa ili koordinate (44.84, 20.40).</span>
+            </div>
             <div class="field">
               <label for="s-phone">Telefon</label>
               <input id="s-phone" appInput size="m" type="tel" formControlName="phone" />
@@ -90,6 +95,31 @@
             <label for="s-description">Opis (vidljiv klijentima)</label>
             <textarea id="s-description" appInput size="m" rows="3" formControlName="description"></textarea>
           </div>
+        </div>
+
+        <div class="card mt-4" data-testid="instagram-card">
+          <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span> Objave sa Instagrama</h2>
+          @if (instagram()?.instagram_connected) {
+            <p class="text-sm mb-3">Povezan nalog <strong>&#64;{{ instagram()?.instagram_username }}</strong>. Token se obnavlja sam svake nedelje.</p>
+            <app-toggle [checked]="form.controls.instagram_feed_enabled.value" label="Prikaži poslednje objave na početnoj" (checkedChange)="form.controls.instagram_feed_enabled.setValue($event)" data-testid="settings-instagram-feed" />
+            <button type="button" appBtn theme="ghost" size="s" class="mt-2" (click)="disconnectInstagram()" data-testid="instagram-disconnect">Prekini vezu</button>
+          } @else {
+            <p class="text-sm muted mb-3">Kad otvoriš poslovni (Business ili Creator) Instagram nalog, početna može da prikazuje tvoje poslednje objave. Dok to ne povežeš, linkovi za Instagram (Podeli) i praćenje posetilaca rade i bez ovoga.</p>
+            <details class="text-sm mb-3">
+              <summary class="cursor-pointer font-semibold">Kako da dobijem token?</summary>
+              <ol class="list-decimal pl-5 mt-2 flex flex-col gap-1 muted">
+                <li>U Instagram aplikaciji: Podešavanja → Tip naloga → Prebaci na profesionalni nalog.</li>
+                <li>Na developers.facebook.com napravi aplikaciju tipa „Business" i dodaj proizvod „Instagram" (API setup with Instagram login).</li>
+                <li>U delu „Generate access tokens" dodaj svoj Instagram nalog i klikni „Generate token".</li>
+                <li>Kopiraj token i nalepi ga ovde.</li>
+              </ol>
+            </details>
+            <app-error-message [message]="instagramError()" />
+            <div class="flex flex-wrap gap-2">
+              <input appInput size="m" class="flex-1 min-w-0" [formControl]="instagramToken" placeholder="Nalepi token" aria-label="Instagram token" autocomplete="off" data-testid="instagram-token" />
+              <app-button size="m" [loading]="instagramBusy()" [disabled]="!instagramToken.value.trim()" (click)="connectInstagram()" data-testid="instagram-connect">Poveži</app-button>
+            </div>
+          }
         </div>
       }
 

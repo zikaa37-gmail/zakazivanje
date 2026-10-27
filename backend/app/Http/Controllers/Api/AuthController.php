@@ -8,6 +8,7 @@ use App\Models\RefreshToken;
 use App\Models\User;
 use App\Services\ClientDisciplineService;
 use App\Services\JwtService;
+use App\Services\MarketingService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -21,7 +22,7 @@ class AuthController extends Controller
 {
     private const PHONE_PATTERN = 'regex:/^[\d\s+\-()]+$/';
 
-    public function __construct(private JwtService $jwt, private ClientDisciplineService $discipline) {}
+    public function __construct(private JwtService $jwt, private ClientDisciplineService $discipline, private MarketingService $marketing) {}
 
     public function register(Request $request)
     {
@@ -35,6 +36,10 @@ class AuthController extends Controller
         $user = $placeholder
             ? tap($placeholder)->update($data)
             : User::create([...$data, 'role' => User::ROLE_CLIENT]);
+        $referral = $this->marketing->referral($request);
+        if ($referral['source'] && ! $user->signup_source) {
+            $user->forceFill(['signup_source' => $referral['source'], 'signup_campaign' => $referral['campaign']])->save();
+        }
         $user->sendEmailVerification();
 
         return response()->json([

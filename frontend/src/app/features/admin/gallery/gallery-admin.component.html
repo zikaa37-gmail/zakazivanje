@@ -37,9 +37,17 @@
       <figure class="gallery-tile card" cdkDrag [cdkDragStartDelay]="{ touch: 300, mouse: 0 }" [class.is-hidden]="!image.visible" [attr.data-testid]="'gallery-item-' + image.id">
         <div class="gallery-thumb">
           <img [src]="src(image)" [alt]="image.caption || 'Slika iz galerije'" loading="lazy" [width]="image.width" [height]="image.height" />
-          @if (!image.visible) {
-            <span class="badge badge-neutral gallery-flag">Skrivena</span>
-          }
+          <span class="gallery-flags">
+            @if (image.kind === 'salon') {
+              <span class="badge badge-success">Salon</span>
+            }
+            @if (image.featured) {
+              <span class="badge badge-warning">Istaknuto</span>
+            }
+            @if (!image.visible) {
+              <span class="badge badge-neutral">Skrivena</span>
+            }
+          </span>
           <app-row-actions class="gallery-menu" [actions]="actions" (selected)="onAction(image, $event)" [attr.data-testid]="'gallery-actions-' + image.id" />
         </div>
         <figcaption class="gallery-meta">
@@ -52,6 +60,9 @@
           <span class="flex shrink-0">
             <button type="button" appBtn theme="ghost" size="s" [disabled]="first" (click)="move(image, -1)" aria-label="Pomeri levo"><span appIcon="arrow-left" aria-hidden="true"></span></button>
             <button type="button" appBtn theme="ghost" size="s" [disabled]="last" (click)="move(image, 1)" aria-label="Pomeri desno"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+            <button type="button" appBtn theme="ghost" size="s" (click)="toggleFeatured(image)" [attr.aria-label]="image.featured ? 'Ukloni iz istaknutih' : 'Istakni na početnoj'" [title]="image.featured ? 'Ukloni iz istaknutih' : 'Istakni na početnoj'" [attr.data-testid]="'gallery-featured-' + image.id">
+              <span [appIcon]="image.featured ? 'star-solid' : 'star'" [class.text-[var(--color-star)]]="image.featured" aria-hidden="true"></span>
+            </button>
             <button type="button" appBtn theme="ghost" size="s" (click)="toggleVisible(image)" [attr.aria-label]="image.visible ? 'Sakrij' : 'Prikaži'" [title]="image.visible ? 'Sakrij sa sajta' : 'Prikaži na sajtu'" [attr.data-testid]="'gallery-visible-' + image.id">
               <span [appIcon]="image.visible ? 'eye' : 'lock'" aria-hidden="true"></span>
             </button>
@@ -80,6 +91,15 @@
           }
         </select>
       </div>
+      <div class="field">
+        <span class="text-sm font-semibold">Vrsta</span>
+        <div class="chip-group" role="radiogroup" aria-label="Vrsta">
+          <button type="button" role="radio" class="chip" [class.selected]="form.controls.kind.value === 'work'" [attr.aria-checked]="form.controls.kind.value === 'work'" (click)="form.controls.kind.setValue('work')" data-testid="gallery-kind-work">Rad</button>
+          <button type="button" role="radio" class="chip" [class.selected]="form.controls.kind.value === 'salon'" [attr.aria-checked]="form.controls.kind.value === 'salon'" (click)="form.controls.kind.setValue('salon')" data-testid="gallery-kind-salon">Salon (enterijer)</button>
+        </div>
+        <span class="text-xs muted">Fotografije salona idu u „Naš salon" na početnoj, a radovi u galeriju.</span>
+      </div>
+      <app-toggle [checked]="form.controls.featured.value" label="Istaknuto na početnoj" (checkedChange)="form.controls.featured.setValue($event)" data-testid="gallery-featured-toggle" />
       <app-toggle [checked]="form.controls.visible.value" label="Vidljiva na sajtu" (checkedChange)="form.controls.visible.setValue($event)" />
     </form>
     <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="gallery-save">Sačuvaj</app-button>

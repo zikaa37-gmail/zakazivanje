@@ -6,11 +6,14 @@
 
   <app-error-message [message]="error()" />
 
-  @if (services().length > 1) {
+  @if (filterCount() > 1) {
     <div class="chip-group" data-testid="gallery-filter">
       <button type="button" class="chip" [class.selected]="filter() === null" (click)="filter.set(null)">Sve</button>
       @for (name of services(); track name) {
         <button type="button" class="chip" [class.selected]="filter() === name" (click)="filter.set(name)">{{ name }}</button>
+      }
+      @if (hasSalon()) {
+        <button type="button" class="chip" [class.selected]="filter() === salonFilter" (click)="filter.set(salonFilter)" data-testid="gallery-filter-salon">Salon</button>
       }
     </div>
   }

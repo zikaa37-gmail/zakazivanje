@@ -11,7 +11,9 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/public/business/cover` | naslovna fotografija salona (fajl, keš 7 dana; `cover_url` u `/public/business`) |
 | GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
-| GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, width, height, url}]` (bez sadržaja slike) |
+| GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, kind: work|salon, featured, width, height, url}]` (bez sadržaja slike) |
+| GET | `/public/instagram` | poslednje objave sa povezanog Instagram naloga `[{id, caption, type, image, permalink, posted_at}]` (keš 1 h; prazno bez tokena ili kad je prikaz isključen) |
+| POST | `/public/visit` | `{source, campaign?}` — beleži posetu po izvoru (`?izvor=&kampanja=`); osoblje se ne broji |
 | GET | `/public/reports/{file}` | potpisan link (7 dana) na PDF izveštaja poslat preko WhatsApp-a |
 | GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available, open}]` (`open` = neko tog dana radi — pun dan je `open` ali ne `available`) |
@@ -92,9 +94,11 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/share/qr` | `{url}` (http/https) → `{url, png (data URL), svg}` za štampu |
 | POST | `/gallery/list` | sve slike galerije (i skrivene) |
 | POST | `/gallery` | `{data (data URL JPG/PNG/WEBP, do ~4 MB), width, height, caption?, service_id?}` — jedna slika po pozivu, nova ide na početak |
-| PUT / DELETE | `/gallery/{id}` | `{caption?, service_id?, visible?}` / brisanje |
+| PUT / DELETE | `/gallery/{id}` | `{caption?, service_id?, kind?, featured?, visible?}` / brisanje |
 | POST | `/gallery/reorder` | `{ids}` — redosled kao na ekranu |
 | POST | `/dashboard/demand` | zauzetost po danu u nedelji i satu (poslednjih 90 dana) → `{has_history, buckets: [{weekday, hour, rate, off_peak}]}` — sati koji se nude klijentu u žutoj zoni |
+| POST | `/dashboard/sources` | `{from, to}` → `[{source, campaign, visits, registrations, bookings, completed, revenue}]` (vlasnik) |
+| POST / DELETE | `/instagram/connect`, `/instagram` | `{token}` — proverava token na Instagramu i čuva ga šifrovano / prekid veze (vlasnik); `instagram:refresh-token` ga obnavlja ponedeljkom u 04:00 |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
 | POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom korisniku |

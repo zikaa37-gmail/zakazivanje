@@ -22,7 +22,7 @@ class BusinessSettingController extends Controller
 
         return $request->user()?->isStaff()
             ? $settings
-            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_'))->all();
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled'], true))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -64,6 +64,8 @@ class BusinessSettingController extends Controller
             'email' => ['nullable', 'email', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
             'instagram' => ['nullable', 'string', 'max:255'],
+            'instagram_feed_enabled' => ['sometimes', 'boolean'],
+            'map_query' => ['nullable', 'string', 'max:255'],
             'facebook' => ['nullable', 'string', 'max:255'],
             'tiktok' => ['nullable', 'string', 'max:255'],
             'youtube' => ['nullable', 'string', 'max:255'],

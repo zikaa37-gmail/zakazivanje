@@ -8,6 +8,8 @@ import { apiErrorMessage } from '../../core/utils/api-error';
 import { GalleryViewerComponent } from '../../shared/components/gallery-viewer/gallery-viewer.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 
+const SALON_FILTER = '__salon';
+
 @Component({
   selector: 'app-gallery',
   standalone: true,
@@ -26,9 +28,13 @@ export class GalleryComponent {
   readonly filter = signal<string | null>(null);
   readonly open = signal<number | null>(null);
 
+  readonly salonFilter = SALON_FILTER;
+  readonly hasSalon = computed(() => this.images().some((image) => image.kind === 'salon'));
   readonly services = computed(() => [...new Set(this.images().map((image) => image.service_name).filter((name): name is string => !!name))]);
+  readonly filterCount = computed(() => this.services().length + (this.hasSalon() ? 1 : 0));
   readonly shown = computed(() => {
     const filter = this.filter();
+    if (filter === SALON_FILTER) return this.images().filter((image) => image.kind === 'salon');
     return filter ? this.images().filter((image) => image.service_name === filter) : this.images();
   });
 
