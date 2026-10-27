@@ -32,8 +32,10 @@
         [attr.y]="margin.top - 12"
         [attr.width]="bar.band"
         [attr.height]="height() - margin.top - margin.bottom + 12"
+        [class.is-clickable]="!!actionLabel()"
         (pointerenter)="active.set(bar.index)"
-        (pointerdown)="active.set(bar.index)"
+        (pointerdown)="onPointerDown($event, bar.index)"
+        (click)="onBarClick(bar.index)"
       />
     }
   </svg>
@@ -42,6 +44,9 @@
     <div class="tooltip" [style.left.px]="tooltipLeft()" [style.top.px]="bar.top" role="status" data-testid="chart-tooltip">
       <strong>{{ format()(bar.point.value) }}</strong>
       <span>{{ bar.point.tooltipLabel }}</span>
+      @if (actionLabel(); as action) {
+        <span class="tooltip-action">{{ action }}</span>
+      }
     </div>
   }
 

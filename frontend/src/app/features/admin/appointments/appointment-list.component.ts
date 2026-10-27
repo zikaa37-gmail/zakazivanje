@@ -1,6 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { StaffMember } from '../../../core/models/staff.model';
@@ -17,7 +18,7 @@ import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { AppointmentActionsService } from './appointment-actions.service';
 import { AppointmentFormComponent, AppointmentPrefill } from './appointment-form.component';
 
-type Period = 'today' | 'tomorrow' | 'week' | 'month';
+type Period = 'today' | 'tomorrow' | 'week' | 'month' | 'day';
 
 const PERIODS: { value: Period; label: string }[] = [
   { value: 'today', label: 'Danas' },
@@ -43,6 +44,8 @@ export class AppointmentListComponent {
   readonly statusOptions = Object.entries(STATUS_LABELS).map(([value, s]) => ({ value: value as AppointmentStatus, label: s.label }));
 
   readonly period = signal<Period>('week');
+  readonly day = signal<string>(today());
+  readonly dayLabel = computed(() => longDate(this.day()));
   readonly staffFilter = signal<number | null>(null);
   readonly statusFilter = signal<AppointmentStatus | null>(null);
   readonly search = new FormControl('', { nonNullable: true });
@@ -64,6 +67,8 @@ export class AppointmentListComponent {
         return { from: start, to: addDays(start, 6) };
       case 'month':
         return { from: start, to: addDays(start, 29) };
+      case 'day':
+        return { from: this.day(), to: this.day() };
     }
   });
 
@@ -85,6 +90,7 @@ export class AppointmentListComponent {
   readonly prefill = signal<AppointmentPrefill>({});
 
   constructor() {
+    this.applyDateParam(inject(ActivatedRoute).snapshot.queryParamMap.get('date'));
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
     this.appointmentService.refreshPendingCount();
 
@@ -96,6 +102,22 @@ export class AppointmentListComponent {
       const filters = { ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), search: this.searchTerm() || null };
       untracked(() => this.load(filters));
     });
+  }
+
+  private applyDateParam(date: string | null): void {
+    if (!date) return;
+    const value = date === 'today' ? today() : date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+    if (value === today()) {
+      this.period.set('today');
+      return;
+    }
+    if (value === addDays(today(), 1)) {
+      this.period.set('tomorrow');
+      return;
+    }
+    this.day.set(value);
+    this.period.set('day');
   }
 
   reload(): void {

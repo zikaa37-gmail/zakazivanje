@@ -151,3 +151,13 @@
   color: var(--color-viewer-text);
   font-size: 0.7rem;
 }
+
+.today-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}

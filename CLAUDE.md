@@ -211,6 +211,8 @@ u `.env`; bez njih ručni token), prekidači po funkciji (`instagram_feed_enable
 za bio. Token je šifrovan u bazi (`InstagramService`).
 Statistika (#68): Pregled → „Odakle dolaze klijenti" — lestvica za Instagram (doseg → posete profilu → klik na link iz `InstagramService::insights()`,
 pa naše posete → registracije + prijave postojećih (`marketing_visits.logins`) → termini (novi klijenti = prvi termin) → prihod) i najbolje objave.
+Pregled: grafikoni su opcioni (prekidač „Prikaži grafikone", pamti se u pregledaču, podrazumevano isključeno); klik na stub dana i
+„Svi današnji termini" vode na `/admin/appointments?date=YYYY-MM-DD|today`).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

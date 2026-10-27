@@ -17,6 +17,9 @@
         <h2 class="text-base font-semibold">Danas</h2>
         <span class="text-sm muted">{{ t.appointments.length }} · očekivano {{ t.expected_revenue | rsd }}</span>
       </div>
+      <a routerLink="/admin/appointments" [queryParams]="{ date: 'today' }" class="today-link" data-testid="dashboard-today-appointments">
+        <span appIcon="calendar" [iconSize]="15" aria-hidden="true"></span> Svi današnji termini <span appIcon="arrow-right" [iconSize]="14" aria-hidden="true"></span>
+      </a>
       @if (t.next) {
         <button type="button" class="next-up" (click)="selected.set(t.next)" data-testid="dashboard-next">
           <span class="text-xs muted">Sledeći</span>
@@ -129,17 +132,23 @@
         }
       </div>
 
-      <div class="chart-grid mb-4" [class.opacity-60]="statsLoading()">
-        <div class="card">
-          <h3 class="font-semibold mb-1">Termini po danu</h3>
-          <app-column-chart [points]="appointmentPoints()" [format]="countFormat" ariaLabel="Broj termina po danu" data-testid="chart-appointments" />
-        </div>
-        <div class="card">
-          <h3 class="font-semibold mb-1">Prihod po danu</h3>
-          <p class="text-xs muted mb-1">Samo završeni termini</p>
-          <app-column-chart [points]="revenuePoints()" [format]="moneyFormat" [tickFormat]="moneyTick" ariaLabel="Prihod po danu" data-testid="chart-revenue" />
-        </div>
+      <div class="flex justify-end mb-3">
+        <app-toggle [checked]="showCharts()" label="Prikaži grafikone" (checkedChange)="setShowCharts($event)" data-testid="dashboard-charts-toggle" />
       </div>
+
+      @if (showCharts()) {
+        <div class="chart-grid mb-4" [class.opacity-60]="statsLoading()">
+          <div class="card">
+            <h3 class="font-semibold mb-1">Termini po danu</h3>
+            <app-column-chart [points]="appointmentPoints()" [format]="countFormat" ariaLabel="Broj termina po danu" actionLabel="Klikni za termine tog dana" (opened)="openDay($event.key)" data-testid="chart-appointments" />
+          </div>
+          <div class="card">
+            <h3 class="font-semibold mb-1">Prihod po danu</h3>
+            <p class="text-xs muted mb-1">Samo završeni termini</p>
+            <app-column-chart [points]="revenuePoints()" [format]="moneyFormat" [tickFormat]="moneyTick" ariaLabel="Prihod po danu" actionLabel="Klikni za termine tog dana" (opened)="openDay($event.key)" data-testid="chart-revenue" />
+          </div>
+        </div>
+      }
 
       <div class="chart-grid" [class.opacity-60]="statsLoading()">
         <div class="card" data-testid="top-services">

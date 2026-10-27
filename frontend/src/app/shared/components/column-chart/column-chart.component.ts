@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, computed, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, input, output, signal } from '@angular/core';
 
 export interface ColumnPoint {
   key: string;
@@ -32,6 +32,9 @@ export class ColumnChartComponent {
   readonly height = input(200);
   readonly ariaLabel = input('');
   readonly testId = input('', { alias: 'data-testid' });
+  readonly actionLabel = input<string | null>(null);
+  readonly opened = output<ColumnPoint>();
+  private armed = false;
 
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly width = signal(600);
@@ -95,8 +98,18 @@ export class ColumnChartComponent {
     else if (event.key === 'ArrowLeft') this.active.set(Math.max(0, current <= 0 ? 0 : current - 1));
     else if (event.key === 'Home') this.active.set(0);
     else if (event.key === 'End') this.active.set(count - 1);
+    else if (event.key === 'Enter' && current >= 0 && this.actionLabel()) this.opened.emit(this.points()[current]);
     else return;
     event.preventDefault();
+  }
+
+  onPointerDown(event: PointerEvent, index: number): void {
+    this.armed = event.pointerType === 'mouse' || this.active() === index;
+    this.active.set(index);
+  }
+
+  onBarClick(index: number): void {
+    if (this.armed && this.actionLabel()) this.opened.emit(this.points()[index]);
   }
 
   onFocus(): void {

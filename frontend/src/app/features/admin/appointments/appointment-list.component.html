@@ -13,6 +13,9 @@
     @for (p of periods; track p.value) {
       <button type="button" class="chip" [class.selected]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'period-' + p.value">{{ p.label }}</button>
     }
+    @if (period() === 'day') {
+      <button type="button" class="chip selected" aria-pressed="true" data-testid="period-day">{{ dayLabel() }}</button>
+    }
   </div>
   <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni">
     <option value="">Svi zaposleni</option>

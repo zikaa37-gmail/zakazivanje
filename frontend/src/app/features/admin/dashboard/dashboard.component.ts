@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -36,10 +37,20 @@ const PERIODS: { value: Period; label: string }[] = [
   { value: 'month', label: 'Ovaj mesec' },
 ];
 
+const CHARTS_KEY = 'zk_dashboard_charts';
+
+function readChartsPreference(): boolean {
+  try {
+    return localStorage.getItem(CHARTS_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe],
+  imports: [RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -58,6 +69,8 @@ export class DashboardComponent {
   readonly todayData = signal<DashboardToday | null>(null);
   readonly stats = signal<DashboardStats | null>(null);
   readonly statsLoading = signal(true);
+  private router = inject(Router);
+  readonly showCharts = signal(readChartsPreference());
   readonly sourcesReport = signal<SourcesReport | null>(null);
   readonly sources = computed(() => this.sourcesReport()?.rows ?? []);
   readonly instagramInsights = computed(() => this.sourcesReport()?.instagram ?? null);
@@ -216,6 +229,17 @@ export class DashboardComponent {
   waitlistDay(entry: WaitlistEntry): string {
     const d = parseDate(entry.date);
     return `${weekdayShort(entry.date)} ${d.getDate()}.${d.getMonth() + 1}.`;
+  }
+
+  setShowCharts(show: boolean): void {
+    this.showCharts.set(show);
+    try {
+      localStorage.setItem(CHARTS_KEY, show ? '1' : '0');
+    } catch {}
+  }
+
+  openDay(date: string): void {
+    this.router.navigate(['/admin/appointments'], { queryParams: { date } });
   }
 
   stepRate(steps: FunnelStep[], index: number): string | null {
