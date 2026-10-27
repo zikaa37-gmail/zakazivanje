@@ -1,4 +1,4 @@
--- Tabela `zk_shifts`: šema i podaci iz lokalne baze (23.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_shifts`: šema i podaci iz lokalne baze (27.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
