@@ -38,6 +38,10 @@ class MarketingTest extends TestCase
             'phone' => '060 123 456', 'referral' => $referral,
         ])->assertCreated();
         $mila = User::where('email', 'mila@example.com')->first();
+        $mila->forceFill(['email_verified_at' => now()])->save();
+        $this->postJson('/api/auth/login', ['email' => 'mila@example.com', 'password' => 'tajna1234', 'referral' => $referral])->assertOk();
+        $petar = User::factory()->create(['password' => bcrypt('tajna1234'), 'created_at' => now()->subMonth()]);
+        $this->postJson('/api/auth/login', ['email' => $petar->email, 'password' => 'tajna1234', 'referral' => $referral])->assertOk();
         $this->assertSame('instagram', $mila->signup_source);
 
         $this->actingAsJwt($mila)->postJson('/api/bookings', [
@@ -47,11 +51,14 @@ class MarketingTest extends TestCase
 
         $this->actingAsJwt($owner)->postJson('/api/dashboard/sources', ['from' => '2026-10-01', 'to' => '2026-10-31'])
             ->assertOk()
-            ->assertJsonPath('0.source', 'instagram')
-            ->assertJsonPath('0.campaign', 'story-akcija')
-            ->assertJsonPath('0.visits', 2)
-            ->assertJsonPath('0.registrations', 1)
-            ->assertJsonPath('0.bookings', 1);
+            ->assertJsonPath('rows.0.source', 'instagram')
+            ->assertJsonPath('rows.0.campaign', 'story-akcija')
+            ->assertJsonPath('rows.0.visits', 2)
+            ->assertJsonPath('rows.0.registrations', 1)
+            ->assertJsonPath('rows.0.logins', 1)
+            ->assertJsonPath('rows.0.bookings', 1)
+            ->assertJsonPath('rows.0.new_clients', 1)
+            ->assertJsonPath('instagram', null);
 
         $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
         $this->actingAsJwt($worker)->postJson('/api/dashboard/sources', ['from' => '2026-10-01', 'to' => '2026-10-31'])->assertForbidden();
@@ -108,6 +115,11 @@ class MarketingTest extends TestCase
                 ['id' => '1', 'caption' => 'Balayage', 'media_type' => 'IMAGE', 'media_url' => 'https://cdn.example/1.jpg', 'permalink' => 'https://instagram.com/p/1'],
                 ['id' => '2', 'media_type' => 'VIDEO', 'thumbnail_url' => 'https://cdn.example/2.jpg', 'media_url' => 'https://cdn.example/2.mp4', 'permalink' => 'https://instagram.com/p/2'],
             ]]),
+            'graph.instagram.com/me/insights*' => Http::response(['data' => [
+                ['name' => 'reach', 'total_value' => ['value' => 1200]],
+                ['name' => 'profile_views', 'total_value' => ['value' => 300]],
+                ['name' => 'website_clicks', 'total_value' => ['value' => 45]],
+            ]]),
             'graph.instagram.com/refresh_access_token*' => Http::response(['access_token' => str_repeat('n', 40), 'expires_in' => 5184000]),
         ]);
 
@@ -116,6 +128,13 @@ class MarketingTest extends TestCase
 
         $this->getJson('/api/public/instagram')->assertOk()->assertJsonCount(2)->assertJsonPath('1.image', 'https://cdn.example/2.jpg');
         $this->getJson('/api/public/business')->assertJsonMissingPath('instagram_token')->assertJsonPath('instagram_connected', true);
+
+        $today = now()->toDateString();
+        $this->actingAsJwt($owner)->postJson('/api/dashboard/sources', ['from' => now()->subDays(6)->toDateString(), 'to' => $today])
+            ->assertOk()->assertJsonPath('instagram.available', true)->assertJsonPath('instagram.reach', 1200)->assertJsonPath('instagram.website_clicks', 45);
+
+        BusinessSetting::current()->update(['instagram_insights_enabled' => false]);
+        $this->actingAsJwt($owner)->postJson('/api/dashboard/sources', ['from' => $today, 'to' => $today])->assertJsonPath('instagram', null);
 
         $this->artisan('instagram:refresh-token')->assertSuccessful();
         $this->assertSame(str_repeat('n', 40), BusinessSetting::current()->instagram_token);

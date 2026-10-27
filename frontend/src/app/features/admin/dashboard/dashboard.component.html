@@ -196,7 +196,43 @@
         <h3 class="font-semibold">Odakle dolaze klijenti</h3>
         <a routerLink="/admin/share" class="text-sm font-semibold text-[var(--color-primary-text)]">Linkovi za Instagram</a>
       </div>
-      <p class="text-xs muted mb-3">Posete sajtu, registracije i zakazani termini po izvoru (link sa Instagrama, QR kod, direktno)</p>
+      <p class="text-xs muted mb-3">Posete sajtu, nove registracije, prijave postojećih klijenata i zakazani termini po izvoru (link sa Instagrama, QR kod, direktno)</p>
+      @if (instagramFunnel().length > 0) {
+        <div class="funnel mb-4" data-testid="dashboard-instagram-funnel">
+          <div class="text-sm font-semibold mb-2 flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span> Instagram — od pregleda do termina</div>
+          @for (step of instagramFunnel(); track step.key; let i = $index) {
+            <div class="funnel-step" [attr.data-testid]="'funnel-' + step.key">
+              <div class="min-w-0">
+                <div class="text-sm">{{ step.label }}</div>
+                <div class="text-xs muted">{{ step.hint }}</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="font-semibold">{{ step.money ? (step.value | rsd) : step.value }}</div>
+                @if (stepRate(instagramFunnel(), i); as rate) {
+                  <div class="text-xs muted">{{ rate }} od prethodnog</div>
+                }
+              </div>
+            </div>
+          }
+          @if (instagramInsights(); as ig) {
+            @if (!ig.available) {
+              <p class="text-xs muted mt-2">Instagram trenutno ne vraća statistiku — proveri vezu u Podešavanja → Instagram i Meta.</p>
+            } @else if (ig.top_posts.length > 0) {
+              <div class="text-sm font-semibold mt-3 mb-2">Najbolje objave u periodu</div>
+              <div class="home-photos">
+                @for (post of ig.top_posts; track post.id) {
+                  <a [href]="post.permalink" target="_blank" rel="noopener" class="home-photo relative" [attr.aria-label]="post.caption || 'Objava'">
+                    @if (post.image) {
+                      <img [src]="post.image" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                    }
+                    <span class="post-reach">{{ post.reach }} doseg</span>
+                  </a>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
       @if (sources().length === 0) {
         <p class="text-sm muted">Još nema poseta u ovom periodu.</p>
       } @else {
@@ -212,6 +248,7 @@
               <div class="source-numbers">
                 <span><strong>{{ row.visits }}</strong> poseta</span>
                 <span><strong>{{ row.registrations }}</strong> reg.</span>
+                <span><strong>{{ row.logins }}</strong> prij.</span>
                 <span><strong>{{ row.bookings }}</strong> termina</span>
               </div>
             </div>

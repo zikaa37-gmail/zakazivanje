@@ -35,7 +35,13 @@ class MarketingController extends Controller
             'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
         ]);
 
-        return $this->marketing->report(CarbonImmutable::parse($data['from']), CarbonImmutable::parse($data['to']));
+        $from = CarbonImmutable::parse($data['from']);
+        $to = CarbonImmutable::parse($data['to']);
+
+        return [
+            'rows' => $this->marketing->report($from, $to),
+            'instagram' => $this->instagram->insights($from, $to),
+        ];
     }
 
     public function instagramPosts()

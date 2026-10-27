@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
-import { InstagramPost, InstagramState, Referral, SourceRow } from '../models/marketing.model';
+import { InstagramPost, InstagramState, Referral, SourcesReport } from '../models/marketing.model';
 
 const REFERRAL_KEY = 'zk_referral';
 const VISIT_KEY = 'zk_visit';
@@ -23,7 +23,7 @@ export class MarketingService {
 
   capture(): void {
     const params = new URLSearchParams(window.location.search);
-    const source = slug(params.get('izvor') ?? params.get('utm_source'), 30);
+    const source = slug(params.get('izvor') ?? params.get('source') ?? params.get('src') ?? params.get('utm_source'), 30);
     const fresh: Referral | null = source
       ? { source, campaign: slug(params.get('kampanja') ?? params.get('utm_campaign'), 60) }
       : this.fromReferrer();
@@ -60,8 +60,8 @@ export class MarketingService {
     return url.toString();
   }
 
-  sources(from: string, to: string): Observable<SourceRow[]> {
-    return this.http.post<SourceRow[]>(`${environment.apiUrl}/dashboard/sources`, { from, to }, this.quiet);
+  sources(from: string, to: string): Observable<SourcesReport> {
+    return this.http.post<SourcesReport>(`${environment.apiUrl}/dashboard/sources`, { from, to }, this.quiet);
   }
 
   instagramPosts(): Observable<InstagramPost[]> {
