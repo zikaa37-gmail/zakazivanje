@@ -109,6 +109,8 @@ class BusinessSettingController extends Controller
             'discipline_auto_suspend' => ['sometimes', 'boolean'],
             'discipline_yellow_min_days' => ['sometimes', 'integer', 'between:0,30'],
             'discipline_yellow_horizon_days' => ['sometimes', 'integer', 'between:1,90'],
+            'discipline_yellow_off_peak' => ['sometimes', 'boolean'],
+            'discipline_off_peak_percent' => ['sometimes', 'integer', 'between:10,90'],
             'report_auto_channel' => ['sometimes', Rule::in([ReportNotification::CHANNEL_MAIL, ReportNotification::CHANNEL_WHATSAPP])],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],

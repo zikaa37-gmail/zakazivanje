@@ -15,6 +15,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ClientDisciplineService
 {
+    public function __construct(private DemandService $demand) {}
+
     public const BUSY_MESSAGE = 'Termin je u međuvremenu zauzet. Izaberi drugo vreme.';
 
     public const SUSPENDED_MESSAGE = 'Tvoj nalog je suspendovan i ne možeš da zakazuješ termine. Za više informacija pozovi salon.';
@@ -122,6 +124,7 @@ class ClientDisciplineService
             'suspended' => $zone === User::ZONE_RED,
             'silent_block' => $zone === User::ZONE_ORANGE,
             'force_pending' => $zone !== User::ZONE_GREEN,
+            'off_peak_only' => $zone === User::ZONE_YELLOW && $settings->discipline_yellow_off_peak,
             'earliest' => $zone === User::ZONE_YELLOW ? CarbonImmutable::today()->addDays($settings->discipline_yellow_min_days) : null,
             'latest' => $zone === User::ZONE_YELLOW ? CarbonImmutable::today()->addDays($settings->discipline_yellow_horizon_days) : null,
         ];
@@ -136,6 +139,11 @@ class ClientDisciplineService
             || ($rules['latest'] && $date->gt($rules['latest']));
     }
 
+    public function allowsSlot(?User $client, CarbonImmutable $start): bool
+    {
+        return ! $this->restrictions($client)['off_peak_only'] || $this->demand->isOffPeak($start);
+    }
+
     public function ensureCanBook(User $client, CarbonImmutable $start, string $failureType = ClientActivity::BOOKING_FAILED): void
     {
         $rules = $this->restrictions($client);
@@ -148,6 +156,11 @@ class ClientDisciplineService
         if ($this->hidesDate($client, $start->startOfDay())) {
             ClientActivity::dispatch($client, $failureType, ['starts_at' => $start->format('Y-m-d H:i'), 'reason' => $rules['silent_block'] ? 'silent_block' : 'yellow_window', 'zone' => $rules['zone']]);
             $this->notifyBlockedAttempt($client);
+            throw ValidationException::withMessages(['starts_at' => [self::BUSY_MESSAGE]]);
+        }
+
+        if (! $this->allowsSlot($client, $start)) {
+            ClientActivity::dispatch($client, $failureType, ['starts_at' => $start->format('Y-m-d H:i'), 'reason' => 'peak_slot', 'zone' => $rules['zone']]);
             throw ValidationException::withMessages(['starts_at' => [self::BUSY_MESSAGE]]);
         }
     }

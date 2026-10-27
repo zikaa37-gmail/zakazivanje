@@ -156,6 +156,33 @@ class ClientDisciplineTest extends TestCase
         $this->assertSame(User::ZONE_GREEN, $discipline->refresh($this->client)->discipline_zone);
     }
 
+    public function test_yellow_client_gets_only_off_peak_slots(): void
+    {
+        $regular = User::factory()->create();
+        foreach (range(1, 12) as $week) {
+            $monday = now()->startOfWeek()->subWeeks($week)->format('Y-m-d');
+            Appointment::create([
+                'client_id' => $regular->id, 'staff_member_id' => $this->ana->id,
+                'starts_at' => "{$monday} 09:00", 'ends_at' => "{$monday} 13:00",
+                'status' => Appointment::STATUS_COMPLETED, 'source' => Appointment::SOURCE_ADMIN, 'price' => 1500, 'discount' => 0, 'total' => 1500,
+            ]);
+        }
+        $this->client->forceFill(['discipline_zone' => User::ZONE_YELLOW, 'zone_manual' => true])->save();
+
+        $slots = $this->slots('2026-10-26');
+        $this->assertSame('13:00', $slots[0]);
+        $this->assertNotContains('10:00', $slots);
+
+        $this->book('2026-10-26 10:00')->assertUnprocessable()->assertJsonPath('errors.starts_at.0', ClientDisciplineService::BUSY_MESSAGE);
+        $this->book('2026-10-26 14:00')->assertCreated()->assertJsonPath('status', Appointment::STATUS_PENDING);
+        $this->assertTrue(ClientActivityLog::where('user_id', $this->client->id)->where('data->reason', 'peak_slot')->exists());
+
+        $this->actingAsJwt($this->owner)->postJson('/api/dashboard/demand')->assertOk()->assertJsonPath('has_history', true);
+
+        BusinessSetting::current()->update(['discipline_yellow_off_peak' => false]);
+        $this->assertContains('10:00', $this->slots('2026-10-26'));
+    }
+
     public function test_discipline_settings_are_hidden_from_public(): void
     {
         $this->getJson('/api/public/business')->assertOk()->assertJsonMissingPath('discipline_enabled');

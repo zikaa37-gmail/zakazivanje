@@ -86,6 +86,8 @@ export interface BusinessSetting {
   discipline_auto_suspend: boolean;
   discipline_yellow_min_days: number;
   discipline_yellow_horizon_days: number;
+  discipline_yellow_off_peak: boolean;
+  discipline_off_peak_percent: number;
   opening_hours?: OpeningHour[];
   shifts?: ShiftTemplate[];
 }
