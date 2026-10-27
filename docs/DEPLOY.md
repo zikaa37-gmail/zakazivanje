@@ -75,6 +75,19 @@ pa nove migracije stižu same. Tabele sa podacima sa servera upisati u `KEEP_SER
 Paket bez upload-a: `bash deploy/build-release.sh` → `deploy/zakazivanje-app.zip`,
 `deploy/zakazivanje-web.zip`, `deploy/zakazivanje-baza.sql` (sve van gita).
 
+## Instagram (opciono)
+
+Dugme „Poveži sa Instagramom" (Podešavanja → Instagram i Meta) radi kad postoji Meta aplikacija:
+
+1. developers.facebook.com → Create app → tip „Business" → dodaj proizvod **Instagram** → „API setup with Instagram login".
+2. U „Business login settings" upiši redirect URL: `https://zakazivanje.fiskultura.rs/api/public/instagram/callback`.
+3. U „App roles → Roles" dodaj Instagram nalog salona kao **Instagram Tester** i prihvati poziv u Instagram aplikaciji
+   (Podešavanja → Aplikacije i veb-sajtovi → Pozivi testera). Za jedan salon je dovoljan razvojni režim.
+4. U `deploy/.env`: `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` (Instagram app ID / secret iz istog ekrana) i opciono
+   `INSTAGRAM_REDIRECT_URI` (ako se razlikuje od podrazumevanog).
+
+Bez ovih ključeva ostaje ručno lepljenje tokena. Token se obnavlja `instagram:refresh-token` (ponedeljkom 04:00).
+
 ## Provera
 
 - `https://zakazivanje.fiskultura.rs/` učitava aplikaciju.

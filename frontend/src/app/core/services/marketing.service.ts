@@ -68,6 +68,10 @@ export class MarketingService {
     return this.http.get<InstagramPost[]>(`${environment.apiUrl}/public/instagram`, this.quiet);
   }
 
+  authorizeInstagram(): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${environment.apiUrl}/instagram/authorize`, {});
+  }
+
   connectInstagram(token: string): Observable<InstagramState> {
     return this.http.post<InstagramState>(`${environment.apiUrl}/instagram/connect`, { token });
   }

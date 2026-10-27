@@ -14,6 +14,7 @@
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'hours'" (click)="openTab('hours')" data-testid="tab-hours">Radno vreme</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'booking'" (click)="openTab('booking')" data-testid="tab-booking">Zakazivanje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'payments'" (click)="openTab('payments')" data-testid="tab-payments">Plaćanje</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'social'" (click)="openTab('social')" data-testid="tab-social">Instagram i Meta</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'notifications'" (click)="openTab('notifications')" data-testid="tab-notifications">Obaveštenja</button>
 </div>
 
@@ -96,30 +97,59 @@
             <textarea id="s-description" appInput size="m" rows="3" formControlName="description"></textarea>
           </div>
         </div>
+      }
 
-        <div class="card mt-4" data-testid="instagram-card">
-          <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span> Objave sa Instagrama</h2>
+      @case ('social') {
+        <div class="card mb-4" data-testid="instagram-card">
+          <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span> Instagram</h2>
+          <app-error-message [message]="instagramError()" />
           @if (instagram()?.instagram_connected) {
-            <p class="text-sm mb-3">Povezan nalog <strong>&#64;{{ instagram()?.instagram_username }}</strong>. Token se obnavlja sam svake nedelje.</p>
-            <app-toggle [checked]="form.controls.instagram_feed_enabled.value" label="Prikaži poslednje objave na početnoj" (checkedChange)="form.controls.instagram_feed_enabled.setValue($event)" data-testid="settings-instagram-feed" />
-            <button type="button" appBtn theme="ghost" size="s" class="mt-2" (click)="disconnectInstagram()" data-testid="instagram-disconnect">Prekini vezu</button>
-          } @else {
-            <p class="text-sm muted mb-3">Kad otvoriš poslovni (Business ili Creator) Instagram nalog, početna može da prikazuje tvoje poslednje objave. Dok to ne povežeš, linkovi za Instagram (Podeli) i praćenje posetilaca rade i bez ovoga.</p>
-            <details class="text-sm mb-3">
-              <summary class="cursor-pointer font-semibold">Kako da dobijem token?</summary>
-              <ol class="list-decimal pl-5 mt-2 flex flex-col gap-1 muted">
-                <li>U Instagram aplikaciji: Podešavanja → Tip naloga → Prebaci na profesionalni nalog.</li>
-                <li>Na developers.facebook.com napravi aplikaciju tipa „Business" i dodaj proizvod „Instagram" (API setup with Instagram login).</li>
-                <li>U delu „Generate access tokens" dodaj svoj Instagram nalog i klikni „Generate token".</li>
-                <li>Kopiraj token i nalepi ga ovde.</li>
-              </ol>
-            </details>
-            <app-error-message [message]="instagramError()" />
-            <div class="flex flex-wrap gap-2">
-              <input appInput size="m" class="flex-1 min-w-0" [formControl]="instagramToken" placeholder="Nalepi token" aria-label="Instagram token" autocomplete="off" data-testid="instagram-token" />
-              <app-button size="m" [loading]="instagramBusy()" [disabled]="!instagramToken.value.trim()" (click)="connectInstagram()" data-testid="instagram-connect">Poveži</app-button>
+            <p class="text-sm mb-1">Povezan nalog <strong>&#64;{{ instagram()?.instagram_username }}</strong>.</p>
+            @if (instagram()?.instagram_token_expires_at; as expires) {
+              <p class="text-xs muted mb-3">Pristup važi do {{ expires | srDate }} i sam se produžava svake nedelje.</p>
+            }
+            <div class="flex flex-col gap-1">
+              <app-toggle [checked]="form.controls.instagram_feed_enabled.value" label="Objave sa Instagrama na početnoj" (checkedChange)="form.controls.instagram_feed_enabled.setValue($event)" data-testid="settings-instagram-feed" />
+              <app-toggle [checked]="form.controls.instagram_insights_enabled.value" label="Statistika Instagrama u Pregledu (doseg, posete profilu, klikovi na link)" (checkedChange)="form.controls.instagram_insights_enabled.setValue($event)" data-testid="settings-instagram-insights" />
             </div>
+            <button type="button" appBtn theme="ghost" size="s" class="mt-3" (click)="disconnectInstagram()" data-testid="instagram-disconnect">Prekini vezu</button>
+          } @else {
+            <p class="text-sm muted mb-3">Povezivanjem aplikacija prikazuje tvoje objave na početnoj i u Pregledu pokazuje koliko je ljudi videlo profil i kliknulo na link. Linkovi sa praćenjem (Podeli) rade i bez ovoga.</p>
+            @if (business.settings()?.instagram_oauth_available) {
+              <app-button size="m" [loading]="instagramBusy()" (click)="authorizeInstagram()" data-testid="instagram-authorize">Poveži sa Instagramom</app-button>
+              <p class="text-xs muted mt-2">Otvoriće se Instagram — prijavi se nalogom salona i odobri pristup.</p>
+            } @else {
+              <details class="text-sm mb-3">
+                <summary class="cursor-pointer font-semibold">Ručno povezivanje tokenom</summary>
+                <ol class="list-decimal pl-5 mt-2 flex flex-col gap-1 muted">
+                  <li>Na developers.facebook.com napravi aplikaciju tipa „Business" i dodaj proizvod „Instagram" (API setup with Instagram login).</li>
+                  <li>U delu „Generate access tokens" dodaj Instagram nalog salona i klikni „Generate token".</li>
+                  <li>Kopiraj token i nalepi ga ovde.</li>
+                </ol>
+              </details>
+              <div class="flex flex-wrap gap-2">
+                <input appInput size="m" class="flex-1 min-w-0" [formControl]="instagramToken" placeholder="Nalepi token" aria-label="Instagram token" autocomplete="off" data-testid="instagram-token" />
+                <app-button size="m" [loading]="instagramBusy()" [disabled]="!instagramToken.value.trim()" (click)="connectInstagram()" data-testid="instagram-connect">Poveži</app-button>
+              </div>
+            }
           }
+        </div>
+
+        <div class="card" data-testid="instagram-advice">
+          <h2 class="text-base font-semibold mb-1">Preporuka za Instagram profil salona</h2>
+          <ol class="list-decimal pl-5 text-sm flex flex-col gap-2">
+            <li><strong>Pređi na poslovni (Business) nalog</strong> — besplatno je: Podešavanja → Tip naloga i alati → Prebaci na profesionalni nalog → Biznis. Bez toga nema statistike ni povezivanja sa aplikacijom. Profil mora biti javan, što je za salon i poželjno.</li>
+            <li><strong>Kategorija i podaci:</strong> kategorija „Frizerski salon", adresa, radno vreme i dugmad Pozovi / Email / Uputstva.</li>
+            <li>
+              <strong>Link u biju</strong> neka bude link sa praćenjem — tako u Pregledu vidiš koliko je ljudi došlo sa Instagrama, registrovalo se i zakazalo:
+              <span class="flex flex-wrap items-center gap-2 mt-1">
+                <code class="text-xs break-all">{{ bioLink }}</code>
+                <button type="button" appBtn theme="ghost" size="s" (click)="copyBioLink()" data-testid="instagram-bio-copy"><span appIcon="copy" aria-hidden="true"></span> Kopiraj</button>
+              </span>
+            </li>
+            <li><strong>Facebook stranica</strong> nije neophodna — potrebna je tek za ozbiljnije plaćene reklame (Ads Manager).</li>
+            <li><strong>Meta Verified</strong> (plava kvačica, plaća se) salonu ne treba.</li>
+          </ol>
         </div>
       }
 

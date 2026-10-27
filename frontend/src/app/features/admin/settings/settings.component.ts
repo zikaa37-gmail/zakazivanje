@@ -1,5 +1,7 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
 import { InstagramState } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
@@ -22,7 +24,8 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
-type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'notifications';
+type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'social' | 'notifications';
+const TABS: Tab[] = ['business', 'look', 'hours', 'booking', 'payments', 'social', 'notifications'];
 
 interface DayRow {
   weekday: number;
@@ -48,17 +51,20 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, TimePickerComponent, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, SrDatePipe, TimePickerComponent, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
   private fb = inject(FormBuilder);
-  private business = inject(BusinessSettingService);
+  protected business = inject(BusinessSettingService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private theme = inject(ThemeService);
   private toast = inject(ToastService);
   private notificationLogs = inject(NotificationLogService);
   private dashboard = inject(DashboardService);
   private marketing = inject(MarketingService);
+  readonly bioLink = this.marketing.link(`${window.location.origin}/`, 'instagram', 'bio');
   private confirm = inject(ConfirmService);
   readonly instagram = signal<InstagramState | null>(null);
   readonly instagramToken = new FormControl('', { nonNullable: true });
@@ -101,6 +107,7 @@ export class SettingsComponent {
     city: this.fb.control<string | null>(null),
     map_query: this.fb.control<string | null>(null),
     instagram_feed_enabled: this.fb.nonNullable.control(false),
+    instagram_insights_enabled: this.fb.nonNullable.control(true),
     phone: this.fb.control<string | null>(null),
     whatsapp_number: this.fb.control<string | null>(null),
     email: this.fb.control<string | null>(null, Validators.email),
@@ -197,6 +204,7 @@ export class SettingsComponent {
   ];
 
   constructor() {
+    this.readReturn();
     this.business.load().subscribe({
       next: (settings) => {
         this.fill(settings);
@@ -373,6 +381,39 @@ export class SettingsComponent {
     });
   }
 
+  authorizeInstagram(): void {
+    this.instagramBusy.set(true);
+    this.instagramError.set(null);
+    this.marketing.authorizeInstagram().subscribe({
+      next: ({ url }) => window.location.assign(url),
+      error: (err) => {
+        this.instagramBusy.set(false);
+        this.instagramError.set(apiErrorMessage(err, 'Povezivanje trenutno nije moguće.'));
+      },
+    });
+  }
+
+  async copyBioLink(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.bioLink);
+      this.toast.success('Link je kopiran — nalepi ga u Instagram profil (Uredi profil → Linkovi).');
+    } catch {
+      this.toast.error('Kopiranje nije uspelo.');
+    }
+  }
+
+  private readReturn(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const tab = params.get('tab') as Tab | null;
+    if (tab && TABS.includes(tab)) this.tab.set(tab);
+    const result = params.get('instagram');
+    if (!result) return;
+    if (result === 'connected') this.toast.success('Instagram je povezan.');
+    if (result === 'cancelled') this.toast.error('Povezivanje sa Instagramom je otkazano.');
+    if (result === 'error') this.instagramError.set(params.get('message') || 'Povezivanje sa Instagramom nije uspelo.');
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab }, replaceUrl: true });
+  }
+
   connectInstagram(): void {
     const token = this.instagramToken.value.trim();
     if (!token) return;
@@ -429,6 +470,7 @@ export class SettingsComponent {
       city: clean(value.city),
       map_query: clean(value.map_query),
       instagram_feed_enabled: value.instagram_feed_enabled,
+      instagram_insights_enabled: value.instagram_insights_enabled,
       phone: clean(value.phone),
       whatsapp_number: clean(value.whatsapp_number),
       email: clean(value.email),
@@ -456,7 +498,7 @@ export class SettingsComponent {
       next: (settings) => {
         this.saving.set(false);
         this.saved = settings;
-    this.instagram.set({ instagram_connected: settings.instagram_connected, instagram_username: settings.instagram_username, instagram_token_expires_at: settings.instagram_token_expires_at ?? null, instagram_feed_enabled: settings.instagram_feed_enabled ?? false });
+    this.instagram.set({ instagram_connected: settings.instagram_connected, instagram_username: settings.instagram_username, instagram_token_expires_at: settings.instagram_token_expires_at ?? null, instagram_feed_enabled: settings.instagram_feed_enabled ?? false, instagram_insights_enabled: settings.instagram_insights_enabled ?? true });
         this.coverData.set(undefined);
         if (this.tab() === 'booking') this.loadDemand();
         this.toast.success('Podešavanja su sačuvana.');
@@ -487,6 +529,7 @@ export class SettingsComponent {
       city: settings.city,
       map_query: settings.map_query ?? null,
       instagram_feed_enabled: settings.instagram_feed_enabled ?? false,
+      instagram_insights_enabled: settings.instagram_insights_enabled ?? true,
       phone: settings.phone,
       whatsapp_number: settings.whatsapp_number,
       email: settings.email,

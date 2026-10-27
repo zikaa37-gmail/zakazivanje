@@ -51,6 +51,8 @@ export interface BusinessSetting {
   instagram_username: string | null;
   instagram_token_expires_at?: string | null;
   instagram_feed_enabled?: boolean;
+  instagram_insights_enabled?: boolean;
+  instagram_oauth_available?: boolean;
   cover_image?: string | null;
   theme_primary: string | null;
   theme_secondary: string | null;

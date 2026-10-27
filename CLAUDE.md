@@ -206,8 +206,9 @@ Landing i Instagram (#65): početna je landing za sve (naslovna ili prva fotogra
 iz `map_query` ili naziva i adrese, bez API ključa), utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
 Praćenje izvora: `?izvor=&kampanja=` (i `utm_*`, referrer instagram/facebook/tiktok/google) pamti `MarketingService.capture()` 30 dana;
 poseta → `marketing_visits`, registracija → `users.signup_source`, termin → `appointments.referral_source`; Pregled → „Odakle dolaze klijenti",
-Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Objave sa Instagrama su opcione (`InstagramService`, token iz Podešavanja →
-Biznis, šifrovan u bazi).
+Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Instagram i Meta (#67): Podešavanja → Instagram i Meta — „Poveži sa Instagramom" (OAuth, `config/instagram.php`, `INSTAGRAM_APP_*`
+u `.env`; bez njih ručni token), prekidači po funkciji (`instagram_feed_enabled`, `instagram_insights_enabled`), preporuke za profil i link
+za bio. Token je šifrovan u bazi (`InstagramService`).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
