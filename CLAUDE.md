@@ -99,6 +99,11 @@ npm install
 npm start
 ```
 
+Demo podaci za ručno testiranje: `php artisan db:seed --class=DemoDataSeeder` — 32 klijenta `@demo.zakazivanje.rs`
+(lozinka `test`, neki bez naloga), termini od pre 60 do za 21 dan po radnom vremenu zaposlenih, naplate, recenzije,
+aktivnost, nekoliko klijenata u žutoj / narandžastoj zoni i nalog radnika za prvog zaposlenog (`<ime>@demo.zakazivanje.rs` /
+`radnik2026`). Ponovno pokretanje briše prethodne demo klijente i pravi nove.
+
 Posle izmena pokreni relevantne testove: `php artisan test` (backend) i `npx ng build` (frontend).
 
 ## Current state
