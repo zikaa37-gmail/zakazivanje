@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../core/models/business-setting.model';
 import { SalonService } from '../../../core/models/service.model';
@@ -12,6 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { isoDate, today } from '../../../core/utils/dates';
 import { shiftName } from '../../../core/utils/schedule';
+import { AccordionComponent } from '../../../shared/components/accordion/accordion.component';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
@@ -34,7 +36,7 @@ const PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#1d4ed8', '#15803d
 @Component({
   selector: 'app-staff-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
+  imports: [NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './staff-list.component.html',
 })
 export class StaffListComponent {
@@ -46,11 +48,12 @@ export class StaffListComponent {
   private business = inject(BusinessSettingService);
 
   readonly weekdays = WEEKDAYS;
-  readonly roleLabels = ROLE_LABELS;
   readonly palette = PALETTE;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly staff = signal<StaffMember[]>([]);
+  readonly activeStaff = computed(() => this.staff().filter((m) => m.active));
+  readonly inactiveStaff = computed(() => this.staff().filter((m) => !m.active));
   readonly services = signal<SalonService[]>([]);
 
   readonly editing = signal<StaffMember | null>(null);
@@ -191,6 +194,10 @@ export class StaffListComponent {
     return CONFIRMATION_OPTIONS.find((o) => o.value === member.booking_confirmation)?.label ?? '';
   }
 
+  accountLabel(member: StaffMember): string {
+    return member.account ? ROLE_LABELS[member.account.role] : '';
+  }
+
   initials(member: StaffMember): string {
     return `${member.first_name[0] ?? ''}${member.last_name[0] ?? ''}`.toUpperCase();
   }
@@ -198,7 +205,7 @@ export class StaffListComponent {
   onAction(member: StaffMember, action: string): void {
     if (action === 'edit') this.openForm(member);
     if (action === 'deactivate') this.deactivate(member);
-    if (action === 'activate') this.setActive(member, true);
+    if (action === 'activate') this.activate(member);
   }
 
   openForm(member: StaffMember | null = null): void {
@@ -313,6 +320,16 @@ export class StaffListComponent {
       confirmLabel: 'Deaktiviraj',
     });
     if (ok) this.setActive(member, false);
+  }
+
+  private async activate(member: StaffMember): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Aktivacija zaposlenog',
+      message: `${member.first_name} ${member.last_name} će ponovo moći da prima termine i pojaviće se u kalendaru, a nalog radnika se ponovo uključuje.`,
+      confirmLabel: 'Aktiviraj',
+      danger: false,
+    });
+    if (ok) this.setActive(member, true);
   }
 
   private setActive(member: StaffMember, active: boolean): void {
