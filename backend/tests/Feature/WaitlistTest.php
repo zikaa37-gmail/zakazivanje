@@ -34,7 +34,7 @@ class WaitlistTest extends TestCase
         Notification::fake();
         BusinessSetting::current()->update(['slot_interval_minutes' => 60]);
 
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->booked = User::factory()->create();
         $this->waiting = User::factory()->create();
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);

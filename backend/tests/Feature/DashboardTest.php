@@ -25,7 +25,7 @@ class DashboardTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->cut->id]);

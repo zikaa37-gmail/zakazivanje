@@ -17,7 +17,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
 | POST | `/bookings/quote` | cena sa akcijama (za prijavljenog klijenta računa i loyalty / N+M) |
 | POST | `/bookings` | `{service_ids, staff_member_id?, starts_at "Y-m-d H:i", note?, guest?}` — gost: `{first_name, last_name, phone, email?}`; `null` zaposleni = prvi slobodan |
-| POST | `/auth/register` | registracija klijenta → mejl za potvrdu (preuzima klijenta kog je admin upisao bez naloga, isti email) |
+| POST | `/auth/register` | registracija klijenta → mejl za potvrdu (preuzima klijenta kog je salon upisao bez naloga, isti email) |
 | POST | `/auth/login` | `{email, password}` → `{access_token, refresh_token, user}` |
 | POST | `/auth/refresh` | `{refresh_token}` → novi par tokena (stari se opoziva) |
 | POST | `/auth/verify-email` | `{token}` iz linka u mejlu |
@@ -38,7 +38,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
-| POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; adminu mejl sa starim vremenom |
+| POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; salonu mejl sa starim vremenom |
 | POST | `/my-waitlist/list`, `/my-waitlist` | lista čekanja klijenta / prijava `{service_ids, staff_member_id?, date, part: any \| morning \| afternoon}` (jedna po danu) |
 | DELETE | `/my-waitlist/{id}` | odjava |
 | POST | `/my-appointments/{id}/review` | `{rating 1–5, comment?}` — samo završen termin; izmena do 30 dana |
@@ -46,31 +46,40 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/my-appointments/{id}/slip` | PDF uplatnica |
 | POST | `/my-appointments/{id}/cancel` | otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina) |
 
-## Admin (`jwt` + `role:admin`)
+## Osoblje (`jwt` + `role:owner,worker`)
+
+Vlasnik i radnik — svakodnevni rad.
 
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
-| PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`) |
 | POST | `/staff/list` | zaposleni sa uslugama i radnim vremenom |
-| POST / PUT / DELETE | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis) |
 | POST | `/services/list` | sve usluge (i neaktivne) |
 | POST | `/services/quote` | `{service_ids, date?, completed_visits?, completed_visits_by_service?}` → cena sa akcijama (`PriceQuoteService`) |
-| POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `category`, `staff_member_ids` |
-| POST | `/promotions/list` | akcije |
-| POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays` |
 | POST | `/clients/list` | `{search?, page?}` → paginirano, `has_account` |
-| POST / PUT / DELETE | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski) |
+| POST / PUT | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski) |
 | POST | `/appointments/list` | `{from, to, staff_member_id?, status?, search?}` |
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
-| POST | `/appointments` | admin zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
+| POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series}` — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
-| POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (admin, i bez uključenog plaćanja unapred) |
+| POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |
-| POST / DELETE | `/waitlist/list`, `/waitlist/{id}` | aktivne prijave na listu čekanja (admin) |
+| POST / DELETE | `/waitlist/list`, `/waitlist/{id}` | aktivne prijave na listu čekanja |
+| POST | `/dashboard/today` | `{date?}` → termini dana, sledeći termin, zahtevi na čekanju, ko radi i očekivani prihod |
+
+## Vlasnik (`jwt` + `role:owner`)
+
+| Metoda | Ruta | Opis |
+| --- | --- | --- |
+| PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`) |
+| POST / PUT / DELETE | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); sa `email` zaposleni automatski dobija nalog radnika (`users.staff_member_id`), brisanje gasi nalog |
+| POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `category`, `staff_member_ids` |
+| POST | `/promotions/list` | akcije |
+| POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays` |
+| DELETE | `/clients/{id}` | brisanje klijenta |
 | POST | `/reviews/list` | `{rating?, staff_member_id?, visible?}` → `{summary, staff (prosek po zaposlenom), items}` |
 | PUT | `/reviews/{id}` | `{visible?, reply?}` — sakrivanje sa sajta, odgovor salona |
 | POST | `/share/qr` | `{url}` (http/https) → `{url, png (data URL), svg}` za štampu |
@@ -78,7 +87,9 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/gallery` | `{data (data URL JPG/PNG/WEBP, do ~4 MB), width, height, caption?, service_id?}` — jedna slika po pozivu, nova ide na početak |
 | PUT / DELETE | `/gallery/{id}` | `{caption?, service_id?, visible?}` / brisanje |
 | POST | `/gallery/reorder` | `{ids}` — redosled kao na ekranu |
-| POST | `/dashboard/today` | `{date?}` → termini dana, sledeći termin, zahtevi na čekanju, ko radi i očekivani prihod |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
-| POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom adminu |
+| POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom korisniku |
+| POST | `/team/list` | nalozi osoblja (vlasnici i radnici) sa `staff_member`, `has_password` |
+| POST / PUT / DELETE | `/team`, `/team/{id}` | `{first_name, last_name, email, phone?, role: owner \| worker, active?, send_invite?}` — administrativni radnik ili vlasnik; nalogu zaposlenog menjaju se samo `role` i `active`; mora ostati bar jedan aktivan vlasnik |
+| POST | `/team/{id}/invite` | mejl sa linkom za postavljanje lozinke |

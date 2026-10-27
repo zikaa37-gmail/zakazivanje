@@ -68,7 +68,7 @@ class ServiceAudienceTest extends TestCase
 
     public function test_admin_is_held_to_the_same_rule(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $petar = User::factory()->create(['gender' => 'male']);
 
         $this->actingAsJwt($admin)->postJson('/api/appointments', [

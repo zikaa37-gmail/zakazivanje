@@ -35,7 +35,7 @@ class NotificationTest extends TestCase
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Jovanović']);
         $this->ana->services()->sync([$this->cut->id]);
         $this->ana->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN, 'email' => 'salon@example.com']);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER, 'email' => 'salon@example.com']);
     }
 
     private function guestBooking(array $guest, string $at = '2026-10-21 10:00')

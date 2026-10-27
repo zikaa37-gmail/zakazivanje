@@ -3,6 +3,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../core/models/business-setting.model';
 import { SalonService } from '../../../core/models/service.model';
 import { StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
+import { ROLE_LABELS } from '../../../core/models/user.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
@@ -45,6 +46,7 @@ export class StaffListComponent {
   private business = inject(BusinessSettingService);
 
   readonly weekdays = WEEKDAYS;
+  readonly roleLabels = ROLE_LABELS;
   readonly palette = PALETTE;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);

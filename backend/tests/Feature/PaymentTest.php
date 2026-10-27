@@ -26,7 +26,7 @@ class PaymentTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
         $cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);

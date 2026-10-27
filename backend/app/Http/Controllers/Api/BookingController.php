@@ -93,8 +93,8 @@ class BookingController extends Controller
 
         $client = $request->user() ?? $this->guestClient($data['guest']);
 
-        if ($client->isAdmin()) {
-            throw ValidationException::withMessages(['guest' => ['Admin zakazuje kroz stranicu Termini.']]);
+        if ($client->isStaff()) {
+            throw ValidationException::withMessages(['guest' => ['Osoblje zakazuje kroz stranicu Termini.']]);
         }
 
         $appointment = $this->bookings->book(

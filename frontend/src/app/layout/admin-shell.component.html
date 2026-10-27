@@ -11,12 +11,12 @@
     }
     <div class="min-w-0">
       <div class="shell-brand-name">{{ business.name() }}</div>
-      <div class="shell-brand-role">Administrator</div>
+      <div class="shell-brand-role">{{ roleLabel() }}</div>
     </div>
   </div>
 
-  <nav class="shell-nav" aria-label="Admin meni">
-    @for (item of nav; track item.path) {
+  <nav class="shell-nav" aria-label="Meni salona">
+    @for (item of nav(); track item.path) {
       <a class="shell-nav-item" [routerLink]="item.path" routerLinkActive="active" [attr.data-testid]="'nav-' + item.path.split('/').pop()">
         <span [appIcon]="item.icon" [iconSize]="18" aria-hidden="true"></span>
         <span class="flex-1">{{ item.label }}</span>

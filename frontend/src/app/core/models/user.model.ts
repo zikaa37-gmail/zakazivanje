@@ -1,4 +1,4 @@
-export type UserRole = 'client' | 'admin';
+export type UserRole = 'client' | 'owner' | 'worker';
 
 export type CommunicationChannel = 'email' | 'whatsapp' | 'both';
 
@@ -15,6 +15,7 @@ export interface User {
   last_name: string;
   gender: Gender | null;
   favorite_staff_member_id: number | null;
+  staff_member_id: number | null;
   email: string;
   phone: string | null;
   whatsapp_number: string | null;
@@ -34,5 +35,6 @@ export const COMMUNICATION_OPTIONS: { value: CommunicationChannel; label: string
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   client: 'Klijent',
-  admin: 'Administrator',
+  owner: 'Vlasnik',
+  worker: 'Radnik',
 };

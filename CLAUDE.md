@@ -17,8 +17,11 @@ Prati isti obrazac kao `D:\Playground\Angular\kosarkaska-evidencija` (a ona `pra
 pogledaj taj repo za referentne konvencije (auth interceptor, core/services po entitetu, deljene
 komponente, deploy na cPanel) ako nešto ovde nije eksplicitno napisano.
 
-Uloge: `client` (registruje se sam, zakazuje) i `admin` (vlasnik / osoblje, upravlja svime).
-Middleware `role:admin` štiti admin rute; nove uloge (npr. zaposleni) dodaju se u `User::ROLES`.
+Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik, upravlja svime) i `worker` (radnik:
+pregled dana, kalendar, termini, blokade, klijenti bez brisanja, lista čekanja). Rute: `role:owner,worker`
+za svakodnevni rad, `role:owner` za ostalo; frontend `staffGuard` / `ownerGuard`, meni po `ownerOnly`.
+Svaki zaposleni sa emailom automatski ima nalog radnika (`users.staff_member_id`, `StaffAccountService::sync()`);
+administrativni radnik je nalog bez zaposlenog (Nalozi osoblja, `/admin/team`). Nove uloge idu u `User::ROLES`.
 
 ## Working conventions
 
@@ -83,8 +86,9 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Seed nalozi: admin `zakazivanje@fiskultura.rs` / `zakazivanje2026`, klijent Petar Petrović
-`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Admin / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
+Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, radnik `radnik@fiskultura.rs` /
+`radnik2026`, klijent Petar Petrović
+`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Vlasnik / Radnik / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
 `environment.ts` i `environment.development.ts`) — dok su podaci test; ukloniti pre pravih klijenata.
 
 Frontend (from `frontend/`):

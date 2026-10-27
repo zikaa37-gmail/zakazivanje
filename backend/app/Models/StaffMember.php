@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 #[Fillable(['first_name', 'last_name', 'title', 'phone', 'email', 'color', 'booking_confirmation', 'avatar', 'active', 'sort_order', 'rotation_weeks', 'rotation_starts_on'])]
@@ -67,6 +68,11 @@ class StaffMember extends Model
     public function workingHours(): HasMany
     {
         return $this->hasMany(StaffWorkingHour::class)->orderBy('week')->orderBy('weekday')->orderBy('starts_at');
+    }
+
+    public function account(): HasOne
+    {
+        return $this->hasOne(User::class);
     }
 
     public function reviews(): HasMany

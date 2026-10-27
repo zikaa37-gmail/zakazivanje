@@ -29,7 +29,7 @@ class GalleryTest extends TestCase
 
     public function test_admin_uploads_and_public_sees_visible_images(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $service = Service::create(['name' => 'Feniranje', 'duration_minutes' => 30, 'price' => 1000]);
 
         $first = $this->upload($admin, ['caption' => 'Pre i posle', 'service_id' => $service->id]);
@@ -49,7 +49,7 @@ class GalleryTest extends TestCase
 
     public function test_new_images_come_first_and_can_be_reordered(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $a = $this->upload($admin);
         $b = $this->upload($admin);
 
@@ -64,7 +64,7 @@ class GalleryTest extends TestCase
 
     public function test_rejects_non_image_data(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $this->actingAsJwt($admin)->postJson('/api/gallery', ['data' => 'data:text/html;base64,PGI+', 'width' => 1, 'height' => 1])
             ->assertUnprocessable()

@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { ownerGuard, staffGuard } from './core/guards/staff.guard';
 
 export const routes: Routes = [
   {
@@ -72,7 +72,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    canActivate: [staffGuard],
     loadComponent: () => import('./layout/admin-shell.component').then((m) => m.AdminShellComponent),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -93,31 +93,37 @@ export const routes: Routes = [
       },
       {
         path: 'staff',
+        canActivate: [ownerGuard],
         title: 'Zaposleni',
         loadComponent: () => import('./features/admin/staff/staff-list.component').then((m) => m.StaffListComponent),
       },
       {
         path: 'services',
+        canActivate: [ownerGuard],
         title: 'Usluge',
         loadComponent: () => import('./features/admin/services/service-list.component').then((m) => m.ServiceListComponent),
       },
       {
         path: 'promotions',
+        canActivate: [ownerGuard],
         title: 'Cene i akcije',
         loadComponent: () => import('./features/admin/promotions/promotion-list.component').then((m) => m.PromotionListComponent),
       },
       {
         path: 'gallery',
+        canActivate: [ownerGuard],
         title: 'Galerija',
         loadComponent: () => import('./features/admin/gallery/gallery-admin.component').then((m) => m.GalleryAdminComponent),
       },
       {
         path: 'reviews',
+        canActivate: [ownerGuard],
         title: 'Recenzije',
         loadComponent: () => import('./features/admin/reviews/review-list.component').then((m) => m.ReviewListComponent),
       },
       {
         path: 'share',
+        canActivate: [ownerGuard],
         title: 'Podeli',
         loadComponent: () => import('./features/admin/share/share.component').then((m) => m.ShareComponent),
       },
@@ -127,7 +133,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/clients/client-list.component').then((m) => m.ClientListComponent),
       },
       {
+        path: 'team',
+        canActivate: [ownerGuard],
+        title: 'Nalozi osoblja',
+        loadComponent: () => import('./features/admin/team/team-list.component').then((m) => m.TeamListComponent),
+      },
+      {
         path: 'settings',
+        canActivate: [ownerGuard],
         title: 'Podešavanja',
         loadComponent: () => import('./features/admin/settings/settings.component').then((m) => m.SettingsComponent),
       },

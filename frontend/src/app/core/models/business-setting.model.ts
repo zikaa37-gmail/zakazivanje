@@ -75,7 +75,7 @@ export interface BusinessSetting {
 }
 
 export const CONFIRMATION_OPTIONS: { value: ConfirmationMode; label: string; hint: string }[] = [
-  { value: 'manual', label: 'Ručno', hint: 'Termin čeka da ga admin potvrdi.' },
+  { value: 'manual', label: 'Ručno', hint: 'Termin čeka da ga salon potvrdi.' },
   { value: 'automatic', label: 'Automatski', hint: 'Termin je potvrđen odmah po zakazivanju.' },
 ];
 

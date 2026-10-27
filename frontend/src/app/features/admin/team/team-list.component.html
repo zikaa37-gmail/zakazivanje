@@ -1,0 +1,97 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Nalozi osoblja</h1>
+    <p class="page-subtitle">Ko može da se prijavi u salon. Zaposleni sa email adresom automatski dobijaju nalog radnika.</p>
+  </div>
+  <button type="button" appBtn (click)="openForm()" data-testid="team-add">
+    <span appIcon="plus" aria-hidden="true"></span> Novi nalog
+  </button>
+</div>
+
+<app-error-message [message]="error()" />
+
+@if (loading() && members().length === 0) {
+} @else if (members().length === 0) {
+  <div class="card empty-state">Još nema naloga osoblja.</div>
+} @else {
+  <div class="card flex flex-col">
+    @for (member of members(); track member.id) {
+      <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [attr.data-testid]="'team-' + member.id">
+        <span class="avatar avatar-initials avatar-sm">{{ initials(member) }}</span>
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold truncate">{{ member.first_name }} {{ member.last_name }}</div>
+          <div class="text-xs muted truncate">{{ member.email }}</div>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span class="badge" [class.badge-success]="member.role === 'owner'" [class.badge-neutral]="member.role !== 'owner'">{{ roleLabels[member.role] }}</span>
+            @if (member.staff_member) {
+              <span class="badge badge-neutral">Zaposleni{{ member.staff_member.title ? ' · ' + member.staff_member.title : '' }}</span>
+            } @else if (member.role === 'worker') {
+              <span class="badge badge-neutral">Administrativni radnik</span>
+            }
+            @if (!member.active) {
+              <span class="badge badge-danger">Neaktivan</span>
+            } @else if (!member.has_password) {
+              <span class="badge badge-warning">Čeka lozinku</span>
+            }
+          </div>
+        </div>
+        <div class="hidden sm:block text-xs muted text-right whitespace-nowrap">
+          @if (member.last_login_at) {
+            Poslednja prijava<br />{{ member.last_login_at | srDateTime }}
+          } @else {
+            Još se nije prijavio/la
+          }
+        </div>
+        <app-row-actions [actions]="actionsFor(member)" (selected)="onAction(member, $event)" />
+      </div>
+    }
+  </div>
+}
+
+@if (modalOpen()) {
+  <app-modal [title]="editing() ? 'Izmena naloga' : 'Novi nalog'" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="team-modal">
+    <app-error-message [message]="formError()" />
+    @if (linked()) {
+      <p class="text-sm muted">Ime i email ovog naloga se menjaju u <a routerLink="/admin/staff">Zaposleni</a>.</p>
+    } @else if (!editing()) {
+      <p class="text-sm muted">Za administrativnog radnika (recepcija) ili još jednog vlasnika. Ne pojavljuje se među zaposlenima koji pružaju usluge.</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="team-first">Ime <span class="required-mark">*</span></label>
+          <input id="team-first" appInput size="m" formControlName="first_name" data-testid="team-first-name" />
+        </div>
+        <div class="field">
+          <label for="team-last">Prezime <span class="required-mark">*</span></label>
+          <input id="team-last" appInput size="m" formControlName="last_name" data-testid="team-last-name" />
+        </div>
+        <div class="field">
+          <label for="team-email">Email <span class="required-mark">*</span></label>
+          <input id="team-email" appInput size="m" type="email" formControlName="email" data-testid="team-email" />
+        </div>
+        <div class="field">
+          <label for="team-phone">Telefon</label>
+          <input id="team-phone" appInput size="m" type="tel" formControlName="phone" />
+        </div>
+        <div class="field">
+          <label for="team-role">Uloga</label>
+          <select id="team-role" appInput size="m" formControlName="role" data-testid="team-role">
+            @for (option of roleOptions; track option.value) {
+              <option [ngValue]="option.value">{{ option.label }}</option>
+            }
+          </select>
+          <span class="text-xs muted">{{ roleHint() }}</span>
+        </div>
+      </div>
+      @if (editing()) {
+        @if (!isSelf()) {
+          <app-toggle [checked]="form.controls.active.value" label="Aktivan (može da se prijavi)" (checkedChange)="form.controls.active.setValue($event)" data-testid="team-active" />
+        }
+      } @else {
+        <app-toggle [checked]="form.controls.send_invite.value" label="Pošalji pozivnicu za postavljanje lozinke" (checkedChange)="form.controls.send_invite.setValue($event)" data-testid="team-invite" />
+      }
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="team-save">Sačuvaj</app-button>
+  </app-modal>
+}

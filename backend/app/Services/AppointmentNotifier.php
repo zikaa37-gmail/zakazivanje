@@ -22,7 +22,7 @@ class AppointmentNotifier
         }
 
         if ($appointment->source === Appointment::SOURCE_ONLINE && $settings->notify_admin_new_booking) {
-            Notification::send($this->admins(), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::NEW_BOOKING));
+            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::NEW_BOOKING));
         }
     }
 
@@ -60,7 +60,7 @@ class AppointmentNotifier
     public function cancelledByClient(Appointment $appointment): void
     {
         if (BusinessSetting::current()->notify_admin_new_booking) {
-            Notification::send($this->admins(), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_CANCELLED));
+            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_CANCELLED));
         }
     }
 
@@ -81,7 +81,7 @@ class AppointmentNotifier
         }
 
         if ($settings->notify_admin_new_booking) {
-            Notification::send($this->admins(), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart));
+            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart));
         }
     }
 
@@ -99,8 +99,12 @@ class AppointmentNotifier
         }
     }
 
-    private function admins()
+    private function salonRecipients(Appointment $appointment)
     {
-        return User::where('role', User::ROLE_ADMIN)->where('active', true)->whereNotNull('email')->get();
+        return User::where('active', true)
+            ->whereNotNull('email')
+            ->where(fn ($q) => $q->where('role', User::ROLE_OWNER)
+                ->orWhere(fn ($q) => $q->where('role', User::ROLE_WORKER)->where('staff_member_id', $appointment->staff_member_id)))
+            ->get();
     }
 }

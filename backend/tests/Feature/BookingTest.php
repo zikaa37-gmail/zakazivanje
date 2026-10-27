@@ -46,7 +46,7 @@ class BookingTest extends TestCase
 
         $this->ana = $this->staff('Ana', null, [$this->cut->id, $this->blow->id]);
         $this->milica = $this->staff('Milica', 'automatic', [$this->cut->id]);
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
     }
 
     private function staff(string $name, ?string $mode, array $serviceIds): StaffMember

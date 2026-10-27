@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
+use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -64,46 +65,19 @@ Route::middleware('jwt')->group(function () {
     Route::post('/my-appointments/{appointment}/reschedule', [MyAppointmentController::class, 'reschedule'])->middleware('throttle:booking');
 });
 
-Route::middleware(['jwt', 'role:admin'])->group(function () {
-    Route::put('/business-settings', [BusinessSettingController::class, 'update']);
-
+Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
     Route::post('/dashboard/today', [DashboardController::class, 'today']);
-    Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
 
     Route::post('/staff/list', [StaffMemberController::class, 'index']);
-    Route::post('/staff', [StaffMemberController::class, 'store']);
-    Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
-    Route::delete('/staff/{staffMember}', [StaffMemberController::class, 'destroy']);
-
     Route::post('/services/list', [ServiceController::class, 'index']);
     Route::post('/services/quote', [ServiceController::class, 'quote']);
-    Route::post('/services', [ServiceController::class, 'store']);
-    Route::put('/services/{service}', [ServiceController::class, 'update']);
-    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
-
-    Route::post('/promotions/list', [PromotionController::class, 'index']);
-    Route::post('/promotions', [PromotionController::class, 'store']);
-    Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
-    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
 
     Route::post('/waitlist/list', [WaitlistController::class, 'index']);
     Route::delete('/waitlist/{entry}', [WaitlistController::class, 'adminDestroy']);
 
-    Route::post('/reviews/list', [ReviewController::class, 'index']);
-    Route::put('/reviews/{review}', [ReviewController::class, 'update']);
-
-    Route::post('/share/qr', [ShareController::class, 'qr']);
-
-    Route::post('/gallery/list', [GalleryController::class, 'index']);
-    Route::post('/gallery', [GalleryController::class, 'store']);
-    Route::post('/gallery/reorder', [GalleryController::class, 'reorder']);
-    Route::put('/gallery/{image}', [GalleryController::class, 'update']);
-    Route::delete('/gallery/{image}', [GalleryController::class, 'destroy']);
-
     Route::post('/clients/list', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::put('/clients/{client}', [ClientController::class, 'update']);
-    Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
 
     Route::post('/appointments/list', [AppointmentController::class, 'index']);
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
@@ -116,10 +90,48 @@ Route::middleware(['jwt', 'role:admin'])->group(function () {
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
 
-    Route::post('/notification-logs/list', [NotificationController::class, 'logs']);
-    Route::post('/notifications/test', [NotificationController::class, 'test'])->middleware('throttle:booking');
-
     Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
     Route::post('/blocked-times', [BlockedTimeController::class, 'store']);
     Route::delete('/blocked-times/{blockedTime}', [BlockedTimeController::class, 'destroy']);
+});
+
+Route::middleware(['jwt', 'role:owner'])->group(function () {
+    Route::put('/business-settings', [BusinessSettingController::class, 'update']);
+
+    Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
+
+    Route::post('/staff', [StaffMemberController::class, 'store']);
+    Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
+    Route::delete('/staff/{staffMember}', [StaffMemberController::class, 'destroy']);
+
+    Route::post('/team/list', [TeamController::class, 'index']);
+    Route::post('/team', [TeamController::class, 'store']);
+    Route::put('/team/{user}', [TeamController::class, 'update']);
+    Route::post('/team/{user}/invite', [TeamController::class, 'invite'])->middleware('throttle:booking');
+    Route::delete('/team/{user}', [TeamController::class, 'destroy']);
+
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    Route::post('/promotions/list', [PromotionController::class, 'index']);
+    Route::post('/promotions', [PromotionController::class, 'store']);
+    Route::put('/promotions/{promotion}', [PromotionController::class, 'update']);
+    Route::delete('/promotions/{promotion}', [PromotionController::class, 'destroy']);
+
+    Route::post('/reviews/list', [ReviewController::class, 'index']);
+    Route::put('/reviews/{review}', [ReviewController::class, 'update']);
+
+    Route::post('/share/qr', [ShareController::class, 'qr']);
+
+    Route::post('/gallery/list', [GalleryController::class, 'index']);
+    Route::post('/gallery', [GalleryController::class, 'store']);
+    Route::post('/gallery/reorder', [GalleryController::class, 'reorder']);
+    Route::put('/gallery/{image}', [GalleryController::class, 'update']);
+    Route::delete('/gallery/{image}', [GalleryController::class, 'destroy']);
+
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
+
+    Route::post('/notification-logs/list', [NotificationController::class, 'logs']);
+    Route::post('/notifications/test', [NotificationController::class, 'test'])->middleware('throttle:booking');
 });
