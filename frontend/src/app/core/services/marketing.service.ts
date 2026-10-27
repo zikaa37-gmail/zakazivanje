@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
-import { InstagramPost, InstagramState, Referral, SourcesReport } from '../models/marketing.model';
+import { FreeSlotsPreview, InstagramPost, InstagramState, NewInstagramPost, Referral, ScheduledInstagramPost, SourcesReport } from '../models/marketing.model';
 
 const REFERRAL_KEY = 'zk_referral';
 const VISIT_KEY = 'zk_visit';
@@ -78,6 +78,26 @@ export class MarketingService {
 
   disconnectInstagram(): Observable<InstagramState> {
     return this.http.delete<InstagramState>(`${environment.apiUrl}/instagram`);
+  }
+
+  scheduledPosts(): Observable<ScheduledInstagramPost[]> {
+    return this.http.post<ScheduledInstagramPost[]>(`${environment.apiUrl}/instagram/posts/list`, {}, this.quiet);
+  }
+
+  publishToInstagram(post: NewInstagramPost): Observable<ScheduledInstagramPost> {
+    return this.http.post<ScheduledInstagramPost>(`${environment.apiUrl}/instagram/posts`, post);
+  }
+
+  retryInstagramPost(id: number): Observable<ScheduledInstagramPost> {
+    return this.http.post<ScheduledInstagramPost>(`${environment.apiUrl}/instagram/posts/${id}/publish`, {});
+  }
+
+  deleteInstagramPost(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/instagram/posts/${id}`);
+  }
+
+  freeSlotsPreview(): Observable<FreeSlotsPreview> {
+    return this.http.post<FreeSlotsPreview>(`${environment.apiUrl}/instagram/free-slots/preview`, {});
   }
 
   private fromReferrer(): Referral | null {

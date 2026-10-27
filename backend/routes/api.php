@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\InstagramPostController;
 use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
@@ -30,6 +31,7 @@ Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middle
 Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/instagram', [MarketingController::class, 'instagramPosts'])->middleware('throttle:public');
 Route::get('/public/instagram/callback', [MarketingController::class, 'instagramCallback'])->middleware('throttle:public')->name('instagram.callback');
+Route::get('/public/instagram-media/{token}', [InstagramPostController::class, 'media'])->where('token', '[A-Za-z0-9]{40}')->name('instagram.media');
 Route::post('/public/visit', [MarketingController::class, 'visit'])->middleware(['jwt.optional', 'throttle:public']);
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
 Route::get('/public/reports/{file}', [ReportController::class, 'file'])->middleware('signed')->name('reports.file');
@@ -116,6 +118,11 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
     Route::post('/instagram/authorize', [MarketingController::class, 'authorizeInstagram']);
     Route::post('/instagram/connect', [MarketingController::class, 'connectInstagram'])->middleware('throttle:booking');
     Route::delete('/instagram', [MarketingController::class, 'disconnectInstagram']);
+    Route::post('/instagram/posts/list', [InstagramPostController::class, 'index']);
+    Route::post('/instagram/posts', [InstagramPostController::class, 'store'])->middleware('throttle:booking');
+    Route::post('/instagram/posts/{post}/publish', [InstagramPostController::class, 'publish'])->middleware('throttle:booking');
+    Route::delete('/instagram/posts/{post}', [InstagramPostController::class, 'destroy']);
+    Route::post('/instagram/free-slots/preview', [InstagramPostController::class, 'freeSlotsPreview']);
 
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);

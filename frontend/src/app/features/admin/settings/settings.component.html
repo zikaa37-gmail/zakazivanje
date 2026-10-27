@@ -111,7 +111,29 @@
             <div class="flex flex-col gap-1">
               <app-toggle [checked]="form.controls.instagram_feed_enabled.value" label="Objave sa Instagrama na početnoj" (checkedChange)="form.controls.instagram_feed_enabled.setValue($event)" data-testid="settings-instagram-feed" />
               <app-toggle [checked]="form.controls.instagram_insights_enabled.value" label="Statistika Instagrama u Pregledu (doseg, posete profilu, klikovi na link)" (checkedChange)="form.controls.instagram_insights_enabled.setValue($event)" data-testid="settings-instagram-insights" />
+              <app-toggle [checked]="form.controls.instagram_publishing_enabled.value" label="Objavljivanje iz aplikacije (Podeli → Objavi na Instagram, odmah ili zakazano)" (checkedChange)="form.controls.instagram_publishing_enabled.setValue($event)" data-testid="settings-instagram-publishing" />
             </div>
+            @if (form.controls.instagram_publishing_enabled.value) {
+              <div class="mt-3 pt-3 border-t border-[var(--color-border)]" data-testid="instagram-free-slots">
+                <app-toggle [checked]="form.controls.instagram_free_slots_enabled.value" label="Story „Slobodni termini“ — automatski, samo manje traženi termini za sutra" (checkedChange)="form.controls.instagram_free_slots_enabled.setValue($event)" data-testid="settings-instagram-free-slots" />
+                <p class="text-xs muted mt-1">Aplikacija sama pravi story sa slobodnim terminima u satima kada inače ima malo posla. Kad takvih termina nema, ništa se ne objavljuje. Instagram ne dozvoljava link na story-ju objavljenom preko aplikacije, pa na slici piše „Zakaži preko linka u biju".</p>
+                @if (form.controls.instagram_free_slots_enabled.value) {
+                  <div class="field mt-3">
+                    <span class="text-sm font-semibold">Dani objave</span>
+                    <div class="chip-group">
+                      @for (day of weekdayList; track day.value) {
+                        <button type="button" class="chip" [class.selected]="form.controls.instagram_free_slots_days.value.includes(day.value)" (click)="toggleFreeSlotsDay(day.value)" [attr.aria-pressed]="form.controls.instagram_free_slots_days.value.includes(day.value)" [attr.data-testid]="'free-slots-day-' + day.value">{{ day.label }}</button>
+                      }
+                    </div>
+                  </div>
+                  <div class="field">
+                    <span class="text-sm font-semibold">Vreme objave</span>
+                    <app-time-picker [control]="form.controls.instagram_free_slots_time" data-testid="free-slots-time" />
+                  </div>
+                  <button type="button" appBtn theme="secondary" size="s" (click)="showFreeSlotsPreview()" data-testid="free-slots-preview"><span appIcon="eye" aria-hidden="true"></span> Pogledaj primer za sutra</button>
+                }
+              </div>
+            }
             <button type="button" appBtn theme="ghost" size="s" class="mt-3" (click)="disconnectInstagram()" data-testid="instagram-disconnect">Prekini vezu</button>
           } @else {
             <p class="text-sm muted mb-3">Povezivanjem aplikacija prikazuje tvoje objave na početnoj i u Pregledu pokazuje koliko je ljudi videlo profil i kliknulo na link. Linkovi sa praćenjem (Podeli) rade i bez ovoga.</p>
@@ -134,6 +156,16 @@
             }
           }
         </div>
+
+        @if (freeSlotsPreview(); as preview) {
+          <app-modal [title]="'Slobodni termini — ' + preview.label" footerMode="none" (cancelled)="freeSlotsPreview.set(null)" testId="free-slots-preview-modal">
+            @if (preview.image) {
+              <img [src]="preview.image" alt="Primer story-ja sa slobodnim terminima" class="w-full max-w-xs mx-auto rounded-lg" />
+            } @else {
+              <p class="text-sm muted">Za {{ preview.label }} nema slobodnih manje traženih termina — tog dana se ništa ne bi objavilo.</p>
+            }
+          </app-modal>
+        }
 
         <div class="card" data-testid="instagram-advice">
           <h2 class="text-base font-semibold mb-1">Preporuka za Instagram profil salona</h2>

@@ -88,6 +88,11 @@ Dugme „Poveži sa Instagramom" (Podešavanja → Instagram i Meta) radi kad po
 
 Bez ovih ključeva ostaje ručno lepljenje tokena. Token se obnavlja `instagram:refresh-token` (ponedeljkom 04:00).
 
+Objavljivanje (Podeli → „Objavi na Instagram", story „Slobodni termini") traži dozvolu `instagram_business_content_publish`
+(već je u `config/instagram.php`) i da `APP_URL` bude javna HTTPS adresa — Instagram sam preuzima sliku sa
+`/api/public/instagram-media/{token}`. Zakazane objave šalje `instagram:publish-scheduled` (na 5 minuta, preko postojećeg
+cron-a za `schedule:run`). Lokalno objavljivanje ne radi jer Instagram ne vidi `localhost`.
+
 ## Provera
 
 - `https://zakazivanje.fiskultura.rs/` učitava aplikaciju.

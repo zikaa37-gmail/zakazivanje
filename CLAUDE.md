@@ -209,6 +209,11 @@ poseta → `marketing_visits`, registracija → `users.signup_source`, termin �
 Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Instagram i Meta (#67): Podešavanja → Instagram i Meta — „Poveži sa Instagramom" (OAuth, `config/instagram.php`, `INSTAGRAM_APP_*`
 u `.env`; bez njih ručni token), prekidači po funkciji (`instagram_feed_enabled`, `instagram_insights_enabled`), preporuke za profil i link
 za bio. Token je šifrovan u bazi (`InstagramService`).
+Objavljivanje (#69): prekidač `instagram_publishing_enabled`; Podeli → „Objavi na Instagram" (canvas → JPEG, objava ili story, odmah
+ili zakazano) → `instagram_posts` (slika kao data URL, javno `/public/instagram-media/{token}`, briše se posle objave),
+`InstagramPublisher` (kontejner → čekanje `status_code` → `media_publish`, greške u `error`), `instagram:publish-scheduled` na 5 min.
+Opcioni story „Slobodni termini" (`instagram_free_slots_*`: dani, vreme) — `FreeSlotsStoryService` (slobodni termini za sutra samo u
+manje traženim satima iz `DemandService`, slika 1080×1920 kroz GD i DejaVu iz dompdf-a); bez takvih termina red je „Preskočeno".
 Statistika (#68): Pregled → „Odakle dolaze klijenti" — lestvica za Instagram (doseg → posete profilu → klik na link iz `InstagramService::insights()`,
 pa naše posete → registracije + prijave postojećih (`marketing_visits.logins`) → termini (novi klijenti = prvi termin) → prihod) i najbolje objave.
 Pregled: grafikoni su opcioni (prekidač „Prikaži grafikone", pamti se u pregledaču, podrazumevano isključeno); klik na stub dana i

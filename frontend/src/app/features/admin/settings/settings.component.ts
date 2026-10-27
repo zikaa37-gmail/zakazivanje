@@ -3,7 +3,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute, Router } from '@angular/router';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
-import { InstagramState } from '../../../core/models/marketing.model';
+import { FreeSlotsPreview, InstagramState } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { MarketingService } from '../../../core/services/marketing.service';
@@ -19,6 +19,7 @@ import { ErrorMessageComponent } from '../../../shared/components/error-message/
 import { WEEKDAYS } from '../../../core/models/staff.model';
 import { ImageCropperComponent } from '../../../shared/components/image-cropper/image-cropper.component';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
+import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
@@ -51,7 +52,7 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, SrDatePipe, TimePickerComponent, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, ModalComponent, SrDatePipe, TimePickerComponent, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
@@ -70,6 +71,7 @@ export class SettingsComponent {
   readonly instagramToken = new FormControl('', { nonNullable: true });
   readonly instagramBusy = signal(false);
   readonly instagramError = signal<string | null>(null);
+  readonly freeSlotsPreview = signal<FreeSlotsPreview | null>(null);
   readonly offPeak = signal<{ hasHistory: boolean; rows: { day: string; ranges: string }[] } | null>(null);
 
   readonly categories = BUSINESS_CATEGORIES;
@@ -108,6 +110,10 @@ export class SettingsComponent {
     map_query: this.fb.control<string | null>(null),
     instagram_feed_enabled: this.fb.nonNullable.control(false),
     instagram_insights_enabled: this.fb.nonNullable.control(true),
+    instagram_publishing_enabled: this.fb.nonNullable.control(false),
+    instagram_free_slots_enabled: this.fb.nonNullable.control(false),
+    instagram_free_slots_days: this.fb.nonNullable.control<number[]>([]),
+    instagram_free_slots_time: this.fb.control<string | null>('09:00'),
     phone: this.fb.control<string | null>(null),
     whatsapp_number: this.fb.control<string | null>(null),
     email: this.fb.control<string | null>(null, Validators.email),
@@ -441,9 +447,24 @@ export class SettingsComponent {
       next: (state) => {
         this.instagram.set(state);
         this.form.controls.instagram_feed_enabled.setValue(false);
+        this.form.controls.instagram_publishing_enabled.setValue(false);
+        this.form.controls.instagram_free_slots_enabled.setValue(false);
         this.toast.success('Veza sa Instagramom je prekinuta.');
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Prekid veze nije uspeo.')),
+    });
+  }
+
+  toggleFreeSlotsDay(day: number): void {
+    const control = this.form.controls.instagram_free_slots_days;
+    control.setValue(control.value.includes(day) ? control.value.filter((d) => d !== day) : [...control.value, day].sort());
+    control.markAsDirty();
+  }
+
+  showFreeSlotsPreview(): void {
+    this.marketing.freeSlotsPreview().subscribe({
+      next: (preview) => this.freeSlotsPreview.set(preview),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Primer nije napravljen.')),
     });
   }
 
@@ -471,6 +492,7 @@ export class SettingsComponent {
       map_query: clean(value.map_query),
       instagram_feed_enabled: value.instagram_feed_enabled,
       instagram_insights_enabled: value.instagram_insights_enabled,
+      instagram_free_slots_time: value.instagram_free_slots_time || '09:00',
       phone: clean(value.phone),
       whatsapp_number: clean(value.whatsapp_number),
       email: clean(value.email),
@@ -498,7 +520,7 @@ export class SettingsComponent {
       next: (settings) => {
         this.saving.set(false);
         this.saved = settings;
-    this.instagram.set({ instagram_connected: settings.instagram_connected, instagram_username: settings.instagram_username, instagram_token_expires_at: settings.instagram_token_expires_at ?? null, instagram_feed_enabled: settings.instagram_feed_enabled ?? false, instagram_insights_enabled: settings.instagram_insights_enabled ?? true });
+        this.syncInstagram(settings);
         this.coverData.set(undefined);
         if (this.tab() === 'booking') this.loadDemand();
         this.toast.success('Podešavanja su sačuvana.');
@@ -508,6 +530,10 @@ export class SettingsComponent {
         this.error.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
       },
     });
+  }
+
+  private syncInstagram(settings: BusinessSetting): void {
+    this.instagram.set({ instagram_connected: settings.instagram_connected, instagram_username: settings.instagram_username, instagram_token_expires_at: settings.instagram_token_expires_at ?? null, instagram_feed_enabled: settings.instagram_feed_enabled ?? false, instagram_insights_enabled: settings.instagram_insights_enabled ?? true });
   }
 
   private fill(settings: BusinessSetting): void {
@@ -520,6 +546,7 @@ export class SettingsComponent {
     );
     this.shiftRows.set((settings.shifts ?? []).map((s) => this.shiftRow(s.name, s.starts_at, s.ends_at)));
     this.saved = settings;
+    this.syncInstagram(settings);
     this.logo.set(settings.logo);
     this.form.reset({
       name: settings.name,
@@ -530,6 +557,10 @@ export class SettingsComponent {
       map_query: settings.map_query ?? null,
       instagram_feed_enabled: settings.instagram_feed_enabled ?? false,
       instagram_insights_enabled: settings.instagram_insights_enabled ?? true,
+      instagram_publishing_enabled: settings.instagram_publishing_enabled ?? false,
+      instagram_free_slots_enabled: settings.instagram_free_slots_enabled ?? false,
+      instagram_free_slots_days: settings.instagram_free_slots_days ?? [],
+      instagram_free_slots_time: settings.instagram_free_slots_time ?? '09:00',
       phone: settings.phone,
       whatsapp_number: settings.whatsapp_number,
       email: settings.email,

@@ -79,8 +79,104 @@
     <div class="flex flex-wrap gap-2 mt-3">
       <button type="button" appBtn size="s" (click)="shareImage()" data-testid="share-image"><span appIcon="share" aria-hidden="true"></span> Podeli</button>
       <button type="button" appBtn theme="secondary" size="s" (click)="downloadImage()" data-testid="share-download"><span appIcon="download" aria-hidden="true"></span> Preuzmi PNG</button>
+      @if (canPublish()) {
+        <button type="button" appBtn theme="secondary" size="s" (click)="openPublish()" data-testid="share-publish"><span appIcon="instagram" aria-hidden="true"></span> Objavi na Instagram</button>
+      }
     </div>
   </section>
+
+  @if (canPublish()) {
+    <section class="card" data-testid="share-instagram-posts">
+      <h2 class="text-base font-semibold mb-1">Objave na Instagramu</h2>
+      <p class="text-sm muted mb-3">Zakazane i objavljene iz aplikacije, uključujući automatski story sa slobodnim terminima.</p>
+      @if (postsLoading() && posts().length === 0) {
+      } @else if (posts().length === 0) {
+        <p class="empty-state">Još nema objava — napravi sliku i klikni „Objavi na Instagram".</p>
+      } @else {
+        <ul class="ig-post-list">
+          @for (post of posts(); track post.id) {
+            <li class="ig-post" [attr.data-testid]="'ig-post-' + post.id">
+              @if (post.image_url) {
+                <img [src]="post.image_url" alt="" class="ig-post-thumb" loading="lazy" />
+              } @else {
+                <span class="ig-post-thumb ig-post-thumb-empty"><span appIcon="instagram" [iconSize]="18" aria-hidden="true"></span></span>
+              }
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold">{{ post.source === 'free_slots' ? 'Slobodni termini' : post.kind === 'story' ? 'Story' : 'Objava' }}</span>
+                  <span class="badge {{ postStatus[post.status].badge }}">{{ postStatus[post.status].label }}</span>
+                </div>
+                <div class="text-xs muted">{{ post.published_at ?? post.scheduled_at | srDateTime }}</div>
+                @if (post.caption) {
+                  <div class="text-sm truncate">{{ post.caption }}</div>
+                }
+                @if (post.slots; as slots) {
+                  <div class="text-sm">
+                    @for (range of slots.ranges; track range.from) {
+                      <span class="mr-2">{{ rangeLabel(range) }}</span>
+                    }
+                  </div>
+                }
+                @if (post.error) {
+                  <div class="text-xs" [class.field-error]="post.status === 'failed'" [class.muted]="post.status !== 'failed'">{{ post.error }}</div>
+                }
+                <div class="flex flex-wrap gap-2 mt-1">
+                  @if (post.permalink) {
+                    <a appBtn theme="ghost" size="s" [href]="post.permalink" target="_blank" rel="noopener">Otvori</a>
+                  }
+                  @if (post.status === 'failed' && post.image_url) {
+                    <button type="button" appBtn theme="ghost" size="s" (click)="retryPost(post)" [attr.data-testid]="'ig-post-retry-' + post.id">Pokušaj ponovo</button>
+                  }
+                  @if (post.status !== 'published' && post.status !== 'publishing') {
+                    <button type="button" appBtn theme="ghost" size="s" (click)="deletePost(post)" [attr.data-testid]="'ig-post-delete-' + post.id">{{ post.status === 'scheduled' ? 'Otkaži' : 'Obriši' }}</button>
+                  }
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  @if (publishOpen()) {
+    <app-modal title="Objavi na Instagram" footerMode="none" (cancelled)="publishOpen.set(false)" testId="publish-modal">
+      <app-error-message [message]="publishError()" />
+      <div class="field">
+        <span class="text-sm font-semibold">Kao</span>
+        <div class="chip-group">
+          <button type="button" class="chip" [class.selected]="publishKind() === 'post'" (click)="publishKind.set('post')" data-testid="publish-kind-post">Objava</button>
+          <button type="button" class="chip" [class.selected]="publishKind() === 'story'" (click)="publishKind.set('story')" data-testid="publish-kind-story">Story</button>
+        </div>
+      </div>
+      @if (publishKind() === 'post') {
+        <div class="field">
+          <label for="publish-caption">Opis</label>
+          <textarea id="publish-caption" appInput rows="4" maxlength="2200" [value]="publishCaption()" (input)="publishCaption.set($any($event.target).value)" data-testid="publish-caption"></textarea>
+          <span class="text-xs muted">Link u opisu nije klikabilan — uputi na link u biju.</span>
+        </div>
+      } @else {
+        <p class="text-sm muted mb-3">Story objavljen preko aplikacije ne može da ima nalepnicu sa linkom — dodaj je ručno u Instagramu ako treba.</p>
+      }
+      <div class="field">
+        <span class="text-sm font-semibold">Kada</span>
+        <div class="chip-group">
+          <button type="button" class="chip" [class.selected]="!publishLater()" (click)="publishLater.set(false)" data-testid="publish-now">Odmah</button>
+          <button type="button" class="chip" [class.selected]="publishLater()" (click)="publishLater.set(true)" data-testid="publish-later">Zakaži</button>
+        </div>
+      </div>
+      @if (publishLater()) {
+        <div class="field">
+          <label for="publish-at">Datum i vreme</label>
+          <input id="publish-at" type="datetime-local" appInput size="m" [value]="publishAt()" (input)="publishAt.set($any($event.target).value)" data-testid="publish-at" />
+        </div>
+      }
+      <div class="flex justify-end gap-2 mt-2">
+        <button type="button" appBtn theme="ghost" (click)="publishOpen.set(false)">Otkaži</button>
+        <app-button [loading]="publishing()" (click)="publish()" data-testid="publish-submit">{{ publishLater() ? 'Zakaži' : 'Objavi' }}</app-button>
+      </div>
+    </app-modal>
+  }
 
   <section class="card" data-testid="share-instagram-links">
     <h2 class="text-base font-semibold mb-1">Linkovi za Instagram</h2>
