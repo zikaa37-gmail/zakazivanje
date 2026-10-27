@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\StaffMember;
+use App\Services\StaffAccountService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +15,14 @@ use Illuminate\Validation\ValidationException;
 
 class StaffMemberController extends Controller
 {
+    public function __construct(private StaffAccountService $accounts) {}
+
     public function index(Request $request)
     {
         $data = $request->validate(['include_inactive' => ['sometimes', 'boolean']]);
 
         return StaffMember::query()
-            ->with(['workingHours', 'services:id,name'])
+            ->with(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active'])
             ->when(! ($data['include_inactive'] ?? true), fn ($q) => $q->where('active', true))
             ->orderBy('sort_order')
             ->orderBy('first_name')
@@ -44,7 +47,10 @@ class StaffMemberController extends Controller
 
     public function destroy(StaffMember $staffMember)
     {
-        $staffMember->delete();
+        DB::transaction(function () use ($staffMember) {
+            $this->accounts->removeFor($staffMember);
+            $staffMember->delete();
+        });
 
         return response()->json(['message' => 'Zaposleni je obrisan.']);
     }
@@ -56,7 +62,7 @@ class StaffMemberController extends Controller
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
             'title' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[\d\s+\-()]+$/'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('staff_members', 'email')->ignore($request->route('staffMember'))],
             'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'booking_confirmation' => ['nullable', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
             'avatar' => ['nullable', 'string', 'max:2000000'],
@@ -141,6 +147,8 @@ class StaffMemberController extends Controller
             $staff->workingHours()->createMany($data['working_hours']);
         }
 
-        return $staff->load(['workingHours', 'services:id,name']);
+        $this->accounts->sync($staff);
+
+        return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active']);
     }
 }

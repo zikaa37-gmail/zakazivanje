@@ -9,12 +9,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
+#[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
 #[Hidden(['password', 'remember_token', 'email_verification_token'])]
 class User extends Authenticatable
 {
@@ -29,9 +30,13 @@ class User extends Authenticatable
 
     public const ROLE_CLIENT = 'client';
 
-    public const ROLE_ADMIN = 'admin';
+    public const ROLE_OWNER = 'owner';
 
-    public const ROLES = [self::ROLE_CLIENT, self::ROLE_ADMIN];
+    public const ROLE_WORKER = 'worker';
+
+    public const ROLES = [self::ROLE_CLIENT, self::ROLE_OWNER, self::ROLE_WORKER];
+
+    public const STAFF_ROLES = [self::ROLE_OWNER, self::ROLE_WORKER];
 
     public const COMMUNICATION_CHANNELS = ['email', 'whatsapp', 'both'];
 
@@ -39,6 +44,7 @@ class User extends Authenticatable
     {
         return [
             'favorite_staff_member_id' => 'integer',
+            'staff_member_id' => 'integer',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'active' => 'boolean',
@@ -75,9 +81,19 @@ class User extends Authenticatable
         return $channels;
     }
 
-    public function isAdmin(): bool
+    public function staffMember(): BelongsTo
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->belongsTo(StaffMember::class);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === self::ROLE_OWNER;
+    }
+
+    public function isStaff(): bool
+    {
+        return in_array($this->role, self::STAFF_ROLES, true);
     }
 
     public function fullName(): string

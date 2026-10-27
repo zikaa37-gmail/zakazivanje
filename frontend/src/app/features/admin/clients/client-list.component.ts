@@ -4,6 +4,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Client, ClientPayload } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { StaffMember } from '../../../core/models/staff.model';
@@ -66,7 +67,7 @@ export class ClientListComponent {
   readonly rowActions: RowAction[] = [
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
     { id: 'call', label: 'Pozovi', icon: 'phone' },
-    { id: 'delete', label: 'Obriši', icon: 'trash', danger: true },
+    ...(inject(AuthService).isOwner() ? [{ id: 'delete', label: 'Obriši', icon: 'trash' as const, danger: true }] : []),
   ];
 
   constructor() {

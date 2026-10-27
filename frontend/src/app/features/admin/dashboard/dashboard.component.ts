@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { RouterLink } from '@angular/router';
 import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { StaffMember } from '../../../core/models/staff.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { DashboardService, DashboardStats, DashboardToday } from '../../../core/services/dashboard.service';
 import { StaffService } from '../../../core/services/staff.service';
@@ -42,6 +43,7 @@ const PERIODS: { value: Period; label: string }[] = [
 })
 export class DashboardComponent {
   private dashboard = inject(DashboardService);
+  protected readonly isOwner = inject(AuthService).isOwner;
   private appointmentService = inject(AppointmentService);
   private staffService = inject(StaffService);
   private toast = inject(ToastService);
@@ -188,6 +190,7 @@ export class DashboardComponent {
   }
 
   private loadStats(from: string, to: string): void {
+    if (!this.isOwner()) return;
     this.statsLoading.set(true);
     this.dashboard.stats(from, to).subscribe({
       next: (stats) => {

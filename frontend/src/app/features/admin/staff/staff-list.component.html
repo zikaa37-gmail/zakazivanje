@@ -47,6 +47,9 @@
         <div class="flex flex-wrap gap-2">
           <span class="badge" [class.badge-success]="member.active" [class.badge-neutral]="!member.active">{{ member.active ? 'Aktivan' : 'Neaktivan' }}</span>
           <span class="badge badge-neutral">Potvrda: {{ modeLabel(member) }}</span>
+          @if (member.account) {
+            <span class="badge badge-neutral" data-testid="staff-account">Nalog: {{ roleLabels[member.account.role] }}</span>
+          }
         </div>
       </div>
     }
@@ -83,6 +86,7 @@
         <div class="field">
           <label for="staff-email">Email</label>
           <input id="staff-email" appInput size="m" type="email" formControlName="email" />
+          <p class="text-xs muted mt-1">Sa email adresom zaposleni dobija nalog radnika (pozivnica u Nalozi osoblja).</p>
         </div>
         <div class="field">
           <label for="staff-confirmation">Potvrda termina</label>

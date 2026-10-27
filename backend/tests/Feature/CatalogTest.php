@@ -19,7 +19,7 @@ class CatalogTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
     }
 
     public function test_admin_routes_require_admin(): void
