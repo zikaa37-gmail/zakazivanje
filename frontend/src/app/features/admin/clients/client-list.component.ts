@@ -2,7 +2,8 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { Client, ClientPayload } from '../../../core/models/client.model';
+import { ActivatedRoute } from '@angular/router';
+import { Client, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClientService } from '../../../core/services/client.service';
@@ -20,11 +21,12 @@ import { RowAction, RowActionsComponent } from '../../../shared/components/row-a
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
+import { ClientHistoryComponent } from './client-history.component';
 
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
+  imports: [ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
   templateUrl: './client-list.component.html',
 })
 export class ClientListComponent {
@@ -64,7 +66,13 @@ export class ClientListComponent {
     note: this.fb.control<string | null>(null),
   });
 
+  readonly zones = ZONES;
+  readonly zoneInfo = ZONE_BY_VALUE;
+  readonly zoneFilter = signal<DisciplineZone | null>(null);
+  readonly historyId = signal<number | null>(null);
+
   readonly rowActions: RowAction[] = [
+    { id: 'history', label: 'Istorijat i zona', icon: 'activity' },
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
     { id: 'call', label: 'Pozovi', icon: 'phone' },
     ...(inject(AuthService).isOwner() ? [{ id: 'delete', label: 'Obriši', icon: 'trash' as const, danger: true }] : []),
@@ -72,6 +80,8 @@ export class ClientListComponent {
 
   constructor() {
     this.staffService.list().subscribe((staff) => this.stylists.set(staff.filter((m) => m.active)));
+    const history = Number(inject(ActivatedRoute).snapshot.queryParamMap.get('history'));
+    if (history) this.historyId.set(history);
     this.load();
     this.search.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(inject(DestroyRef)))
@@ -81,7 +91,7 @@ export class ClientListComponent {
   load(page = this.page()): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clientService.list(this.search.value.trim(), page).subscribe({
+    this.clientService.list(this.search.value.trim(), page, this.zoneFilter()).subscribe({
       next: (result) => {
         this.clients.set(result.data);
         this.page.set(result.current_page);
@@ -96,11 +106,21 @@ export class ClientListComponent {
     });
   }
 
+  filterZone(zone: DisciplineZone | null): void {
+    this.zoneFilter.set(zone);
+    this.load(1);
+  }
+
+  onZoneChanged(client: Client): void {
+    this.clients.update((list) => list.map((c) => (c.id === client.id ? { ...c, ...client } : c)));
+  }
+
   initials(client: Client): string {
     return `${client.first_name[0] ?? ''}${client.last_name[0] ?? ''}`.toUpperCase();
   }
 
   onAction(client: Client, action: string): void {
+    if (action === 'history') this.historyId.set(client.id);
     if (action === 'edit') this.openForm(client);
     if (action === 'call' && client.phone) window.location.href = `tel:${client.phone.replace(/\s/g, '')}`;
     if (action === 'delete') this.remove(client);

@@ -310,6 +310,62 @@
             }
           </div>
         </div>
+
+        <div class="card max-w-2xl mt-4" data-testid="settings-discipline">
+          <h2 class="text-base font-semibold">Disciplina klijenata</h2>
+          <p class="text-sm muted mb-2">
+            Klijent skuplja poene kad otkaže ili ne dođe; stariji od izabranog perioda se ne računaju. Po poenima prelazi u žutu zonu (otežano zakazivanje),
+            narandžastu (tiho — vidi da je sve popunjeno) i, ako dozvoliš, crvenu (suspendovan). Zonu uvek možeš i ručno da postaviš u Klijenti → Istorijat i zona.
+            Klijent zonu ne vidi, osim suspenzije.
+          </p>
+          <app-toggle [checked]="form.controls.discipline_enabled.value" label="Uključeno automatsko praćenje" (checkedChange)="form.controls.discipline_enabled.setValue($event)" data-testid="settings-discipline-enabled" />
+          @if (form.controls.discipline_enabled.value) {
+            <div class="form-grid mt-3">
+              <div class="field">
+                <label for="d-cancel">Poeni za otkazivanje</label>
+                <input id="d-cancel" appInput size="m" type="number" step="0.5" min="0" formControlName="discipline_cancel_points" />
+              </div>
+              <div class="field">
+                <label for="d-late">Poeni za kasno otkazivanje</label>
+                <input id="d-late" appInput size="m" type="number" step="0.5" min="0" formControlName="discipline_late_cancel_points" />
+                <span class="text-xs muted">Manje od 24 h pre termina (javio/la salonu).</span>
+              </div>
+              <div class="field">
+                <label for="d-noshow">Poeni za nedolazak</label>
+                <input id="d-noshow" appInput size="m" type="number" step="0.5" min="0" formControlName="discipline_no_show_points" />
+              </div>
+              <div class="field">
+                <label for="d-window">Računa se poslednjih (dana)</label>
+                <input id="d-window" appInput size="m" type="number" min="7" max="365" formControlName="discipline_window_days" />
+              </div>
+              <div class="field">
+                <label for="d-yellow">Žuta zona od (poena)</label>
+                <input id="d-yellow" appInput size="m" type="number" step="0.5" min="0.5" formControlName="discipline_yellow_points" />
+              </div>
+              <div class="field">
+                <label for="d-orange">Narandžasta zona od (poena)</label>
+                <input id="d-orange" appInput size="m" type="number" step="0.5" min="0.5" formControlName="discipline_orange_points" />
+              </div>
+              <div class="field">
+                <label for="d-yellow-min">Žuta: najranije za (dana)</label>
+                <input id="d-yellow-min" appInput size="m" type="number" min="0" max="30" formControlName="discipline_yellow_min_days" />
+              </div>
+              <div class="field">
+                <label for="d-yellow-max">Žuta: najdalje za (dana)</label>
+                <input id="d-yellow-max" appInput size="m" type="number" min="1" max="90" formControlName="discipline_yellow_horizon_days" />
+              </div>
+            </div>
+            <app-toggle [checked]="form.controls.discipline_auto_suspend.value" label="Automatska suspenzija (crvena zona)" (checkedChange)="form.controls.discipline_auto_suspend.setValue($event)" data-testid="settings-discipline-auto-suspend" />
+            @if (form.controls.discipline_auto_suspend.value) {
+              <div class="field mt-3 max-w-xs">
+                <label for="d-red">Crvena zona od (poena)</label>
+                <input id="d-red" appInput size="m" type="number" step="0.5" min="0.5" formControlName="discipline_red_points" />
+              </div>
+            } @else {
+              <p class="text-xs muted mt-2">Suspenzija samo ručno — automatski najviše do narandžaste zone.</p>
+            }
+          }
+        </div>
       }
       @case ('payments') {
         <div class="card max-w-2xl">

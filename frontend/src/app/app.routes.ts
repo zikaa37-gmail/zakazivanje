@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { ownerGuard, staffGuard } from './core/guards/staff.guard';
+import { notSuspendedGuard } from './core/guards/suspended.guard';
 
 export const routes: Routes = [
   {
@@ -44,6 +45,7 @@ export const routes: Routes = [
       {
         path: 'book',
         title: 'Zakazivanje',
+        canActivate: [notSuspendedGuard],
         loadComponent: () => import('./features/public/book.component').then((m) => m.BookComponent),
       },
       {
@@ -59,8 +61,13 @@ export const routes: Routes = [
       {
         path: 'my-appointments',
         title: 'Moji termini',
-        canActivate: [authGuard],
+        canActivate: [authGuard, notSuspendedGuard],
         loadComponent: () => import('./features/client/my-appointments.component').then((m) => m.MyAppointmentsComponent),
+      },
+      {
+        path: 'suspended',
+        title: 'Nalog je suspendovan',
+        loadComponent: () => import('./features/client/suspended.component').then((m) => m.SuspendedComponent),
       },
       {
         path: 'profile',

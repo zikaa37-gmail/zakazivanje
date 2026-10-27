@@ -21,6 +21,7 @@ export class AppointmentActionsService {
       list.push({ id: 'completed', label: 'Završen', icon: 'check-square' });
       list.push({ id: 'no_show', label: 'Nije došao', icon: 'alert-triangle' });
       list.push({ id: 'cancel', label: 'Otkaži', icon: 'close', danger: true });
+      list.push({ id: 'cancel-by-client', label: 'Klijent otkazao', icon: 'close', danger: true });
       if (a.recurrence?.active) list.push({ id: 'cancel-series', label: 'Otkaži ovaj i sve sledeće', icon: 'close', danger: true });
     } else {
       list.push({ id: 'confirmed', label: 'Vrati na potvrđen', icon: 'rotate-ccw' });
@@ -36,18 +37,21 @@ export class AppointmentActionsService {
     }
 
     try {
-      if (action === 'cancel' || action === 'cancel-series') {
+      if (action === 'cancel' || action === 'cancel-series' || action === 'cancel-by-client') {
         const series = action === 'cancel-series';
+        const byClient = action === 'cancel-by-client';
         const ok = await this.confirm.confirm({
-          title: series ? 'Otkazivanje niza' : 'Otkazivanje termina',
+          title: series ? 'Otkazivanje niza' : byClient ? 'Klijent je otkazao' : 'Otkazivanje termina',
           message: series
             ? `Otkazati ovaj i sve sledeće termine za ${a.client?.first_name} ${a.client?.last_name}? Ponavljanje se zaustavlja.`
-            : `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)})?`,
+            : byClient
+              ? `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na zahtev klijenta? Računa se kao otkazivanje klijenta.`
+              : `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)})?`,
           confirmLabel: 'Otkaži',
           cancelLabel: 'Ne',
         });
         if (!ok) return false;
-        const res = await firstValueFrom(this.appointments.cancel(a.id, series ? 'series' : 'this'));
+        const res = await firstValueFrom(this.appointments.cancel(a.id, series ? 'series' : 'this', byClient));
         this.toast.success(res.message);
         return true;
       }

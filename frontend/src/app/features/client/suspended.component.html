@@ -1,0 +1,18 @@
+<div class="content-container max-w-lg py-8">
+  <div class="card flex flex-col items-center gap-3 text-center" data-testid="suspended">
+    <span class="avatar avatar-lg avatar-initials" aria-hidden="true"><span appIcon="lock" [iconSize]="24"></span></span>
+    <h1 class="text-xl font-semibold">Nalog je suspendovan</h1>
+    <p class="muted">
+      {{ auth.currentUser()?.first_name }}, tvoj nalog je suspendovan i ne možeš da koristiš usluge salona {{ business.name() }} — zakazivanje, pomeranje
+      termina i listu čekanja.
+    </p>
+    @if (business.settings()?.phone; as phone) {
+      <p class="text-sm">Za više informacija pozovi salon: <a [href]="'tel:' + phone">{{ phone }}</a></p>
+    } @else if (business.settings()?.email; as email) {
+      <p class="text-sm">Za više informacija piši salonu: <a [href]="'mailto:' + email">{{ email }}</a></p>
+    }
+    <button type="button" appBtn theme="secondary" (click)="logout()" data-testid="suspended-logout">
+      <span appIcon="logout" aria-hidden="true"></span> Odjavi se
+    </button>
+  </div>
+</div>

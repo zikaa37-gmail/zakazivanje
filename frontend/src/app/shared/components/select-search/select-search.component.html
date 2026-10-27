@@ -1,0 +1,41 @@
+<div class="app-select-search">
+  <div class="app-select-search-trigger" [class.open]="open()">
+    <span appIcon="search" [iconSize]="16" class="muted" aria-hidden="true"></span>
+    <input
+      type="text"
+      autocomplete="off"
+      [attr.id]="inputId()"
+      [value]="open() ? query() : selectedLabel()"
+      [placeholder]="placeholder()"
+      [disabled]="control().disabled"
+      (focus)="openList()"
+      (input)="onQueryInput($event)"
+      [attr.data-testid]="testId() || null"
+    />
+    <span appIcon="chevron-down" [iconSize]="16" aria-hidden="true"></span>
+  </div>
+
+  @if (open()) {
+    <ul class="app-select-search-list" role="listbox">
+      @if (filteredOptions().length === 0) {
+        <li class="app-select-search-empty">Nema rezultata.</li>
+      }
+      @for (option of filteredOptions(); track option.value) {
+        <li>
+          <button
+            type="button"
+            class="app-select-search-option"
+            [class.selected]="option.value === control().value"
+            (click)="selectOption(option)"
+            [attr.data-testid]="testId() ? testId() + '-option-' + option.value : null"
+          >
+            {{ option.label }}
+            @if (option.hint) {
+              <span class="app-select-search-hint">{{ option.hint }}</span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</div>

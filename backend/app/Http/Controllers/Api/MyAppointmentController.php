@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Services\AppointmentNotifier;
 use App\Services\BookingService;
+use App\Services\ClientDisciplineService;
 use App\Services\ReviewService;
 use App\Services\WaitlistService;
 use Carbon\CarbonImmutable;
@@ -43,6 +45,8 @@ class MyAppointmentController extends Controller
         }
 
         $bookings->cancel($appointment, 'client');
+        ClientActivity::dispatch($request->user(), ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at)]);
+        app(ClientDisciplineService::class)->refresh($request->user());
         $notifier->cancelledByClient($appointment);
         $waitlist->slotFreed($appointment);
 
@@ -65,7 +69,15 @@ class MyAppointmentController extends Controller
 
         $previous = $appointment->starts_at->format('Y-m-d H:i');
         $previousStaff = $appointment->staff_member_id;
-        $moved = $bookings->moveByClient($appointment, $data['staff_member_id'] ?? null, CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']));
+        $start = CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']);
+        app(ClientDisciplineService::class)->ensureCanBook($request->user(), $start, ClientActivity::RESCHEDULE_FAILED);
+        try {
+            $moved = $bookings->moveByClient($appointment, $data['staff_member_id'] ?? null, $start);
+        } catch (ValidationException $e) {
+            ClientActivity::dispatch($request->user(), ClientActivity::RESCHEDULE_FAILED, ['appointment_id' => $appointment->id, 'starts_at' => $data['starts_at'], 'reason' => collect($e->errors())->flatten()->first()]);
+            throw $e;
+        }
+        ClientActivity::dispatch($request->user(), ClientActivity::RESCHEDULED, ['appointment_id' => $appointment->id, 'from' => $previous, 'to' => $data['starts_at']]);
 
         if ($previous !== $moved->starts_at->format('Y-m-d H:i') || $moved->wasChanged('staff_member_id')) {
             $notifier->rescheduledByClient($moved, $previous);

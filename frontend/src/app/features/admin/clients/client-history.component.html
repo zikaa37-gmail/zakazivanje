@@ -1,0 +1,95 @@
+<app-modal [title]="client() ? client()!.first_name + ' ' + client()!.last_name : 'Istorijat klijenta'" size="l" footerMode="none" (cancelled)="closed.emit()" testId="client-history">
+  <app-error-message [message]="error()" />
+
+  @if (history(); as h) {
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-wrap items-center gap-2" data-testid="client-zone">
+        <span class="badge" [class]="zoneInfo[h.client.discipline_zone].badge">Zona: {{ zoneInfo[h.client.discipline_zone].label }}</span>
+        <span class="text-sm muted">
+          poeni {{ h.client.discipline_points }} · {{ h.client.zone_manual ? 'postavljeno ručno' : 'automatski' }}
+          @if (h.client.zone_until) {
+            do {{ h.client.zone_until | srDate }}
+          }
+        </span>
+      </div>
+      <p class="text-sm muted -mt-2">{{ zoneInfo[h.client.discipline_zone].hint }}{{ h.client.zone_reason ? ' Razlog: ' + h.client.zone_reason : '' }}</p>
+
+      <div class="stat-tiles stat-tiles-4">
+        <div class="card stat-tile">
+          <span class="text-xs muted">Termini</span>
+          <span class="stat-value">{{ h.stats.total }}</span>
+          <span class="text-xs muted">završeno {{ h.stats.completed }} · zakazano {{ h.stats.upcoming }}</span>
+        </div>
+        <div class="card stat-tile">
+          <span class="text-xs muted">Otkazao/la</span>
+          <span class="stat-value">{{ h.stats.cancelled_by_client }}</span>
+          <span class="text-xs muted">kasno {{ h.stats.late_cancelled }} · salon {{ h.stats.cancelled_by_salon }}</span>
+        </div>
+        <div class="card stat-tile">
+          <span class="text-xs muted">Nije došao/la</span>
+          <span class="stat-value">{{ h.stats.no_shows }}</span>
+        </div>
+        <div class="card stat-tile">
+          <span class="text-xs muted">Pouzdanost</span>
+          <span class="stat-value">{{ h.stats.reliability === null ? '—' : h.stats.reliability + '%' }}</span>
+          <span class="text-xs muted">došao/la od dogovorenih</span>
+        </div>
+      </div>
+
+      @if (isOwner()) {
+        <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="card flex flex-col gap-2" novalidate data-testid="client-zone-form">
+          <h3 class="font-semibold">Ručna zona</h3>
+          <div class="form-grid">
+            <div class="field !mb-0">
+              <label for="zone-select">Zona</label>
+              <select id="zone-select" appInput size="m" formControlName="zone" data-testid="client-zone-select">
+                <option value="auto">Automatski (po poenima)</option>
+                @for (z of zones; track z.value) {
+                  <option [value]="z.value">{{ z.label }}</option>
+                }
+              </select>
+            </div>
+            @if (zoneForm.controls.zone.value !== 'auto') {
+              <div class="field !mb-0">
+                <label for="zone-until">Važi do</label>
+                <input id="zone-until" appInput size="m" type="date" [min]="minDate" formControlName="until" />
+                <span class="text-xs muted">Prazno = dok ne promeniš.</span>
+              </div>
+              <div class="field !mb-0 sm:col-span-2">
+                <label for="zone-reason">Razlog (vidi samo salon)</label>
+                <input id="zone-reason" appInput size="m" formControlName="reason" maxlength="255" />
+              </div>
+            }
+          </div>
+          <div>
+            <app-button size="s" type="submit" [loading]="saving()" data-testid="client-zone-save">Sačuvaj zonu</app-button>
+          </div>
+        </form>
+      }
+
+      <div>
+        <h3 class="font-semibold mb-2">Istorijat</h3>
+        @if (logs().length === 0) {
+          <p class="empty-state">Još nema zabeleženih aktivnosti.</p>
+        } @else {
+          <div class="flex flex-col" data-testid="client-activity">
+            @for (log of logs(); track log.id) {
+              <div class="flex items-start gap-3 py-2 border-t border-[var(--color-bg)] text-sm">
+                <span class="w-24 shrink-0 text-xs muted">{{ log.created_at | srDateTime }}</span>
+                <div class="min-w-0 flex-1">
+                  <span class="badge" [class]="tone(log)">{{ label(log) }}</span>
+                  @if (details(log); as text) {
+                    <div class="text-xs muted mt-1">{{ text }}</div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (h.has_more) {
+            <button type="button" appBtn theme="ghost" size="s" class="mt-2" [disabled]="loadingMore()" (click)="loadMore()">Učitaj starije</button>
+          }
+        }
+      </div>
+    </div>
+  }
+</app-modal>

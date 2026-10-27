@@ -13,6 +13,13 @@
   <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
 </div>
 
+<div class="chip-scroll mb-4" role="radiogroup" aria-label="Zona" data-testid="client-zone-filter">
+  <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === null" [attr.aria-checked]="zoneFilter() === null" (click)="filterZone(null)">Svi</button>
+  @for (z of zones; track z.value) {
+    <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === z.value" [attr.aria-checked]="zoneFilter() === z.value" (click)="filterZone(z.value)" [attr.data-testid]="'client-zone-filter-' + z.value">{{ z.label }}</button>
+  }
+</div>
+
 <app-error-message [message]="error()" />
 
 @if (loading() && clients().length === 0) {
@@ -33,7 +40,12 @@
             </div>
             <a [href]="'tel:' + client.phone" class="whitespace-nowrap">{{ client.phone }}</a>
             <div class="truncate muted">{{ client.note || '' }}</div>
-            <span class="badge" [class.badge-success]="client.has_account" [class.badge-neutral]="!client.has_account">{{ client.has_account ? 'Nalog' : 'Bez naloga' }}</span>
+            <div class="flex flex-wrap gap-1">
+              <span class="badge" [class.badge-success]="client.has_account" [class.badge-neutral]="!client.has_account">{{ client.has_account ? 'Nalog' : 'Bez naloga' }}</span>
+              @if (client.discipline_zone !== 'green') {
+                <button type="button" class="badge" [class]="zoneInfo[client.discipline_zone].badge" (click)="historyId.set(client.id)" [attr.data-testid]="'client-zone-' + client.id">{{ zoneInfo[client.discipline_zone].label }}</button>
+              }
+            </div>
             <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
           </app-data-row>
         }
@@ -45,7 +57,12 @@
         <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0">
           <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
           <div class="min-w-0 flex-1">
-            <div class="font-semibold truncate">{{ client.first_name }} {{ client.last_name }}</div>
+            <div class="font-semibold truncate">
+              {{ client.first_name }} {{ client.last_name }}
+              @if (client.discipline_zone !== 'green') {
+                <span class="badge ml-1" [class]="zoneInfo[client.discipline_zone].badge">{{ zoneInfo[client.discipline_zone].label }}</span>
+              }
+            </div>
             <a [href]="'tel:' + client.phone" class="text-sm">{{ client.phone }}</a>
           </div>
           <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
@@ -130,4 +147,8 @@
     </form>
     <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="client-save">Sačuvaj</app-button>
   </app-modal>
+}
+
+@if (historyId(); as id) {
+  <app-client-history [clientId]="id" (changed)="onZoneChanged($event)" (closed)="historyId.set(null)" />
 }

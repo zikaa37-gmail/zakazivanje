@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\RefreshToken;
 use App\Models\User;
+use App\Services\ClientDisciplineService;
 use App\Services\JwtService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -18,7 +21,7 @@ class AuthController extends Controller
 {
     private const PHONE_PATTERN = 'regex:/^[\d\s+\-()]+$/';
 
-    public function __construct(private JwtService $jwt) {}
+    public function __construct(private JwtService $jwt, private ClientDisciplineService $discipline) {}
 
     public function register(Request $request)
     {
@@ -50,6 +53,9 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if (! $user || $user->password === null || ! Hash::check($credentials['password'], $user->password)) {
+            if ($user) {
+                ClientActivity::dispatch($user, ClientActivity::LOGIN_FAILED);
+            }
             throw ValidationException::withMessages(['email' => ['Pogrešan email ili lozinka.']]);
         }
 
@@ -58,6 +64,8 @@ class AuthController extends Controller
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
+        ClientActivity::dispatch($user, ClientActivity::LOGIN);
+        $this->discipline->refresh($user);
 
         return response()->json($this->tokensFor($user));
     }
@@ -75,6 +83,10 @@ class AuthController extends Controller
         }
 
         $stored->update(['revoked_at' => now()]);
+        if (Cache::add("activity:session:{$stored->user_id}", true, now()->endOfDay())) {
+            ClientActivity::dispatch($stored->user, ClientActivity::SESSION);
+            $this->discipline->refresh($stored->user);
+        }
 
         return response()->json($this->tokensFor($stored->user));
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\AppointmentRecurrence;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
+use App\Services\ClientDisciplineService;
 use App\Services\RecurrenceService;
 use App\Services\WaitlistService;
 use Carbon\CarbonImmutable;
@@ -26,6 +28,7 @@ class AppointmentController extends Controller
         private RecurrenceService $recurrences,
         private AppointmentNotifier $notifier,
         private WaitlistService $waitlist,
+        private ClientDisciplineService $discipline,
     ) {}
 
     public function index(Request $request)
@@ -147,6 +150,12 @@ class AppointmentController extends Controller
         ]);
 
         $this->notifier->statusChanged($appointment, $previous);
+        if ($appointment->client && ($data['status'] === Appointment::STATUS_NO_SHOW || $previous === Appointment::STATUS_NO_SHOW)) {
+            if ($data['status'] === Appointment::STATUS_NO_SHOW) {
+                ClientActivity::dispatch($appointment->client, ClientActivity::NO_SHOW, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i')], $request->user());
+            }
+            $this->discipline->refresh($appointment->client);
+        }
 
         return $appointment;
     }
@@ -204,7 +213,10 @@ class AppointmentController extends Controller
 
     public function cancel(Request $request, Appointment $appointment)
     {
-        $data = $request->validate(['scope' => ['required', Rule::in(['this', 'series'])]]);
+        $data = $request->validate([
+            'scope' => ['required', Rule::in(['this', 'series'])],
+            'by_client' => ['sometimes', 'boolean'],
+        ]);
 
         if ($data['scope'] === 'series' && $appointment->recurrence) {
             $count = $this->recurrences->stop($appointment->recurrence, CarbonImmutable::parse($appointment->starts_at));
@@ -213,7 +225,12 @@ class AppointmentController extends Controller
             return ['message' => "Otkazano termina: {$count}. Ponavljanje je zaustavljeno."];
         }
 
-        $this->bookings->cancel($appointment, 'admin');
+        $byClient = (bool) ($data['by_client'] ?? false);
+        $this->bookings->cancel($appointment, $byClient ? 'client' : 'admin');
+        if ($byClient && $appointment->client) {
+            ClientActivity::dispatch($appointment->client, ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at), 'by_salon' => true], $request->user());
+            $this->discipline->refresh($appointment->client);
+        }
         $this->notifier->cancelledBySalon($appointment);
         $this->waitlist->slotFreed($appointment);
 

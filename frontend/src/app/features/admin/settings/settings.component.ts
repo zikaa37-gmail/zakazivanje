@@ -125,6 +125,17 @@ export class SettingsComponent {
     report_auto_weekly: this.fb.nonNullable.control(true),
     report_auto_monthly: this.fb.nonNullable.control(true),
     report_auto_channel: this.fb.nonNullable.control<'mail' | 'whatsapp'>('mail'),
+    discipline_enabled: this.fb.nonNullable.control(true),
+    discipline_window_days: this.fb.nonNullable.control(90, [Validators.min(7), Validators.max(365)]),
+    discipline_cancel_points: this.fb.nonNullable.control(1, [Validators.min(0), Validators.max(20)]),
+    discipline_late_cancel_points: this.fb.nonNullable.control(2, [Validators.min(0), Validators.max(20)]),
+    discipline_no_show_points: this.fb.nonNullable.control(3, [Validators.min(0), Validators.max(20)]),
+    discipline_yellow_points: this.fb.nonNullable.control(3, [Validators.min(0.5), Validators.max(100)]),
+    discipline_orange_points: this.fb.nonNullable.control(6, [Validators.min(0.5), Validators.max(100)]),
+    discipline_red_points: this.fb.nonNullable.control(10, [Validators.min(0.5), Validators.max(100)]),
+    discipline_auto_suspend: this.fb.nonNullable.control(false),
+    discipline_yellow_min_days: this.fb.nonNullable.control(3, [Validators.min(0), Validators.max(30)]),
+    discipline_yellow_horizon_days: this.fb.nonNullable.control(7, [Validators.min(1), Validators.max(90)]),
   });
 
   readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
@@ -325,8 +336,9 @@ export class SettingsComponent {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       const payments = this.form.controls.bank_account.invalid || this.form.controls.payment_code.invalid;
-      this.tab.set(payments ? 'payments' : 'business');
-      this.error.set(payments ? 'Proveri tekući račun i šifru plaćanja.' : 'Proveri naziv i email.');
+      const discipline = Object.entries(this.form.controls).some(([key, control]) => key.startsWith('discipline_') && control.invalid);
+      this.tab.set(payments ? 'payments' : discipline ? 'booking' : 'business');
+      this.error.set(payments ? 'Proveri tekući račun i šifru plaćanja.' : discipline ? 'Proveri brojeve u delu Disciplina klijenata.' : 'Proveri naziv i email.');
       return;
     }
 
@@ -429,6 +441,17 @@ export class SettingsComponent {
       report_auto_weekly: settings.report_auto_weekly ?? true,
       report_auto_monthly: settings.report_auto_monthly ?? true,
       report_auto_channel: settings.report_auto_channel ?? 'mail',
+      discipline_enabled: settings.discipline_enabled ?? true,
+      discipline_window_days: settings.discipline_window_days ?? 90,
+      discipline_cancel_points: settings.discipline_cancel_points ?? 1,
+      discipline_late_cancel_points: settings.discipline_late_cancel_points ?? 2,
+      discipline_no_show_points: settings.discipline_no_show_points ?? 3,
+      discipline_yellow_points: settings.discipline_yellow_points ?? 3,
+      discipline_orange_points: settings.discipline_orange_points ?? 6,
+      discipline_red_points: settings.discipline_red_points ?? 10,
+      discipline_auto_suspend: settings.discipline_auto_suspend ?? false,
+      discipline_yellow_min_days: settings.discipline_yellow_min_days ?? 3,
+      discipline_yellow_horizon_days: settings.discipline_yellow_horizon_days ?? 7,
     });
   }
 

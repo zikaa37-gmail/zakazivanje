@@ -20,6 +20,7 @@ export interface User {
   phone: string | null;
   whatsapp_number: string | null;
   role: UserRole;
+  suspended: boolean;
   preferred_communication: CommunicationChannel;
   active: boolean;
   email_verified_at: string | null;

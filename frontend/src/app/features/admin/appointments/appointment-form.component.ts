@@ -1,9 +1,11 @@
 import { Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, startWith } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
+import { Subject, debounceTime, distinctUntilChanged, startWith, switchMap } from 'rxjs';
 import { Slot } from '../../../core/models/appointment.model';
-import { Client } from '../../../core/models/client.model';
+import { Client, ZONE_BY_VALUE } from '../../../core/models/client.model';
+import { SKIP_LOADER } from '../../../core/interceptors/loader.interceptor';
 import { SalonService, suitsAudience } from '../../../core/models/service.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
@@ -17,10 +19,10 @@ import { parseDate, timeOf, today, weekdayLong } from '../../../core/utils/dates
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { SelectSearchComponent, SelectSearchOption } from '../../../shared/components/select-search/select-search.component';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
-import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 
 export interface AppointmentPrefill {
@@ -32,7 +34,7 @@ export interface AppointmentPrefill {
 @Component({
   selector: 'app-appointment-form',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, TimePickerComponent, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, InputDirective, ModalComponent, SelectSearchComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './appointment-form.component.html',
 })
 export class AppointmentFormComponent implements OnInit {
@@ -63,7 +65,16 @@ export class AppointmentFormComponent implements OnInit {
   readonly repeatEnd = signal<'count' | 'date' | 'never'>('count');
   readonly weekdayLabel = signal('');
 
-  readonly clientSearch = new FormControl('', { nonNullable: true });
+  readonly zoneInfo = ZONE_BY_VALUE;
+  readonly clientControl = new FormControl<number | null>(null);
+  readonly clientOptions = computed<SelectSearchOption<number>[]>(() =>
+    this.clientResults().map((c) => ({
+      value: c.id,
+      label: `${c.first_name} ${c.last_name}`,
+      hint: [c.phone, c.email, c.discipline_zone !== 'green' ? `zona: ${ZONE_BY_VALUE[c.discipline_zone].label.toLowerCase()}` : null].filter(Boolean).join(' · '),
+    })),
+  );
+  private readonly clientQuery = new Subject<string>();
   readonly time = new FormControl<string | null>(null);
   readonly form = this.fb.group({
     staff_member_id: this.fb.control<number | null>(null, Validators.required),
@@ -99,15 +110,18 @@ export class AppointmentFormComponent implements OnInit {
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
     this.catalog.list().subscribe((services) => this.services.set(services.filter((s) => s.active)));
 
-    this.clientSearch.valueChanges
-      .pipe(debounceTime(250), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => {
-        if (value.trim().length < 2) {
-          this.clientResults.set([]);
-          return;
-        }
-        this.clientService.list(value.trim()).subscribe((res) => this.clientResults.set(res.data.slice(0, 6)));
-      });
+    this.clientQuery
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap((query) => this.clientService.list(query, 1, null, { context: new HttpContext().set(SKIP_LOADER, true) })),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((res) => this.clientResults.set(res.data.slice(0, 10)));
+    this.clientControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((id) => {
+      const client = this.clientResults().find((c) => c.id === id);
+      if (client) this.pickClient(client);
+    });
 
     this.form.valueChanges.pipe(startWith(null), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       const date = this.form.controls.date.value;
@@ -119,12 +133,16 @@ export class AppointmentFormComponent implements OnInit {
     this.selectedClient.set(client);
     const services = this.services();
     this.selectedServices.update((ids) => ids.filter((id) => suitsAudience(services.find((x) => x.id === id)?.audience ?? 'all', client.gender ?? null)));
-    this.clientResults.set([]);
+  }
+
+  searchClients(query: string): void {
+    this.clientQuery.next(query);
   }
 
   toggleNewClient(): void {
     this.newClient.update((v) => !v);
     this.selectedClient.set(null);
+    this.clientControl.setValue(null, { emitEvent: false });
   }
 
   toggleService(id: number): void {

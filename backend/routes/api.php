@@ -22,7 +22,7 @@ use App\Http\Controllers\Api\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
-Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware('throttle:public');
+Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware(['jwt.optional', 'throttle:public']);
 Route::get('/public/business/cover', [BusinessSettingController::class, 'cover']);
 Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
@@ -80,6 +80,7 @@ Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
     Route::post('/clients/list', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
 
     Route::post('/appointments/list', [AppointmentController::class, 'index']);
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
@@ -137,6 +138,7 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
     Route::delete('/gallery/{image}', [GalleryController::class, 'destroy']);
 
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
+    Route::put('/clients/{client}/zone', [ClientController::class, 'zone']);
 
     Route::post('/notification-logs/list', [NotificationController::class, 'logs']);
     Route::post('/notifications/test', [NotificationController::class, 'test'])->middleware('throttle:booking');

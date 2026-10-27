@@ -40,7 +40,8 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
   readonly isOwner = computed(() => this.currentUserSignal()?.role === 'owner');
   readonly isStaff = computed(() => ['owner', 'worker'].includes(this.currentUserSignal()?.role ?? ''));
-  readonly homeUrl = computed(() => (this.isStaff() ? '/admin' : this.isAuthenticated() ? '/my-appointments' : '/'));
+  readonly isSuspended = computed(() => this.currentUserSignal()?.suspended === true);
+  readonly homeUrl = computed(() => (this.isStaff() ? '/admin' : this.isSuspended() ? '/suspended' : this.isAuthenticated() ? '/my-appointments' : '/'));
 
   isRefreshing = false;
   readonly refreshedAccessToken = new BehaviorSubject<string | null>(null);

@@ -40,9 +40,9 @@ export class AppointmentService {
     return this.http.post<Appointment>(`${this.api}/${id}/status`, { status }).pipe(tap(() => this.refreshPendingCount()));
   }
 
-  cancel(id: number, scope: 'this' | 'series'): Observable<{ message: string }> {
+  cancel(id: number, scope: 'this' | 'series', byClient = false): Observable<{ message: string }> {
     return this.http
-      .post<{ message: string }>(`${this.api}/${id}/cancel`, { scope })
+      .post<{ message: string }>(`${this.api}/${id}/cancel`, { scope, by_client: byClient })
       .pipe(tap(() => this.refreshPendingCount()));
   }
 

@@ -6,8 +6,10 @@ use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use App\Services\WhatsAppService;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Attributes\Appends;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +18,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
 #[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
-#[Hidden(['password', 'remember_token', 'email_verification_token'])]
+#[Hidden(['password', 'remember_token', 'email_verification_token', ...self::DISCIPLINE_FIELDS])]
+#[Appends(['suspended'])]
 class User extends Authenticatable
 {
     public const GENDER_FEMALE = 'female';
@@ -40,11 +43,27 @@ class User extends Authenticatable
 
     public const COMMUNICATION_CHANNELS = ['email', 'whatsapp', 'both'];
 
+    public const ZONE_GREEN = 'green';
+
+    public const ZONE_YELLOW = 'yellow';
+
+    public const ZONE_ORANGE = 'orange';
+
+    public const ZONE_RED = 'red';
+
+    public const ZONES = [self::ZONE_GREEN, self::ZONE_YELLOW, self::ZONE_ORANGE, self::ZONE_RED];
+
+    public const DISCIPLINE_FIELDS = ['discipline_zone', 'discipline_points', 'zone_manual', 'zone_until', 'zone_reason', 'zone_changed_at'];
+
     protected function casts(): array
     {
         return [
             'favorite_staff_member_id' => 'integer',
             'staff_member_id' => 'integer',
+            'discipline_points' => 'float',
+            'zone_manual' => 'boolean',
+            'zone_until' => 'date:Y-m-d',
+            'zone_changed_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'active' => 'boolean',
@@ -84,6 +103,21 @@ class User extends Authenticatable
     public function staffMember(): BelongsTo
     {
         return $this->belongsTo(StaffMember::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ClientActivityLog::class);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->role === self::ROLE_CLIENT && $this->discipline_zone === self::ZONE_RED;
+    }
+
+    protected function suspended(): Attribute
+    {
+        return Attribute::get(fn () => $this->isSuspended());
     }
 
     public function isOwner(): bool
