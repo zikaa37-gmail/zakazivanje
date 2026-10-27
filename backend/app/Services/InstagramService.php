@@ -3,13 +3,20 @@
 namespace App\Services;
 
 use App\Models\BusinessSetting;
+use App\Models\User;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class InstagramService
 {
     private const API = 'https://graph.instagram.com';
+
+    private const AUTHORIZE_URL = 'https://www.instagram.com/oauth/authorize';
+
+    private const TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
 
     private const CACHE_KEY = 'instagram:posts';
 
@@ -54,7 +61,66 @@ class InstagramService
         return $posts;
     }
 
-    public function connect(string $token): BusinessSetting
+    public function oauthAvailable(): bool
+    {
+        return (bool) config('instagram.app_id') && (bool) config('instagram.app_secret');
+    }
+
+    public function authorizeUrl(User $owner): string
+    {
+        $state = Crypt::encryptString(json_encode(['uid' => $owner->id, 'exp' => now()->addMinutes(15)->timestamp]));
+
+        return self::AUTHORIZE_URL.'?'.http_build_query([
+            'client_id' => config('instagram.app_id'),
+            'redirect_uri' => $this->redirectUri(),
+            'response_type' => 'code',
+            'scope' => implode(',', config('instagram.scopes')),
+            'state' => $state,
+        ]);
+    }
+
+    public function handleCallback(?string $code, ?string $state): void
+    {
+        try {
+            $payload = json_decode(Crypt::decryptString((string) $state), true);
+        } catch (DecryptException) {
+            $payload = null;
+        }
+
+        $owner = $payload && ($payload['exp'] ?? 0) >= now()->timestamp ? User::find($payload['uid'] ?? 0) : null;
+        if (! $owner?->isOwner() || ! $code) {
+            throw ValidationException::withMessages(['instagram' => ['Povezivanje je isteklo ili je otkazano. Pokušaj ponovo.']]);
+        }
+
+        $short = Http::asForm()->timeout(10)->post(self::TOKEN_URL, [
+            'client_id' => config('instagram.app_id'),
+            'client_secret' => config('instagram.app_secret'),
+            'grant_type' => 'authorization_code',
+            'redirect_uri' => $this->redirectUri(),
+            'code' => $code,
+        ]);
+        if (! $short->successful() || ! $short->json('access_token')) {
+            throw ValidationException::withMessages(['instagram' => ['Instagram nije izdao pristup. Proveri da li je nalog poslovni (Business / Creator).']]);
+        }
+
+        $long = Http::timeout(10)->get(self::API.'/access_token', [
+            'grant_type' => 'ig_exchange_token',
+            'client_secret' => config('instagram.app_secret'),
+            'access_token' => $short->json('access_token'),
+        ]);
+        if (! $long->successful() || ! $long->json('access_token')) {
+            throw ValidationException::withMessages(['instagram' => ['Instagram nije izdao dugotrajni pristup. Pokušaj ponovo.']]);
+        }
+
+        $this->connect($long->json('access_token'), (int) $long->json('expires_in', 5184000));
+    }
+
+    public function redirectUri(): string
+    {
+        return config('instagram.redirect_uri') ?: route('instagram.callback');
+    }
+
+    public function connect(string $token, int $expiresIn = 5184000): BusinessSetting
     {
         $response = Http::timeout(10)->get(self::API.'/me', ['fields' => 'username', 'access_token' => $token]);
 
@@ -66,7 +132,7 @@ class InstagramService
         $settings->forceFill([
             'instagram_token' => $token,
             'instagram_username' => $response->json('username'),
-            'instagram_token_expires_at' => now()->addDays(60),
+            'instagram_token_expires_at' => now()->addSeconds($expiresIn),
             'instagram_feed_enabled' => true,
         ])->save();
         $this->forget();

@@ -69,6 +69,34 @@ class MarketingTest extends TestCase
         $this->getJson('/api/public/gallery')->assertJsonPath('0.kind', 'salon');
     }
 
+    public function test_owner_connects_instagram_through_oauth(): void
+    {
+        config(['instagram.app_id' => '123', 'instagram.app_secret' => 'secret']);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        Http::fake([
+            'api.instagram.com/oauth/access_token' => Http::response(['access_token' => 'short-token', 'user_id' => 1]),
+            'graph.instagram.com/access_token*' => Http::response(['access_token' => str_repeat('l', 40), 'expires_in' => 5000000]),
+            'graph.instagram.com/me?*' => Http::response(['username' => 'salonpink']),
+        ]);
+
+        $this->getJson('/api/public/business')->assertJsonMissingPath('instagram_oauth_available');
+        $this->actingAsJwt($worker)->postJson('/api/instagram/authorize')->assertForbidden();
+        $this->actingAsJwt($owner)->getJson('/api/public/business')->assertJsonPath('instagram_oauth_available', true);
+
+        $url = $this->actingAsJwt($owner)->postJson('/api/instagram/authorize')->assertOk()->json('url');
+        parse_str(parse_url($url, PHP_URL_QUERY), $query);
+        $this->assertStringContainsString('instagram_business_manage_insights', $query['scope']);
+
+        $this->get('/api/public/instagram/callback?code=abc&state=pokvaren')->assertRedirectContains('instagram=error');
+        $this->get('/api/public/instagram/callback?code=abc&state='.urlencode($query['state']))->assertRedirectContains('instagram=connected');
+
+        $settings = BusinessSetting::current();
+        $this->assertSame(str_repeat('l', 40), $settings->instagram_token);
+        $this->assertSame('salonpink', $settings->instagram_username);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'oauth/access_token') && $request['code'] === 'abc');
+    }
+
     public function test_instagram_feed_is_optional_and_token_stays_private(): void
     {
         $owner = User::factory()->create(['role' => User::ROLE_OWNER]);

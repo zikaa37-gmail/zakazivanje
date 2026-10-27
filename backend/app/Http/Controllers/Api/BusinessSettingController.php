@@ -7,6 +7,7 @@ use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\Shift;
 use App\Notifications\ReportNotification;
+use App\Services\InstagramService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,7 @@ class BusinessSettingController extends Controller
 
         return $request->user()?->isStaff()
             ? $settings
-            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled'], true))->all();
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available'], true))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -36,6 +37,7 @@ class BusinessSettingController extends Controller
                 'opens_at' => $week->get($day)?->opens_at,
                 'closes_at' => $week->get($day)?->closes_at,
             ])->all(),
+            'instagram_oauth_available' => app(InstagramService::class)->oauthAvailable(),
             'shifts' => Shift::query()->orderBy('sort_order')->orderBy('starts_at')->get(['id', 'name', 'starts_at', 'ends_at', 'sort_order']),
         ];
     }
@@ -65,6 +67,7 @@ class BusinessSettingController extends Controller
             'website' => ['nullable', 'url', 'max:255'],
             'instagram' => ['nullable', 'string', 'max:255'],
             'instagram_feed_enabled' => ['sometimes', 'boolean'],
+            'instagram_insights_enabled' => ['sometimes', 'boolean'],
             'map_query' => ['nullable', 'string', 'max:255'],
             'facebook' => ['nullable', 'string', 'max:255'],
             'tiktok' => ['nullable', 'string', 'max:255'],

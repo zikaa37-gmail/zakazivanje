@@ -27,6 +27,7 @@ export interface InstagramState {
   instagram_username: string | null;
   instagram_token_expires_at: string | null;
   instagram_feed_enabled: boolean;
+  instagram_insights_enabled?: boolean;
 }
 
 export const SOURCE_LABELS: Record<string, string> = {

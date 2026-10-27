@@ -29,6 +29,7 @@ Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middl
 Route::get('/public/gallery', [GalleryController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/reviews', [ReviewController::class, 'publicIndex'])->middleware('throttle:public');
 Route::get('/public/instagram', [MarketingController::class, 'instagramPosts'])->middleware('throttle:public');
+Route::get('/public/instagram/callback', [MarketingController::class, 'instagramCallback'])->middleware('throttle:public')->name('instagram.callback');
 Route::post('/public/visit', [MarketingController::class, 'visit'])->middleware(['jwt.optional', 'throttle:public']);
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
 Route::get('/public/reports/{file}', [ReportController::class, 'file'])->middleware('signed')->name('reports.file');
@@ -112,6 +113,7 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
     Route::post('/dashboard/demand', [DashboardController::class, 'demand']);
     Route::post('/dashboard/sources', [MarketingController::class, 'report']);
 
+    Route::post('/instagram/authorize', [MarketingController::class, 'authorizeInstagram']);
     Route::post('/instagram/connect', [MarketingController::class, 'connectInstagram'])->middleware('throttle:booking');
     Route::delete('/instagram', [MarketingController::class, 'disconnectInstagram']);
 

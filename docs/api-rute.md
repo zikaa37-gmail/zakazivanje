@@ -98,6 +98,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/gallery/reorder` | `{ids}` — redosled kao na ekranu |
 | POST | `/dashboard/demand` | zauzetost po danu u nedelji i satu (poslednjih 90 dana) → `{has_history, buckets: [{weekday, hour, rate, off_peak}]}` — sati koji se nude klijentu u žutoj zoni |
 | POST | `/dashboard/sources` | `{from, to}` → `[{source, campaign, visits, registrations, bookings, completed, revenue}]` (vlasnik) |
+| POST | `/instagram/authorize` | `{url}` — adresa za prijavu na Instagram (OAuth, vlasnik); posle odobrenja Instagram vraća na `GET /public/instagram/callback`, koji čuva dugotrajni token i preusmerava na `/admin/settings?tab=social&instagram=connected|error|cancelled` |
 | POST / DELETE | `/instagram/connect`, `/instagram` | `{token}` — proverava token na Instagramu i čuva ga šifrovano / prekid veze (vlasnik); `instagram:refresh-token` ga obnavlja ponedeljkom u 04:00 |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
