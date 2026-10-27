@@ -8,9 +8,46 @@ export interface SourceRow {
   campaign: string | null;
   visits: number;
   registrations: number;
+  logins: number;
   bookings: number;
+  new_clients: number;
   completed: number;
   revenue: number;
+}
+
+export interface InstagramTopPost {
+  id: string;
+  caption: string | null;
+  image: string | null;
+  permalink: string | null;
+  posted_at: string;
+  reach: number;
+  interactions: number;
+}
+
+export interface InstagramInsights {
+  available: boolean;
+  from: string;
+  to: string;
+  reach: number;
+  profile_views: number;
+  website_clicks: number;
+  accounts_engaged: number;
+  total_interactions: number;
+  top_posts: InstagramTopPost[];
+}
+
+export interface SourcesReport {
+  rows: SourceRow[];
+  instagram: InstagramInsights | null;
+}
+
+export interface FunnelStep {
+  key: string;
+  label: string;
+  value: number;
+  hint: string;
+  money?: boolean;
 }
 
 export interface InstagramPost {

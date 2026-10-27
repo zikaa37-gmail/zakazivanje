@@ -209,6 +209,8 @@ poseta → `marketing_visits`, registracija → `users.signup_source`, termin �
 Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Instagram i Meta (#67): Podešavanja → Instagram i Meta — „Poveži sa Instagramom" (OAuth, `config/instagram.php`, `INSTAGRAM_APP_*`
 u `.env`; bez njih ručni token), prekidači po funkciji (`instagram_feed_enabled`, `instagram_insights_enabled`), preporuke za profil i link
 za bio. Token je šifrovan u bazi (`InstagramService`).
+Statistika (#68): Pregled → „Odakle dolaze klijenti" — lestvica za Instagram (doseg → posete profilu → klik na link iz `InstagramService::insights()`,
+pa naše posete → registracije + prijave postojećih (`marketing_visits.logins`) → termini (novi klijenti = prvi termin) → prihod) i najbolje objave.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

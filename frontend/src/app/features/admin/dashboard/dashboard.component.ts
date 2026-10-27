@@ -5,7 +5,7 @@ import { StaffMember } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { DashboardService, DashboardStats, DashboardToday } from '../../../core/services/dashboard.service';
-import { SourceRow, sourceLabel } from '../../../core/models/marketing.model';
+import { FunnelStep, SourcesReport, sourceLabel } from '../../../core/models/marketing.model';
 import { MarketingService } from '../../../core/services/marketing.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -58,7 +58,31 @@ export class DashboardComponent {
   readonly todayData = signal<DashboardToday | null>(null);
   readonly stats = signal<DashboardStats | null>(null);
   readonly statsLoading = signal(true);
-  readonly sources = signal<SourceRow[]>([]);
+  readonly sourcesReport = signal<SourcesReport | null>(null);
+  readonly sources = computed(() => this.sourcesReport()?.rows ?? []);
+  readonly instagramInsights = computed(() => this.sourcesReport()?.instagram ?? null);
+  readonly instagramFunnel = computed<FunnelStep[]>(() => {
+    const rows = this.sources().filter((r) => r.source === 'instagram');
+    const insights = this.instagramInsights();
+    if (rows.length === 0 && !insights?.available) return [];
+    const sum = (key: 'visits' | 'registrations' | 'logins' | 'bookings' | 'new_clients' | 'revenue') => rows.reduce((total, r) => total + r[key], 0);
+    const steps: FunnelStep[] = [];
+    if (insights?.available) {
+      steps.push(
+        { key: 'reach', label: 'Videlo profil ili objave', value: insights.reach, hint: 'doseg na Instagramu' },
+        { key: 'profile', label: 'Posete profilu', value: insights.profile_views, hint: 'otvorili profil salona' },
+        { key: 'clicks', label: 'Klik na link', value: insights.website_clicks, hint: 'link u biju' },
+      );
+    }
+    const newClients = sum('new_clients');
+    steps.push(
+      { key: 'visits', label: 'Posete sajtu', value: sum('visits'), hint: 'stigli na aplikaciju' },
+      { key: 'accounts', label: 'Registracije i prijave', value: sum('registrations') + sum('logins'), hint: `${sum('registrations')} novih naloga · ${sum('logins')} postojećih` },
+      { key: 'bookings', label: 'Zakazani termini', value: sum('bookings'), hint: newClients ? `od toga ${newClients} novih klijenata` : 'svi od postojećih klijenata' },
+      { key: 'revenue', label: 'Prihod', value: sum('revenue'), hint: 'od završenih termina', money: true },
+    );
+    return steps;
+  });
   readonly sourceLabel = sourceLabel;
   private marketing = inject(MarketingService);
   readonly error = signal<string | null>(null);
@@ -194,9 +218,16 @@ export class DashboardComponent {
     return `${weekdayShort(entry.date)} ${d.getDate()}.${d.getMonth() + 1}.`;
   }
 
+  stepRate(steps: FunnelStep[], index: number): string | null {
+    if (index === 0 || steps[index].money) return null;
+    const previous = steps[index - 1].value;
+    if (!previous) return null;
+    return `${Math.round((steps[index].value / previous) * 1000) / 10}`.replace('.', ',') + '%';
+  }
+
   private loadStats(from: string, to: string): void {
     if (!this.isOwner()) return;
-    this.marketing.sources(from, to).subscribe({ next: (rows) => this.sources.set(rows), error: () => this.sources.set([]) });
+    this.marketing.sources(from, to).subscribe({ next: (report) => this.sourcesReport.set(report), error: () => this.sourcesReport.set(null) });
     this.statsLoading.set(true);
     this.dashboard.stats(from, to).subscribe({
       next: (stats) => {

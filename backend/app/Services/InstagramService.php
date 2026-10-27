@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BusinessSetting;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -19,6 +20,8 @@ class InstagramService
     private const TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
 
     private const CACHE_KEY = 'instagram:posts';
+
+    private const INSIGHT_METRICS = ['reach', 'profile_views', 'website_clicks', 'accounts_engaged', 'total_interactions'];
 
     public function posts(): array
     {
@@ -59,6 +62,86 @@ class InstagramService
         Cache::put(self::CACHE_KEY, $posts, now()->addHour());
 
         return $posts;
+    }
+
+    public function insights(CarbonImmutable $from, CarbonImmutable $to): ?array
+    {
+        $settings = BusinessSetting::current();
+        if (! $settings->instagram_insights_enabled || ! $settings->instagram_token) {
+            return null;
+        }
+
+        $to = $to->min(CarbonImmutable::today());
+        $from = $from->max($to->subDays(89));
+
+        return Cache::remember("instagram:insights:{$from->toDateString()}:{$to->toDateString()}", now()->addHour(), function () use ($settings, $from, $to) {
+            $totals = array_fill_keys(self::INSIGHT_METRICS, 0);
+            $failed = false;
+
+            for ($start = $from; $start->lte($to); $start = $start->addDays(30)) {
+                $end = $start->addDays(29)->min($to);
+                $response = Http::timeout(10)->get(self::API.'/me/insights', [
+                    'metric' => implode(',', self::INSIGHT_METRICS),
+                    'period' => 'day',
+                    'metric_type' => 'total_value',
+                    'since' => $start->startOfDay()->timestamp,
+                    'until' => $end->endOfDay()->timestamp,
+                    'access_token' => $settings->instagram_token,
+                ]);
+                if (! $response->successful()) {
+                    $failed = true;
+                    break;
+                }
+                foreach ($response->json('data', []) as $metric) {
+                    if (array_key_exists($metric['name'] ?? '', $totals)) {
+                        $totals[$metric['name']] += (int) ($metric['total_value']['value'] ?? 0);
+                    }
+                }
+            }
+
+            return [
+                'available' => ! $failed,
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                ...$totals,
+                'top_posts' => $failed ? [] : $this->topPosts($settings->instagram_token, $from, $to),
+            ];
+        });
+    }
+
+    private function topPosts(string $token, CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $media = Http::timeout(10)->get(self::API.'/me/media', [
+            'fields' => 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count',
+            'limit' => 25,
+            'access_token' => $token,
+        ]);
+        if (! $media->successful()) {
+            return [];
+        }
+
+        return collect($media->json('data', []))
+            ->filter(fn ($post) => isset($post['timestamp']) && CarbonImmutable::parse($post['timestamp'])->between($from->startOfDay(), $to->endOfDay()))
+            ->take(10)
+            ->map(function ($post) use ($token) {
+                $insights = Http::timeout(10)->get(self::API."/{$post['id']}/insights", ['metric' => 'reach,total_interactions', 'access_token' => $token]);
+                $values = collect($insights->successful() ? $insights->json('data', []) : [])
+                    ->mapWithKeys(fn ($m) => [$m['name'] => (int) ($m['values'][0]['value'] ?? $m['total_value']['value'] ?? 0)]);
+
+                return [
+                    'id' => (string) $post['id'],
+                    'caption' => $post['caption'] ?? null,
+                    'image' => ($post['media_type'] ?? '') === 'VIDEO' ? ($post['thumbnail_url'] ?? null) : ($post['media_url'] ?? null),
+                    'permalink' => $post['permalink'] ?? null,
+                    'posted_at' => $post['timestamp'],
+                    'reach' => $values['reach'] ?? 0,
+                    'interactions' => $values['total_interactions'] ?? ((int) ($post['like_count'] ?? 0) + (int) ($post['comments_count'] ?? 0)),
+                ];
+            })
+            ->sortByDesc('reach')
+            ->take(3)
+            ->values()
+            ->all();
     }
 
     public function oauthAvailable(): bool

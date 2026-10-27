@@ -13,7 +13,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
 | GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, kind: work|salon, featured, width, height, url}]` (bez sadržaja slike) |
 | GET | `/public/instagram` | poslednje objave sa povezanog Instagram naloga `[{id, caption, type, image, permalink, posted_at}]` (keš 1 h; prazno bez tokena ili kad je prikaz isključen) |
-| POST | `/public/visit` | `{source, campaign?}` — beleži posetu po izvoru (`?izvor=&kampanja=`); osoblje se ne broji |
+| POST | `/public/visit` | `{source, campaign?}` — beleži posetu po izvoru (`?izvor=` / `?source=` / `utm_source`, `&kampanja=`); osoblje se ne broji. `login`, `register` i `bookings` primaju `referral: {source, campaign}` |
 | GET | `/public/reports/{file}` | potpisan link (7 dana) na PDF izveštaja poslat preko WhatsApp-a |
 | GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
 | POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available, open}]` (`open` = neko tog dana radi — pun dan je `open` ali ne `available`) |
@@ -97,7 +97,7 @@ Vlasnik i radnik — svakodnevni rad.
 | PUT / DELETE | `/gallery/{id}` | `{caption?, service_id?, kind?, featured?, visible?}` / brisanje |
 | POST | `/gallery/reorder` | `{ids}` — redosled kao na ekranu |
 | POST | `/dashboard/demand` | zauzetost po danu u nedelji i satu (poslednjih 90 dana) → `{has_history, buckets: [{weekday, hour, rate, off_peak}]}` — sati koji se nude klijentu u žutoj zoni |
-| POST | `/dashboard/sources` | `{from, to}` → `[{source, campaign, visits, registrations, bookings, completed, revenue}]` (vlasnik) |
+| POST | `/dashboard/sources` | `{from, to}` → `{rows: [{source, campaign, visits, registrations, logins, bookings, new_clients, completed, revenue}], instagram: {available, reach, profile_views, website_clicks, accounts_engaged, total_interactions, top_posts} \| null}` (vlasnik; Instagram samo kad je povezan i uključena statistika, keš 1 h) |
 | POST | `/instagram/authorize` | `{url}` — adresa za prijavu na Instagram (OAuth, vlasnik); posle odobrenja Instagram vraća na `GET /public/instagram/callback`, koji čuva dugotrajni token i preusmerava na `/admin/settings?tab=social&instagram=connected|error|cancelled` |
 | POST / DELETE | `/instagram/connect`, `/instagram` | `{token}` — proverava token na Instagramu i čuva ga šifrovano / prekid veze (vlasnik); `instagram:refresh-token` ga obnavlja ponedeljkom u 04:00 |
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |

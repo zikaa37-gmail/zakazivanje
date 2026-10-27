@@ -54,7 +54,7 @@ export class AuthService {
 
   login(email: string, password: string): Observable<TokenResponse> {
     return this.http
-      .post<TokenResponse>(`${this.api}/login`, { email, password }, quiet())
+      .post<TokenResponse>(`${this.api}/login`, { email, password, referral: this.marketing.referral() }, quiet())
       .pipe(tap((res) => this.storeSession(res)));
   }
 

@@ -70,6 +70,7 @@ class AuthController extends Controller
 
         $user->forceFill(['last_login_at' => now()])->save();
         ClientActivity::dispatch($user, ClientActivity::LOGIN);
+        $this->marketing->recordLogin($user, $this->marketing->referral($request));
         $this->discipline->refresh($user);
 
         return response()->json($this->tokensFor($user));
