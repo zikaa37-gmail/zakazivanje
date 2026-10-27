@@ -212,9 +212,12 @@ za bio. Token je šifrovan u bazi (`InstagramService`).
 Statistika (#68): Pregled → „Odakle dolaze klijenti" — lestvica za Instagram (doseg → posete profilu → klik na link iz `InstagramService::insights()`,
 pa naše posete → registracije + prijave postojećih (`marketing_visits.logins`) → termini (novi klijenti = prvi termin) → prihod) i najbolje objave.
 Pregled: grafikoni su opcioni (prekidač „Prikaži grafikone", pamti se u pregledaču, podrazumevano isključeno); klik na stub dana i
-„Svi današnji termini" vode na `/admin/appointments?date=YYYY-MM-DD|today`).
+„Svi današnji termini" vode na `/admin/appointments?date=YYYY-MM-DD|today`.
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
+Uputstvo za korisnike (#75): `docs/uputstvo/index.html` (koraci za vlasnika, svakodnevni rad, radnika i klijenta; slike sa telefona u `slike/`,
+obeležene crvenim okvirom i brojem). Slike se ponovo snimaju sa `node docs/uputstvo/snimi-slike.js docs/uputstvo/slike` dok rade frontend na 4210
+i backend na 8010; posle izmena ekrana ažurirati i uputstvo. PDF se pravi kad se potvrdi da je sve obuhvaćeno.
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

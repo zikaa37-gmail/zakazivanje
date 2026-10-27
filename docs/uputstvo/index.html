@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Uputstvo za zakazivanje</title>
+<style>
+  :root {
+    --text: #1c1917;
+    --muted: #57534e;
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --accent: #0f766e;
+    --accent-soft: #ccfbf1;
+    --mark: #e11d48;
+    --tip: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header.top { background: var(--accent); color: #fff; padding: 2.5rem 1rem 2rem; }
+  header.top h1 { margin: 0 0 .4rem; font-size: 2rem; line-height: 1.2; }
+  header.top p { margin: 0; opacity: .92; max-width: 46rem; }
+  main { max-width: 64rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  h2 { font-size: 1.6rem; margin: 3rem 0 .5rem; padding-top: 1rem; border-top: 3px solid var(--accent); }
+  h2 small { display: block; font-size: 1rem; font-weight: 400; color: var(--muted); }
+  h3 { font-size: 1.2rem; margin: 0 0 .5rem; }
+  a { color: var(--accent); }
+  .roles { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin: 1rem 0; }
+  .role { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+  .role strong { display: block; font-size: 1.1rem; }
+  nav.toc { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; }
+  nav.toc ol { margin: .25rem 0 0; padding-left: 1.25rem; }
+  nav.toc li { margin: .15rem 0; }
+  .step { display: grid; gap: 1.25rem; grid-template-columns: 1fr; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; margin: 1rem 0; break-inside: avoid; page-break-inside: avoid; }
+  .step-head { display: flex; gap: .75rem; align-items: flex-start; }
+  .num { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 2.4rem; height: 2.4rem; padding: 0 .5rem; border-radius: 1.2rem; background: var(--accent); color: #fff; font-weight: 700; }
+  .step ol, .step ul { padding-left: 1.3rem; margin: .4rem 0; }
+  .step li { margin: .3rem 0; }
+  .badge { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; border-radius: .75rem; background: var(--mark); color: #fff; font-size: .8rem; font-weight: 700; vertical-align: .1em; margin-right: .2rem; }
+  .open { display: inline-flex; align-items: center; gap: .35rem; margin-top: .5rem; padding: .45rem .85rem; border: 1px solid var(--accent); border-radius: 8px; text-decoration: none; font-weight: 600; font-size: .95rem; }
+  .open::after { content: "↗"; }
+  .tip { background: var(--tip); border-radius: 10px; padding: .6rem .85rem; margin: .6rem 0 0; font-size: .95rem; }
+  figure { margin: 0; text-align: center; }
+  figure img { width: 100%; max-width: 300px; border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  figure.pair { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+  figure.pair img { max-width: 240px; }
+  figcaption { font-size: .85rem; color: var(--muted); margin-top: .35rem; }
+  @media (min-width: 760px) {
+    .step { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+    .step.wide { grid-template-columns: minmax(0, 1fr) 500px; }
+  }
+  @media print {
+    body { font-size: 12pt; background: #fff; }
+    header.top { padding: 1rem; }
+    .open::after { content: " (" attr(href) ")"; font-weight: 400; font-size: 9pt; }
+    h2 { page-break-before: always; }
+    .step { border: none; padding: .5rem 0; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Uputstvo za online zakazivanje</h1>
+  <p>Korak po korak: kako da podesite salon, kako se radi svakog dana i kako klijenti zakazuju. Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu pored.</p>
+</header>
+
+<main>
+  <p>Aplikacija se koristi na telefonu i na računaru, a izgleda isto — zato su slike sa telefona. Dugme <strong>„Otvori u aplikaciji ↗"</strong> otvara pomenutu stranicu u novom prozoru (ako niste prijavljeni, prvo se prijavite).</p>
+
+  <div class="roles">
+    <div class="role"><strong>Vlasnik</strong>Podešava salon, zaposlene, usluge i cene i vidi sve, uključujući zaradu i statistiku.</div>
+    <div class="role"><strong>Radnik</strong>Svakodnevni posao: kalendar, termini, potvrđivanje i otkazivanje, klijenti, izveštaji.</div>
+    <div class="role"><strong>Klijent</strong>Zakazuje, pomera i otkazuje svoje termine, plaća i ocenjuje posetu.</div>
+  </div>
+
+  <nav class="toc">
+    <strong>Sadržaj</strong>
+    <ol>
+      <li><a href="#podesavanje">Vlasnik — prvo podešavanje salona (koraci 1–14)</a></li>
+      <li><a href="#svaki-dan">Svakodnevni rad — vlasnik i radnik (koraci 15–22)</a></li>
+      <li><a href="#radnik">Šta vidi radnik</a></li>
+      <li><a href="#klijent">Klijent — kako se zakazuje (koraci K1–K9)</a></li>
+      <li><a href="#pitanja">Česta pitanja</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===================== VLASNIK ===================== -->
+  <h2 id="podesavanje">1. Prvo podešavanje salona<small>Radi se jednom, redom kako je napisano. Posle se menja samo ono što se promeni.</small></h2>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">1</span><h3>Prijavite se kao vlasnik</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Upišite svoju email adresu.</li>
+        <li><span class="badge">2</span> Upišite lozinku.</li>
+        <li><span class="badge">3</span> Kliknite <strong>„Prijavi se"</strong>.</li>
+      </ol>
+      <p class="tip">Lozinku ste dobili od nas. Odmah je promenite: gore desno kliknite na krug sa inicijalima → <strong>Profil</strong> → <strong>Promeni lozinku</strong>.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/login" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/admin-01-prijava.jpg" alt="Prijava" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">2</span><h3>Upoznajte meni</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Na telefonu meni otvarate dugmetom sa tri crtice gore levo. Na računaru je meni uvek vidljiv sa leve strane.</li>
+        <li><span class="badge">2</span> Na dnu menija su <strong>Podešavanja</strong> — tu počinje podešavanje salona.</li>
+      </ol>
+      <p class="tip">Broj u žutom polju pored „Termini" pokazuje koliko termina čeka vašu potvrdu.</p>
+    </div>
+    <figure><img src="slike/admin-02-meni.jpg" alt="Meni" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">3</span><h3>Upišite podatke o salonu</h3></div>
+      <p>Meni → <strong>Podešavanja</strong>.</p>
+      <ol>
+        <li><span class="badge">1</span> Otvorite karticu <strong>„Biznis"</strong>.</li>
+        <li><span class="badge">2</span> Upišite naziv salona i izaberite delatnost.</li>
+        <li>Na drugoj slici: adresa i grad <span class="badge">1</span>, telefon <span class="badge">2</span> i vaš Instagram <span class="badge">3</span> (dovoljno je ime naloga, npr. <em>@salonpink</em>). Tu su i WhatsApp, email, Facebook i kratak opis salona koji vide klijenti.</li>
+        <li><span class="badge">3</span> Na kraju kliknite <strong>„Sačuvaj"</strong> (dugme je uvek na vrhu stranice).</li>
+      </ol>
+      <p class="tip">Ako mapa na početnoj stranici pokazuje pogrešno mesto, u polje „Pretraga na mapi" upišite naziv salona tačno kako stoji na Google mapama.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=business" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-03-podaci-firme.jpg" alt="Podaci o firmi" loading="lazy" /><img src="slike/admin-03b-kontakt.jpg" alt="Kontakt podaci" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">4</span><h3>Logo, boje i naslovna fotografija</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Kartica <strong>„Logo i boje"</strong>.</li>
+        <li>Dodajte logo — aplikacija iz njega sama predloži boje, pa sve stranice dobiju boje vašeg salona. Boje možete i ručno da promenite.</li>
+        <li><span class="badge">2</span> <strong>Naslovna fotografija</strong>: lepa fotografija salona koja stoji na vrhu početne stranice. Posle izbora pomerite i uvećajte sliku da se vidi deo koji želite.</li>
+        <li>Kliknite <strong>„Sačuvaj"</strong>.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=look" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/admin-04-logo-boje.jpg" alt="Logo i boje" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">5</span><h3>Radno vreme salona</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Kartica <strong>„Radno vreme"</strong>.</li>
+        <li>Za svaki dan upišite od kada do kada salon radi. Dan kada ne radite ostavite isključen.</li>
+        <li>Ispod su <strong>smene</strong> (npr. Pre podne 08–14, Popodne 14–20). One vam kasnije ubrzavaju upis radnog vremena zaposlenih — jednim klikom.</li>
+        <li>Kliknite <strong>„Sačuvaj"</strong>.</li>
+      </ol>
+      <p class="tip">Zaposleni ne mogu da rade van radnog vremena salona. Ako skratite radno vreme salona, skraćuje se i njihovo.</p>
+    </div>
+    <figure><img src="slike/admin-05-radno-vreme.jpg" alt="Radno vreme salona" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">6</span><h3>Upišite usluge i cene</h3></div>
+      <p>Meni → <strong>Usluge</strong>.</p>
+      <ol>
+        <li><span class="badge">1</span> Kliknite <strong>„+ Nova usluga"</strong>.</li>
+        <li>Na drugoj slici: naziv usluge <span class="badge">1</span> (npr. „Žensko šišanje"), koliko traje <span class="badge">2</span> i cena <span class="badge">3</span>.</li>
+        <li>Izaberite kategoriju (npr. Šišanje, Boja, Nega) — klijenti tako lakše nalaze uslugu.</li>
+        <li>Ako je usluga samo za žene ili samo za muškarce, to izaberite; klijentu se onda nudi samo ono što je za njega.</li>
+        <li>Kliknite <strong>„Sačuvaj"</strong> i ponovite za svaku uslugu.</li>
+      </ol>
+      <p class="tip">Trajanje je važno: po njemu aplikacija računa slobodne termine. Upišite stvarno vreme koje vam je potrebno.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/services" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-06-usluge.jpg" alt="Usluge" loading="lazy" /><img src="slike/admin-07-nova-usluga.jpg" alt="Nova usluga" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">7</span><h3>Upišite zaposlene</h3></div>
+      <p>Meni → <strong>Zaposleni</strong>.</p>
+      <ol>
+        <li><span class="badge">1</span> Kliknite <strong>„+ Novi zaposleni"</strong>.</li>
+        <li>Na drugoj slici: ime <span class="badge">1</span> i prezime <span class="badge">2</span>.</li>
+        <li>Upišite i email zaposlenog — on tada dobija svoj nalog i može da vodi svoj kalendar sa telefona.</li>
+        <li><strong>Potvrda termina</strong>: da li termini kod ovog zaposlenog odmah važe, ili čekaju da ih neko potvrdi.</li>
+        <li><strong>Boja</strong>: njegovi termini su tom bojom označeni u kalendaru.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/staff" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-08-zaposleni.jpg" alt="Zaposleni" loading="lazy" /><img src="slike/admin-09-novi-zaposleni.jpg" alt="Novi zaposleni" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">8</span><h3>Dodelite ko koje usluge radi</h3></div>
+      <p>U istom prozoru, malo niže:</p>
+      <ol>
+        <li><span class="badge">1</span> <strong>Usluge koje radi</strong> — kliknite na svaku uslugu koju ovaj zaposleni radi (izabrane postanu tamne). Klijent će kod njega moći da zakaže samo te usluge.</li>
+        <li><span class="badge">2</span> <strong>Raspored</strong>: „Isto svake nedelje" ako radi uvek isto, ili „Smenski" ako se smene menjaju na 2, 3 ili 4 nedelje.</li>
+      </ol>
+    </div>
+    <figure><img src="slike/admin-10-usluge-zaposlenog.jpg" alt="Usluge zaposlenog" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">9</span><h3>Radno vreme zaposlenog</h3></div>
+      <ol>
+        <li>Uključite dane kada radi.</li>
+        <li><span class="badge">1</span> Kliknite smenu (Pre podne, Popodne, Ceo dan) — vreme se samo upiše.</li>
+        <li><span class="badge">2</span> Ili upišite vreme ručno. „+ smena" dodaje još jedan deo dana (npr. ako ima pauzu).</li>
+        <li><span class="badge">3</span> <strong>„Kopiraj ponedeljak na radne dane"</strong> — ponedeljak se prepiše na utorak–petak, da ne kucate isto pet puta.</li>
+        <li>Kliknite <strong>„Sačuvaj"</strong>.</li>
+      </ol>
+      <p class="tip">Kad zaposleni privremeno ne radi (bolovanje, odmor, odlazak), ne brišite ga: u meniju „⋮" kod njegovog imena izaberite <strong>„Deaktiviraj"</strong>. Njegovi termini i statistika ostaju sačuvani, a kasnije ga vraćate preko „Neaktivni".</p>
+    </div>
+    <figure><img src="slike/admin-11-radno-vreme-zaposlenog.jpg" alt="Radno vreme zaposlenog" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">10</span><h3>Nalozi osoblja (recepcija i drugi vlasnici)</h3></div>
+      <p>Meni → <strong>Nalozi osoblja</strong>.</p>
+      <ol>
+        <li>Svaki zaposleni sa emailom ovde već ima nalog — ne morate ništa.</li>
+        <li><span class="badge">1</span> Za osobu koja ne šiša, a vodi kalendar (recepcija, administracija), kliknite <strong>„+ Novi nalog"</strong>, upišite ime i email i izaberite ulogu <strong>Radnik</strong>. Ako je u pitanju suvlasnik, izaberite <strong>Vlasnik</strong>.</li>
+        <li>Ta osoba dobija mejl sa linkom da postavi svoju lozinku.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/team" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/admin-12-nalozi-osoblja.jpg" alt="Nalozi osoblja" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">11</span><h3>Pravila zakazivanja</h3></div>
+      <p>Podešavanja → <span class="badge">1</span> kartica <strong>„Zakazivanje"</strong>. Ovde odlučujete:</p>
+      <ul>
+        <li><strong>Potvrda termina</strong> — „Ručno": svaki online termin čeka da ga vi ili radnik potvrdite. „Automatski": termin važi čim ga klijent zakaže.</li>
+        <li><strong>Koliko unapred</strong> klijent može da zakaže (npr. najranije sutra, najkasnije za 60 dana) i na koliko minuta se nude termini.</li>
+        <li><strong>Otkazivanje</strong> — do kada klijent sam može da otkaže (npr. najkasnije dan pre).</li>
+        <li><strong>Lista čekanja</strong> — kad je dan pun, klijent se prijavi i dobije poruku čim se neki termin oslobodi.</li>
+        <li><strong>Ocene posle posete</strong> — klijent dobija poziv da oceni uslugu.</li>
+        <li><strong>Disciplina klijenata</strong> — klijenti koji često otkazuju ili ne dođu dobijaju „kaznene poene". Žuta zona: termin im uvek čeka vašu potvrdu i nude im se samo manje traženi termini. Narandžasta: ne mogu sami da zakažu (vide da je sve popunjeno). Crvena: nalog je privremeno blokiran. Vi uvek možete da im zakažete termin.</li>
+      </ul>
+      <p>Kliknite <strong>„Sačuvaj"</strong>.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=booking" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/admin-13-pravila-zakazivanja.jpg" alt="Pravila zakazivanja" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">12</span><h3>Obaveštenja i plaćanje</h3></div>
+      <p><strong>Obaveštenja</strong> (prva slika): izaberite koje poruke klijenti dobijaju — da je termin primljen, potvrđen, otkazan i podsetnik pre termina (npr. 24 sata ranije). Poruke idu mejlom, a po želji klijenta i preko WhatsApp-a. Tu možete uključiti i automatsko slanje izveštaja vama.</p>
+      <p><strong>Plaćanje</strong> (druga slika): upišite tekući račun salona. Klijent tada u aplikaciji vidi uplatnicu i QR kod za plaćanje preko mobilnog bankarstva, a na kasi možete pokazati QR kod sa iznosom.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=notifications" target="_blank" rel="noopener">Otvori obaveštenja</a>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=payments" target="_blank" rel="noopener">Otvori plaćanje</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-14-obavestenja.jpg" alt="Obaveštenja" loading="lazy" /><img src="slike/admin-15-placanje.jpg" alt="Plaćanje" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">13</span><h3>Akcije, popusti i galerija</h3></div>
+      <p><strong>Cene i akcije</strong> (prva slika) <span class="badge">1</span> „+ Nova akcija": popust u procentima ili dinarima, paket usluga, „treći dolazak gratis" i slično, za određeni period i dane. Cena sa popustom se klijentu sama izračuna.</p>
+      <p><strong>Galerija</strong> (druga slika):</p>
+      <ol>
+        <li><span class="badge">1</span> <strong>„Dodaj slike"</strong> — možete izabrati više slika odjednom ili slikati telefonom.</li>
+        <li><span class="badge">2</span> Zvezdica = slika je <strong>istaknuta</strong> na početnoj stranici (vaši najlepši radovi).</li>
+        <li>U meniju „⋮" kod slike → „Opis, vrsta i usluga": vrsta <strong>„Salon"</strong> za fotografije enterijera — one idu u deo „Naš salon" na početnoj.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/promotions" target="_blank" rel="noopener">Otvori akcije</a>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/gallery" target="_blank" rel="noopener">Otvori galeriju</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-16-akcije.jpg" alt="Akcije" loading="lazy" /><img src="slike/admin-17-galerija.jpg" alt="Galerija" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">14</span><h3>Instagram — da ljudi sa Instagrama zakazuju</h3></div>
+      <p>Podešavanja → <span class="badge">1</span> <strong>„Instagram i Meta"</strong>.</p>
+      <ol>
+        <li>Pročitajte <strong>preporuke</strong> na dnu: pređite na poslovni (Business) Instagram nalog — besplatno je i traje minut.</li>
+        <li><span class="badge">2</span> Kad imate poslovni nalog, kliknite <strong>„Poveži sa Instagramom"</strong> i prijavite se nalogom salona. Vaše objave se tada pojavljuju na početnoj stranici, a u Pregledu vidite koliko je ljudi videlo profil.</li>
+        <li>Na drugoj slici <span class="badge">1</span> <strong>„Kopiraj"</strong> link i nalepite ga u Instagram: Uredi profil → Linkovi. Tako u Pregledu vidite koliko je ljudi došlo sa Instagrama i zakazalo.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/settings?tab=social" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-18-instagram.jpg" alt="Instagram" loading="lazy" /><img src="slike/admin-18b-link-bio.jpg" alt="Link za bio" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">14b</span><h3>Podeli — slike za objave i linkovi za story</h3></div>
+      <p>Meni → <strong>Podeli</strong>.</p>
+      <ol>
+        <li><span class="badge">1</span> <strong>Slika za Instagram</strong>: izaberite šta prikazuje (zakaži online, akcija, cenovnik, slika iz galerije) i format (objava ili story). Dugme „Podeli" na telefonu šalje sliku pravo u Instagram, WhatsApp ili Viber.</li>
+        <li>Druga slika — <strong>Linkovi za Instagram</strong>: izaberite gde stavljate link <span class="badge">2</span> (bio, story, objava, reklama), po želji dajte naziv (npr. „jesenja akcija") i <span class="badge">1</span> kopirajte link. U story ga ubacite nalepnicom „Link".</li>
+        <li>Niže je <strong>QR kod za štampu</strong> — za izlog, recepciju i vizit karte.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/share" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-19-podeli.jpg" alt="Podeli" loading="lazy" /><img src="slike/admin-19b-linkovi.jpg" alt="Linkovi za Instagram" loading="lazy" /></figure>
+  </section>
+
+  <!-- ===================== SVAKI DAN ===================== -->
+  <h2 id="svaki-dan">2. Svakodnevni rad<small>Ovo rade i vlasnik i radnici.</small></h2>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">15</span><h3>Pregled — vaš dan na jednom mestu</h3></div>
+      <p>Posle prijave otvara se <strong>Pregled</strong>: današnji termini, ko je sledeći klijent, termini koji čekaju potvrdu i ko danas radi.</p>
+      <ol>
+        <li><span class="badge">1</span> <strong>„Svi današnji termini"</strong> otvara listu današnjih termina.</li>
+        <li>Druga slika (samo vlasnik): statistika za 7, 30 ili 90 dana — zarada, broj termina, popunjenost, najtraženije usluge i odakle dolaze klijenti. <span class="badge">1</span> „Prikaži grafikone" uključuje grafikone; klik na stub dana otvara termine tog dana.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/dashboard" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/rad-01-pregled.jpg" alt="Pregled" loading="lazy" /><img src="slike/rad-02-statistika.jpg" alt="Statistika" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">16</span><h3>Kalendar i novi termin (npr. kad klijent pozove telefonom)</h3></div>
+      <ol>
+        <li><span class="badge">3</span> Izaberite prikaz: dan (kolona za svakog zaposlenog), nedelja ili mesec.</li>
+        <li><span class="badge">1</span> <strong>„+ Novi termin"</strong> — ili samo kliknite na prazno mesto u kalendaru.</li>
+        <li>Druga slika: <span class="badge">1</span> počnite da kucate ime ili telefon klijenta i izaberite ga sa spiska. Ako ga nema, dodajte novog klijenta. Zatim izaberite uslugu, zaposlenog, dan i vreme i sačuvajte.</li>
+        <li><span class="badge">2</span> <strong>„Blokiraj vreme"</strong> — zatvorite vreme kada se ne zakazuje (pauza, lekar, kasniji dolazak).</li>
+        <li>Termin pomerate tako što ga prevučete na novo vreme ili kod drugog zaposlenog.</li>
+      </ol>
+      <p class="tip">Ako je klijent ranije često otkazivao ili nije dolazio, pri zakazivanju se pojavi upozorenje — termin i dalje možete da upišete.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/calendar" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/rad-03-kalendar.jpg" alt="Kalendar" loading="lazy" /><img src="slike/rad-04-novi-termin.jpg" alt="Novi termin" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">17</span><h3>Potvrdite, završite ili otkažite termin</h3></div>
+      <p>Meni → <strong>Termini</strong> (izaberite Danas, Sutra, 7 ili 30 dana).</p>
+      <ol>
+        <li><span class="badge">1</span> <strong>„Potvrdi"</strong> — za termine koji čekaju potvrdu. Klijent odmah dobija poruku.</li>
+        <li><span class="badge">2</span> Meni „⋮" pored termina (druga slika):
+          <ul>
+            <li><strong>Završen</strong> — klijent je bio; termin ulazi u zaradu i klijent dobija poziv da oceni posetu.</li>
+            <li><strong>Nije došao</strong> — klijent nije došao (računa se u disciplinu).</li>
+            <li><strong>Otkaži</strong> — salon otkazuje; <strong>Klijent otkazao</strong> — klijent je javio da ne dolazi.</li>
+            <li><strong>Pozovi klijenta</strong> — poziv sa telefona.</li>
+          </ul>
+        </li>
+        <li>Kad kliknete na termin u kalendaru, otvaraju se detalji: tu beležite <strong>plaćanje</strong> (gotovina, kartica, račun) ili pokazujete QR kod za plaćanje.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/appointments?date=today" target="_blank" rel="noopener">Otvori današnje termine</a>
+    </div>
+    <figure class="pair"><img src="slike/rad-05-termini.jpg" alt="Termini" loading="lazy" /><img src="slike/rad-06-status-termina.jpg" alt="Status termina" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">18</span><h3>Klijenti</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Pretraga po imenu ili telefonu.</li>
+        <li><span class="badge">2</span> <strong>„+ Novi klijent"</strong> — za klijente koji zovu telefonom. Kada se kasnije sam registruje istim emailom, dobija sve svoje termine.</li>
+        <li>Meni „⋮" → <strong>„Istorijat i zona"</strong>: svi dolasci, otkazivanja i nedolasci klijenta. Vlasnik tu može ručno da mu promeni zonu (npr. da ga odblokira).</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/clients" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/rad-07-klijenti.jpg" alt="Klijenti" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">19</span><h3>Izveštaji (dan, nedelja, mesec)</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Izaberite zbirni izveštaj ili izveštaj za jednog zaposlenog i period: dan, nedelja ili mesec.</li>
+        <li><span class="badge">2</span> <strong>„Otvori PDF"</strong> — izveštaj za štampu ili čuvanje. Može i da se pošalje na mejl ili WhatsApp.</li>
+      </ol>
+      <p class="tip">Zaposleni koji šiša vidi samo svoj izveštaj; vlasnik i recepcija vide sve.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/reports" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/rad-08-izvestaji.jpg" alt="Izveštaji" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">20</span><h3>Recenzije (vlasnik)</h3></div>
+      <p>Ovde stižu ocene klijenata posle završenih termina. Možete da <strong>odgovorite</strong> (odgovor se vidi javno) ili da <strong>sakrijete</strong> neprikladnu ocenu. Vidi se i prosečna ocena po zaposlenom.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/admin/reviews" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/rad-09-recenzije.jpg" alt="Recenzije" loading="lazy" /></figure>
+  </section>
+
+  <!-- ===================== RADNIK ===================== -->
+  <h2 id="radnik">3. Šta vidi radnik</h2>
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">21</span><h3>Meni radnika</h3></div>
+      <p><span class="badge">1</span> Radnik vidi <strong>Pregled, Kalendar, Termini, Klijenti i Izveštaje</strong> — sve što je potrebno za svakodnevni rad (koraci 15–19). Ne vidi podešavanja, usluge i cene, galeriju ni statistiku salona i ne može da briše klijente.</p>
+      <p>Svoju lozinku i podatke menja u <strong>Profilu</strong> (dole u meniju).</p>
+    </div>
+    <figure><img src="slike/radnik-01-meni.jpg" alt="Meni radnika" loading="lazy" /></figure>
+  </section>
+
+  <!-- ===================== KLIJENT ===================== -->
+  <h2 id="klijent">4. Klijent — kako se zakazuje<small>Ovaj deo možete poslati klijentima.</small></h2>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">K1</span><h3>Otvorite stranicu salona</h3></div>
+      <ol>
+        <li>Otvorite link salona (iz Instagrama, poruke ili QR koda).</li>
+        <li><span class="badge">1</span> Kliknite <strong>„Zakaži termin"</strong>.</li>
+        <li>Druga slika: ako nemate nalog, izaberite <strong>„Registruj se"</strong> <span class="badge">1</span>. Možete i prvo da pogledate slobodne termine, a nalog napravite na kraju.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/" target="_blank" rel="noopener">Otvori stranicu salona</a>
+    </div>
+    <figure class="pair"><img src="slike/klijent-01-pocetna.jpg" alt="Početna" loading="lazy" /><img src="slike/klijent-02-izbor.jpg" alt="Prijava ili registracija" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">K2</span><h3>Napravite nalog</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Upišite ime, prezime, email, broj telefona i lozinku.</li>
+        <li><span class="badge">2</span> Kliknite <strong>„Registruj se"</strong>.</li>
+        <li>Na email stiže poruka — kliknite link u njoj da potvrdite adresu.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/register" target="_blank" rel="noopener">Otvori registraciju</a>
+    </div>
+    <figure><img src="slike/klijent-03-registracija.jpg" alt="Registracija" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">K3</span><h3>Izaberite uslugu i frizera</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Kliknite uslugu (može i više njih, npr. farbanje i feniranje).</li>
+        <li><span class="badge">2</span> <strong>„Dalje"</strong>.</li>
+        <li>Druga slika: izaberite kod koga želite <span class="badge">1</span>, ili „Bilo ko" za prvi slobodan termin. „Zapamti kao mog frizera" — sledeći put on je odmah izabran.</li>
+      </ol>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/book" target="_blank" rel="noopener">Otvori zakazivanje</a>
+    </div>
+    <figure class="pair"><img src="slike/klijent-04-usluga.jpg" alt="Izbor usluge" loading="lazy" /><img src="slike/klijent-05-frizer.jpg" alt="Izbor frizera" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">K4</span><h3>Izaberite dan i vreme</h3></div>
+      <ol>
+        <li><span class="badge">1</span> Kliknite dan. Strelicama idete na sledeće nedelje.</li>
+        <li><span class="badge">2</span> Kliknite slobodno vreme, pa <strong>„Dalje"</strong>.</li>
+      </ol>
+      <p class="tip">Ako je dan pun (isprekidan okvir), možete se prijaviti na <strong>listu čekanja</strong> — čim se termin oslobodi, stiže vam poruka.</p>
+    </div>
+    <figure><img src="slike/klijent-06-termin.jpg" alt="Izbor termina" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">K5</span><h3>Potvrdite</h3></div>
+      <ol>
+        <li>Proverite uslugu, frizera, vreme i cenu. Ako nešto treba promeniti, kliknite „Izmeni".</li>
+        <li><span class="badge">1</span> Kliknite <strong>„Zakaži termin"</strong>.</li>
+        <li>Na email stiže potvrda sa podsetnikom za vaš kalendar. Ako salon potvrđuje termine ručno, stiže vam još jedna poruka kad je termin potvrđen.</li>
+      </ol>
+    </div>
+    <figure><img src="slike/klijent-07-potvrda.jpg" alt="Potvrda" loading="lazy" /></figure>
+  </section>
+
+  <section class="step wide">
+    <div>
+      <div class="step-head"><span class="num">K6</span><h3>Moji termini — pomeranje, otkazivanje, plaćanje</h3></div>
+      <ol>
+        <li><span class="badge">1</span> <strong>„Promeni termin"</strong> — izaberete novo vreme, bez otkazivanja.</li>
+        <li><span class="badge">2</span> <strong>„Otkaži"</strong> — moguće do roka koji je salon odredio (npr. najkasnije dan pre).</li>
+        <li><strong>„Plati"</strong> (ako salon to nudi) — QR kod za mobilno bankarstvo ili uplatnica.</li>
+        <li>Druga slika: <span class="badge">1</span> „Prošli i otkazani" — tu je dugme <strong>„Oceni posetu"</strong> posle završenog termina. <span class="badge">2</span> „Kalendar" prikazuje termine po mesecima.</li>
+      </ol>
+      <p class="tip">Česta otkazivanja u poslednjem trenutku i nedolasci mogu ograničiti online zakazivanje — tada termin zakazujete pozivom salonu.</p>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/my-appointments" target="_blank" rel="noopener">Otvori moje termine</a>
+    </div>
+    <figure class="pair"><img src="slike/klijent-08-moji-termini.jpg" alt="Moji termini" loading="lazy" /><img src="slike/klijent-09-prosli.jpg" alt="Prošli termini" loading="lazy" /></figure>
+  </section>
+
+  <section class="step">
+    <div>
+      <div class="step-head"><span class="num">K7</span><h3>Profil</h3></div>
+      <ul>
+        <li><span class="badge">1</span> <strong>Omiljeni frizer</strong> — uvek ponuđen prvi.</li>
+        <li><strong>Obaveštenja preko</strong> — email ili WhatsApp; tu su i broj telefona, promena lozinke i odjava.</li>
+      </ul>
+      <a class="open" href="https://zakazivanje.fiskultura.rs/profile" target="_blank" rel="noopener">Otvori profil</a>
+    </div>
+    <figure><img src="slike/klijent-10-profil.jpg" alt="Profil" loading="lazy" /></figure>
+  </section>
+
+  <!-- ===================== PITANJA ===================== -->
+  <h2 id="pitanja">5. Česta pitanja</h2>
+  <section class="step" style="grid-template-columns: 1fr">
+    <div>
+      <p><strong>Klijent kaže da nije dobio mejl.</strong> Neka proveri folder „Promocije" ili „Neželjena pošta". Vlasnik u Podešavanja → Obaveštenja → Dnevnik slanja vidi da li je poruka poslata.</p>
+      <p><strong>Klijent je zaboravio lozinku.</strong> Na stranici za prijavu neka klikne „Zaboravljena lozinka?" — stiže mu link za novu.</p>
+      <p><strong>Zaposleni ide na odmor.</strong> U kalendaru kliknite <em>„Blokiraj vreme"</em> za te dane, ili ga u Zaposleni → „⋮" privremeno <em>deaktivirajte</em>.</p>
+      <p><strong>Promenila se cena.</strong> Usluge → „⋮" → Izmeni. Već zakazani termini zadržavaju staru cenu.</p>
+      <p><strong>Ne vidim neki deo menija.</strong> Radnici ne vide podešavanja, cene i galeriju — to radi vlasnik.</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>
