@@ -4,12 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\DashboardService;
+use App\Services\DemandService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class DashboardController extends Controller
 {
+    public function demand(DemandService $demand)
+    {
+        $buckets = $demand->buckets();
+
+        return ['has_history' => $demand->hasHistory($buckets), 'buckets' => array_values($buckets)];
+    }
+
     public function __construct(private DashboardService $dashboard) {}
 
     public function today(Request $request)

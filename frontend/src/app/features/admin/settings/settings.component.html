@@ -355,6 +355,25 @@
                 <input id="d-yellow-max" appInput size="m" type="number" min="1" max="90" formControlName="discipline_yellow_horizon_days" />
               </div>
             </div>
+            <app-toggle [checked]="form.controls.discipline_yellow_off_peak.value" label="Žuta zona: nudi samo manje tražene termine" (checkedChange)="form.controls.discipline_yellow_off_peak.setValue($event)" data-testid="settings-discipline-off-peak" />
+            @if (form.controls.discipline_yellow_off_peak.value) {
+              <div class="field mt-3 max-w-xs">
+                <label for="d-off-peak">Koliko sati se nudi (% najmanje traženih)</label>
+                <input id="d-off-peak" appInput size="m" type="number" min="10" max="90" step="5" formControlName="discipline_off_peak_percent" />
+              </div>
+              @if (offPeak(); as op) {
+                <div class="text-sm mb-3" data-testid="settings-off-peak-hours">
+                  @if (!op.hasHistory) {
+                    <p class="muted">Još nema istorije termina — dok je nema, nude se svi termini.</p>
+                  } @else {
+                    <p class="muted mb-1">Po zauzetosti u poslednjih 90 dana, sada se nude (preračunava se svakog dana):</p>
+                    @for (row of op.rows; track row.day) {
+                      <div><span class="font-semibold inline-block w-10">{{ row.day }}</span> {{ row.ranges }}</div>
+                    }
+                  }
+                </div>
+              }
+            }
             <app-toggle [checked]="form.controls.discipline_auto_suspend.value" label="Automatska suspenzija (crvena zona)" (checkedChange)="form.controls.discipline_auto_suspend.setValue($event)" data-testid="settings-discipline-auto-suspend" />
             @if (form.controls.discipline_auto_suspend.value) {
               <div class="field mt-3 max-w-xs">

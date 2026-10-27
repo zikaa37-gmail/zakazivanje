@@ -106,6 +106,7 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
     Route::put('/business-settings', [BusinessSettingController::class, 'update']);
 
     Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::post('/dashboard/demand', [DashboardController::class, 'demand']);
 
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);

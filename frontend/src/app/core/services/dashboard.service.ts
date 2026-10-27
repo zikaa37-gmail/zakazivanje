@@ -25,6 +25,15 @@ export interface DashboardSummary {
   new_clients: number;
 }
 
+export interface DemandBucket {
+  weekday: number;
+  hour: number;
+  available: number;
+  booked: number;
+  rate: number;
+  off_peak: boolean;
+}
+
 export interface DashboardStats {
   from: string;
   to: string;
@@ -46,5 +55,9 @@ export class DashboardService {
 
   stats(from: string, to: string): Observable<DashboardStats> {
     return this.http.post<DashboardStats>(`${this.api}/stats`, { from, to }, { context: new HttpContext().set(SKIP_LOADER, true) });
+  }
+
+  demand(): Observable<{ has_history: boolean; buckets: DemandBucket[] }> {
+    return this.http.post<{ has_history: boolean; buckets: DemandBucket[] }>(`${this.api}/demand`, {}, { context: new HttpContext().set(SKIP_LOADER, true) });
   }
 }

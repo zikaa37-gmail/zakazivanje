@@ -191,7 +191,8 @@ dan / nedelja / mesec; `ReportService` (brojke, `pdf/report` blade), „Otvori P
 automatsko slanje `reports:send-scheduled` u 21h (dnevni, nedeljni nedeljom, mesečni poslednjeg dana) uključuje se u
 Podešavanja → Obaveštenja (`report_auto_*`, podrazumevano isključeno).
 Disciplina klijenata (#55): poeni za otkazivanje klijenta (kasno = manje od 24 h), nedolazak, u periodu
-`discipline_window_days`; zone `users.discipline_zone` — žuta (kasniji / kraći period, svaki termin čeka potvrdu),
+`discipline_window_days`; zone `users.discipline_zone` — žuta (kasniji / kraći period, svaki termin čeka potvrdu, i samo manje traženi sati:
+`DemandService` — zauzetost po danu u nedelji i satu iz poslednjih 90 dana, donjih `discipline_off_peak_percent` %),
 narandžasta (tiho: dostupnost prazna, dani „puni", zakazivanje vraća „Termin je u međuvremenu zauzet"), crvena
 (suspendovan, `user.suspended`, `/suspended`, 403). `ClientDisciplineService` je jedino mesto za pravila (dostupnost,
 `BookingService`, lista čekanja); automatska crvena samo uz `discipline_auto_suspend`; ručna zona (vlasnik) sa razlogom i

@@ -24,7 +24,7 @@ class WaitlistService
 
         return collect($this->availability->slots($services, $entry->staff_member_id, CarbonImmutable::parse($entry->date)))
             ->pluck('time')
-            ->filter(fn ($time) => $entry->fitsTime($time))
+            ->filter(fn ($time) => $entry->fitsTime($time) && (! $entry->client || app(ClientDisciplineService::class)->allowsSlot($entry->client, CarbonImmutable::parse($entry->date)->setTimeFromTimeString($time))))
             ->values()
             ->all();
     }

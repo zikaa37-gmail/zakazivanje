@@ -2,6 +2,7 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { DashboardService } from '../../../core/services/dashboard.service';
 import { NOTIFICATION_TYPES, NotificationLogEntry, NotificationLogService } from '../../../core/services/notification-log.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -53,6 +54,8 @@ export class SettingsComponent {
   private theme = inject(ThemeService);
   private toast = inject(ToastService);
   private notificationLogs = inject(NotificationLogService);
+  private dashboard = inject(DashboardService);
+  readonly offPeak = signal<{ hasHistory: boolean; rows: { day: string; ranges: string }[] } | null>(null);
 
   readonly categories = BUSINESS_CATEGORIES;
   readonly confirmationOptions = CONFIRMATION_OPTIONS;
@@ -136,6 +139,8 @@ export class SettingsComponent {
     discipline_auto_suspend: this.fb.nonNullable.control(false),
     discipline_yellow_min_days: this.fb.nonNullable.control(3, [Validators.min(0), Validators.max(30)]),
     discipline_yellow_horizon_days: this.fb.nonNullable.control(7, [Validators.min(1), Validators.max(90)]),
+    discipline_yellow_off_peak: this.fb.nonNullable.control(true),
+    discipline_off_peak_percent: this.fb.nonNullable.control(40, [Validators.min(10), Validators.max(90)]),
   });
 
   readonly notificationToggles: { key: NotifyKey; label: string; hint: string }[] = [
@@ -208,6 +213,35 @@ export class SettingsComponent {
   openTab(tab: Tab): void {
     this.tab.set(tab);
     if (tab === 'notifications') this.loadLogs();
+    if (tab === 'booking') this.loadDemand();
+  }
+
+  loadDemand(): void {
+    this.dashboard.demand().subscribe((res) => {
+      const days = ['', 'Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
+      const byDay = new Map<number, number[]>();
+      for (const b of res.buckets.filter((x) => x.off_peak)) {
+        byDay.set(b.weekday, [...(byDay.get(b.weekday) ?? []), b.hour]);
+      }
+      this.offPeak.set({
+        hasHistory: res.has_history,
+        rows: [...byDay.entries()]
+          .sort(([a], [b]) => a - b)
+          .map(([weekday, hours]) => ({ day: days[weekday], ranges: this.hourRanges(hours.sort((a, b) => a - b)) })),
+      });
+    });
+  }
+
+  private hourRanges(hours: number[]): string {
+    const ranges: string[] = [];
+    let start = hours[0];
+    for (let i = 1; i <= hours.length; i++) {
+      if (hours[i] !== hours[i - 1] + 1) {
+        ranges.push(`${String(start).padStart(2, '0')}–${String(hours[i - 1] + 1).padStart(2, '0')}h`);
+        start = hours[i];
+      }
+    }
+    return ranges.join(', ');
   }
 
   loadLogs(): void {
@@ -377,6 +411,7 @@ export class SettingsComponent {
         this.saving.set(false);
         this.saved = settings;
         this.coverData.set(undefined);
+        if (this.tab() === 'booking') this.loadDemand();
         this.toast.success('Podešavanja su sačuvana.');
       },
       error: (err) => {
@@ -452,6 +487,8 @@ export class SettingsComponent {
       discipline_auto_suspend: settings.discipline_auto_suspend ?? false,
       discipline_yellow_min_days: settings.discipline_yellow_min_days ?? 3,
       discipline_yellow_horizon_days: settings.discipline_yellow_horizon_days ?? 7,
+      discipline_yellow_off_peak: settings.discipline_yellow_off_peak ?? true,
+      discipline_off_peak_percent: settings.discipline_off_peak_percent ?? 40,
     });
   }
 

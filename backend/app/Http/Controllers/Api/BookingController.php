@@ -41,12 +41,14 @@ class BookingController extends Controller
             return [];
         }
 
-        return $this->availability->slots(
+        $slots = $this->availability->slots(
             $this->availability->servicesInOrder($data['service_ids']),
             $data['staff_member_id'] ?? null,
             $date,
             $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
         );
+
+        return $this->offPeakOnly($request->user(), $date, $slots);
     }
 
     public function days(Request $request)
@@ -69,8 +71,26 @@ class BookingController extends Controller
         );
         $this->discipline->logAvailability($request->user(), ['from' => $data['from'], 'staff_member_id' => $data['staff_member_id'] ?? null]);
 
+        $services = $this->availability->servicesInOrder($data['service_ids']);
+        $offPeak = $this->discipline->restrictions($request->user())['off_peak_only'];
+
         return collect($days)
-            ->map(fn ($day) => $day['open'] && $this->discipline->hidesDate($request->user(), CarbonImmutable::parse($day['date'])) ? [...$day, 'available' => false] : $day)
+            ->map(function ($day) use ($request, $data, $services, $offPeak) {
+                $date = CarbonImmutable::parse($day['date']);
+                if (! $day['open'] || ! $day['available']) {
+                    return $day;
+                }
+                if ($this->discipline->hidesDate($request->user(), $date)) {
+                    return [...$day, 'available' => false];
+                }
+                if ($offPeak) {
+                    $slots = $this->availability->slots($services, $data['staff_member_id'] ?? null, $date, $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null));
+
+                    return [...$day, 'available' => $this->offPeakOnly($request->user(), $date, $slots) !== []];
+                }
+
+                return $day;
+            })
             ->all();
     }
 
@@ -132,6 +152,11 @@ class BookingController extends Controller
         $this->notifier->booked($appointment);
 
         return response()->json($appointment, 201);
+    }
+
+    private function offPeakOnly(?User $client, CarbonImmutable $date, array $slots): array
+    {
+        return array_values(array_filter($slots, fn ($slot) => $this->discipline->allowsSlot($client, $date->setTimeFromTimeString($slot['time']))));
     }
 
     private function ownAppointmentId(Request $request, ?int $id): ?int
