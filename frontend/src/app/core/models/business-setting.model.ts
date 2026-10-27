@@ -75,6 +75,17 @@ export interface BusinessSetting {
   report_auto_weekly: boolean;
   report_auto_monthly: boolean;
   report_auto_channel: 'mail' | 'whatsapp';
+  discipline_enabled: boolean;
+  discipline_window_days: number;
+  discipline_cancel_points: number;
+  discipline_late_cancel_points: number;
+  discipline_no_show_points: number;
+  discipline_yellow_points: number;
+  discipline_orange_points: number;
+  discipline_red_points: number;
+  discipline_auto_suspend: boolean;
+  discipline_yellow_min_days: number;
+  discipline_yellow_horizon_days: number;
   opening_hours?: OpeningHour[];
   shifts?: ShiftTemplate[];
 }

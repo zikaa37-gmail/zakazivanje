@@ -185,6 +185,16 @@ dan / nedelja / mesec; `ReportService` (brojke, `pdf/report` blade), „Otvori P
 (`ReportNotification`, WhatsApp dobija potpisan link na PDF u `storage/app/reports`, briše se posle 7 dana);
 automatsko slanje `reports:send-scheduled` u 21h (dnevni, nedeljni nedeljom, mesečni poslednjeg dana) uključuje se u
 Podešavanja → Obaveštenja (`report_auto_*`, podrazumevano isključeno).
+Disciplina klijenata (#55): poeni za otkazivanje klijenta (kasno = manje od 24 h), nedolazak, u periodu
+`discipline_window_days`; zone `users.discipline_zone` — žuta (kasniji / kraći period, svaki termin čeka potvrdu),
+narandžasta (tiho: dostupnost prazna, dani „puni", zakazivanje vraća „Termin je u međuvremenu zauzet"), crvena
+(suspendovan, `user.suspended`, `/suspended`, 403). `ClientDisciplineService` je jedino mesto za pravila (dostupnost,
+`BookingService`, lista čekanja); automatska crvena samo uz `discipline_auto_suspend`; ručna zona (vlasnik) sa razlogom i
+rokom; `clients:refresh-discipline` u 03:00. Aktivnost klijenta (prijava, pregled termina, pokušaji, otkazivanja...) ide kroz
+događaj `ClientActivity` → `client_activity_logs`; vlasnik dobija mejl kad klijent pređe u višu zonu i kad blokiran
+pokušava (jednom dnevno). Vlasnik i radnik vide zonu i istorijat (Klijenti → Istorijat i zona, `?history={id}`); salon
+može da zakaže blokiranom uz upozorenje. Podešavanja discipline i izveštaja se ne vraćaju javno (`/public/business`
+samo osoblju). Klijenta u formi termina bira deljena `<app-select-search>` (prima `FormControl`, `remote` pretraga).
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 

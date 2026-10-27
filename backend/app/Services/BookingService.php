@@ -19,6 +19,7 @@ class BookingService
     public function __construct(
         private AvailabilityService $availability,
         private PriceQuoteService $quotes,
+        private ClientDisciplineService $discipline,
     ) {}
 
     public function book(
@@ -62,7 +63,8 @@ class BookingService
             }
 
             $quote = $this->quoteFor($client, $services, $start);
-            $automatic = $source !== Appointment::SOURCE_ONLINE || $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC;
+            $automatic = $source !== Appointment::SOURCE_ONLINE
+                || ($staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC && ! $this->discipline->restrictions($client)['force_pending']);
 
             $appointment = Appointment::create([
                 'client_id' => $client->id,
@@ -111,7 +113,8 @@ class BookingService
                 throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
             }
 
-            $automatic = $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC;
+            $automatic = $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC
+                && ! $this->discipline->restrictions($appointment->client)['force_pending'];
 
             $appointment->update([
                 'staff_member_id' => $staff->id,

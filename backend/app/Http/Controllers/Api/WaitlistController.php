@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\WaitlistEntry;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
+use App\Services\ClientDisciplineService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -38,6 +40,7 @@ class WaitlistController extends Controller
         ]);
 
         abort_unless(BusinessSetting::current()->waitlist_enabled, 422, 'Lista čekanja nije uključena.');
+        app(ClientDisciplineService::class)->ensureNotSuspended($request->user());
 
         $services = $this->availability->servicesInOrder($data['service_ids']);
         $date = CarbonImmutable::parse($data['date']);
@@ -54,6 +57,7 @@ class WaitlistController extends Controller
             'service_ids' => $services->pluck('id')->all(),
             'notified_at' => null,
         ])->save();
+        ClientActivity::dispatch($request->user(), ClientActivity::WAITLIST_JOINED, ['date' => $date->toDateString(), 'staff_member_id' => $entry->staff_member_id, 'part' => $entry->part]);
 
         return response()->json($this->present($entry->load('staffMember:id,first_name,last_name')), 201);
     }

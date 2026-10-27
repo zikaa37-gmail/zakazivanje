@@ -30,6 +30,8 @@ export const NOTIFICATION_TYPES: Record<string, string> = {
   password_reset: 'Reset lozinke',
   staff_invite: 'Pozivnica osoblju',
   report: 'Izveštaj',
+  discipline_zone_raised: 'Klijent u višoj zoni',
+  discipline_blocked_attempt: 'Blokiran klijent pokušava da zakaže',
   test: 'Probna poruka',
 };
 

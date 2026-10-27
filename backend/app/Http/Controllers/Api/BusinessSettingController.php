@@ -16,9 +16,13 @@ class BusinessSettingController extends Controller
 {
     private const PHONE_PATTERN = 'regex:/^[\d\s+\-()]+$/';
 
-    public function show()
+    public function show(Request $request)
     {
-        return $this->present(BusinessSetting::current());
+        $settings = $this->present(BusinessSetting::current());
+
+        return $request->user()?->isStaff()
+            ? $settings
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_'))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -94,6 +98,17 @@ class BusinessSettingController extends Controller
             'report_auto_daily' => ['sometimes', 'boolean'],
             'report_auto_weekly' => ['sometimes', 'boolean'],
             'report_auto_monthly' => ['sometimes', 'boolean'],
+            'discipline_enabled' => ['sometimes', 'boolean'],
+            'discipline_window_days' => ['sometimes', 'integer', 'between:7,365'],
+            'discipline_cancel_points' => ['sometimes', 'numeric', 'between:0,20'],
+            'discipline_late_cancel_points' => ['sometimes', 'numeric', 'between:0,20'],
+            'discipline_no_show_points' => ['sometimes', 'numeric', 'between:0,20'],
+            'discipline_yellow_points' => ['sometimes', 'numeric', 'between:0.5,100'],
+            'discipline_orange_points' => ['sometimes', 'numeric', 'between:0.5,100', 'gte:discipline_yellow_points'],
+            'discipline_red_points' => ['sometimes', 'numeric', 'between:0.5,100', 'gte:discipline_orange_points'],
+            'discipline_auto_suspend' => ['sometimes', 'boolean'],
+            'discipline_yellow_min_days' => ['sometimes', 'integer', 'between:0,30'],
+            'discipline_yellow_horizon_days' => ['sometimes', 'integer', 'between:1,90'],
             'report_auto_channel' => ['sometimes', Rule::in([ReportNotification::CHANNEL_MAIL, ReportNotification::CHANNEL_WHATSAPP])],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],

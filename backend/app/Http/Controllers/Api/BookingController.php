@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
+use App\Services\ClientDisciplineService;
 use App\Services\PriceQuoteService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -20,6 +22,7 @@ class BookingController extends Controller
         private AvailabilityService $availability,
         private BookingService $bookings,
         private AppointmentNotifier $notifier,
+        private ClientDisciplineService $discipline,
     ) {}
 
     public function slots(Request $request)
@@ -32,10 +35,16 @@ class BookingController extends Controller
             'ignore_appointment_id' => ['nullable', 'integer'],
         ]);
 
+        $date = CarbonImmutable::parse($data['date']);
+        $this->discipline->logAvailability($request->user(), ['date' => $data['date'], 'staff_member_id' => $data['staff_member_id'] ?? null]);
+        if ($this->discipline->hidesDate($request->user(), $date)) {
+            return [];
+        }
+
         return $this->availability->slots(
             $this->availability->servicesInOrder($data['service_ids']),
             $data['staff_member_id'] ?? null,
-            CarbonImmutable::parse($data['date']),
+            $date,
             $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
         );
     }
@@ -51,13 +60,18 @@ class BookingController extends Controller
             'ignore_appointment_id' => ['nullable', 'integer'],
         ]);
 
-        return $this->availability->days(
+        $days = $this->availability->days(
             $this->availability->servicesInOrder($data['service_ids']),
             $data['staff_member_id'] ?? null,
             CarbonImmutable::parse($data['from']),
             $data['days'] ?? 14,
             $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
         );
+        $this->discipline->logAvailability($request->user(), ['from' => $data['from'], 'staff_member_id' => $data['staff_member_id'] ?? null]);
+
+        return collect($days)
+            ->map(fn ($day) => $day['open'] && $this->discipline->hidesDate($request->user(), CarbonImmutable::parse($day['date'])) ? [...$day, 'available' => false] : $day)
+            ->all();
     }
 
     public function quote(Request $request)
@@ -97,14 +111,23 @@ class BookingController extends Controller
             throw ValidationException::withMessages(['guest' => ['Osoblje zakazuje kroz stranicu Termini.']]);
         }
 
-        $appointment = $this->bookings->book(
-            $client,
-            $this->availability->servicesInOrder($data['service_ids']),
-            $data['staff_member_id'] ?? null,
-            CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']),
-            Appointment::SOURCE_ONLINE,
-            $data['note'] ?? null,
-        );
+        $start = CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']);
+        $this->discipline->ensureCanBook($client, $start);
+
+        try {
+            $appointment = $this->bookings->book(
+                $client,
+                $this->availability->servicesInOrder($data['service_ids']),
+                $data['staff_member_id'] ?? null,
+                $start,
+                Appointment::SOURCE_ONLINE,
+                $data['note'] ?? null,
+            );
+        } catch (ValidationException $e) {
+            ClientActivity::dispatch($client, ClientActivity::BOOKING_FAILED, ['starts_at' => $data['starts_at'], 'service_ids' => $data['service_ids'], 'reason' => collect($e->errors())->flatten()->first()]);
+            throw $e;
+        }
+        ClientActivity::dispatch($client, ClientActivity::BOOKED, ['appointment_id' => $appointment->id, 'starts_at' => $data['starts_at'], 'status' => $appointment->status]);
 
         $this->notifier->booked($appointment);
 

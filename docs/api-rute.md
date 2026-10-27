@@ -56,13 +56,14 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/staff/list` | zaposleni sa uslugama i radnim vremenom |
 | POST | `/services/list` | sve usluge (i neaktivne) |
 | POST | `/services/quote` | `{service_ids, date?, completed_visits?, completed_visits_by_service?}` → cena sa akcijama (`PriceQuoteService`) |
-| POST | `/clients/list` | `{search?, page?}` → paginirano, `has_account` |
+| POST | `/clients/list` | `{search?, page?, zone?}` → paginirano, `has_account`, `discipline_zone`, `discipline_points`, `zone_*` |
+| POST | `/clients/{id}/activity` | `{before_id?}` → `{client, stats (termini, otkazivanja, nedolasci, pouzdanost), logs (100, najnoviji prvi), has_more}` |
 | POST / PUT | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski) |
 | POST | `/appointments/list` | `{from, to, staff_member_id?, status?, search?}` |
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
 | POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
-| POST | `/appointments/{id}/cancel` | `{scope: this \| series}` — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
+| POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
 | POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik-zaposleni dobija samo svoj |
@@ -85,6 +86,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/promotions/list` | akcije |
 | POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays` |
 | DELETE | `/clients/{id}` | brisanje klijenta |
+| PUT | `/clients/{id}/zone` | `{zone: green \| yellow \| orange \| red \| null, reason?, until?}` — ručna zona (`null` = ponovo automatski po poenima) |
 | POST | `/reviews/list` | `{rating?, staff_member_id?, visible?}` → `{summary, staff (prosek po zaposlenom), items}` |
 | PUT | `/reviews/{id}` | `{visible?, reply?}` — sakrivanje sa sajta, odgovor salona |
 | POST | `/share/qr` | `{url}` (http/https) → `{url, png (data URL), svg}` za štampu |
