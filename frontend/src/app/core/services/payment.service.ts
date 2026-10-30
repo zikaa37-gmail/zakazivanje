@@ -14,8 +14,8 @@ export class PaymentService {
     return this.http.post<PaymentDetails>(`${this.api}/${this.base(asClient)}/${id}/payment`, {});
   }
 
-  markPaid(id: number, method: PaymentMethod | null): Observable<Appointment> {
-    return this.http.post<Appointment>(`${this.api}/appointments/${id}/paid`, { method });
+  markPaid(id: number, method: PaymentMethod | null, tip = 0): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.api}/appointments/${id}/paid`, { method, tip });
   }
 
   async openSlip(id: number, asClient: boolean): Promise<void> {

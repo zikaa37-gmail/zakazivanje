@@ -15,13 +15,29 @@
     </div>
   </div>
 
+  @if (hasSections()) {
+    <div class="shell-tabs" role="tablist" aria-label="Deo menija">
+      @for (s of sections; track s.value) {
+        <button type="button" role="tab" class="shell-tab" [class.active]="section() === s.value" [attr.aria-selected]="section() === s.value" (click)="section.set(s.value)" [attr.data-testid]="'nav-section-' + s.value">
+          {{ s.label }}
+          @if (s.value === 'daily' && section() !== 'daily' && (appointments.pendingCount() > 0 || notes.unreadCount() > 0)) {
+            <span class="shell-tab-dot" aria-label="Ima termina na čekanju"></span>
+          }
+        </button>
+      }
+    </div>
+  }
+
   <nav class="shell-nav" aria-label="Meni salona">
     @for (item of nav(); track item.path) {
-      <a class="shell-nav-item" [routerLink]="item.path" routerLinkActive="active" [attr.data-testid]="'nav-' + item.path.split('/').pop()">
+      <a class="shell-nav-item" [routerLink]="item.path" [class.active]="isActive(item)" [attr.data-testid]="'nav-' + item.path.split('/').pop()">
         <span [appIcon]="item.icon" [iconSize]="18" aria-hidden="true"></span>
         <span class="flex-1">{{ item.label }}</span>
         @if (item.path === '/admin/appointments' && appointments.pendingCount() > 0) {
           <span class="badge badge-warning" data-testid="pending-badge">{{ appointments.pendingCount() }}</span>
+        }
+        @if (item.path === '/admin/notes' && notes.unreadCount() > 0) {
+          <span class="badge badge-warning" data-testid="notes-badge">{{ notes.unreadCount() }}</span>
         }
       </a>
     }

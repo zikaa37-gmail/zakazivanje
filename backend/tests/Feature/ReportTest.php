@@ -31,7 +31,7 @@ class ReportTest extends TestCase
         $this->marko = StaffMember::create(['first_name' => 'Marko', 'last_name' => 'Marković', 'active' => false]);
         $this->client = User::factory()->create();
 
-        $this->appointment($this->ana, '2026-11-02 10:00', Appointment::STATUS_COMPLETED, 2000, ['paid_at' => '2026-11-02 11:00', 'payment_method' => 'cash']);
+        $this->appointment($this->ana, '2026-11-02 10:00', Appointment::STATUS_COMPLETED, 2000, ['paid_at' => '2026-11-02 11:00', 'payment_method' => 'cash', 'tip' => 300]);
         $this->appointment($this->ana, '2026-11-03 10:00', Appointment::STATUS_COMPLETED, 1500);
         $this->appointment($this->ana, '2026-11-04 10:00', Appointment::STATUS_CANCELLED, 1500, ['cancelled_by' => 'client']);
         $this->appointment($this->marko, '2026-11-02 12:00', Appointment::STATUS_NO_SHOW, 1000);
@@ -72,6 +72,7 @@ class ReportTest extends TestCase
         $this->assertEquals(3500, $report['totals']['revenue']);
         $this->assertEquals(2000, $report['totals']['paid']);
         $this->assertEquals(2000, $report['totals']['by_method']['cash']);
+        $this->assertEquals(300, $report['totals']['tips']);
         $this->assertCount(7, $report['days']);
         $this->assertSame(['Ana Jovanović', 'Marko Marković'], array_column($report['staff'], 'name'));
     }
@@ -87,7 +88,7 @@ class ReportTest extends TestCase
         $this->assertSame([], $report['staff']);
     }
 
-    public function test_linked_worker_sees_only_own_report_and_admin_worker_sees_all(): void
+    public function test_linked_worker_sees_only_own_report_and_admin_worker_only_sends_to_owner(): void
     {
         $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
 
@@ -96,9 +97,14 @@ class ReportTest extends TestCase
         $this->actingAsJwt($worker)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02', 'staff_member_id' => $this->marko->id])
             ->assertUnprocessable();
 
-        $reception = User::factory()->create(['role' => User::ROLE_WORKER]);
-        $this->actingAsJwt($reception)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])
-            ->assertOk()->assertJsonPath('staff_member', null)->assertJsonCount(2, 'appointments');
+        $reception = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $this->actingAsJwt($reception)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
+        $this->actingAsJwt($reception)->postJson('/api/reports/pdf', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
+
+        Notification::fake();
+        $this->actingAsJwt($reception)->postJson('/api/reports/send', ['period' => 'day', 'date' => '2026-11-02', 'channel' => 'mail'])->assertOk();
+        Notification::assertSentTo($this->owner, ReportNotification::class);
+        Notification::assertNotSentTo($reception, ReportNotification::class);
 
         $this->actingAsJwt($this->client)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
     }
@@ -123,6 +129,7 @@ class ReportTest extends TestCase
 
         BusinessSetting::current()->update(['report_auto_enabled' => true]);
         User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
+        User::factory()->create(['role' => User::ROLE_MANAGER]);
 
         $this->artisan('reports:send-scheduled', ['--date' => '2026-11-30'])->assertSuccessful();
         Notification::assertCount(4);

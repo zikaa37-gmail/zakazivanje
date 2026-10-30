@@ -7,6 +7,7 @@ import { BusinessSettingService } from '../../../core/services/business-setting.
 import { PaymentService } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
+import { contactChannels } from '../../../core/utils/contact';
 import { longDate, timeOf } from '../../../core/utils/dates';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
@@ -48,6 +49,7 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly moveStaff = new FormControl<number | null>(null);
   readonly moveDate = new FormControl<string>('', { nonNullable: true });
   readonly moveTime = new FormControl<string | null>(null);
+  readonly tip = new FormControl<number | null>(null);
 
   readonly active = computed(() => ['pending', 'confirmed'].includes(this.appointment().status));
   readonly when = computed(() => `${longDate(this.appointment().starts_at)} · ${timeOf(this.appointment().starts_at)} – ${timeOf(this.appointment().ends_at)}`);
@@ -55,10 +57,9 @@ export class AppointmentDetailsComponent implements OnInit {
     const ids = this.appointment().items.map((i) => i.service_id).filter((id): id is number => id !== null);
     return this.staff().filter((m) => m.active && ids.every((id) => m.services.some((s) => s.id === id)));
   });
-  readonly phoneHref = computed(() => {
-    const phone = this.appointment().client?.phone;
-    return phone ? `tel:${phone.replace(/\s/g, '')}` : null;
-  });
+  readonly contacts = computed(() => contactChannels(this.appointment().client?.phone));
+  readonly callHref = computed(() => this.contacts().find((c) => c.id === 'call')?.href ?? null);
+  readonly messageLinks = computed(() => this.contacts().filter((c) => c.id !== 'call'));
 
   ngOnInit(): void {
     const a = this.appointment();
@@ -68,7 +69,7 @@ export class AppointmentDetailsComponent implements OnInit {
   }
 
   markPaid(method: PaymentMethod | null): void {
-    this.payments.markPaid(this.appointment().id, method).subscribe({
+    this.payments.markPaid(this.appointment().id, method, Math.max(0, Number(this.tip.value) || 0)).subscribe({
       next: () => {
         this.toast.success(method ? `Naplaćeno: ${this.paymentLabel(method).toLowerCase()}.` : 'Plaćanje je poništeno.');
         this.changed.emit();

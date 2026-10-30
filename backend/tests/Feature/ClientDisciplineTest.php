@@ -93,7 +93,7 @@ class ClientDisciplineTest extends TestCase
     {
         $this->pastAppointment(Appointment::STATUS_CONFIRMED);
         $second = $this->pastAppointment(Appointment::STATUS_CONFIRMED, ['starts_at' => '2026-10-12 10:00', 'ends_at' => '2026-10-12 10:30']);
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => User::ROLE_MANAGER]);
 
         foreach (Appointment::all() as $appointment) {
             $this->actingAsJwt($worker)->postJson("/api/appointments/{$appointment->id}/status", ['status' => 'no_show'])->assertOk();
@@ -120,7 +120,7 @@ class ClientDisciplineTest extends TestCase
 
     public function test_owner_suspends_client_and_client_sees_it_after_login(): void
     {
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         $this->actingAsJwt($worker)->putJson("/api/clients/{$this->client->id}/zone", ['zone' => 'red'])->assertForbidden();
 
         $this->actingAsJwt($this->owner)->putJson("/api/clients/{$this->client->id}/zone", ['zone' => 'red', 'reason' => 'Stalno otkazuje'])
@@ -132,7 +132,8 @@ class ClientDisciplineTest extends TestCase
         $this->book('2026-10-21 09:00')->assertForbidden();
         $this->actingAsJwt($this->client)->postJson('/api/my-waitlist', ['service_ids' => [$this->cut->id], 'date' => '2026-10-21'])->assertForbidden();
 
-        $history = $this->actingAsJwt($worker)->postJson("/api/clients/{$this->client->id}/activity")->assertOk()
+        $this->actingAsJwt($worker)->postJson("/api/clients/{$this->client->id}/activity")->assertForbidden();
+        $history = $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/activity")->assertOk()
             ->assertJsonPath('client.discipline_zone', 'red')->json();
         $this->assertSame(['booking_failed', 'login', 'zone_changed'], collect($history['logs'])->pluck('type')->sort()->values()->unique()->values()->all());
 

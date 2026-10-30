@@ -9,9 +9,19 @@ use Illuminate\Support\Collection;
 
 class PriceQuoteService
 {
-    public function quote(Collection $services, CarbonInterface $date, array $completedVisitsByService = [], int $completedVisits = 0): array
+    public function quote(Collection $services, CarbonInterface $date, array $completedVisitsByService = [], int $completedVisits = 0, ?string $code = null, ?int $clientId = null): array
     {
+        $code = Promotion::normalizeCode($code);
+        $codeError = null;
         $promotions = Promotion::active()->with('services')->get()->filter(fn (Promotion $p) => $p->isValidOn($date));
+        $coded = $code ? $promotions->first(fn (Promotion $p) => $p->code === $code) : null;
+        if ($code && ! $coded) {
+            $codeError = 'Kod nije važeći za izabrani datum.';
+        } elseif ($coded && ($problem = $coded->codeProblem($clientId))) {
+            $codeError = $problem;
+            $coded = null;
+        }
+        $promotions = $promotions->filter(fn (Promotion $p) => $p->code === null || $p->is($coded));
 
         [$packages, $remaining] = $this->applyPackages($services->keyBy('id'), $promotions->where('type', Promotion::TYPE_PACKAGE));
 
@@ -38,6 +48,9 @@ class PriceQuoteService
             'subtotal' => $subtotal,
             'discount' => round($subtotal - $total, 2),
             'total' => $total,
+            'code' => $code,
+            'code_applied' => $coded !== null && collect($lines)->contains('promotion_id', $coded->id),
+            'code_error' => $codeError ?? ($coded && ! collect($lines)->contains('promotion_id', $coded->id) ? 'Kod ne važi za izabrane usluge ili postoji bolja akcija.' : null),
         ];
     }
 

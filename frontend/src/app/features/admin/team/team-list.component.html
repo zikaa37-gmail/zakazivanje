@@ -1,12 +1,14 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Nalozi osoblja</h1>
-    <p class="page-subtitle">Ko može da se prijavi u salon. Zaposleni sa email adresom automatski dobijaju nalog radnika.</p>
+    <h1 class="page-title">Zaposleni</h1>
+    <p class="page-subtitle">Ko sme da se prijavi u aplikaciju. Ovde dodaješ vlasnika ili administrativnog radnika; zaposleni dobijaju nalog sami.</p>
   </div>
   <button type="button" appBtn (click)="openForm()" data-testid="team-add">
     <span appIcon="plus" aria-hidden="true"></span> Novi nalog
   </button>
 </div>
+
+<app-team-tabs />
 
 <app-error-message [message]="error()" />
 
@@ -22,11 +24,9 @@
           <div class="font-semibold truncate">{{ member.first_name }} {{ member.last_name }}</div>
           <div class="text-xs muted truncate">{{ member.email }}</div>
           <div class="flex flex-wrap gap-1 mt-1">
-            <span class="badge" [class.badge-success]="member.role === 'owner'" [class.badge-neutral]="member.role !== 'owner'">{{ roleLabels[member.role] }}</span>
+            <span class="badge" [class.badge-success]="member.role === 'owner'" [class.badge-neutral]="member.role !== 'owner'">{{ roleLabel(member) }}</span>
             @if (member.staff_member) {
               <span class="badge badge-neutral">Zaposleni{{ member.staff_member.title ? ' · ' + member.staff_member.title : '' }}</span>
-            } @else if (member.role === 'worker') {
-              <span class="badge badge-neutral">Administrativni radnik</span>
             }
             @if (!member.active) {
               <span class="badge badge-danger">Neaktivan</span>
@@ -42,7 +42,13 @@
             Još se nije prijavio/la
           }
         </div>
-        <app-row-actions [actions]="actionsFor(member)" (selected)="onAction(member, $event)" />
+        @if (actionsFor(member); as actions) {
+          @if (actions.length) {
+            <app-row-actions [actions]="actions" (selected)="onAction(member, $event)" />
+          } @else {
+            <span class="w-9 shrink-0"></span>
+          }
+        }
       </div>
     }
   </div>
@@ -77,7 +83,7 @@
         <div class="field">
           <label for="team-role">Uloga</label>
           <select id="team-role" appInput size="m" formControlName="role" data-testid="team-role">
-            @for (option of roleOptions; track option.value) {
+            @for (option of roleOptions(); track option.value) {
               <option [ngValue]="option.value">{{ option.label }}</option>
             }
           </select>

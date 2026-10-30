@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'type', 'description', 'discount_percent', 'discount_amount', 'package_price', 'buy_quantity', 'free_quantity', 'loyalty_visits', 'starts_on', 'ends_on', 'weekdays', 'active'])]
+#[Fillable(['name', 'code', 'max_uses', 'once_per_client', 'type', 'description', 'discount_percent', 'discount_amount', 'package_price', 'buy_quantity', 'free_quantity', 'loyalty_visits', 'starts_on', 'ends_on', 'weekdays', 'active'])]
 class Promotion extends Model
 {
     public const TYPE_PERCENT = 'discount_percent';
@@ -36,6 +36,8 @@ class Promotion extends Model
             'ends_on' => 'date:Y-m-d',
             'weekdays' => 'array',
             'active' => 'boolean',
+            'max_uses' => 'integer',
+            'once_per_client' => 'boolean',
         ];
     }
 
@@ -71,5 +73,34 @@ class Promotion extends Model
         $ids = $this->services->pluck('id');
 
         return $ids->isEmpty() || $ids->contains($serviceId);
+    }
+
+    public static function normalizeCode(?string $code): ?string
+    {
+        $code = strtoupper(preg_replace('/\s+/', '', (string) $code));
+
+        return $code === '' ? null : $code;
+    }
+
+    public function uses(?int $clientId = null): int
+    {
+        return AppointmentItem::query()
+            ->where('promotion_id', $this->id)
+            ->whereHas('appointment', fn ($q) => $q->where('status', '!=', Appointment::STATUS_CANCELLED)
+                ->when($clientId, fn ($q) => $q->where('client_id', $clientId)))
+            ->distinct()
+            ->count('appointment_id');
+    }
+
+    public function codeProblem(?int $clientId): ?string
+    {
+        if ($this->max_uses !== null && $this->uses() >= $this->max_uses) {
+            return 'Ovaj kod je iskorišćen maksimalan broj puta.';
+        }
+        if ($this->once_per_client && $clientId && $this->uses($clientId) > 0) {
+            return 'Ovaj kod si već iskoristio/la.';
+        }
+
+        return null;
     }
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'paid_at', 'payment_method'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'paid_at', 'payment_method', 'tip'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -45,6 +45,7 @@ class Appointment extends Model
             'price' => 'float',
             'discount' => 'float',
             'total' => 'float',
+            'tip' => 'float',
         ];
     }
 

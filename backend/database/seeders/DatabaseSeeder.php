@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Recepcija',
             'email' => 'radnik@fiskultura.rs',
             'password' => Hash::make('radnik2026'),
-            'role' => User::ROLE_WORKER,
+            'role' => User::ROLE_MANAGER,
         ]);
 
         User::factory()->create([

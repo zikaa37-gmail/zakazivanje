@@ -19,9 +19,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', '*'))),
+    'allowed_origins' => env('APP_ENV') === 'local' ? ['*'] : array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', '*'))),
 
-    'allowed_origins_patterns' => array_filter(explode(',', env('CORS_ALLOWED_ORIGIN_PATTERNS', ''))),
+    'allowed_origins_patterns' => env('APP_ENV') === 'local' ? [] : array_filter(explode(',', env('CORS_ALLOWED_ORIGIN_PATTERNS', ''))),
 
     'allowed_headers' => ['*'],
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\StaffMember;
+use App\Models\User;
 use App\Notifications\ReportNotification;
 use App\Services\ReportService;
 use Carbon\CarbonImmutable;
@@ -17,11 +18,14 @@ class ReportController extends Controller
 
     public function show(Request $request)
     {
+        $this->ensureCanView($request);
+
         return $this->build($request);
     }
 
     public function pdf(Request $request)
     {
+        $this->ensureCanView($request);
         $report = $this->build($request);
 
         return response($this->reports->pdf($report), 200, [
@@ -37,7 +41,19 @@ class ReportController extends Controller
         ])['channel'];
 
         $user = $request->user();
-        $this->reports->send($user, $this->build($request), $channel);
+        $report = $this->build($request);
+
+        $own = $user->staff_member_id !== null && (int) $request->input('staff_member_id') === $user->staff_member_id;
+        if ($user->isOfficeWorker() && ! $own) {
+            $owners = User::where('role', User::ROLE_OWNER)->where('active', true)->get();
+            foreach ($owners as $owner) {
+                $this->reports->send($owner, $report, $channel);
+            }
+
+            return response()->json(['message' => 'Izveštaj je poslat vlasniku: '.$owners->map(fn (User $o) => trim("{$o->first_name} {$o->last_name}"))->join(', ').'.']);
+        }
+
+        $this->reports->send($user, $report, $channel);
 
         return response()->json([
             'message' => $channel === ReportNotification::CHANNEL_MAIL
@@ -57,6 +73,13 @@ class ReportController extends Controller
         ]);
     }
 
+    private function ensureCanView(Request $request): void
+    {
+        $user = $request->user();
+        $own = $user->staff_member_id !== null && (int) $request->input('staff_member_id') === $user->staff_member_id;
+        abort_if($user->isOfficeWorker() && ! $own, 403, 'Izveštaje pregleda vlasnik — ti možeš da ih pošalješ vlasniku (svoj izveštaj možeš da vidiš).');
+    }
+
     private function build(Request $request): array
     {
         $data = $request->validate([
@@ -67,7 +90,7 @@ class ReportController extends Controller
 
         $user = $request->user();
         $staffId = $data['staff_member_id'] ?? null;
-        if (! $user->isOwner() && $user->staff_member_id !== null) {
+        if ($user->isServiceWorker()) {
             $staffId ??= $user->staff_member_id;
         }
         $this->reports->ensureAllowed($user, $staffId);

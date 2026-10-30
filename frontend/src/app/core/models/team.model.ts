@@ -27,6 +27,7 @@ export interface TeamMemberPayload {
 }
 
 export const STAFF_ROLE_OPTIONS: { value: StaffRole; label: string; hint: string }[] = [
-  { value: 'worker', label: 'Radnik', hint: 'Kalendar, termini, klijenti i lista čekanja.' },
-  { value: 'owner', label: 'Vlasnik', hint: 'Sve, uključujući podešavanja, cene, zaposlene i statistiku.' },
+  { value: 'manager', label: 'Administrativni radnik', hint: 'Vodi salon umesto vlasnika: termini, klijenti, zaposleni, usluge, cene, recenzije, galerija, podešavanja; izveštaje šalje vlasniku. Ne vidi finansijsku statistiku i ne menja naloge vlasnika.' },
+  { value: 'owner', label: 'Vlasnik', hint: 'Sve, uključujući finansijsku statistiku i naloge vlasnika.' },
+  { value: 'worker', label: 'Radnik', hint: 'Samo svoj dan: kalendar, termini, klijenti, svoj pazar i bakšiš. Samo za nalog vezan za zaposlenog.' },
 ];

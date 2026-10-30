@@ -17,12 +17,18 @@ Prati isti obrazac kao `D:\Playground\Angular\kosarkaska-evidencija` (a ona `pra
 pogledaj taj repo za referentne konvencije (auth interceptor, core/services po entitetu, deljene
 komponente, deploy na cPanel) ako nešto ovde nije eksplicitno napisano.
 
-Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik, upravlja svime) i `worker` (radnik:
-pregled dana, kalendar, termini, blokade, klijenti bez brisanja, lista čekanja). Rute: `role:owner,worker`
-za svakodnevni rad, `role:owner` za ostalo; frontend `staffGuard` / `ownerGuard`, meni po `ownerOnly`.
-Svaki zaposleni sa emailom automatski ima nalog radnika (`users.staff_member_id`, `StaffAccountService::sync()`);
-zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu);
-administrativni radnik je nalog bez zaposlenog (Nalozi osoblja, `/admin/team`). Nove uloge idu u `User::ROLES`.
+Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik) i `worker`. Radnik vezan za zaposlenog
+(`users.staff_member_id`) je onaj koji radi usluge: pregled dana i izveštaji samo za sebe, kalendar, termini, blokade, klijenti
+bez brisanja, lista čekanja. Radnik bez zaposlenog je administrativni radnik (Zaposleni → Nalozi za prijavu, `/admin/team`) i radi umesto
+vlasnika: `User::isManager()` (vlasnik ili administrativni radnik) — zaposleni, usluge, cene, recenzije, galerija, podeli,
+nalozi, podešavanja, brisanje klijenata i zone. Samo vlasniku ostaju finansijska statistika (`dashboard/stats`, `dashboard/sources`)
+i nalozi vlasnika (administrativni radnik ne pravi, ne menja i ne briše vlasnika). Rute: `role:owner,worker` za svakodnevni rad,
+`role:manager` za upravljanje, `role:owner` za finansije; frontend `staffGuard` / `managerGuard`, meni po `managerOnly`;
+vlasnik i administrativni radnik imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
+Administrativni radnik izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
+automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
+Svaki zaposleni sa emailom automatski ima nalog radnika (`StaffAccountService::sync()`);
+zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Nove uloge idu u `User::ROLES`.
 
 ## Working conventions
 
@@ -79,17 +85,20 @@ administrativni radnik je nalog bez zaposlenog (Nalozi osoblja, `/admin/team`). 
 
 ## Local development
 
+Sve odjednom: `node dev.mjs` iz korena (frontend http://localhost:5110, backend http://127.0.0.1:8110, `/api` ide preko
+`frontend/proxy.conf.json`; na lokalu CORS pušta sve). Portovi 4200 i 8000 su rezervisani za druge projekte.
+
 Backend (from `backend/`):
 
 ```bash
 composer install
 php artisan migrate --seed
-php artisan serve
+php artisan serve --port=8110
 ```
 
-Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, radnik `radnik@fiskultura.rs` /
+Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, administrativni radnik `radnik@fiskultura.rs` /
 `radnik2026`, klijent Petar Petrović
-`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Vlasnik / Radnik / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
+`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Vlasnik / Administrativni radnik / Radnik (Jelena, `jelena@demo.zakazivanje.rs` / `radnik2026`, iz DemoDataSeeder-a) / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
 `environment.ts` i `environment.development.ts`) — dok su podaci test; ukloniti pre pravih klijenata.
 
 Frontend (from `frontend/`):
@@ -118,7 +127,7 @@ podešavanja (podaci o biznisu, logo kao data URL, tema iz boja logoa — `extra
 `ThemeService.applyBrand()` računa nijanse `--color-primary/secondary/tertiary*`; režim potvrde
 `manual` / `automatic`). Zakazivanje (#17): `AvailabilityService` (slobodni termini), `BookingService`
 (zaključava zaposlene u transakciji, cena kroz `PriceQuoteService` sa istorijom klijenta, režim
-potvrde zaposlenog), `RecurrenceService` + `appointments:extend-recurring` (svake noći 02:00, 8
+potvrde zaposlenog, a usluga ga nadjačava: bar jedna „ručno“ → čeka potvrdu, sve „automatski“ → potvrđen; `BookingService::confirmsAutomatically()`), `RecurrenceService` + `appointments:extend-recurring` (svake noći 02:00, 8
 nedelja unapred; zauzeti datumi u `skipped_dates`), gost bez naloga (vezuje se po telefonu / emailu
 za klijenta bez lozinke), pravila u Podešavanjima (`slot_interval_minutes`, `booking_lead_minutes`,
 `booking_horizon_days`, `booking_min_days_ahead` (podrazumevano 1 = najranije sutra),
@@ -221,8 +230,24 @@ Pregled: grafikoni su opcioni (prekidač „Prikaži grafikone", pamti se u preg
 Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakazivanje je potreban nalog
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
-Uputstvo za korisnike (#75): `frontend/public/uputstvo/index.html`, u aplikaciji `/uputstvo/index.html` (link „Uputstvo" u meniju osoblja i u profilu) (koraci za vlasnika, svakodnevni rad, radnika i klijenta; slike sa telefona u `slike/`,
-obeležene crvenim okvirom i brojem). Slike se ponovo snimaju sa `node docs/uputstvo/snimi-slike.js frontend/public/uputstvo/slike` dok rade frontend na 4210
-i backend na 8010; posle izmena ekrana ažurirati i uputstvo. PDF se pravi kad se potvrdi da je sve obuhvaćeno.
+Uputstvo za korisnike (#75): statički HTML u `frontend/public/uputstvo/`, u aplikaciji `/uputstvo/index.html` (link „Uputstvo" u meniju osoblja i u profilu).
+Stranice: `index.html` (uvod i kartice), `vlasnik.html` (vlasnik i administrativni radnik: prvo podešavanje i Upravljanje), `svakodnevni-rad.html`,
+`radnik.html`, `klijent.html` (može da se pošalje klijentima) i `prijava-i-nalozi.html`; zajednički `uputstvo.css` i `uputstvo.js` (boje, naziv i logo
+salona iz `GET /api/public/business`, uz neutralne podrazumevane boje). Svaki korak je `<details class="step">` sa `<span class="num">`, zatvoren osim prvog;
+broj u tekstu (`<span class="badge">`) odgovara crvenoj oznaci na slici. Slike sa telefona (390×844) su u `slike/`. Ponovo se snimaju sa
+`node docs/uputstvo/snimi-slike.js frontend/public/uputstvo/slike [ime1,ime2]` dok radi `node dev.mjs` (frontend 5110, backend 8110): skripta se prijavljuje
+dugmićima za brzu prijavu, pravi privremenu akciju INSTA10, pauzu usluge i jedan termin klijenta, pa ih na kraju briše (`php artisan tinker`), a slike upisuje
+tek na kraju (upis u `public/` usred snimanja bi osvežio aplikaciju). Posle izmena ekrana ažurirati uputstvo i slike; slika koju nijedna stranica ne koristi se briše.
+PDF se pravi kad se potvrdi da je sve obuhvaćeno.
+Potvrda termina po usluzi: `services.booking_confirmation` (bar jedna „ručno“ → čeka, sve „automatski“ → potvrđen, inače zaposleni pa salon;
+`BookingService::confirmsAutomatically()`). Usluga se onemogućava (`active`) ili pauzira do datuma (`paused_until`: online se ne nudi do tog dana,
+`AvailabilityService::pausedOn()`); briše se samo ako nikad nije zakazana. Kodovi za popust: `promotions.code` (+ `max_uses`, `once_per_client`),
+akcija sa kodom važi samo uz `promo_code` pri zakazivanju (`PriceQuoteService::quote`), upotreba se broji preko `appointment_items.promotion_id`;
+šabloni praznika u `core/utils/promo-presets.ts`, `/book?kod=`. Naplata beleži bakšiš (`appointments.tip`). Registracija: nalog klijenta je aktivan
+tek posle linka iz mejla (`email_verification_sent_at`, važi `User::VERIFICATION_DAYS` = 3, link prijavljuje i vraća na `next`); ponovna registracija
+nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja (`staff_notes`,
+`staff_note_recipients`): status novo / preuzeto (`taken_by`) / urađeno, pročitano po primaocu, obaveštenje izabranima + uvek
+`business_settings.note_always_notify_ids` (podrazumevano vlasnici i administrativni radnici). Zaposleni mora imati email i telefon.
+Lokalno: `node dev.mjs` (frontend 5110, backend 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

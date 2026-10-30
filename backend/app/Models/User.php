@@ -37,9 +37,11 @@ class User extends Authenticatable
 
     public const ROLE_WORKER = 'worker';
 
-    public const ROLES = [self::ROLE_CLIENT, self::ROLE_OWNER, self::ROLE_WORKER];
+    public const ROLE_MANAGER = 'manager';
 
-    public const STAFF_ROLES = [self::ROLE_OWNER, self::ROLE_WORKER];
+    public const ROLES = [self::ROLE_CLIENT, self::ROLE_OWNER, self::ROLE_MANAGER, self::ROLE_WORKER];
+
+    public const STAFF_ROLES = [self::ROLE_OWNER, self::ROLE_MANAGER, self::ROLE_WORKER];
 
     public const COMMUNICATION_CHANNELS = ['email', 'whatsapp', 'both'];
 
@@ -65,6 +67,7 @@ class User extends Authenticatable
             'zone_until' => 'date:Y-m-d',
             'zone_changed_at' => 'datetime',
             'email_verified_at' => 'datetime',
+            'email_verification_sent_at' => 'datetime',
             'last_login_at' => 'datetime',
             'active' => 'boolean',
             'password' => 'hashed',
@@ -125,6 +128,21 @@ class User extends Authenticatable
         return $this->role === self::ROLE_OWNER;
     }
 
+    public function isManager(): bool
+    {
+        return $this->isOwner() || $this->isOfficeWorker();
+    }
+
+    public function isOfficeWorker(): bool
+    {
+        return $this->role === self::ROLE_MANAGER;
+    }
+
+    public function isServiceWorker(): bool
+    {
+        return $this->role === self::ROLE_WORKER;
+    }
+
     public function isStaff(): bool
     {
         return in_array($this->role, self::STAFF_ROLES, true);
@@ -135,11 +153,18 @@ class User extends Authenticatable
         return trim($this->first_name.' '.$this->last_name);
     }
 
-    public function sendEmailVerification(): void
+    public const VERIFICATION_DAYS = 3;
+
+    public function sendEmailVerification(?string $next = null): void
     {
         $token = Str::random(64);
-        $this->forceFill(['email_verification_token' => hash('sha256', $token)])->save();
-        $this->notify(new VerifyEmailNotification($token));
+        $this->forceFill(['email_verification_token' => hash('sha256', $token), 'email_verification_sent_at' => now()])->save();
+        $this->notify(new VerifyEmailNotification($token, $next));
+    }
+
+    public function verificationExpired(): bool
+    {
+        return $this->email_verification_sent_at === null || $this->email_verification_sent_at->lt(now()->subDays(self::VERIFICATION_DAYS));
     }
 
     public function sendPasswordResetNotification($token): void

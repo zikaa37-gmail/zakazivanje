@@ -39,8 +39,8 @@ class SendScheduledReports extends Command
         foreach ($periods as $period) {
             $summary = null;
             foreach ($recipients as $user) {
-                $staff = $user->isOwner() || $user->staff_member_id === null ? null : $user->staffMember;
-                if (! $staff && ! $user->isOwner() && $user->staff_member_id !== null) {
+                $staff = $user->isOwner() ? null : $user->staffMember;
+                if (! $staff && ! $user->isOwner()) {
                     continue;
                 }
 

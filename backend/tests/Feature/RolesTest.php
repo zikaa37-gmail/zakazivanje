@@ -27,6 +27,7 @@ class RolesTest extends TestCase
             'first_name' => 'Ana',
             'last_name' => 'Jovanović',
             'email' => 'ana@salon.rs',
+            'phone' => '060 111 2222',
             'active' => true,
             'working_hours' => [],
             ...$overrides,
@@ -77,9 +78,9 @@ class RolesTest extends TestCase
         $this->assertSame($id, $this->owner->staff_member_id);
     }
 
-    public function test_worker_handles_daily_work_but_not_owner_pages(): void
+    public function test_linked_worker_handles_daily_work_but_not_management_pages(): void
     {
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
 
         $this->actingAsJwt($worker)->postJson('/api/appointments/list', ['from' => '2026-11-02', 'to' => '2026-11-08'])->assertOk();
         $this->actingAsJwt($worker)->postJson('/api/staff/list')->assertOk();
@@ -95,6 +96,62 @@ class RolesTest extends TestCase
         $this->actingAsJwt($worker)->deleteJson('/api/clients/'.User::factory()->create()->id)->assertForbidden();
     }
 
+    public function test_administrative_worker_manages_salon_but_not_finances_or_owners(): void
+    {
+        $office = User::factory()->create(['role' => User::ROLE_MANAGER]);
+
+        $this->actingAsJwt($office)->postJson('/api/staff', $this->staffPayload())->assertCreated();
+        $this->actingAsJwt($office)->postJson('/api/promotions/list')->assertOk();
+        $this->actingAsJwt($office)->postJson('/api/reviews/list')->assertOk();
+        $this->actingAsJwt($office)->postJson('/api/gallery/list')->assertOk();
+        $this->actingAsJwt($office)->postJson('/api/team/list')->assertOk();
+        $this->actingAsJwt($office)->postJson('/api/notification-logs/list')->assertOk();
+
+        $this->actingAsJwt($office)->postJson('/api/dashboard/stats', ['from' => '2026-11-01', 'to' => '2026-11-07'])->assertForbidden();
+        $this->actingAsJwt($office)->postJson('/api/dashboard/sources', [])->assertForbidden();
+
+        $this->actingAsJwt($office)->postJson('/api/team', ['first_name' => 'Novi', 'last_name' => 'Vlasnik', 'email' => 'novi@salon.rs', 'role' => User::ROLE_OWNER])->assertForbidden();
+        $this->actingAsJwt($office)->putJson("/api/team/{$this->owner->id}", ['role' => User::ROLE_WORKER, 'active' => false])->assertForbidden();
+        $this->actingAsJwt($office)->deleteJson("/api/team/{$this->owner->id}")->assertForbidden();
+        $this->actingAsJwt($office)->postJson('/api/team', ['first_name' => 'Mila', 'last_name' => 'Recepcija', 'email' => 'mila@salon.rs', 'role' => User::ROLE_MANAGER])->assertCreated();
+    }
+
+    public function test_owner_and_manager_can_also_be_staff_with_same_login(): void
+    {
+        $staffId = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['email' => $this->owner->email]))->assertCreated()->json('id');
+        $this->assertSame(User::ROLE_OWNER, $this->owner->refresh()->role);
+        $this->assertSame($staffId, $this->owner->staff_member_id);
+        $this->actingAsJwt($this->owner)->postJson('/api/dashboard/today', ['staff_member_id' => null])->assertOk()->assertJsonPath('staff_member_id', null);
+        $this->actingAsJwt($this->owner)->postJson('/api/dashboard/stats', ['from' => '2026-11-01', 'to' => '2026-11-07'])->assertOk();
+
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER, 'email' => 'mila@salon.rs']);
+        $milaId = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['first_name' => 'Mila', 'email' => 'mila@salon.rs']))->assertCreated()->json('id');
+        $manager->refresh();
+        $this->assertSame(User::ROLE_MANAGER, $manager->role);
+        $this->assertSame($milaId, $manager->staff_member_id);
+
+        $this->actingAsJwt($manager)->postJson('/api/promotions/list')->assertOk();
+        $this->actingAsJwt($manager)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02', 'staff_member_id' => $milaId])->assertOk();
+        $this->actingAsJwt($manager)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
+        $this->actingAsJwt($manager)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02', 'staff_member_id' => $staffId])->assertForbidden();
+        $this->actingAsJwt($manager)->postJson('/api/dashboard/today', ['staff_member_id' => $staffId])->assertOk()->assertJsonPath('staff_member_id', $staffId);
+
+        $this->actingAsJwt($this->owner)->postJson('/api/team', ['first_name' => 'Bez', 'last_name' => 'Zaposlenog', 'email' => 'bez@salon.rs', 'role' => User::ROLE_WORKER])
+            ->assertUnprocessable()->assertJsonValidationErrors('role');
+    }
+
+    public function test_worker_changes_status_only_of_own_appointments(): void
+    {
+        $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'T']);
+        $marko = StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T']);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $ana->id]);
+        $client = User::factory()->create();
+        $make = fn (StaffMember $s) => \App\Models\Appointment::create(['client_id' => $client->id, 'staff_member_id' => $s->id, 'starts_at' => '2026-11-02 10:00', 'ends_at' => '2026-11-02 10:30', 'status' => 'confirmed', 'source' => 'admin', 'price' => 1000, 'discount' => 0, 'total' => 1000]);
+
+        $this->actingAsJwt($worker)->postJson('/api/appointments/'.$make($ana)->id.'/status', ['status' => 'completed'])->assertOk();
+        $this->actingAsJwt($worker)->postJson('/api/appointments/'.$make($marko)->id.'/status', ['status' => 'completed'])->assertForbidden();
+    }
+
     public function test_owner_manages_administrative_worker(): void
     {
         Notification::fake();
@@ -103,7 +160,7 @@ class RolesTest extends TestCase
             'first_name' => 'Milica',
             'last_name' => 'Recepcija',
             'email' => 'recepcija@salon.rs',
-            'role' => User::ROLE_WORKER,
+            'role' => User::ROLE_MANAGER,
             'send_invite' => true,
         ])->assertCreated()->assertJsonPath('has_password', false)->assertJsonPath('staff_member_id', null)->json('id');
 
@@ -118,7 +175,7 @@ class RolesTest extends TestCase
             'first_name' => 'Milica',
             'last_name' => 'Recepcija',
             'email' => 'recepcija@salon.rs',
-            'role' => User::ROLE_WORKER,
+            'role' => User::ROLE_MANAGER,
             'active' => false,
         ])->assertOk()->assertJsonPath('active', false);
 

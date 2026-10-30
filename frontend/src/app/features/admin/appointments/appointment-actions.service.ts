@@ -5,6 +5,7 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
+import { contactActions, openContact } from '../../../core/utils/contact';
 import { timeOf } from '../../../core/utils/dates';
 import { RowAction } from '../../../shared/components/row-actions/row-actions.component';
 
@@ -26,15 +27,11 @@ export class AppointmentActionsService {
     } else {
       list.push({ id: 'confirmed', label: 'Vrati na potvrđen', icon: 'rotate-ccw' });
     }
-    if (a.client?.phone) list.push({ id: 'call', label: 'Pozovi klijenta', icon: 'phone' });
-    return list;
+    return [...list, ...contactActions(a.client?.phone)];
   }
 
   async run(a: Appointment, action: string): Promise<boolean> {
-    if (action === 'call') {
-      window.location.href = `tel:${a.client!.phone!.replace(/\s/g, '')}`;
-      return false;
-    }
+    if (openContact(action, a.client?.phone)) return false;
 
     try {
       if (action === 'cancel' || action === 'cancel-series' || action === 'cancel-by-client') {

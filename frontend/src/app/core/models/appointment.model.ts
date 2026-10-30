@@ -32,6 +32,7 @@ export interface Appointment {
   recurrence?: { id: number; interval_weeks: number; active: boolean } | null;
   paid_at: string | null;
   payment_method: PaymentMethod | null;
+  tip: number;
   can_cancel?: boolean;
   can_pay?: boolean;
   can_review?: boolean;
@@ -64,6 +65,9 @@ export interface Quote {
   subtotal: number;
   discount: number;
   total: number;
+  code?: string | null;
+  code_applied?: boolean;
+  code_error?: string | null;
 }
 
 export interface GuestDetails {
@@ -78,6 +82,7 @@ export interface BookingPayload {
   staff_member_id: number | null;
   starts_at: string;
   note: string | null;
+  promo_code?: string | null;
   guest?: GuestDetails;
 }
 

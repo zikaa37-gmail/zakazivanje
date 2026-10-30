@@ -1,7 +1,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Izveštaji</h1>
-    <p class="page-subtitle">{{ canChoose() ? 'Zbirni ili po zaposlenom, za dan, nedelju ili mesec' : 'Tvoj rad za dan, nedelju ili mesec' }}</p>
+    <p class="page-subtitle">{{ sendOnly() ? 'Izaberi izveštaj i pošalji ga vlasniku. Brojke pregleda vlasnik.' : canChoose() ? 'Zbirni ili po zaposlenom, za dan, nedelju ili mesec' : 'Tvoj rad za dan, nedelju ili mesec' }}</p>
   </div>
 </div>
 
@@ -11,6 +11,9 @@
       <div class="chip-group" role="radiogroup" aria-label="Vrsta izveštaja">
         <button type="button" role="radio" class="chip" [class.selected]="scope() === 'summary'" [attr.aria-checked]="scope() === 'summary'" (click)="scope.set('summary')" data-testid="report-scope-summary">Zbirni</button>
         <button type="button" role="radio" class="chip" [class.selected]="scope() === 'staff'" [attr.aria-checked]="scope() === 'staff'" (click)="scope.set('staff')" data-testid="report-scope-staff">Po zaposlenom</button>
+        @if (myStaffId() && sendOnlyRole()) {
+          <button type="button" role="radio" class="chip" [class.selected]="scope() === 'mine'" [attr.aria-checked]="scope() === 'mine'" (click)="scope.set('mine')" data-testid="report-scope-mine">Moj pazar</button>
+        }
       </div>
       @if (scope() === 'staff') {
         <select appInput size="m" class="min-w-0 flex-1 sm:flex-none sm:w-60" aria-label="Zaposleni" [value]="staffId()" (change)="staffId.set(+$any($event.target).value)" data-testid="report-staff">
@@ -40,16 +43,28 @@
   </div>
 
   <div class="flex flex-wrap gap-2 pt-1">
-    <app-button size="s" [loading]="busy() === 'pdf'" [disabled]="!report() || busy() !== null" (click)="openPdf()" data-testid="report-pdf">
-      <span appIcon="file-text" aria-hidden="true"></span> Otvori PDF
-    </app-button>
-    <app-button theme="secondary" size="s" [loading]="busy() === 'mail'" [disabled]="!report() || busy() !== null" (click)="send('mail')" data-testid="report-send-mail">
-      <span appIcon="mail" aria-hidden="true"></span> Pošalji na mejl
-    </app-button>
-    <app-button theme="secondary" size="s" [loading]="busy() === 'whatsapp'" [disabled]="!report() || busy() !== null" (click)="send('whatsapp')" data-testid="report-send-whatsapp">
-      <span appIcon="message-square" aria-hidden="true"></span> Pošalji na WhatsApp
-    </app-button>
+    @if (sendOnly()) {
+      <app-button size="s" [loading]="busy() === 'mail'" [disabled]="!ready() || busy() !== null" (click)="send('mail')" data-testid="report-send-mail">
+        <span appIcon="mail" aria-hidden="true"></span> Pošalji vlasniku na mejl
+      </app-button>
+      <app-button theme="secondary" size="s" [loading]="busy() === 'whatsapp'" [disabled]="!ready() || busy() !== null" (click)="send('whatsapp')" data-testid="report-send-whatsapp">
+        <span appIcon="message-square" aria-hidden="true"></span> Pošalji vlasniku na WhatsApp
+      </app-button>
+    } @else {
+      <app-button size="s" [loading]="busy() === 'pdf'" [disabled]="!report() || busy() !== null" (click)="openPdf()" data-testid="report-pdf">
+        <span appIcon="file-text" aria-hidden="true"></span> Otvori PDF
+      </app-button>
+      <app-button theme="secondary" size="s" [loading]="busy() === 'mail'" [disabled]="!report() || busy() !== null" (click)="send('mail')" data-testid="report-send-mail">
+        <span appIcon="mail" aria-hidden="true"></span> Pošalji na mejl
+      </app-button>
+      <app-button theme="secondary" size="s" [loading]="busy() === 'whatsapp'" [disabled]="!report() || busy() !== null" (click)="send('whatsapp')" data-testid="report-send-whatsapp">
+        <span appIcon="message-square" aria-hidden="true"></span> Pošalji na WhatsApp
+      </app-button>
+    }
   </div>
+  @if (sendOnly()) {
+    <p class="text-xs muted">Automatsko slanje vlasniku uključuje se u Upravljanje → Podešavanja salona → Obaveštenja; tada ručno slanje nije potrebno.</p>
+  }
 </div>
 
 <app-error-message [message]="error()" />
@@ -103,13 +118,29 @@
       </div>
     </div>
 
+    @if (r.staff_member) {
+      <div class="stat-tiles stat-tiles-2 mb-4" data-testid="report-cash">
+        <div class="card stat-tile">
+          <span class="text-xs muted">Gotovina za kasu</span>
+          <span class="stat-value">{{ r.totals.by_method.cash | rsd }}</span>
+          <span class="text-xs muted">ostavi u radnji · kartica {{ r.totals.by_method.card | rsd }}</span>
+        </div>
+        <div class="card stat-tile">
+          <span class="text-xs muted">Bakšiš</span>
+          <span class="stat-value">{{ r.totals.tips | rsd }}</span>
+          <span class="text-xs muted">{{ r.staff_member.id === myStaffId() ? 'tvoje' : 'zaposlenog' }}, nije deo pazara</span>
+        </div>
+      </div>
+    }
+
     <div class="card mb-4">
       <h3 class="font-semibold mb-2">Naplata</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
         <div><div class="text-xs muted">Gotovina</div>{{ r.totals.by_method.cash | rsd }}</div>
         <div><div class="text-xs muted">Kartica</div>{{ r.totals.by_method.card | rsd }}</div>
         <div><div class="text-xs muted">Račun</div>{{ r.totals.by_method.bank | rsd }}</div>
         <div><div class="text-xs muted">Popusti</div>{{ r.totals.discount | rsd }}</div>
+        <div><div class="text-xs muted">Bakšiš</div>{{ r.totals.tips | rsd }}</div>
       </div>
     </div>
 

@@ -51,7 +51,7 @@ export class ClientHistoryComponent implements OnInit {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-  protected readonly isOwner = inject(AuthService).isOwner;
+  protected readonly isManager = inject(AuthService).isManager;
 
   readonly zones = ZONES;
   readonly zoneInfo = ZONE_BY_VALUE;

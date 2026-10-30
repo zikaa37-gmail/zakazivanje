@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
-import { ownerGuard, staffGuard } from './core/guards/staff.guard';
+import { managerGuard, staffGuard } from './core/guards/staff.guard';
 import { notSuspendedGuard } from './core/guards/suspended.guard';
 
 export const routes: Routes = [
@@ -100,59 +100,66 @@ export const routes: Routes = [
       },
       {
         path: 'reports',
+        canActivate: [managerGuard],
         title: 'Izveštaji',
         loadComponent: () => import('./features/admin/reports/report.component').then((m) => m.ReportComponent),
       },
       {
         path: 'staff',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Zaposleni',
         loadComponent: () => import('./features/admin/staff/staff-list.component').then((m) => m.StaffListComponent),
       },
       {
         path: 'services',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Usluge',
         loadComponent: () => import('./features/admin/services/service-list.component').then((m) => m.ServiceListComponent),
       },
       {
         path: 'promotions',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Cene i akcije',
         loadComponent: () => import('./features/admin/promotions/promotion-list.component').then((m) => m.PromotionListComponent),
       },
       {
         path: 'gallery',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Galerija',
         loadComponent: () => import('./features/admin/gallery/gallery-admin.component').then((m) => m.GalleryAdminComponent),
       },
       {
         path: 'reviews',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Recenzije',
         loadComponent: () => import('./features/admin/reviews/review-list.component').then((m) => m.ReviewListComponent),
       },
       {
         path: 'share',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Podeli',
         loadComponent: () => import('./features/admin/share/share.component').then((m) => m.ShareComponent),
       },
       {
+        path: 'notes',
+        title: 'Beleške',
+        loadComponent: () => import('./features/admin/notes/notes.component').then((m) => m.NotesComponent),
+      },
+      {
         path: 'clients',
+        canActivate: [managerGuard],
         title: 'Klijenti',
         loadComponent: () => import('./features/admin/clients/client-list.component').then((m) => m.ClientListComponent),
       },
       {
         path: 'team',
-        canActivate: [ownerGuard],
-        title: 'Nalozi osoblja',
+        canActivate: [managerGuard],
+        title: 'Zaposleni · Nalozi za prijavu',
         loadComponent: () => import('./features/admin/team/team-list.component').then((m) => m.TeamListComponent),
       },
       {
         path: 'settings',
-        canActivate: [ownerGuard],
+        canActivate: [managerGuard],
         title: 'Podešavanja',
         loadComponent: () => import('./features/admin/settings/settings.component').then((m) => m.SettingsComponent),
       },

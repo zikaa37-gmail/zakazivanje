@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request', 'cover_image', 'waitlist_enabled', 'report_auto_enabled', 'report_auto_daily', 'report_auto_weekly', 'report_auto_monthly', 'report_auto_channel', 'discipline_enabled', 'discipline_window_days', 'discipline_cancel_points', 'discipline_late_cancel_points', 'discipline_no_show_points', 'discipline_yellow_points', 'discipline_orange_points', 'discipline_red_points', 'discipline_auto_suspend', 'discipline_yellow_min_days', 'discipline_yellow_horizon_days', 'discipline_yellow_off_peak', 'discipline_off_peak_percent', 'map_query', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'])]
+#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request', 'cover_image', 'waitlist_enabled', 'report_auto_enabled', 'report_auto_daily', 'report_auto_weekly', 'report_auto_monthly', 'report_auto_channel', 'discipline_enabled', 'discipline_window_days', 'discipline_cancel_points', 'discipline_late_cancel_points', 'discipline_no_show_points', 'discipline_yellow_points', 'discipline_orange_points', 'discipline_red_points', 'discipline_auto_suspend', 'discipline_yellow_min_days', 'discipline_yellow_horizon_days', 'discipline_yellow_off_peak', 'discipline_off_peak_percent', 'map_query', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time', 'note_always_notify_ids'])]
 #[Hidden(['cover_image', 'instagram_token'])]
 #[Appends(['cover_url', 'instagram_connected'])]
 class BusinessSetting extends Model
@@ -45,6 +45,7 @@ class BusinessSetting extends Model
             'notify_review_request' => 'boolean',
             'waitlist_enabled' => 'boolean',
             'report_auto_enabled' => 'boolean',
+            'note_always_notify_ids' => 'array',
             'report_auto_daily' => 'boolean',
             'report_auto_weekly' => 'boolean',
             'report_auto_monthly' => 'boolean',
@@ -110,5 +111,11 @@ class BusinessSetting extends Model
     public static function current(): self
     {
         return static::query()->firstOrCreate([], ['name' => config('app.name'), 'category' => 'other']);
+    }
+
+    public function noteAlwaysNotifyIds(): array
+    {
+        return $this->note_always_notify_ids
+            ?? User::whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])->where('active', true)->pluck('id')->all();
     }
 }

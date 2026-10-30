@@ -17,7 +17,8 @@ class PromotionController extends Controller
             ->with('services:id,name,price')
             ->orderByDesc('active')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(fn (Promotion $p) => $p->setAttribute('uses', $p->code ? $p->uses() : null));
     }
 
     public function store(Request $request)
@@ -45,8 +46,12 @@ class PromotionController extends Controller
 
     private function validated(Request $request): array
     {
+        $request->merge(['code' => Promotion::normalizeCode($request->input('code'))]);
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:150'],
+            'code' => ['nullable', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('promotions', 'code')->ignore($request->route('promotion'))],
+            'max_uses' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'once_per_client' => ['boolean'],
             'type' => ['required', Rule::in(Promotion::TYPES)],
             'description' => ['nullable', 'string', 'max:2000'],
             'discount_percent' => ['nullable', 'numeric', 'gt:0', 'max:100'],
@@ -64,6 +69,8 @@ class PromotionController extends Controller
             'service_ids.*' => ['integer', 'distinct', 'exists:services,id'],
         ], [
             'ends_on.after_or_equal' => 'Kraj akcije ne može biti pre početka.',
+            'code.regex' => 'Kod sme da ima samo slova, brojeve, - i _ (bez razmaka).',
+            'code.unique' => 'Već postoji akcija sa ovim kodom.',
         ]);
 
         $required = match ($data['type']) {

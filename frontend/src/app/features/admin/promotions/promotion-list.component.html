@@ -1,7 +1,7 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Cene i akcije</h1>
-    <p class="page-subtitle">Popusti, paketi, 2+1 i nagrade za verne klijente. Popusti se ne sabiraju — važi najpovoljniji.</p>
+    <p class="page-subtitle">Popusti, paketi, 2+1, nagrade za verne klijente i kodovi za Instagram i praznike. Popusti se ne sabiraju — važi najpovoljniji.</p>
   </div>
   <button type="button" appBtn (click)="openForm()" data-testid="promotion-add">
     <span appIcon="plus" aria-hidden="true"></span> Nova akcija
@@ -28,6 +28,9 @@
           <div class="text-lg font-bold text-[var(--color-secondary-text)]">{{ summary(p) }}</div>
           <div class="text-sm muted">{{ scope(p) }}</div>
           <div class="flex flex-wrap gap-2 mt-2">
+            @if (p.code) {
+              <span class="badge badge-success" [attr.data-testid]="'promotion-code-' + p.id">Kod {{ p.code }}{{ p.uses !== null && p.uses !== undefined ? ' · iskorišćen ' + p.uses + (p.max_uses ? '/' + p.max_uses : '') : '' }}</span>
+            }
             <span class="badge badge-neutral">{{ typeLabel(p.type) }}</span>
             @if (days(p)) {
               <span class="badge badge-neutral">{{ days(p) }}</span>
@@ -49,6 +52,18 @@
   <app-modal [title]="editing() ? 'Izmena akcije' : 'Nova akcija'" size="l" footerMode="custom" (cancelled)="modalOpen.set(false)" testId="promotion-modal">
     <app-error-message [message]="formError()" />
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      @if (!editing()) {
+        <div class="field">
+          <label>Brzi početak</label>
+          <div class="chip-group">
+            @for (preset of presets; track preset.key) {
+              <button type="button" class="chip" (click)="applyPreset(preset)" [attr.data-testid]="'promotion-preset-' + preset.key">{{ preset.label }}</button>
+            }
+          </div>
+          <span class="text-sm muted">Popunjava naziv, kod, popust i datume za sledeći takav praznik. Sve možeš da promeniš.</span>
+        </div>
+      }
+
       <div class="field">
         <label>Vrsta akcije</label>
         <div class="chip-group">
@@ -140,6 +155,21 @@
           }
         </div>
       </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="p-code">Kod za popust</label>
+          <input id="p-code" appInput size="m" formControlName="code" placeholder="npr. INSTA10" maxlength="40" autocomplete="off" (input)="upperCode($event)" data-testid="promotion-code" />
+          <span class="text-xs muted">Sa kodom akcija važi samo kad ga klijent unese pri zakazivanju (Instagram, praznici). Bez koda važi za sve.</span>
+        </div>
+        <div class="field">
+          <label for="p-max-uses">Najviše upotreba</label>
+          <input id="p-max-uses" appInput size="m" type="number" min="1" formControlName="max_uses" placeholder="neograničeno" data-testid="promotion-max-uses" />
+        </div>
+      </div>
+      @if (form.controls.code.value) {
+        <app-toggle class="mb-3" [checked]="form.controls.once_per_client.value" label="Jedan klijent može da ga iskoristi samo jednom" (checkedChange)="form.controls.once_per_client.setValue($event)" />
+      }
 
       <div class="field">
         <label for="p-description">Opis za klijente</label>

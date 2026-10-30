@@ -9,6 +9,7 @@
     @if (done(); as message) {
       <h1 class="text-2xl font-bold">Proveri mejl</h1>
       <p class="muted" data-testid="register-done">{{ message }}</p>
+      <p class="muted text-sm mt-2">Klikni na dugme „Aktiviraj nalog" u mejlu — odmah si prijavljen/a{{ returnUrl()?.startsWith('/book') ? ' i nastavljaš zakazivanje' : '' }}. Ako mejl ne stigne, pogledaj i Spam.</p>
       <a routerLink="/login" class="auth-link">Nazad na prijavu</a>
     } @else {
       <h1 class="text-2xl font-bold">Napravi nalog</h1>
@@ -17,6 +18,10 @@
       <app-error-message [message]="error()" />
 
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="hp-field" aria-hidden="true">
+          <label for="r-website">Website</label>
+          <input id="r-website" type="text" tabindex="-1" autocomplete="off" [value]="honeypot()" (input)="honeypot.set($any($event.target).value)" />
+        </div>
         <div class="grid grid-cols-2 gap-3">
           <div class="field">
             <label for="r-first">Ime</label>

@@ -90,12 +90,14 @@
             <th>{{ $label }}</th>
         @endforeach
         <th>Popusti</th>
+        <th>Bakšiš</th>
     </tr>
     <tr>
         @foreach ($methods as $key => $label)
             <td>{{ $money($t['by_method'][$key]) }}</td>
         @endforeach
         <td>{{ $money($t['discount']) }}</td>
+        <td>{{ $money($t['tips']) }}</td>
     </tr>
 </table>
 

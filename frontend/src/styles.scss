@@ -7,9 +7,14 @@
 @use 'themes/data-row';
 @use 'themes/scrollbar';
 
-@import 'tailwindcss';
+@use 'tailwindcss';
 
 @layer components {
+  .cancelled-content {
+    opacity: 0.55;
+    text-decoration: line-through;
+  }
+
   .stat-tiles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -17,6 +22,12 @@
 
     @include bp.md-up {
       grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  .stat-tiles-2 {
+    @include bp.md-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
@@ -195,6 +206,14 @@ textarea {
 
 .auth-card form {
   text-align: left;
+}
+
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
 }
 
 .auth-link {

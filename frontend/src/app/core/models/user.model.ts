@@ -1,4 +1,4 @@
-export type UserRole = 'client' | 'owner' | 'worker';
+export type UserRole = 'client' | 'owner' | 'manager' | 'worker';
 
 export type CommunicationChannel = 'email' | 'whatsapp' | 'both';
 
@@ -37,5 +37,10 @@ export const COMMUNICATION_OPTIONS: { value: CommunicationChannel; label: string
 export const ROLE_LABELS: Record<UserRole, string> = {
   client: 'Klijent',
   owner: 'Vlasnik',
+  manager: 'Administrativni radnik',
   worker: 'Radnik',
 };
+
+export function userRoleLabel(user: Pick<User, 'role' | 'staff_member_id'>): string {
+  return user.role !== 'worker' && user.role !== 'client' && user.staff_member_id !== null ? `${ROLE_LABELS[user.role]} · radi usluge` : ROLE_LABELS[user.role];
+}

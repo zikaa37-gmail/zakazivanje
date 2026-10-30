@@ -36,7 +36,7 @@ class AvailabilityService
         $settings = BusinessSetting::current();
         $date = $date->startOfDay();
 
-        if ($date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days))) {
+        if ($date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days)) || $this->pausedOn($services, $date)) {
             return [];
         }
 
@@ -82,7 +82,7 @@ class AvailabilityService
     public function isOpenDay(Collection $services, ?int $staffMemberId, CarbonImmutable $date): bool
     {
         $settings = BusinessSetting::current();
-        if ($date->lt($settings->earliestOnlineStart()->startOfDay()) || $date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days))) {
+        if ($date->lt($settings->earliestOnlineStart()->startOfDay()) || $date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days)) || $this->pausedOn($services, $date)) {
             return false;
         }
         $openingHours = OpeningHour::week();
@@ -123,6 +123,11 @@ class AvailabilityService
     private function overlapsAny(Collection $busy, CarbonImmutable $start, CarbonImmutable $end): bool
     {
         return $busy->contains(fn ($interval) => $interval[0]->lt($end) && $interval[1]->gt($start));
+    }
+
+    public function pausedOn(Collection $services, CarbonImmutable $date): ?Service
+    {
+        return $services->first(fn (Service $service) => $service->isPausedOn($date));
     }
 
     public function servicesInOrder(array $ids): Collection

@@ -43,9 +43,40 @@ class AuthTest extends TestCase
             return true;
         });
 
-        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk();
+        $this->postJson('/api/auth/login', ['email' => 'marija@example.com', 'password' => 'tajna1234'])
+            ->assertUnprocessable()->assertJsonValidationErrors('email');
+
+        $this->postJson('/api/auth/verify-email', ['token' => $token])->assertOk()->assertJsonStructure(['access_token', 'refresh_token', 'user']);
         $this->assertNotNull($user->fresh()->email_verified_at);
         $this->postJson('/api/auth/verify-email', ['token' => $token])->assertUnprocessable();
+        $this->postJson('/api/auth/login', ['email' => 'marija@example.com', 'password' => 'tajna1234'])->assertOk();
+    }
+
+    public function test_activation_link_expires_and_re_registration_starts_new_activation(): void
+    {
+        Notification::fake();
+
+        $this->postJson('/api/auth/register', $this->clientPayload())->assertCreated();
+        $tokens = [];
+        $user = User::where('email', 'marija@example.com')->firstOrFail();
+        Notification::assertSentTo($user, VerifyEmailNotification::class, function ($notification) use (&$tokens, $user) {
+            preg_match('/token=([^&]+)/', $notification->toMail($user)->actionUrl, $matches);
+            $tokens[] = $matches[1];
+
+            return true;
+        });
+
+        $this->travel(User::VERIFICATION_DAYS + 1)->days();
+        $this->postJson('/api/auth/verify-email', ['token' => $tokens[0]])->assertUnprocessable()->assertJsonValidationErrors('token');
+
+        $this->postJson('/api/auth/register', $this->clientPayload(['first_name' => 'Marija2', 'next' => '/book']))->assertCreated();
+        $this->assertSame(1, User::where('email', 'marija@example.com')->count());
+        $this->assertSame('Marija2', $user->fresh()->first_name);
+        Notification::assertSentToTimes($user, VerifyEmailNotification::class, 2);
+
+        $this->postJson('/api/auth/register', $this->clientPayload(['website' => 'http://spam.example']))->assertCreated();
+        $this->postJson('/api/auth/register', $this->clientPayload(['started_at' => now()->getTimestampMs() - 500]))->assertCreated();
+        Notification::assertSentToTimes($user, VerifyEmailNotification::class, 2);
     }
 
     public function test_registration_rejects_duplicate_email(): void

@@ -10,14 +10,30 @@
 
 <app-error-message [message]="error()" />
 
+@if (canFilterStaff() && filterStaff().length > 1) {
+  <div class="chip-scroll mb-3" data-testid="dashboard-staff-filter">
+    <button type="button" class="chip" [class.selected]="staffFilter() === null" (click)="setStaffFilter(null)" data-testid="dashboard-staff-all">Svi</button>
+    @for (m of filterStaff(); track m.id) {
+      <button type="button" class="chip" [class.selected]="staffFilter() === m.id" (click)="setStaffFilter(m.id)" [attr.data-testid]="'dashboard-staff-' + m.id">
+        <span class="color-dot" [style.background]="m.color || 'var(--color-primary)'"></span>{{ m.id === myStaffId() ? 'Ja' : m.first_name }}
+      </button>
+    }
+  </div>
+}
+
 @if (todayData(); as t) {
   <section class="today-grid mb-6" data-testid="dashboard-today">
     <div class="card">
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-base font-semibold">Danas</h2>
+        <h2 class="text-base font-semibold">
+          Danas
+          @if (filteredStaffName(); as name) {
+            <span class="muted font-normal">· {{ canFilterStaff() ? name : 'moji termini' }}</span>
+          }
+        </h2>
         <span class="text-sm muted">{{ t.appointments.length }} · očekivano {{ t.expected_revenue | rsd }}</span>
       </div>
-      <a routerLink="/admin/appointments" [queryParams]="{ date: 'today' }" class="today-link" data-testid="dashboard-today-appointments">
+      <a routerLink="/admin/appointments" [queryParams]="{ date: 'today', staff: t.staff_member_id }" class="today-link" data-testid="dashboard-today-appointments">
         <span appIcon="calendar" [iconSize]="15" aria-hidden="true"></span> Svi današnji termini <span appIcon="arrow-right" [iconSize]="14" aria-hidden="true"></span>
       </a>
       @if (t.next) {
@@ -31,6 +47,7 @@
         <div class="empty-state">Danas nema zakazanih termina.</div>
       } @else {
         @for (a of t.appointments; track a.id) {
+          <div class="today-item">
           <button type="button" class="today-row" (click)="selected.set(a)" [attr.data-testid]="'today-' + a.id">
             <span class="w-14 shrink-0 text-left">
               <span class="block font-bold">{{ time(a) }}</span>
@@ -43,11 +60,42 @@
             </span>
             <span class="badge" [class]="statuses[a.status].badge">{{ statuses[a.status].label }}</span>
           </button>
+          @if (canComplete(a)) {
+            <button type="button" appBtn size="s" class="shrink-0" (click)="complete(a)" aria-label="Završen" title="Završen" [attr.data-testid]="'complete-' + a.id"><span appIcon="check" aria-hidden="true"></span><span class="hidden sm:inline">Završen</span></button>
+          }
+          </div>
         }
       }
     </div>
 
     <div class="flex flex-col gap-4">
+      @if (myStaffId()) {
+        <div class="card" data-testid="dashboard-my-cash">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <h2 class="text-base font-semibold">Moj pazar</h2>
+            <div class="chip-group">
+              @for (p of cashPeriods; track p.value) {
+                <button type="button" class="chip" [class.selected]="cashPeriod() === p.value" (click)="cashPeriod.set(p.value)" [attr.data-testid]="'my-cash-' + p.value">{{ p.label }}</button>
+              }
+            </div>
+          </div>
+          @if (myCash(); as c) {
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-xs muted">Gotovina za kasu</div>
+                <div class="text-xl font-bold" data-testid="my-cash-cash">{{ c.totals.by_method.cash | rsd }}</div>
+                <div class="text-xs muted">ostavi u radnji</div>
+              </div>
+              <div>
+                <div class="text-xs muted">Bakšiš</div>
+                <div class="text-xl font-bold" data-testid="my-cash-tips">{{ c.totals.tips | rsd }}</div>
+                <div class="text-xs muted">tvoje</div>
+              </div>
+            </div>
+            <div class="text-xs muted mt-2">Kartica {{ c.totals.by_method.card | rsd }} · račun {{ c.totals.by_method.bank | rsd }} · nenaplaćeno {{ c.totals.unpaid | rsd }}</div>
+          }
+        </div>
+      }
       <div class="card">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-base font-semibold">Čeka potvrdu</h2>

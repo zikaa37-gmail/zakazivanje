@@ -142,7 +142,7 @@ export class ShareComponent {
     const kind = this.template();
     if (kind === 'promotion') {
       const p = this.promotion();
-      return { kind, title: p?.name ?? 'Izaberi akciju', value: p ? this.promotionValue(p) : '', scope: p ? (p.services.length ? p.services.map((s) => s.name).join(', ') : 'Sve usluge') : '', period: p ? this.period(p) : '' };
+      return { kind, title: p?.name ?? 'Izaberi akciju', value: p ? this.promotionValue(p) : '', scope: p ? (p.services.length ? p.services.map((s) => s.name).join(', ') : 'Sve usluge') : '', period: p ? this.period(p) : '', code: p?.code ?? null };
     }
     if (kind === 'prices') {
       const category = this.category();
@@ -250,7 +250,11 @@ export class ShareComponent {
 
   openPublish(): void {
     this.publishKind.set(this.format() === 'story' ? 'story' : 'post');
-    this.publishCaption.set(this.publishCaption() || 'Zakaži termin online — link je u biju.');
+    const code = this.template() === 'promotion' ? this.promotion()?.code : null;
+    this.publishCaption.set(
+      this.publishCaption() ||
+        (code ? `Zakaži online i unesi kod ${code} — ili otvori ${window.location.host}/book?kod=${code}. Link je u biju.` : 'Zakaži termin online — link je u biju.'),
+    );
     this.publishLater.set(false);
     this.publishAt.set(this.localDateTime(new Date(Date.now() + 60 * 60 * 1000)));
     this.publishError.set(null);

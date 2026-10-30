@@ -1,12 +1,14 @@
 <div class="page-header">
   <div>
     <h1 class="page-title">Zaposleni</h1>
-    <p class="page-subtitle">Ko radi, koje usluge i u koje vreme</p>
+    <p class="page-subtitle">Ko radi usluge, koje i u koje vreme. Zaposleni sa emailom dobija i nalog za prijavu.</p>
   </div>
   <button type="button" appBtn (click)="openForm()" data-testid="staff-add">
     <span appIcon="plus" aria-hidden="true"></span> Novi zaposleni
   </button>
 </div>
+
+<app-team-tabs />
 
 <app-error-message [message]="error()" />
 
@@ -98,13 +100,13 @@
           <input id="staff-title" appInput size="m" formControlName="title" placeholder="npr. Frizer" />
         </div>
         <div class="field">
-          <label for="staff-phone">Telefon</label>
+          <label for="staff-phone">Telefon <span class="required-mark">*</span></label>
           <input id="staff-phone" appInput size="m" type="tel" formControlName="phone" />
         </div>
         <div class="field">
-          <label for="staff-email">Email</label>
+          <label for="staff-email">Email <span class="required-mark">*</span></label>
           <input id="staff-email" appInput size="m" type="email" formControlName="email" />
-          <p class="text-xs muted mt-1">Sa email adresom zaposleni dobija nalog radnika (pozivnica u Nalozi osoblja).</p>
+          <p class="text-xs muted mt-1">Sa email adresom zaposleni dobija nalog radnika (Zaposleni → Nalozi za prijavu). Ako i ti (vlasnik ili administrativni radnik) radiš usluge, upiši se ovde istim mejlom kojim se prijavljuješ — zadržavaš svoju ulogu, a dobijaš i svoj raspored i pazar.</p>
         </div>
         <div class="field">
           <label for="staff-confirmation">Potvrda termina</label>

@@ -38,7 +38,11 @@
                 <div class="text-xs muted truncate">{{ client.email || '—' }}</div>
               </div>
             </div>
-            <a [href]="'tel:' + client.phone" class="whitespace-nowrap">{{ client.phone }}</a>
+            @if (phoneDevice) {
+              <a [href]="'tel:' + client.phone" class="whitespace-nowrap">{{ client.phone }}</a>
+            } @else {
+              <span class="whitespace-nowrap">{{ client.phone }}</span>
+            }
             <div class="truncate muted">{{ client.note || '' }}</div>
             <div class="flex flex-wrap gap-1">
               <span class="badge" [class.badge-success]="client.has_account" [class.badge-neutral]="!client.has_account">{{ client.has_account ? 'Nalog' : 'Bez naloga' }}</span>
@@ -46,7 +50,7 @@
                 <button type="button" class="badge" [class]="zoneInfo[client.discipline_zone].badge" (click)="historyId.set(client.id)" [attr.data-testid]="'client-zone-' + client.id">{{ zoneInfo[client.discipline_zone].label }}</button>
               }
             </div>
-            <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
+            <app-row-actions [actions]="rowActions(client)" (selected)="onAction(client, $event)" />
           </app-data-row>
         }
       </app-data-list>
@@ -63,9 +67,13 @@
                 <span class="badge ml-1" [class]="zoneInfo[client.discipline_zone].badge">{{ zoneInfo[client.discipline_zone].label }}</span>
               }
             </div>
-            <a [href]="'tel:' + client.phone" class="text-sm">{{ client.phone }}</a>
+            @if (phoneDevice) {
+              <a [href]="'tel:' + client.phone" class="text-sm">{{ client.phone }}</a>
+            } @else {
+              <span class="text-sm">{{ client.phone }}</span>
+            }
           </div>
-          <app-row-actions [actions]="rowActions" (selected)="onAction(client, $event)" />
+          <app-row-actions [actions]="rowActions(client)" (selected)="onAction(client, $event)" />
         </div>
       }
     </div>

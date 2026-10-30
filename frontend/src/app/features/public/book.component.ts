@@ -17,6 +17,7 @@ import { IconDirective } from '../../shared/directives/icon.directive';
 import { InputDirective } from '../../shared/directives/input.directive';
 import { DurationPipe } from '../../shared/pipes/duration.pipe';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
+import { SrDatePipe } from '../../shared/pipes/sr-date.pipe';
 import { BookingDraftService } from './booking-draft.service';
 
 interface StaffOption {
@@ -32,7 +33,7 @@ const WINDOW = 14;
 @Component({
   selector: 'app-book',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe],
+  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
   templateUrl: './book.component.html',
 })
 export class BookComponent {
@@ -47,6 +48,9 @@ export class BookComponent {
   readonly draft = this.draftService.draft;
   readonly services = signal<PublicService[]>([]);
   readonly servicesLoading = signal(true);
+  readonly todayDate = today();
+  readonly codeInput = signal(this.draftService.draft().promoCode);
+  readonly codeOpen = signal(!!this.draftService.draft().promoCode);
   readonly windowStart = signal(today());
   private route = inject(ActivatedRoute);
   private waitlist = inject(WaitlistService);
@@ -150,6 +154,13 @@ export class BookComponent {
     const query = this.route.snapshot.queryParamMap;
     const prefillServices = (query.get('services') ?? '').split(',').map(Number).filter(Boolean);
     const prefillDate = query.get('date');
+    const prefillCode = (query.get('kod') ?? query.get('code') ?? '').trim().toUpperCase();
+    if (prefillCode) {
+      this.draftService.patch({ promoCode: prefillCode });
+      this.codeInput.set(prefillCode);
+      this.codeOpen.set(true);
+      if (!prefillServices.length) this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
     if (prefillServices.length && prefillDate && prefillDate >= today()) {
       const staff = Number(query.get('staff')) || null;
       this.draftService.start(prefillServices);
@@ -184,7 +195,7 @@ export class BookComponent {
       const key = this.quoteKey();
       if (!key) return;
       untracked(() =>
-        this.booking.quote(this.draft().serviceIds, this.draft().date).subscribe({
+        this.booking.quote(this.draft().serviceIds, this.draft().date, this.draft().promoCode || null).subscribe({
           next: (q) => this.quote.set(q),
           error: () => this.quote.set(null),
         }),
@@ -204,7 +215,7 @@ export class BookComponent {
 
   private readonly quoteKey = computed(() => {
     const d = this.draft();
-    return d.step === 3 ? `${d.serviceIds.join(',')}|${d.date}|${this.auth.isAuthenticated()}` : null;
+    return d.step === 3 ? `${d.serviceIds.join(',')}|${d.date}|${this.auth.isAuthenticated()}|${d.promoCode}` : null;
   });
 
   weekday(date: string): string {
@@ -365,6 +376,7 @@ export class BookComponent {
         staff_member_id: d.staffMemberId,
         starts_at: `${d.date} ${d.time}`,
         note: d.note.trim() || null,
+        promo_code: d.promoCode && this.quote()?.code_applied ? d.promoCode : null,
         ...(guest ? { guest: { first_name: g.first_name.trim(), last_name: g.last_name.trim(), phone: g.phone.trim(), email: g.email.trim() || null } } : {}),
       })
       .subscribe({
@@ -392,6 +404,19 @@ export class BookComponent {
   bookAnother(): void {
     this.booked.set(null);
     this.draftService.reset();
+  }
+
+  setCodeInput(event: Event): void {
+    this.codeInput.set((event.target as HTMLInputElement).value.toUpperCase().replace(/\s+/g, ''));
+  }
+
+  applyCode(): void {
+    this.draftService.patch({ promoCode: this.codeInput().trim() });
+  }
+
+  clearCode(): void {
+    this.codeInput.set('');
+    this.draftService.patch({ promoCode: '' });
   }
 
   setNote(event: Event): void {

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'description', 'category', 'audience', 'duration_minutes', 'price', 'active', 'sort_order'])]
+#[Fillable(['name', 'description', 'category', 'audience', 'booking_confirmation', 'duration_minutes', 'price', 'active', 'paused_until', 'sort_order'])]
 class Service extends Model
 {
     public const AUDIENCE_ALL = 'all';
@@ -24,6 +25,7 @@ class Service extends Model
             'price' => 'float',
             'duration_minutes' => 'integer',
             'active' => 'boolean',
+            'paused_until' => 'date:Y-m-d',
             'sort_order' => 'integer',
         ];
     }
@@ -36,5 +38,10 @@ class Service extends Model
     public function promotions(): BelongsToMany
     {
         return $this->belongsToMany(Promotion::class)->withPivot('quantity');
+    }
+
+    public function isPausedOn(CarbonInterface $date): bool
+    {
+        return $this->paused_until !== null && $date->copy()->startOfDay()->lte($this->paused_until);
     }
 }

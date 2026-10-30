@@ -104,7 +104,7 @@ class AppointmentNotifier
         return User::where('active', true)
             ->whereNotNull('email')
             ->where(fn ($q) => $q->where('role', User::ROLE_OWNER)
-                ->orWhere(fn ($q) => $q->where('role', User::ROLE_WORKER)->where('staff_member_id', $appointment->staff_member_id)))
+                ->orWhere(fn ($q) => $q->whereIn('role', [User::ROLE_MANAGER, User::ROLE_WORKER])->where('staff_member_id', $appointment->staff_member_id)))
             ->get();
     }
 }

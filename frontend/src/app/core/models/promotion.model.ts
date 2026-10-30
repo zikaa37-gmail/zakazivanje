@@ -3,6 +3,10 @@ export type PromotionType = 'discount_percent' | 'discount_amount' | 'bundle' | 
 export interface Promotion {
   id: number;
   name: string;
+  code: string | null;
+  max_uses: number | null;
+  once_per_client: boolean;
+  uses?: number | null;
   type: PromotionType;
   description: string | null;
   discount_percent: number | null;
@@ -18,7 +22,7 @@ export interface Promotion {
   services: { id: number; name: string; price: number }[];
 }
 
-export type PromotionPayload = Omit<Promotion, 'id' | 'services'> & { service_ids: number[] };
+export type PromotionPayload = Omit<Promotion, 'id' | 'services' | 'uses'> & { service_ids: number[] };
 
 export const PROMOTION_TYPES: { value: PromotionType; label: string; hint: string }[] = [
   { value: 'discount_percent', label: 'Popust u %', hint: 'Procenat popusta na izabrane usluge (ili sve).' },

@@ -8,6 +8,8 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { DashboardService, DashboardStats, DashboardToday } from '../../../core/services/dashboard.service';
 import { FunnelStep, SourcesReport, sourceLabel } from '../../../core/models/marketing.model';
 import { MarketingService } from '../../../core/services/marketing.service';
+import { Report, ReportPeriod } from '../../../core/models/report.model';
+import { ReportService } from '../../../core/services/report.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WaitlistEntry, WaitlistService } from '../../../core/services/waitlist.service';
@@ -38,6 +40,15 @@ const PERIODS: { value: Period; label: string }[] = [
 ];
 
 const CHARTS_KEY = 'zk_dashboard_charts';
+const STAFF_KEY = 'zk_dashboard_staff';
+
+function readStaffPreference(): number | null {
+  try {
+    return Number(localStorage.getItem(STAFF_KEY)) || null;
+  } catch {
+    return null;
+  }
+}
 
 function readChartsPreference(): boolean {
   try {
@@ -56,7 +67,24 @@ function readChartsPreference(): boolean {
 })
 export class DashboardComponent {
   private dashboard = inject(DashboardService);
-  protected readonly isOwner = inject(AuthService).isOwner;
+  private auth = inject(AuthService);
+  protected readonly isOwner = this.auth.isOwner;
+  readonly canFilterStaff = computed(() => !this.auth.isServiceWorker());
+  readonly myStaffId = computed(() => this.auth.currentUser()?.staff_member_id ?? null);
+  private reports = inject(ReportService);
+  readonly cashPeriods: { value: ReportPeriod; label: string }[] = [
+    { value: 'day', label: 'Danas' },
+    { value: 'week', label: 'Nedelja' },
+    { value: 'month', label: 'Mesec' },
+  ];
+  readonly cashPeriod = signal<ReportPeriod>('day');
+  readonly myCash = signal<Report | null>(null);
+  readonly staffFilter = signal<number | null>(readStaffPreference());
+  readonly filterStaff = computed(() => this.staff().filter((m) => m.active));
+  readonly filteredStaffName = computed(() => {
+    const id = this.todayData()?.staff_member_id;
+    return id ? (this.staff().find((m) => m.id === id)?.first_name ?? null) : null;
+  });
   private appointmentService = inject(AppointmentService);
   private staffService = inject(StaffService);
   private toast = inject(ToastService);
@@ -139,7 +167,22 @@ export class DashboardComponent {
 
   constructor() {
     this.loadToday();
-    this.staffService.list().subscribe((staff) => this.staff.set(staff));
+    this.staffService.list().subscribe((staff) => {
+      this.staff.set(staff);
+      const id = this.staffFilter();
+      if (id && !staff.some((m) => m.id === id && m.active)) this.setStaffFilter(null);
+    });
+    effect(() => {
+      const period = this.cashPeriod();
+      const staffId = this.myStaffId();
+      if (!staffId) return;
+      untracked(() =>
+        this.reports.get({ period, date: today(), staff_member_id: staffId }).subscribe({
+          next: (report) => this.myCash.set(report),
+          error: () => this.myCash.set(null),
+        }),
+      );
+    });
     effect(() => {
       const range = this.range();
       untracked(() => this.loadStats(range.from, range.to));
@@ -171,6 +214,21 @@ export class DashboardComponent {
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
     return m ? `${h} h ${m} min` : `${h} h`;
+  }
+
+  canComplete(a: Appointment): boolean {
+    const own = !this.auth.isServiceWorker() || a.staff_member_id === this.myStaffId();
+    return own && ['pending', 'confirmed'].includes(a.status) && a.starts_at <= nowDateTime();
+  }
+
+  complete(a: Appointment): void {
+    this.appointmentService.setStatus(a.id, 'completed').subscribe({
+      next: () => {
+        this.toast.success('Termin je završen. Naplatu upiši klikom na termin.');
+        this.loadToday();
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Nije uspelo.')),
+    });
   }
 
   confirm(a: Appointment, event: Event): void {
@@ -217,8 +275,17 @@ export class DashboardComponent {
     });
   }
 
+  setStaffFilter(id: number | null): void {
+    this.staffFilter.set(id);
+    try {
+      if (id) localStorage.setItem(STAFF_KEY, String(id));
+      else localStorage.removeItem(STAFF_KEY);
+    } catch {}
+    this.loadToday();
+  }
+
   private loadToday(): void {
-    this.dashboard.today().subscribe({
+    this.dashboard.today(this.canFilterStaff() ? this.staffFilter() : null).subscribe({
       next: (data) => this.todayData.set(data),
       error: (err) => this.error.set(apiErrorMessage(err, 'Učitavanje pregleda nije uspelo.')),
     });
@@ -264,4 +331,10 @@ export class DashboardComponent {
       },
     });
   }
+}
+
+function nowDateTime(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }

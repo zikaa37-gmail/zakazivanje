@@ -36,7 +36,7 @@
         </div>
       </div>
 
-      @if (isOwner()) {
+      @if (isManager()) {
         <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="card flex flex-col gap-2" novalidate data-testid="client-zone-form">
           <h3 class="font-semibold">Ručna zona</h3>
           <div class="form-grid">

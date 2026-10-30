@@ -27,7 +27,7 @@ export interface PriceRow {
 
 export type ShareTemplate =
   | { kind: 'book'; qr: HTMLImageElement | null; host: string }
-  | { kind: 'promotion'; title: string; value: string; scope: string; period: string }
+  | { kind: 'promotion'; title: string; value: string; scope: string; period: string; code: string | null }
   | { kind: 'prices'; title: string; rows: PriceRow[] }
   | { kind: 'photo'; photo: HTMLImageElement | null; caption: string };
 
@@ -82,7 +82,7 @@ export function drawShareImage(canvas: HTMLCanvasElement, format: ImageFormat, b
     ctx.font = `500 40px ${brand.font}`;
     const scopeLines = wrap(ctx, template.scope, width - 200).slice(0, 3);
     const big = template.value.length > 14 ? 92 : 150;
-    const blockHeight = 50 + titleLines.length * 92 + big + 80 + scopeLines.length * 52 + (template.period ? 90 : 0);
+    const blockHeight = 50 + titleLines.length * 92 + big + 80 + scopeLines.length * 52 + (template.period ? 90 : 0) + (template.code ? 130 : 0);
     let top = Math.max(y + 60, (y + safeBottom) / 2 - blockHeight / 2);
     ctx.font = `700 40px ${brand.font}`;
     ctx.globalAlpha = 0.85;
@@ -98,6 +98,14 @@ export function drawShareImage(canvas: HTMLCanvasElement, format: ImageFormat, b
     if (template.period) {
       ctx.font = `700 42px ${brand.font}`;
       ctx.fillText(template.period, width / 2, (top += 90));
+    }
+    if (template.code) {
+      ctx.font = `600 36px ${brand.font}`;
+      ctx.globalAlpha = 0.85;
+      ctx.fillText('uz kod pri zakazivanju', width / 2, (top += 70));
+      ctx.globalAlpha = 1;
+      ctx.font = `900 64px ${brand.font}`;
+      fit(ctx, template.code, width / 2, (top += 70), width - 160);
     }
   }
 

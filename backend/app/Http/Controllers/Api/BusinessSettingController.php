@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\Shift;
+use App\Models\User;
 use App\Notifications\ReportNotification;
 use App\Services\InstagramService;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class BusinessSettingController extends Controller
 
         return $request->user()?->isStaff()
             ? $settings
-            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available', 'instagram_user_id', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'], true))->all();
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || str_starts_with($key, 'note_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available', 'instagram_user_id', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'], true))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -122,6 +123,8 @@ class BusinessSettingController extends Controller
             'discipline_yellow_off_peak' => ['sometimes', 'boolean'],
             'discipline_off_peak_percent' => ['sometimes', 'integer', 'between:10,90'],
             'report_auto_channel' => ['sometimes', Rule::in([ReportNotification::CHANNEL_MAIL, ReportNotification::CHANNEL_WHATSAPP])],
+            'note_always_notify_ids' => ['sometimes', 'nullable', 'array'],
+            'note_always_notify_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', User::STAFF_ROLES)],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
             'opening_hours.*.opens_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.closes_at'],

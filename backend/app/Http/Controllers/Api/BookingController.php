@@ -101,14 +101,16 @@ class BookingController extends Controller
             'service_ids' => ['required', 'array', 'min:1'],
             'service_ids.*' => ['integer', 'distinct'],
             'date' => ['nullable', 'date_format:Y-m-d'],
+            'promo_code' => ['nullable', 'string', 'max:40'],
         ]);
 
         $services = $this->availability->servicesInOrder($data['service_ids']);
         $date = isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today();
+        $code = $data['promo_code'] ?? null;
 
         return $request->user()
-            ? $this->bookings->quoteFor($request->user(), $services, $date)
-            : app(PriceQuoteService::class)->quote($services, $date);
+            ? $this->bookings->quoteFor($request->user(), $services, $date, $code)
+            : app(PriceQuoteService::class)->quote($services, $date, code: $code);
     }
 
     public function store(Request $request)
@@ -119,6 +121,7 @@ class BookingController extends Controller
             'staff_member_id' => ['nullable', 'integer', 'exists:staff_members,id'],
             'starts_at' => ['required', 'date_format:Y-m-d H:i'],
             'note' => ['nullable', 'string', 'max:500'],
+            'promo_code' => ['nullable', 'string', 'max:40'],
             'guest' => [$request->user() ? 'prohibited' : 'required', 'array'],
             'guest.first_name' => ['required_with:guest', 'string', 'min:2', 'max:100'],
             'guest.last_name' => ['required_with:guest', 'string', 'min:1', 'max:100'],
@@ -143,6 +146,7 @@ class BookingController extends Controller
                 $start,
                 Appointment::SOURCE_ONLINE,
                 $data['note'] ?? null,
+                promoCode: $data['promo_code'] ?? null,
             );
         } catch (ValidationException $e) {
             ClientActivity::dispatch($client, ClientActivity::BOOKING_FAILED, ['starts_at' => $data['starts_at'], 'service_ids' => $data['service_ids'], 'reason' => collect($e->errors())->flatten()->first()]);

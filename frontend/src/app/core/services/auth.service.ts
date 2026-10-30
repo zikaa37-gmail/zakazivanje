@@ -29,6 +29,9 @@ export interface RegisterPayload {
   phone: string;
   whatsapp_number: string | null;
   preferred_communication: CommunicationChannel;
+  website?: string;
+  started_at?: number;
+  next?: string | null;
 }
 
 const quiet = () => ({ context: new HttpContext().set(SKIP_LOADER, true) });
@@ -40,7 +43,10 @@ export class AuthService {
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
   readonly isOwner = computed(() => this.currentUserSignal()?.role === 'owner');
-  readonly isStaff = computed(() => ['owner', 'worker'].includes(this.currentUserSignal()?.role ?? ''));
+  readonly isStaff = computed(() => ['owner', 'manager', 'worker'].includes(this.currentUserSignal()?.role ?? ''));
+  readonly isOfficeWorker = computed(() => this.currentUserSignal()?.role === 'manager');
+  readonly isServiceWorker = computed(() => this.currentUserSignal()?.role === 'worker');
+  readonly isManager = computed(() => this.isOwner() || this.isOfficeWorker());
   readonly isSuspended = computed(() => this.currentUserSignal()?.suspended === true);
   readonly homeUrl = computed(() => (this.isStaff() ? '/admin' : this.isSuspended() ? '/suspended' : this.isAuthenticated() ? '/my-appointments' : '/'));
 
@@ -62,12 +68,14 @@ export class AuthService {
     return this.http.post<MessageResponse>(`${this.api}/register`, { ...payload, referral: this.marketing.referral() }, quiet());
   }
 
-  verifyEmail(token: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.api}/verify-email`, { token }, quiet());
+  verifyEmail(token: string): Observable<MessageResponse & Partial<TokenResponse>> {
+    return this.http
+      .post<MessageResponse & Partial<TokenResponse>>(`${this.api}/verify-email`, { token }, quiet())
+      .pipe(tap((res) => res.access_token && res.refresh_token && res.user && this.storeSession(res as TokenResponse)));
   }
 
-  resendVerification(email: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.api}/resend-verification`, { email }, quiet());
+  resendVerification(email: string, next: string | null = null): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.api}/resend-verification`, { email, next }, quiet());
   }
 
   refreshTokens(): Observable<TokenResponse> {

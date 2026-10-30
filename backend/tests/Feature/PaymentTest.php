@@ -88,7 +88,7 @@ class PaymentTest extends TestCase
         BusinessSetting::current()->update(['online_payment_enabled' => true]);
         $paid = "/api/appointments/{$this->appointment->id}/paid";
 
-        $this->actingAsJwt($this->admin)->postJson($paid, ['method' => 'cash'])->assertOk()->assertJsonPath('payment_method', 'cash');
+        $this->actingAsJwt($this->admin)->postJson($paid, ['method' => 'cash', 'tip' => 200])->assertOk()->assertJsonPath('payment_method', 'cash')->assertJsonPath('tip', 200);
         $this->assertNotNull($this->appointment->fresh()->paid_at);
 
         $this->actingAsJwt($this->client)->postJson("/api/my-appointments/{$this->appointment->id}/payment")
