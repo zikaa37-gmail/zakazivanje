@@ -1,4 +1,4 @@
--- Tabela `zk_marketing_visits`: šema i podaci iz lokalne baze (28.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_marketing_visits`: šema i podaci iz lokalne baze (30.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -17,8 +17,8 @@ CREATE TABLE `zk_marketing_visits` (
   `logins` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `zk_marketing_visits_visited_on_source_campaign_unique` (`visited_on`,`source`,`campaign`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_marketing_visits` VALUES (1,'2026-10-27','instagram','story-test',1,0),(2,'2026-10-27','direct','',27,0);
+INSERT INTO `zk_marketing_visits` VALUES (1,'2026-10-27','instagram','story-test',1,0),(2,'2026-10-27','direct','',27,0),(29,'2026-10-30','direct','',81,0);
 
 SET FOREIGN_KEY_CHECKS=1;
