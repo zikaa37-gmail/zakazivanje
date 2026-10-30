@@ -43,11 +43,11 @@ class ReportService
 
     public function ensureAllowed(User $user, ?int $staffMemberId): void
     {
-        if ($user->isOwner() || $user->staff_member_id === null) {
+        if (! $user->isServiceWorker()) {
             return;
         }
 
-        if ($staffMemberId !== $user->staff_member_id) {
+        if ($user->staff_member_id === null || $staffMemberId !== $user->staff_member_id) {
             throw ValidationException::withMessages(['staff_member_id' => ['Možeš da vidiš samo svoj izveštaj.']]);
         }
     }
@@ -195,7 +195,8 @@ class ReportService
         return implode("\n", [
             "{$report['title']} · {$report['period']['label']}",
             "Termina: {$t['appointments']} (završeno {$t['completed']}, otkazano {$t['cancelled']}, nije došlo {$t['no_shows']})",
-            'Prihod: '.$money($t['revenue']).' (naplaćeno '.$money($t['paid']).')',
+            'Prihod: '.$money($t['revenue']).' (naplaćeno '.$money($t['paid']).', gotovina za kasu '.$money($t['by_method']['cash']).')',
+            'Bakšiš: '.$money($t['tips']),
             "Popunjenost: {$t['utilization']}%",
         ]);
     }
@@ -204,7 +205,7 @@ class ReportService
     {
         $counted = $appointments->whereIn('status', self::COUNTED);
         $completed = $appointments->where('status', Appointment::STATUS_COMPLETED);
-        $paid = $completed->whereNotNull('paid_at');
+        $paid = $appointments->where('status', '!=', Appointment::STATUS_CANCELLED)->whereNotNull('paid_at');
         $booked = $counted->where('status', '!=', Appointment::STATUS_NO_SHOW)->sum(fn ($a) => $a->starts_at->diffInMinutes($a->ends_at));
         $revenue = round($completed->sum('total'), 2);
         $clientIds = $counted->pluck('client_id')->filter()->unique();
@@ -225,8 +226,9 @@ class ReportService
             'revenue' => $revenue,
             'discount' => round($completed->sum('discount'), 2),
             'paid' => round($paid->sum('total'), 2),
-            'unpaid' => round($revenue - $paid->sum('total'), 2),
+            'unpaid' => round($completed->whereNull('paid_at')->sum('total'), 2),
             'by_method' => collect(Appointment::PAYMENT_METHODS)->mapWithKeys(fn ($m) => [$m => round($paid->where('payment_method', $m)->sum('total'), 2)])->all(),
+            'tips' => round($paid->sum('tip'), 2),
             'average_ticket' => $completed->count() > 0 ? round($completed->avg('total'), 2) : 0,
             'booked_minutes' => (int) $booked,
             'available_minutes' => (int) round($available),

@@ -19,8 +19,13 @@
     </div>
 
     <div class="flex flex-wrap gap-3 text-sm">
-      @if (phoneHref()) {
-        <a [href]="phoneHref()" class="flex items-center gap-1"><span appIcon="phone" aria-hidden="true"></span>{{ appointment().client?.phone }}</a>
+      @if (callHref()) {
+        <a [href]="callHref()" class="flex items-center gap-1"><span appIcon="phone" aria-hidden="true"></span>{{ appointment().client?.phone }}</a>
+      } @else if (appointment().client?.phone) {
+        <span class="flex items-center gap-1"><span appIcon="phone" aria-hidden="true"></span>{{ appointment().client?.phone }}</span>
+      }
+      @for (link of messageLinks(); track link.id) {
+        <a [href]="link.href" target="_blank" rel="noopener" class="flex items-center gap-1" [attr.data-testid]="'contact-' + link.id"><span [appIcon]="link.icon" aria-hidden="true"></span>{{ link.label }}</a>
       }
       @if (appointment().client?.email) {
         <a [href]="'mailto:' + appointment().client?.email" class="flex items-center gap-1"><span appIcon="mail" aria-hidden="true"></span>{{ appointment().client?.email }}</a>
@@ -46,11 +51,14 @@
 
     @if (appointment().paid_at) {
       <div class="flex flex-wrap items-center justify-between gap-2 text-sm" data-testid="details-paid">
-        <span><span class="badge badge-success">Plaćeno</span> {{ paymentLabel(appointment().payment_method) }} · {{ appointment().paid_at! | srDateTime }}</span>
+        <span><span class="badge badge-success">Plaćeno</span> {{ paymentLabel(appointment().payment_method) }}{{ appointment().tip > 0 ? ' · bakšiš ' + (appointment().tip | rsd) : '' }} · {{ appointment().paid_at! | srDateTime }}</span>
         <button type="button" appBtn theme="ghost" size="s" (click)="markPaid(null)" data-testid="details-unpay">Poništi</button>
       </div>
     } @else if (canTakePayment()) {
       <div class="flex flex-wrap items-center gap-2" data-testid="details-payment">
+        <label class="text-sm muted flex items-center gap-1">Bakšiš
+          <input appInput size="s" type="number" min="0" step="50" inputmode="numeric" class="!w-24" placeholder="0" [formControl]="tip" data-testid="details-tip" />
+        </label>
         <span class="text-sm muted">Naplaćeno:</span>
         @for (m of paymentMethods; track m.value) {
           <button type="button" appBtn theme="secondary" size="s" (click)="markPaid(m.value)" [attr.data-testid]="'details-paid-' + m.value">{{ m.label }}</button>

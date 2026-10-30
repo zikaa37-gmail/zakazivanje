@@ -32,12 +32,12 @@ class DashboardTest extends TestCase
         $this->ana->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
     }
 
-    private function appointment(string $at, string $status, ?User $client = null): Appointment
+    private function appointment(string $at, string $status, ?User $client = null, ?StaffMember $staff = null): Appointment
     {
         $id = $this->actingAsJwt($this->admin)->postJson('/api/appointments', [
             'client_id' => ($client ?? User::factory()->create())->id,
             'service_ids' => [$this->cut->id],
-            'staff_member_id' => $this->ana->id,
+            'staff_member_id' => ($staff ?? $this->ana)->id,
             'starts_at' => $at,
         ])->assertCreated()->json('appointments.0.id');
 
@@ -105,6 +105,35 @@ class DashboardTest extends TestCase
         $this->assertSame('09:00 – 17:00', $today['staff'][0]['hours']);
         $this->assertSame(2, $today['staff'][0]['appointments']);
         $this->assertEqualsWithDelta(4000, $today['expected_revenue'], 0.01);
+    }
+
+    public function test_today_filters_by_staff_and_linked_worker_sees_only_own(): void
+    {
+        $this->travelTo('2026-10-19 08:00:00');
+        $marko = StaffMember::create(['first_name' => 'Marko', 'last_name' => 'Test']);
+        $marko->services()->sync([$this->cut->id]);
+        $marko->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
+        $this->appointment('2026-10-19 09:00', 'confirmed');
+        $markos = $this->appointment('2026-10-19 10:00', 'pending', null, $marko);
+
+        $filtered = $this->actingAsJwt($this->admin)->postJson('/api/dashboard/today', ['staff_member_id' => $marko->id])->assertOk()->json();
+        $this->assertSame([$markos->id], array_column($filtered['appointments'], 'id'));
+        $this->assertSame($markos->id, $filtered['next']['id']);
+        $this->assertSame([$markos->id], array_column($filtered['pending'], 'id'));
+        $this->assertEqualsWithDelta(2000, $filtered['expected_revenue'], 0.01);
+        $this->assertCount(2, $filtered['staff']);
+
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
+        $own = $this->actingAsJwt($worker)->postJson('/api/dashboard/today', ['staff_member_id' => $marko->id])->assertOk()->json();
+        $this->assertSame($this->ana->id, $own['staff_member_id']);
+        $this->assertCount(1, $own['appointments']);
+        $this->assertSame($this->ana->id, $own['appointments'][0]['staff_member_id']);
+        $this->assertSame([], $own['pending']);
+
+        $office = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $all = $this->actingAsJwt($office)->postJson('/api/dashboard/today')->assertOk()->json();
+        $this->assertNull($all['staff_member_id']);
+        $this->assertCount(2, $all['appointments']);
     }
 
     public function test_period_is_limited_to_one_year(): void

@@ -1,3 +1,4 @@
+import { ConfirmationMode } from './business-setting.model';
 import { Gender } from './user.model';
 
 export type ServiceAudience = 'all' | Gender;
@@ -37,9 +38,11 @@ export interface SalonService {
   description: string | null;
   category: string | null;
   audience: ServiceAudience;
+  booking_confirmation: ConfirmationMode | null;
   duration_minutes: number;
   price: number;
   active: boolean;
+  paused_until: string | null;
   sort_order: number;
   staff_members: { id: number; first_name: string; last_name: string }[];
 }
@@ -49,9 +52,11 @@ export interface SalonServicePayload {
   description: string | null;
   category: string | null;
   audience: ServiceAudience;
+  booking_confirmation: ConfirmationMode | null;
   duration_minutes: number;
   price: number;
   active: boolean;
+  paused_until: string | null;
   staff_member_ids: number[];
 }
 
@@ -65,5 +70,10 @@ export interface PublicService {
   audience: ServiceAudience;
   duration_minutes: number;
   price: number;
+  paused_until: string | null;
   staff_members: { id: number; first_name: string; last_name: string; title: string | null }[];
+}
+
+export function isPaused(service: { paused_until: string | null }, date: string): boolean {
+  return service.paused_until !== null && date <= service.paused_until;
 }

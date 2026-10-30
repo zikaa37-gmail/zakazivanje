@@ -24,7 +24,7 @@
             @for (service of group.items; track service.id) {
               <app-data-row [columns]="columns" [attr.data-testid]="'service-' + service.id">
                 <div class="min-w-0">
-                  <div class="font-semibold truncate">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}</div>
+                  <div class="font-semibold truncate">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}@if (service.booking_confirmation) {<span class="badge badge-neutral ml-2">{{ confirmationLabel(service.booking_confirmation) }}</span>}</div>
                   @if (service.description) {
                     <div class="text-xs muted truncate">{{ service.description }}</div>
                   }
@@ -32,8 +32,14 @@
                 <div>{{ service.duration_minutes | duration }}</div>
                 <div class="font-semibold">{{ service.price | rsd }}</div>
                 <div class="truncate muted">{{ staffNames(service) }}</div>
-                <span class="badge" [class.badge-success]="service.active" [class.badge-neutral]="!service.active">{{ service.active ? 'Aktivna' : 'Neaktivna' }}</span>
-                <app-row-actions [actions]="rowActions" (selected)="onAction(service, $event)" />
+                @if (!service.active) {
+                  <span class="badge badge-neutral">Onemogućena</span>
+                } @else if (isPaused(service)) {
+                  <span class="badge badge-warning">Pauza do {{ service.paused_until! | srDate }}</span>
+                } @else {
+                  <span class="badge badge-success">Aktivna</span>
+                }
+                <app-row-actions [actions]="actionsFor(service)" (selected)="onAction(service, $event)" />
               </app-data-row>
             }
           </app-data-list>
@@ -43,11 +49,16 @@
           @for (service of group.items; track service.id) {
             <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.opacity-60]="!service.active">
               <div class="min-w-0 flex-1">
-                <div class="font-semibold">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}</div>
+                <div class="font-semibold">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}@if (service.booking_confirmation) {<span class="badge badge-neutral ml-2">{{ confirmationLabel(service.booking_confirmation) }}</span>}</div>
                 <div class="text-sm muted">{{ service.duration_minutes | duration }} · {{ staffNames(service) }}</div>
+                @if (!service.active) {
+                  <span class="badge badge-neutral mt-1">Onemogućena</span>
+                } @else if (isPaused(service)) {
+                  <span class="badge badge-warning mt-1">Pauza do {{ service.paused_until! | srDate }}</span>
+                }
               </div>
               <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
-              <app-row-actions [actions]="rowActions" (selected)="onAction(service, $event)" />
+              <app-row-actions [actions]="actionsFor(service)" (selected)="onAction(service, $event)" />
             </div>
           }
         </div>
@@ -87,6 +98,15 @@
         </div>
       </div>
       <div class="field">
+        <label>Potvrda termina</label>
+        <div class="chip-group" role="radiogroup" aria-label="Potvrda termina">
+          @for (c of confirmationOptions; track c.value) {
+            <button type="button" role="radio" class="chip" [class.selected]="form.controls.booking_confirmation.value === c.value" [attr.aria-checked]="form.controls.booking_confirmation.value === c.value" (click)="form.controls.booking_confirmation.setValue(c.value)" [attr.data-testid]="'service-confirmation-' + (c.value ?? 'staff')">{{ c.label }}</button>
+          }
+        </div>
+        <p class="text-xs muted mt-1">Za online zakazivanje. Ako je u terminu bar jedna usluga „ručno", termin čeka potvrdu; ako su sve „automatski", potvrđuje se sam.</p>
+      </div>
+      <div class="field">
         <label for="service-category">Kategorija</label>
         <input id="service-category" appInput size="m" formControlName="category" list="service-categories" placeholder="npr. Šišanje" />
         <datalist id="service-categories">
@@ -113,7 +133,25 @@
         </div>
       </div>
       <app-toggle [checked]="form.controls.active.value" label="Aktivna (vidljiva klijentima)" (checkedChange)="form.controls.active.setValue($event)" />
+      @if (form.controls.active.value) {
+        <div class="field mt-3">
+          <label for="service-paused">Privremeno nedostupna do</label>
+          <input id="service-paused" appInput size="m" type="date" [min]="today" formControlName="paused_until" data-testid="service-paused-until" />
+          <p class="text-xs muted mt-1">Npr. aparat na servisu. Klijenti vide uslugu, ali je online ne mogu zakazati do ovog dana (uključujući i njega). Prazno = dostupna.</p>
+        </div>
+      }
     </form>
     <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="service-save">Sačuvaj</app-button>
+  </app-modal>
+}
+
+@if (pausing(); as service) {
+  <app-modal [title]="'Pauza: ' + service.name" footerMode="custom" (cancelled)="pausing.set(null)" testId="service-pause-modal">
+    <p class="text-sm muted mb-3">Usluga ostaje u ponudi, ali se online ne može zakazati do izabranog dana (uključujući i njega). Posle toga je opet dostupna sama od sebe. Već zakazani termini ostaju.</p>
+    <div class="field">
+      <label for="pause-until">Nedostupna do</label>
+      <input id="pause-until" appInput size="m" type="date" [min]="today" [formControl]="pauseUntil" data-testid="service-pause-until" />
+    </div>
+    <app-button modal-footer size="s" [disabled]="!pauseUntil.value || pauseUntil.value < today" (click)="confirmPause()" data-testid="service-pause-save">Pauziraj</app-button>
   </app-modal>
 }

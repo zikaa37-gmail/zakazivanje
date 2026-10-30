@@ -35,6 +35,8 @@ class CatalogTest extends TestCase
         $id = $this->actingAsJwt($this->admin)->postJson('/api/staff', [
             'first_name' => 'Ana',
             'last_name' => 'Jovanović',
+            'email' => 'ana@salon.rs',
+            'phone' => '060 111 2222',
             'booking_confirmation' => 'automatic',
             'service_ids' => [$service->id],
             'working_hours' => [
@@ -48,6 +50,8 @@ class CatalogTest extends TestCase
         $this->actingAsJwt($this->admin)->putJson("/api/staff/{$id}", [
             'first_name' => 'Ana',
             'last_name' => 'Jovanović',
+            'email' => 'ana@salon.rs',
+            'phone' => '060 111 2222',
             'booking_confirmation' => null,
             'working_hours' => [
                 ['weekday' => 2, 'starts_at' => '09:00', 'ends_at' => '12:00'],
@@ -58,6 +62,8 @@ class CatalogTest extends TestCase
         $this->actingAsJwt($this->admin)->putJson("/api/staff/{$id}", [
             'first_name' => 'Ana',
             'last_name' => 'Jovanović',
+            'email' => 'ana@salon.rs',
+            'phone' => '060 111 2222',
             'booking_confirmation' => null,
         ])->assertOk();
 

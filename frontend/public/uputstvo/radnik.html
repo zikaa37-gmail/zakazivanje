@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Uputstvo · Radnik</title>
+<link rel="stylesheet" href="uputstvo.css" />
+<script src="uputstvo.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="index.html"><img data-salon-logo alt="" hidden /><span class="brand-text"><span class="brand-name" data-salon-name>Vaš salon</span><span class="brand-sub">Uputstvo za online zakazivanje</span></span></a>
+    <h1>Radnik</h1>
+    <p>Za one koji rade usluge: frizere, maserke, kozmetičarke… Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu.</p>
+  </div>
+</header>
+<nav class="guides" aria-label="Uputstva"><div class="guides-inner">
+  <a href="index.html">Početna</a>
+  <a href="vlasnik.html">Vlasnik i administracija</a>
+  <a href="svakodnevni-rad.html">Svakodnevni rad</a>
+  <a href="radnik.html" aria-current="page">Radnik</a>
+  <a href="klijent.html">Klijent</a>
+  <a href="prijava-i-nalozi.html">Prijava i nalozi</a>
+</div></nav>
+<main>
+  <div class="toolbar"><button type="button" data-open-all>Otvori sve</button><button type="button" data-close-all>Zatvori sve</button></div>
+<details class="step" id="r-meni" open>
+  <summary><span class="num">1</span><span class="step-title">Vaš meni</span></summary>
+  <div class="step-body">
+    <div>
+<p><span class="badge">1</span> Kao radnik vidite <strong>Pregled</strong>, <strong>Kalendar</strong>, <strong>Termini</strong>, <strong>Beleške</strong> i <strong>Uputstvo</strong>.</p>
+<p>Na telefonu meni otvarate dugmetom sa tri crtice gore levo. Lozinku i svoje podatke menjate u <strong>Profilu</strong> (dole u meniju).</p>
+<p class="tip">Stranice Klijenti i Izveštaji ne vidite. Klijenta i dalje možete naći ili dodati u prozoru za novi termin. Ako vam treba više, vlasnik vam može dati ulogu „Administrativni radnik".</p>
+    </div>
+    <figure><img src="slike/radnik-01-meni.jpg" alt="Meni radnika" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="r-pregled">
+  <summary><span class="num">2</span><span class="step-title">Pregled — vaši termini</span></summary>
+  <div class="step-body">
+    <div>
+<p><span class="badge">1</span> Na Pregledu su <strong>samo vaši termini</strong> za danas i termini koji čekaju potvrdu.</p>
+<ol>
+  <li><span class="badge">2</span> <strong>„Završen"</strong> (na telefonu kvačica) se pojavi kod vašeg termina koji je počeo, a nije završen. Status možete menjati samo svojim terminima.</li>
+  <li>Zatim kliknite termin i upišite naplatu i bakšiš (vidi <a href="svakodnevni-rad.html#s-naplata">Naplata i bakšiš</a>).</li>
+</ol>
+<a class="open" href="/admin/dashboard" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/radnik-02-pregled.jpg" alt="Pregled radnika" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="r-pazar">
+  <summary><span class="num">3</span><span class="step-title">Moj pazar</span></summary>
+  <div class="step-body">
+    <div>
+<p><span class="badge">1</span> Kartica <strong>„Moj pazar"</strong> na Pregledu, za <strong>Danas</strong>, <strong>Nedelju</strong> ili <strong>Mesec</strong>:</p>
+<ul>
+  <li><strong>Gotovina za kasu</strong> — koliko gotovine treba da ostavite u salonu.</li>
+  <li><strong>Bakšiš</strong> — vaš bakšiš; nije deo pazara salona.</li>
+  <li>Ispod: koliko je plaćeno karticom, na račun i šta još nije naplaćeno.</li>
+</ul>
+    </div>
+    <figure><img src="slike/radnik-03-moj-pazar.jpg" alt="Moj pazar" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="r-kalendar">
+  <summary><span class="num">4</span><span class="step-title">Kalendar i Termini</span></summary>
+  <div class="step-body">
+    <div>
+<ol>
+  <li><span class="badge">1</span> Kalendar i Termini se otvaraju sa <strong>vašim imenom</strong> u filteru. Promenite filter ako želite da vidite i druge.</li>
+  <li><span class="badge">2</span> <strong>„+ Novi termin"</strong> — kucajte ime ili telefon klijenta; ako ga nema, „+ Novi klijent".</li>
+  <li>Kad se dogovorite sa klijentom, termin možete zakazati i van svog radnog vremena.</li>
+  <li>„Blokiraj vreme" zatvara vreme kada ne radite (pauza, lekar).</li>
+</ol>
+<a class="open" href="/admin/calendar" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/radnik-04-kalendar.jpg" alt="Kalendar radnika" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="r-beleske">
+  <summary><span class="num">5</span><span class="step-title">Beleške</span></summary>
+  <div class="step-body">
+    <div>
+<p>Meni → <strong>Beleške</strong>: javite ostalima šta nedostaje ili se pokvarilo („nestalo je farbe 7.1"). Obaveštenje dobijaju svi uključeni (kliknite ime da ga isključite). Na tuđoj belešci kliknite „Pročitano", „Preuzimam" ako se vi time bavite, i „Urađeno" kad je gotovo. Broj u meniju pokazuje nepročitane beleške. Detaljnije u <a href="svakodnevni-rad.html#s-beleske">Svakodnevni rad</a>.</p>
+<a class="open" href="/admin/notes" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure><img src="slike/rad-11-beleske.jpg" alt="Beleške" loading="lazy" /></figure>
+  </div>
+</details>
+
+  <nav class="pager" aria-label="Sledeće uputstvo"><a href="svakodnevni-rad.html">← Svakodnevni rad</a><a href="klijent.html">Klijent →</a></nav>
+</main>
+</body>
+</html>

@@ -3,7 +3,7 @@
     <span class="avatar avatar-initials !w-20 !h-20 !text-2xl">{{ initials() }}</span>
     <h1 class="text-xl font-bold mt-3">{{ auth.currentUser()?.first_name }} {{ auth.currentUser()?.last_name }}</h1>
     <p class="muted">{{ auth.currentUser()?.email }}</p>
-    <a [href]="auth.currentUser()?.role === 'client' ? '/uputstvo/index.html#klijent' : '/uputstvo/index.html'" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm text-primary mt-2" data-testid="profile-guide">
+    <a [href]="auth.currentUser()?.role === 'client' ? '/uputstvo/klijent.html' : '/uputstvo/index.html'" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm text-primary mt-2" data-testid="profile-guide">
       <span appIcon="book-open" [iconSize]="15" aria-hidden="true"></span> Uputstvo za korišćenje
     </a>
   </div>

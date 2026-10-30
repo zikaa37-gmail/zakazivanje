@@ -28,11 +28,13 @@ class AppointmentPaymentController extends Controller
     {
         $data = $request->validate([
             'method' => ['nullable', Rule::in(Appointment::PAYMENT_METHODS)],
+            'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
         ]);
 
         $appointment->update([
             'payment_method' => $data['method'] ?? null,
             'paid_at' => isset($data['method']) ? ($appointment->paid_at ?? now()) : null,
+            'tip' => isset($data['method']) ? round((float) ($data['tip'] ?? 0), 2) : 0,
         ]);
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);

@@ -171,7 +171,7 @@ class InstagramService
         }
 
         $owner = $payload && ($payload['exp'] ?? 0) >= now()->timestamp ? User::find($payload['uid'] ?? 0) : null;
-        if (! $owner?->isOwner() || ! $code) {
+        if (! $owner?->isManager() || ! $code) {
             throw ValidationException::withMessages(['instagram' => ['Povezivanje je isteklo ili je otkazano. Pokušaj ponovo.']]);
         }
 

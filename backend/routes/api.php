@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
+use App\Http\Controllers\Api\StaffNoteController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\WaitlistController;
 use Illuminate\Support\Facades\Route;
@@ -73,7 +74,7 @@ Route::middleware('jwt')->group(function () {
     Route::post('/my-appointments/{appointment}/reschedule', [MyAppointmentController::class, 'reschedule'])->middleware('throttle:booking');
 });
 
-Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
+Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/dashboard/today', [DashboardController::class, 'today']);
 
     Route::post('/staff/list', [StaffMemberController::class, 'index']);
@@ -85,8 +86,6 @@ Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
 
     Route::post('/clients/list', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
-    Route::put('/clients/{client}', [ClientController::class, 'update']);
-    Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
 
     Route::post('/appointments/list', [AppointmentController::class, 'index']);
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
@@ -103,17 +102,29 @@ Route::middleware(['jwt', 'role:owner,worker'])->group(function () {
     Route::post('/reports/pdf', [ReportController::class, 'pdf']);
     Route::post('/reports/send', [ReportController::class, 'send'])->middleware('throttle:booking');
 
+    Route::post('/notes/list', [StaffNoteController::class, 'index']);
+    Route::post('/notes/recipients', [StaffNoteController::class, 'recipients']);
+    Route::post('/notes/unread-count', [StaffNoteController::class, 'unreadCount']);
+    Route::post('/notes', [StaffNoteController::class, 'store']);
+    Route::post('/notes/{note}/read', [StaffNoteController::class, 'markRead']);
+    Route::post('/notes/{note}/take', [StaffNoteController::class, 'take']);
+    Route::post('/notes/{note}/resolve', [StaffNoteController::class, 'resolve']);
+    Route::delete('/notes/{note}', [StaffNoteController::class, 'destroy']);
+
     Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
     Route::post('/blocked-times', [BlockedTimeController::class, 'store']);
     Route::delete('/blocked-times/{blockedTime}', [BlockedTimeController::class, 'destroy']);
 });
 
 Route::middleware(['jwt', 'role:owner'])->group(function () {
+    Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::post('/dashboard/sources', [MarketingController::class, 'report']);
+});
+
+Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::put('/business-settings', [BusinessSettingController::class, 'update']);
 
-    Route::post('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::post('/dashboard/demand', [DashboardController::class, 'demand']);
-    Route::post('/dashboard/sources', [MarketingController::class, 'report']);
 
     Route::post('/instagram/authorize', [MarketingController::class, 'authorizeInstagram']);
     Route::post('/instagram/connect', [MarketingController::class, 'connectInstagram'])->middleware('throttle:booking');
@@ -154,6 +165,8 @@ Route::middleware(['jwt', 'role:owner'])->group(function () {
     Route::put('/gallery/{image}', [GalleryController::class, 'update']);
     Route::delete('/gallery/{image}', [GalleryController::class, 'destroy']);
 
+    Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
     Route::put('/clients/{client}/zone', [ClientController::class, 'zone']);
 

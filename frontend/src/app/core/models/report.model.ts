@@ -22,6 +22,7 @@ export interface ReportTotals {
   paid: number;
   unpaid: number;
   by_method: { cash: number; card: number; bank: number };
+  tips: number;
   average_ticket: number;
   booked_minutes: number;
   available_minutes: number;

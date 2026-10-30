@@ -16,7 +16,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 
-type Scope = 'summary' | 'staff';
+type Scope = 'summary' | 'staff' | 'mine';
 
 @Component({
   selector: 'app-report',
@@ -32,8 +32,11 @@ export class ReportComponent {
 
   readonly periods = REPORT_PERIODS;
   readonly statuses = STATUS_LABELS;
-  readonly ownStaffId = computed(() => (this.auth.isOwner() ? null : (this.auth.currentUser()?.staff_member_id ?? null)));
-  readonly canChoose = computed(() => this.ownStaffId() === null);
+  readonly myStaffId = computed(() => this.auth.currentUser()?.staff_member_id ?? null);
+  readonly ownStaffId = computed(() => (this.auth.isServiceWorker() || (this.auth.isOfficeWorker() && this.scope() === 'mine') ? this.myStaffId() : null));
+  readonly canChoose = computed(() => !this.auth.isServiceWorker());
+  readonly sendOnlyRole = this.auth.isOfficeWorker;
+  readonly sendOnly = computed(() => this.auth.isOfficeWorker() && this.scope() !== 'mine');
 
   readonly scope = signal<Scope>('summary');
   readonly period = signal<ReportPeriod>('day');
@@ -52,7 +55,7 @@ export class ReportComponent {
     staff_member_id: this.ownStaffId() ?? (this.scope() === 'staff' ? this.staffId() : null),
   }));
 
-  readonly ready = computed(() => this.ownStaffId() !== null || this.scope() === 'summary' || this.staffId() !== null);
+  readonly ready = computed(() => this.ownStaffId() !== null || this.scope() === 'summary' || (this.scope() === 'staff' && this.staffId() !== null));
 
   constructor() {
     if (this.canChoose()) {
@@ -63,7 +66,7 @@ export class ReportComponent {
     }
     effect(() => {
       const query = this.query();
-      if (this.ready()) untracked(() => this.load(query));
+      if (this.ready() && !this.sendOnly()) untracked(() => this.load(query));
     });
   }
 

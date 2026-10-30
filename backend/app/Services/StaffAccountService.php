@@ -43,7 +43,7 @@ class StaffAccountService
         ]);
         $account->staff_member_id = $staff->id;
         if ($account->role === User::ROLE_WORKER) {
-            $account->active = $staff->active;
+            $account->active = $staff->active ?? true;
         }
         $account->save();
 

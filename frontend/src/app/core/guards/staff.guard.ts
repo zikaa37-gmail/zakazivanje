@@ -15,7 +15,7 @@ export const staffGuard: CanActivateFn = (_route, state) => {
     : router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };
 
-export const ownerGuard: CanActivateFn = () => {
+export const managerGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.isOwner() ? true : inject(Router).createUrlTree(['/admin/dashboard']);
+  return auth.isManager() ? true : inject(Router).createUrlTree(['/admin/dashboard']);
 };

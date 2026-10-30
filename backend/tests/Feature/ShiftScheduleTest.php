@@ -32,6 +32,8 @@ class ShiftScheduleTest extends TestCase
         return $this->actingAsJwt($this->admin)->postJson('/api/staff', [
             'first_name' => 'Jelena',
             'last_name' => 'Matović',
+            'email' => 'jelena'.uniqid().'@salon.rs',
+            'phone' => '060 111 2222',
             'service_ids' => [$this->cut->id],
             ...$payload,
         ]);

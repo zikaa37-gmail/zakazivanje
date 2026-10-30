@@ -35,8 +35,8 @@ export class BookingService {
     );
   }
 
-  quote(serviceIds: number[], date: string | null): Observable<Quote> {
-    return this.http.post<Quote>(`${this.api}/bookings/quote`, { service_ids: serviceIds, date }, quiet());
+  quote(serviceIds: number[], date: string | null, promoCode: string | null = null): Observable<Quote> {
+    return this.http.post<Quote>(`${this.api}/bookings/quote`, { service_ids: serviceIds, date, promo_code: promoCode }, quiet());
   }
 
   book(payload: BookingPayload): Observable<Appointment> {

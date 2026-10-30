@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Uputstvo · Prijava i nalozi</title>
+<link rel="stylesheet" href="uputstvo.css" />
+<script src="uputstvo.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="index.html"><img data-salon-logo alt="" hidden /><span class="brand-text"><span class="brand-name" data-salon-name>Vaš salon</span><span class="brand-sub">Uputstvo za online zakazivanje</span></span></a>
+    <h1>Prijava i nalozi</h1>
+    <p>Kako rade registracija, aktivacija, lozinke i nalozi osoblja. Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu.</p>
+  </div>
+</header>
+<nav class="guides" aria-label="Uputstva"><div class="guides-inner">
+  <a href="index.html">Početna</a>
+  <a href="vlasnik.html">Vlasnik i administracija</a>
+  <a href="svakodnevni-rad.html">Svakodnevni rad</a>
+  <a href="radnik.html">Radnik</a>
+  <a href="klijent.html">Klijent</a>
+  <a href="prijava-i-nalozi.html" aria-current="page">Prijava i nalozi</a>
+</div></nav>
+<main>
+  <div class="toolbar"><button type="button" data-open-all>Otvori sve</button><button type="button" data-close-all>Zatvori sve</button></div>
+<details class="step" id="p-registracija" open>
+  <summary><span class="num">1</span><span class="step-title">Registracija i aktivacija naloga (klijenti)</span></summary>
+  <div class="step-body">
+    <div>
+<ol>
+  <li>Klijent se registruje sam: <span class="badge">1</span> ime, prezime, email, telefon, lozinka i <span class="badge">2</span> „Registruj se".</li>
+  <li>Na email stiže <strong>link za aktivaciju</strong>. Link važi <strong>3 dana</strong>.</li>
+  <li>Klik na link aktivira nalog i odmah prijavljuje klijenta. Ako je bio usred zakazivanja, vraća se na zakazivanje.</li>
+</ol>
+<p class="note">Ako se neko ponovo registruje istim emailom pre aktivacije, ne pravi se drugi nalog — podaci se osveže i stiže novi link.</p>
+<a class="open" href="/register" target="_blank" rel="noopener">Otvori registraciju</a>
+    </div>
+    <figure><img src="slike/klijent-03-registracija.jpg" alt="Registracija" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="p-prijava">
+  <summary><span class="num">2</span><span class="step-title">Prijava pre aktivacije</span></summary>
+  <div class="step-body">
+    <div>
+<p>Ako se klijent prijavi pre nego što je aktivirao nalog, vidi poruku „Nalog još nije aktiviran" i automatski mu šaljemo <strong>novi link</strong> (važi 3 dana).</p>
+<p>Ako link ne radi (istekao ili je već iskorišćen), stranica „Aktivacija nije uspela" nudi novi: <span class="badge">1</span> upišite email i <span class="badge">2</span> kliknite <strong>„Pošalji novi link"</strong>.</p>
+    </div>
+    <figure><img src="slike/prijava-03-aktivacija.jpg" alt="Aktivacija nije uspela" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="p-lozinka">
+  <summary><span class="num">3</span><span class="step-title">Zaboravljena lozinka</span></summary>
+  <div class="step-body wide">
+    <div>
+<ol>
+  <li>Na stranici za prijavu <span class="badge">1</span> kliknite <strong>„Zaboravljena lozinka?"</strong> (<span class="badge">2</span> „Registruj se" je za nove klijente).</li>
+  <li>Druga slika: <span class="badge">1</span> upišite email i <span class="badge">2</span> „Pošalji link".</li>
+  <li>Na email stiže link — otvorite ga i upišite novu lozinku.</li>
+</ol>
+<p>Ovo radi za sve: klijente, radnike, administraciju i vlasnika. Ulogovani korisnik lozinku menja u <strong>Profilu</strong> → „Promeni lozinku".</p>
+<a class="open" href="/forgot-password" target="_blank" rel="noopener">Otvori zaboravljenu lozinku</a>
+    </div>
+    <figure class="pair"><img src="slike/prijava-01-prijava.jpg" alt="Prijava" loading="lazy" /><img src="slike/prijava-02-zaboravljena.jpg" alt="Zaboravljena lozinka" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="p-osoblje">
+  <summary><span class="num">4</span><span class="step-title">Nalozi osoblja i pozivnice</span></summary>
+  <div class="step-body">
+    <div>
+<ul>
+  <li><strong>Radnik</strong>: svaki zaposleni kome u Zaposleni upišete email automatski dobija nalog „Radnik".</li>
+  <li><strong>Vlasnik</strong> i <strong>Administrativni radnik</strong>: prave se u Zaposleni → Nalozi za prijavu → „+ Novi nalog".</li>
+  <li>Niko ne dobija lozinku od salona. <span class="badge">1</span> „⋮" → <strong>„Pošalji pozivnicu"</strong> šalje mejl sa linkom, i osoba <strong>sama postavlja lozinku</strong>. Ako je lozinku već postavila, ista stavka šalje link za novu lozinku.</li>
+  <li>Dok osoba ne postavi lozinku, pored imena piše „Čeka lozinku".</li>
+</ul>
+<a class="open" href="/admin/team" target="_blank" rel="noopener">Otvori naloge za prijavu</a>
+    </div>
+    <figure><img src="slike/admin-12b-pozivnica.jpg" alt="Pošalji pozivnicu" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="p-deaktivacija">
+  <summary><span class="num">5</span><span class="step-title">Deaktiviran nalog</span></summary>
+  <div class="step-body text">
+    <div>
+<p>Ako je nalog deaktiviran, prijava prikazuje „Nalog je deaktiviran". Zaposlenog vraćate u Zaposleni → „Neaktivni" → „Aktiviraj".</p>
+    </div>
+  </div>
+</details>
+
+  <nav class="pager" aria-label="Sledeće uputstvo"><a href="klijent.html">← Klijent</a><a href="index.html">Sva uputstva →</a></nav>
+</main>
+</body>
+</html>

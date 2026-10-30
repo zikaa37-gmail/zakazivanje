@@ -15,7 +15,7 @@ class DashboardService
 {
     private const COUNTED = [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED, Appointment::STATUS_NO_SHOW];
 
-    public function today(CarbonImmutable $date): array
+    public function today(CarbonImmutable $date, ?int $staffId = null): array
     {
         $appointments = Appointment::query()
             ->whereDate('starts_at', $date->toDateString())
@@ -23,12 +23,14 @@ class DashboardService
             ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone'])
             ->orderBy('starts_at')
             ->get();
+        $mine = $staffId ? $appointments->where('staff_member_id', $staffId)->values() : $appointments;
 
-        $next = $appointments->first(fn (Appointment $a) => in_array($a->status, Appointment::BLOCKING_STATUSES, true) && $a->ends_at->isFuture());
+        $next = $mine->first(fn (Appointment $a) => in_array($a->status, Appointment::BLOCKING_STATUSES, true) && $a->ends_at->isFuture());
 
         $pending = Appointment::query()
             ->where('status', Appointment::STATUS_PENDING)
             ->where('starts_at', '>=', now())
+            ->when($staffId, fn ($q) => $q->where('staff_member_id', $staffId))
             ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone'])
             ->orderBy('starts_at')
             ->limit(10)
@@ -56,11 +58,12 @@ class DashboardService
 
         return [
             'date' => $date->toDateString(),
-            'appointments' => $appointments,
+            'staff_member_id' => $staffId,
+            'appointments' => $mine,
             'next' => $next,
             'pending' => $pending,
             'staff' => $staff,
-            'expected_revenue' => round($appointments->whereIn('status', [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED])->sum('total'), 2),
+            'expected_revenue' => round($mine->whereIn('status', [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED])->sum('total'), 2),
         ];
     }
 

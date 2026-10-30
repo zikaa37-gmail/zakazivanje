@@ -9,6 +9,7 @@ import { PromotionService } from '../../../core/services/promotion.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
+import { PROMO_PRESETS, PromoPreset, nextPresetRange } from '../../../core/utils/promo-presets';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
@@ -58,6 +59,9 @@ export class PromotionListComponent {
 
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
+    code: this.fb.control<string | null>(null),
+    max_uses: this.fb.control<number | null>(null),
+    once_per_client: this.fb.nonNullable.control(false),
     type: this.fb.nonNullable.control<PromotionType>('discount_percent'),
     description: this.fb.control<string | null>(null),
     discount_percent: this.fb.control<number | null>(null),
@@ -79,8 +83,11 @@ export class PromotionListComponent {
       .reduce((sum, s) => sum + s.price, 0),
   );
 
+  readonly presets = PROMO_PRESETS;
+
   readonly rowActions: RowAction[] = [
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
+    { id: 'copy', label: 'Napravi kopiju (npr. drugi %)', icon: 'copy' },
     { id: 'toggle', label: 'Uključi / isključi', icon: 'rotate-ccw' },
     { id: 'delete', label: 'Obriši', icon: 'trash', danger: true },
   ];
@@ -139,15 +146,38 @@ export class PromotionListComponent {
 
   onAction(promotion: Promotion, action: string): void {
     if (action === 'edit') this.openForm(promotion);
+    if (action === 'copy') this.openForm({ ...promotion, name: `${promotion.name} (kopija)`, code: null }, true);
     if (action === 'toggle') this.persist(promotion, { ...this.payloadFrom(promotion), active: !promotion.active });
     if (action === 'delete') this.remove(promotion);
   }
 
-  openForm(promotion: Promotion | null = null): void {
-    this.editing.set(promotion);
+  applyPreset(preset: PromoPreset): void {
+    const range = nextPresetRange(preset);
+    this.form.patchValue({
+      name: preset.name,
+      code: preset.code,
+      type: 'discount_percent',
+      discount_percent: preset.percent,
+      description: preset.description,
+      once_per_client: preset.oncePerClient,
+      starts_on: range?.[0] ?? null,
+      ends_on: range?.[1] ?? null,
+    });
+  }
+
+  upperCode(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.form.controls.code.setValue(input.value.toUpperCase().replace(/\s+/g, ''));
+  }
+
+  openForm(promotion: Promotion | null = null, asCopy = false): void {
+    this.editing.set(asCopy ? null : promotion);
     this.formError.set(null);
     this.form.reset({
       name: promotion?.name ?? '',
+      code: promotion?.code ?? null,
+      max_uses: promotion?.max_uses ?? null,
+      once_per_client: promotion?.once_per_client ?? false,
       type: promotion?.type ?? 'discount_percent',
       description: promotion?.description ?? null,
       discount_percent: promotion?.discount_percent ?? null,
@@ -184,6 +214,8 @@ export class PromotionListComponent {
     const payload: PromotionPayload = {
       ...value,
       description: value.description?.trim() || null,
+      code: value.code?.trim() || null,
+      max_uses: value.max_uses || null,
       starts_on: value.starts_on || null,
       ends_on: value.ends_on || null,
       weekdays: this.selectedDays().size ? [...this.selectedDays()].sort() : null,
@@ -213,7 +245,7 @@ export class PromotionListComponent {
   }
 
   private payloadFrom(p: Promotion): PromotionPayload {
-    const { id, services, ...rest } = p;
+    const { id, services, uses, ...rest } = p;
     return { ...rest, service_ids: services.map((s) => s.id) };
   }
 

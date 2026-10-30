@@ -23,6 +23,7 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
+import { TeamTabsComponent } from './team-tabs.component';
 
 interface ShiftRow {
   weekday: number;
@@ -36,7 +37,7 @@ const PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#1d4ed8', '#15803d
 @Component({
   selector: 'app-staff-list',
   standalone: true,
-  imports: [NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
+  imports: [TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './staff-list.component.html',
 })
 export class StaffListComponent {
@@ -92,8 +93,8 @@ export class StaffListComponent {
     first_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     last_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     title: this.fb.control<string | null>(null),
-    phone: this.fb.control<string | null>(null),
-    email: this.fb.control<string | null>(null, Validators.email),
+    phone: this.fb.control<string | null>(null, Validators.required),
+    email: this.fb.control<string | null>(null, [Validators.required, Validators.email]),
     color: this.fb.nonNullable.control(PALETTE[0]),
     booking_confirmation: this.fb.control<ConfirmationMode | null>(null),
     active: this.fb.nonNullable.control(true),
@@ -278,7 +279,7 @@ export class StaffListComponent {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.formError.set('Popuni ime i prezime.');
+      this.formError.set('Popuni ime, prezime, telefon i email.');
       return;
     }
 

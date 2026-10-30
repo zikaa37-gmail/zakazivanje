@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { STAFF_ROLE_OPTIONS, StaffRole, TeamMember, TeamMemberPayload } from '../../../core/models/team.model';
-import { ROLE_LABELS } from '../../../core/models/user.model';
+import { userRoleLabel } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { TeamService } from '../../../core/services/team.service';
@@ -17,11 +17,12 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
+import { TeamTabsComponent } from '../staff/team-tabs.component';
 
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, SrDateTimePipe, ToggleComponent],
+  imports: [TeamTabsComponent, ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, SrDateTimePipe, ToggleComponent],
   templateUrl: './team-list.component.html',
 })
 export class TeamListComponent {
@@ -31,8 +32,7 @@ export class TeamListComponent {
   private toast = inject(ToastService);
   private auth = inject(AuthService);
 
-  readonly roleOptions = STAFF_ROLE_OPTIONS;
-  readonly roleLabels = ROLE_LABELS;
+  readonly roleLabel = userRoleLabel;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly members = signal<TeamMember[]>([]);
@@ -42,6 +42,7 @@ export class TeamListComponent {
   readonly formError = signal<string | null>(null);
 
   readonly linked = computed(() => this.editing()?.staff_member_id != null);
+  readonly roleOptions = computed(() => STAFF_ROLE_OPTIONS.filter((o) => (o.value !== 'owner' || this.auth.isOwner()) && (o.value !== 'worker' || this.linked())));
   readonly isSelf = computed(() => this.editing()?.id === this.auth.currentUser()?.id);
 
   readonly form = this.fb.group({
@@ -49,7 +50,7 @@ export class TeamListComponent {
     last_name: this.fb.nonNullable.control('', Validators.required),
     email: this.fb.nonNullable.control('', [Validators.required, Validators.email]),
     phone: this.fb.control<string | null>(null),
-    role: this.fb.nonNullable.control<StaffRole>('worker'),
+    role: this.fb.nonNullable.control<StaffRole>('manager'),
     active: this.fb.nonNullable.control(true),
     send_invite: this.fb.nonNullable.control(true),
   });
@@ -77,6 +78,7 @@ export class TeamListComponent {
 
   actionsFor(member: TeamMember): RowAction[] {
     const self = member.id === this.auth.currentUser()?.id;
+    if (member.role === 'owner' && !this.auth.isOwner()) return [];
     return [
       { id: 'edit', label: 'Izmeni', icon: 'edit' },
       { id: 'invite', label: member.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' },
@@ -103,7 +105,7 @@ export class TeamListComponent {
       last_name: member?.last_name ?? '',
       email: member?.email ?? '',
       phone: member?.phone ?? null,
-      role: member?.role ?? 'worker',
+      role: member?.role ?? 'manager',
       active: member?.active ?? true,
       send_invite: true,
     });

@@ -80,7 +80,7 @@ class MarketingTest extends TestCase
     {
         config(['instagram.app_id' => '123', 'instagram.app_secret' => 'secret']);
         $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         Http::fake([
             'api.instagram.com/oauth/access_token' => Http::response(['access_token' => 'short-token', 'user_id' => 1]),
             'graph.instagram.com/access_token*' => Http::response(['access_token' => str_repeat('l', 40), 'expires_in' => 5000000]),

@@ -24,6 +24,7 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
+import { NoteRecipient, StaffNoteService } from '../../../core/services/staff-note.service';
 
 type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'social' | 'notifications';
 const TABS: Tab[] = ['business', 'look', 'hours', 'booking', 'payments', 'social', 'notifications'];
@@ -152,6 +153,7 @@ export class SettingsComponent {
     report_auto_weekly: this.fb.nonNullable.control(true),
     report_auto_monthly: this.fb.nonNullable.control(true),
     report_auto_channel: this.fb.nonNullable.control<'mail' | 'whatsapp'>('mail'),
+    note_always_notify_ids: this.fb.control<number[] | null>(null),
     discipline_enabled: this.fb.nonNullable.control(true),
     discipline_window_days: this.fb.nonNullable.control(90, [Validators.min(7), Validators.max(365)]),
     discipline_cancel_points: this.fb.nonNullable.control(1, [Validators.min(0), Validators.max(20)]),
@@ -209,7 +211,23 @@ export class SettingsComponent {
     { value: 1440, label: '1 dan' },
   ];
 
+  private notesService = inject(StaffNoteService);
+  readonly noteAccounts = signal<NoteRecipient[]>([]);
+  readonly noteAlwaysValue = signal<number[] | null>(null);
+  readonly noteAlways = computed(() => new Set(this.noteAlwaysValue() ?? this.noteAccounts().filter((r) => r.always).map((r) => r.user_id!)));
+
+  toggleNoteAlways(id: number): void {
+    const next = new Set(this.noteAlways());
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    const value = [...next];
+    this.noteAlwaysValue.set(value);
+    this.form.controls.note_always_notify_ids.setValue(value);
+    this.form.markAsDirty();
+  }
+
   constructor() {
+    this.notesService.recipients().subscribe((list) => this.noteAccounts.set(list.filter((r) => r.user_id !== null)));
     this.readReturn();
     this.business.load().subscribe({
       next: (settings) => {
@@ -599,6 +617,7 @@ export class SettingsComponent {
       report_auto_weekly: settings.report_auto_weekly ?? true,
       report_auto_monthly: settings.report_auto_monthly ?? true,
       report_auto_channel: settings.report_auto_channel ?? 'mail',
+      note_always_notify_ids: settings.note_always_notify_ids ?? null,
       discipline_enabled: settings.discipline_enabled ?? true,
       discipline_window_days: settings.discipline_window_days ?? 90,
       discipline_cancel_points: settings.discipline_cancel_points ?? 1,
@@ -613,6 +632,7 @@ export class SettingsComponent {
       discipline_yellow_off_peak: settings.discipline_yellow_off_peak ?? true,
       discipline_off_peak_percent: settings.discipline_off_peak_percent ?? 40,
     });
+    this.noteAlwaysValue.set(settings.note_always_notify_ids ?? null);
   }
 
   private preview(): void {

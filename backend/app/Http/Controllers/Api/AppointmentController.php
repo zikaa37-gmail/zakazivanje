@@ -57,9 +57,13 @@ class AppointmentController extends Controller
             ->get();
     }
 
-    public function pendingCount()
+    public function pendingCount(Request $request)
     {
-        return ['count' => Appointment::where('status', Appointment::STATUS_PENDING)->where('starts_at', '>=', now())->count()];
+        $user = $request->user();
+
+        return ['count' => Appointment::where('status', Appointment::STATUS_PENDING)->where('starts_at', '>=', now())
+            ->when($user->isServiceWorker(), fn ($q) => $q->where('staff_member_id', $user->staff_member_id))
+            ->count()];
     }
 
     public function store(Request $request)
@@ -125,6 +129,8 @@ class AppointmentController extends Controller
     public function updateStatus(Request $request, Appointment $appointment)
     {
         $data = $request->validate(['status' => ['required', Rule::in(Appointment::STATUSES)]]);
+        $user = $request->user();
+        abort_if($user->isServiceWorker() && $appointment->staff_member_id !== $user->staff_member_id, 403, 'Status menjaš samo za svoje termine.');
 
         if ($data['status'] === Appointment::STATUS_CANCELLED) {
             $this->bookings->cancel($appointment, 'admin');

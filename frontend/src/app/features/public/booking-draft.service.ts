@@ -10,11 +10,12 @@ export interface BookingDraft {
   time: string | null;
   note: string;
   audience: Gender | null;
+  promoCode: string;
 }
 
 const KEY = 'zk_booking_draft';
 
-const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '', audience: null };
+const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '', audience: null, promoCode: '' };
 
 @Injectable({ providedIn: 'root' })
 export class BookingDraftService {
@@ -31,7 +32,7 @@ export class BookingDraftService {
   }
 
   start(serviceIds: number[]): void {
-    this.draft.update((draft) => ({ ...EMPTY, audience: draft.audience, serviceIds, step: serviceIds.length ? 1 : 0 }));
+    this.draft.update((draft) => ({ ...EMPTY, audience: draft.audience, promoCode: draft.promoCode, serviceIds, step: serviceIds.length ? 1 : 0 }));
   }
 
   patch(changes: Partial<BookingDraft>): void {

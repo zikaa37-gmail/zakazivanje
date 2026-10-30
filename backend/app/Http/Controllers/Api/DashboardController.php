@@ -22,9 +22,15 @@ class DashboardController extends Controller
 
     public function today(Request $request)
     {
-        $data = $request->validate(['date' => ['nullable', 'date_format:Y-m-d']]);
+        $data = $request->validate([
+            'date' => ['nullable', 'date_format:Y-m-d'],
+            'staff_member_id' => ['nullable', 'integer', 'exists:staff_members,id'],
+        ]);
 
-        return $this->dashboard->today(isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today());
+        $user = $request->user();
+        $staffId = $user->isServiceWorker() ? $user->staff_member_id : ($data['staff_member_id'] ?? null);
+
+        return $this->dashboard->today(isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today(), $staffId);
     }
 
     public function stats(Request $request)

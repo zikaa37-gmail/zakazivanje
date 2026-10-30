@@ -62,7 +62,7 @@ class InstagramPublishingTest extends TestCase
         $this->connect(['instagram_publishing_enabled' => false]);
         $this->actingAsJwt($owner)->postJson('/api/instagram/posts', $payload)->assertUnprocessable();
 
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         $this->actingAsJwt($worker)->postJson('/api/instagram/posts/list')->assertForbidden();
     }
 

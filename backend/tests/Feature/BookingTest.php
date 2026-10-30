@@ -153,6 +153,34 @@ class BookingTest extends TestCase
             ->assertUnprocessable();
     }
 
+    public function test_paused_service_is_not_bookable_online_until_the_date_and_used_service_cannot_be_deleted(): void
+    {
+        $this->cut->update(['paused_until' => '2026-10-21']);
+
+        $this->assertSame([], $this->slotTimes('2026-10-20', $this->ana->id, [$this->cut->id]));
+        $this->assertNotSame([], $this->slotTimes('2026-10-22', $this->ana->id, [$this->cut->id]));
+        $this->guestBooking()->assertUnprocessable()->assertJsonValidationErrors('service_ids');
+        $this->guestBooking(['starts_at' => '2026-10-22 10:00'])->assertCreated();
+
+        $this->getJson('/api/public/services')->assertOk()->assertJsonFragment(['name' => 'Šišanje', 'paused_until' => '2026-10-21']);
+
+        $this->actingAsJwt($this->admin)->deleteJson("/api/services/{$this->cut->id}")->assertUnprocessable()->assertJsonValidationErrors('service');
+        $this->actingAsJwt($this->admin)->deleteJson("/api/services/{$this->blow->id}")->assertOk();
+    }
+
+    public function test_service_confirmation_overrides_staff_and_manual_service_wins(): void
+    {
+        $this->blow->update(['booking_confirmation' => 'automatic']);
+        $this->guestBooking(['service_ids' => [$this->blow->id]])->assertCreated()->assertJsonPath('status', 'confirmed');
+
+        $this->guestBooking(['service_ids' => [$this->cut->id, $this->blow->id], 'starts_at' => '2026-10-20 12:00', 'guest' => ['first_name' => 'Ivana', 'last_name' => 'I', 'phone' => '062']])
+            ->assertCreated()->assertJsonPath('status', 'pending');
+
+        $this->cut->update(['booking_confirmation' => 'manual']);
+        $this->guestBooking(['staff_member_id' => $this->milica->id, 'guest' => ['first_name' => 'Jelena', 'last_name' => 'J', 'phone' => '063']])
+            ->assertCreated()->assertJsonPath('status', 'pending');
+    }
+
     public function test_logged_in_client_books_with_package_price_and_cancels(): void
     {
         Promotion::create(['name' => 'Paket', 'type' => 'package', 'package_price' => 2200])->services()->sync([$this->cut->id, $this->blow->id]);

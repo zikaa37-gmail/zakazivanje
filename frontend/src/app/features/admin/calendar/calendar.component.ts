@@ -24,6 +24,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { AppointmentActionsService } from '../appointments/appointment-actions.service';
 import { AppointmentDetailsComponent } from '../appointments/appointment-details.component';
 import { AppointmentFormComponent, AppointmentPrefill } from '../appointments/appointment-form.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 type View = 'day' | 'week' | 'month';
 
@@ -88,7 +89,9 @@ export class CalendarComponent {
   readonly statuses = STATUS_LABELS;
   readonly view = signal<View>(this.readView());
   readonly date = signal(today());
-  readonly staffFilter = signal<number | null>(null);
+  private readonly auth = inject(AuthService);
+  private readonly ownStaffId = this.auth.isServiceWorker() ? (this.auth.currentUser()?.staff_member_id ?? null) : null;
+  readonly staffFilter = signal<number | null>(this.ownStaffId);
   readonly showCancelled = signal(false);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);

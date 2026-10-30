@@ -551,7 +551,7 @@
 
           <div class="card" data-testid="settings-auto-reports">
             <h2 class="text-base font-semibold">Automatski izveštaji</h2>
-            <p class="text-sm muted">U 21h stiže PDF izveštaj: vlasniku i administrativnom radniku zbirni, zaposlenom njegov lični. Nedeljni se šalje nedeljom, mesečni poslednjeg dana u mesecu.</p>
+            <p class="text-sm muted">U 21h stiže PDF izveštaj: vlasniku zbirni, zaposlenom koji radi usluge njegov lični. Nedeljni se šalje nedeljom, mesečni poslednjeg dana u mesecu.</p>
             <div class="flex flex-col gap-3 mt-3">
               <app-toggle [checked]="form.controls.report_auto_enabled.value" label="Šalji izveštaje automatski" (checkedChange)="form.controls.report_auto_enabled.setValue($event)" data-testid="toggle-report-auto" />
               @if (form.controls.report_auto_enabled.value) {
@@ -567,6 +567,24 @@
                 </div>
               }
             </div>
+          </div>
+
+          <div class="card" data-testid="settings-note-always">
+            <h2 class="text-base font-semibold">Beleške zaposlenih — uvek obavesti</h2>
+            <p class="text-sm muted">Ovi ljudi dobijaju obaveštenje o svakoj belešci (npr. nestalo je farbe, pokvario se fen) i niko ih ne može isključiti. Ostale bira onaj ko piše belešku.</p>
+            <div class="chip-group mt-3">
+              @for (r of noteAccounts(); track r.user_id) {
+                <button type="button" class="chip" [class.selected]="noteAlways().has(r.user_id!)" [attr.aria-pressed]="noteAlways().has(r.user_id!)" (click)="toggleNoteAlways(r.user_id!)" [attr.data-testid]="'note-always-' + r.user_id">
+                  @if (noteAlways().has(r.user_id!)) {
+                    <span appIcon="check" [iconSize]="13" aria-hidden="true"></span>
+                  }
+                  {{ r.name.split(' ')[0] }}
+                </button>
+              }
+            </div>
+            @if (form.controls.note_always_notify_ids.value === null) {
+              <p class="text-xs muted mt-2">Podrazumevano: svi vlasnici i administrativni radnici.</p>
+            }
           </div>
         </div>
 

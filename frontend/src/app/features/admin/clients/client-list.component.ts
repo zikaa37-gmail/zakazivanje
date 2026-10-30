@@ -21,6 +21,7 @@ import { RowAction, RowActionsComponent } from '../../../shared/components/row-a
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
+import { canPlaceCalls, contactActions, openContact } from '../../../core/utils/contact';
 import { ClientHistoryComponent } from './client-history.component';
 
 @Component({
@@ -71,11 +72,11 @@ export class ClientListComponent {
   readonly zoneFilter = signal<DisciplineZone | null>(null);
   readonly historyId = signal<number | null>(null);
 
-  readonly rowActions: RowAction[] = [
+  readonly phoneDevice = canPlaceCalls();
+  private readonly baseActions: RowAction[] = [
     { id: 'history', label: 'Istorijat i zona', icon: 'activity' },
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
-    { id: 'call', label: 'Pozovi', icon: 'phone' },
-    ...(inject(AuthService).isOwner() ? [{ id: 'delete', label: 'Obriši', icon: 'trash' as const, danger: true }] : []),
+    ...(inject(AuthService).isManager() ? [{ id: 'delete', label: 'Obriši', icon: 'trash' as const, danger: true }] : []),
   ];
 
   constructor() {
@@ -115,6 +116,11 @@ export class ClientListComponent {
     this.clients.update((list) => list.map((c) => (c.id === client.id ? { ...c, ...client } : c)));
   }
 
+  rowActions(client: Client): RowAction[] {
+    const [history, edit, ...rest] = this.baseActions;
+    return [history, edit, ...contactActions(client.phone), ...rest];
+  }
+
   initials(client: Client): string {
     return `${client.first_name[0] ?? ''}${client.last_name[0] ?? ''}`.toUpperCase();
   }
@@ -122,7 +128,7 @@ export class ClientListComponent {
   onAction(client: Client, action: string): void {
     if (action === 'history') this.historyId.set(client.id);
     if (action === 'edit') this.openForm(client);
-    if (action === 'call' && client.phone) window.location.href = `tel:${client.phone.replace(/\s/g, '')}`;
+    openContact(action, client.phone);
     if (action === 'delete') this.remove(client);
   }
 

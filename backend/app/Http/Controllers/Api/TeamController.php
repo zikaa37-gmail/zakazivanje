@@ -31,9 +31,11 @@ class TeamController extends Controller
     {
         $data = $request->validate([
             ...$this->profileRules(),
-            'role' => ['required', Rule::in(User::STAFF_ROLES)],
+            'role' => ['required', Rule::in([User::ROLE_OWNER, User::ROLE_MANAGER])],
             'send_invite' => ['boolean'],
         ]);
+
+        $this->ensureCanManage($request->user(), null, $data['role']);
 
         $user = User::create([...collect($data)->except('send_invite')->all(), 'active' => true]);
 
@@ -47,11 +49,12 @@ class TeamController extends Controller
     public function update(Request $request, User $user)
     {
         abort_unless($user->isStaff(), 404);
+        $this->ensureCanManage($request->user(), $user, $request->input('role'));
 
         $linked = $user->staff_member_id !== null;
         $data = $request->validate([
             ...($linked ? [] : $this->profileRules($user)),
-            'role' => ['required', Rule::in(User::STAFF_ROLES)],
+            'role' => ['required', Rule::in($linked ? User::STAFF_ROLES : [User::ROLE_OWNER, User::ROLE_MANAGER])],
             'active' => ['boolean'],
         ]);
 
@@ -70,9 +73,10 @@ class TeamController extends Controller
         return $this->present($user->load('staffMember'));
     }
 
-    public function invite(User $user)
+    public function invite(Request $request, User $user)
     {
         abort_unless($user->isStaff(), 404);
+        $this->ensureCanManage($request->user(), $user);
 
         if (blank($user->email)) {
             throw ValidationException::withMessages(['email' => ['Nalog nema email adresu.']]);
@@ -90,6 +94,7 @@ class TeamController extends Controller
         if ($user->is($request->user())) {
             throw ValidationException::withMessages(['user' => ['Ne možeš da obrišeš svoj nalog.']]);
         }
+        $this->ensureCanManage($request->user(), $user);
         if ($user->staff_member_id !== null) {
             throw ValidationException::withMessages(['user' => ['Nalog zaposlenog se gasi u Zaposleni (deaktivacija ili brisanje).']]);
         }
@@ -111,6 +116,16 @@ class TeamController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
             'phone' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],
         ];
+    }
+
+    private function ensureCanManage(User $actor, ?User $target, ?string $role = null): void
+    {
+        if ($actor->isOwner()) {
+            return;
+        }
+        if ($target?->isOwner() || $role === User::ROLE_OWNER) {
+            abort(403, 'Naloge vlasnika menja samo vlasnik.');
+        }
     }
 
     private function ensureAnotherOwner(User $user): void

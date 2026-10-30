@@ -81,6 +81,9 @@
                 <div class="min-w-0 flex-1">
                   <div class="font-semibold">{{ service.name }}</div>
                   <div class="text-sm muted">{{ service.duration_minutes | duration }}@if (service.audience !== 'all' && !audience()) { · {{ audienceLabel(service.audience) }}}</div>
+                  @if (service.paused_until && service.paused_until >= todayDate) {
+                    <div class="text-xs text-[var(--color-warning)]" [attr.data-testid]="'book-service-paused-' + service.id">Privremeno nedostupna do {{ service.paused_until | srDate }}</div>
+                  }
                 </div>
                 <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
                 <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>
@@ -222,6 +225,25 @@
             </div>
           } @else {
             <div class="flex justify-between"><span class="muted">Cena</span><strong>{{ regularPrice() | rsd }}</strong></div>
+          }
+          @if (!codeOpen()) {
+            <button type="button" class="summary-edit self-start" (click)="codeOpen.set(true)" data-testid="book-code-open">Imaš kod za popust?</button>
+          } @else {
+            <div class="flex gap-2 items-center">
+              <input appInput size="m" class="flex-1 min-w-0" placeholder="Kod za popust" autocomplete="off" aria-label="Kod za popust" [value]="codeInput()" (input)="setCodeInput($event)" (keydown.enter)="applyCode()" data-testid="book-code" />
+              @if (draft().promoCode && draft().promoCode === codeInput()) {
+                <button type="button" appBtn theme="ghost" size="s" (click)="clearCode()" data-testid="book-code-clear">Ukloni</button>
+              } @else {
+                <button type="button" appBtn theme="secondary" size="s" [disabled]="!codeInput()" (click)="applyCode()" data-testid="book-code-apply">Primeni</button>
+              }
+            </div>
+            @if (draft().promoCode && quote(); as q) {
+              @if (q.code_applied) {
+                <p class="text-sm text-[var(--color-success)]" data-testid="book-code-ok">Kod {{ draft().promoCode }} je primenjen.</p>
+              } @else if (q.code_error) {
+                <p class="field-error" data-testid="book-code-error">{{ q.code_error }}</p>
+              }
+            }
           }
         </div>
 

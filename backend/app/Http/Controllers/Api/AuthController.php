@@ -26,26 +26,35 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $placeholder = User::where('email', $request->input('email'))
+        $sent = fn () => response()->json([
+            'message' => 'Poslali smo link za aktivaciju na '.$request->input('email').'. Link važi '.User::VERIFICATION_DAYS.' dana.',
+        ], 201);
+
+        if (filled($request->input('website')) || ($request->filled('started_at') && now()->getTimestampMs() - (int) $request->input('started_at') < 3000)) {
+            return $sent();
+        }
+
+        $existing = User::where('email', $request->input('email'))
             ->where('role', User::ROLE_CLIENT)
-            ->whereNull('password')
+            ->where(fn ($q) => $q->whereNull('password')->orWhereNull('email_verified_at'))
             ->first();
 
-        $data = $request->validate($this->userRules($placeholder));
+        $data = $request->validate($this->userRules($existing), [
+            'email.unique' => 'Nalog sa ovim mejlom već postoji. Prijavi se ili resetuj lozinku.',
+        ]);
+        $next = $this->safeNext($request->input('next'));
+        unset($data['next']);
 
-        $user = $placeholder
-            ? tap($placeholder)->update($data)
+        $user = $existing
+            ? tap($existing)->update($data)
             : User::create([...$data, 'role' => User::ROLE_CLIENT]);
         $referral = $this->marketing->referral($request);
         if ($referral['source'] && ! $user->signup_source) {
             $user->forceFill(['signup_source' => $referral['source'], 'signup_campaign' => $referral['campaign']])->save();
         }
-        $user->sendEmailVerification();
+        $user->sendEmailVerification($next);
 
-        return response()->json([
-            'message' => 'Nalog je napravljen. Proveri email i potvrdi adresu.',
-            'user_id' => $user->id,
-        ], 201);
+        return $sent();
     }
 
     public function login(Request $request)
@@ -66,6 +75,13 @@ class AuthController extends Controller
 
         if (! $user->active) {
             throw ValidationException::withMessages(['email' => ['Nalog je deaktiviran.']]);
+        }
+
+        if ($user->role === User::ROLE_CLIENT && $user->email_verified_at === null) {
+            if (! $user->email_verification_sent_at || $user->email_verification_sent_at->lt(now()->subMinutes(10))) {
+                $user->sendEmailVerification($this->safeNext($request->input('next')));
+            }
+            throw ValidationException::withMessages(['email' => ['Nalog još nije aktiviran. Poslali smo ti link za aktivaciju na mejl (važi '.User::VERIFICATION_DAYS.' dana).']]);
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
@@ -151,12 +167,16 @@ class AuthController extends Controller
         $user = User::where('email_verification_token', hash('sha256', $data['token']))->first();
 
         if (! $user) {
-            throw ValidationException::withMessages(['token' => ['Link za potvrdu je nevažeći ili je već iskorišćen.']]);
+            throw ValidationException::withMessages(['token' => ['Link za aktivaciju je nevažeći ili je već iskorišćen.']]);
+        }
+        if ($user->verificationExpired()) {
+            throw ValidationException::withMessages(['token' => ['Link je istekao (važi '.User::VERIFICATION_DAYS.' dana). Registruj se ponovo istim mejlom ili zatraži novi link.']]);
         }
 
-        $user->forceFill(['email_verified_at' => now(), 'email_verification_token' => null])->save();
+        $user->forceFill(['email_verified_at' => now(), 'email_verification_token' => null, 'last_login_at' => now()])->save();
+        ClientActivity::dispatch($user, ClientActivity::LOGIN);
 
-        return response()->json(['message' => 'Email adresa je potvrđena.']);
+        return response()->json(['message' => 'Nalog je aktiviran.', ...$this->tokensFor($user)]);
     }
 
     public function resendVerification(Request $request)
@@ -164,7 +184,7 @@ class AuthController extends Controller
         $data = $request->validate(['email' => ['required', 'email']]);
 
         $user = User::where('email', $data['email'])->whereNull('email_verified_at')->first();
-        $user?->sendEmailVerification();
+        $user?->sendEmailVerification($this->safeNext($request->input('next')));
 
         return response()->json(['message' => 'Ako nalog postoji i nije potvrđen, poslali smo novi link.']);
     }
@@ -238,6 +258,11 @@ class AuthController extends Controller
             'preferred_communication' => ['nullable', Rule::in(User::COMMUNICATION_CHANNELS)],
             'gender' => ['nullable', Rule::in(User::GENDERS)],
         ];
+    }
+
+    private function safeNext(?string $next): ?string
+    {
+        return $next && str_starts_with($next, '/') && ! str_starts_with($next, '//') ? mb_substr($next, 0, 300) : null;
     }
 
     private function tokensFor(User $user): array

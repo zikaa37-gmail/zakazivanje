@@ -31,13 +31,14 @@ class BookingService
         ?string $note = null,
         ?string $adminNote = null,
         ?int $recurrenceId = null,
+        ?string $promoCode = null,
     ): Appointment {
         if ($services->isEmpty()) {
             throw ValidationException::withMessages(['service_ids' => ['Izaberi bar jednu uslugu.']]);
         }
         $this->ensureAudience($client, $services);
 
-        return DB::transaction(function () use ($client, $services, $staffMemberId, $start, $source, $note, $adminNote, $recurrenceId) {
+        return DB::transaction(function () use ($client, $services, $staffMemberId, $start, $source, $note, $adminNote, $recurrenceId, $promoCode) {
             $online = $source === Appointment::SOURCE_ONLINE;
             $end = $start->addMinutes($this->availability->duration($services));
 
@@ -50,6 +51,7 @@ class BookingService
 
             if ($online) {
                 $this->ensureBookingRules($start);
+                $this->ensureNotPaused($services, $start);
             }
 
             $staff = $candidates
@@ -62,9 +64,11 @@ class BookingService
                 throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
             }
 
-            $quote = $this->quoteFor($client, $services, $start);
-            $automatic = $source !== Appointment::SOURCE_ONLINE
-                || ($staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC && ! $this->discipline->restrictions($client)['force_pending']);
+            $quote = $this->quoteFor($client, $services, $start, $promoCode);
+            if ($promoCode && $quote['code_error']) {
+                throw ValidationException::withMessages(['promo_code' => [$quote['code_error']]]);
+            }
+            $automatic = $source !== Appointment::SOURCE_ONLINE || $this->confirmsAutomatically($staff, $services, $client);
 
             $appointment = Appointment::create([
                 'client_id' => $client->id,
@@ -98,6 +102,7 @@ class BookingService
             }
 
             $this->ensureBookingRules($start);
+            $this->ensureNotPaused($services, $start);
             $end = $start->addMinutes($this->availability->duration($services));
 
             $candidates = $this->availability->eligibleStaff($services, $staffMemberId);
@@ -113,8 +118,7 @@ class BookingService
                 throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
             }
 
-            $automatic = $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC
-                && ! $this->discipline->restrictions($appointment->client)['force_pending'];
+            $automatic = $this->confirmsAutomatically($staff, $services, $appointment->client);
 
             $appointment->update([
                 'staff_member_id' => $staff->id,
@@ -145,7 +149,7 @@ class BookingService
         }
     }
 
-    public function quoteFor(User $client, Collection $services, CarbonImmutable $date): array
+    public function quoteFor(User $client, Collection $services, CarbonImmutable $date, ?string $promoCode = null): array
     {
         $completed = Appointment::where('client_id', $client->id)->where('status', Appointment::STATUS_COMPLETED);
 
@@ -158,7 +162,7 @@ class BookingService
             ->map(fn ($n) => (int) $n)
             ->all();
 
-        return $this->quotes->quote($services, $date, $byService, $completed->count());
+        return $this->quotes->quote($services, $date, $byService, $completed->count(), $promoCode, $client->id);
     }
 
     public function cancel(Appointment $appointment, string $by): Appointment
@@ -170,6 +174,30 @@ class BookingService
         ]);
 
         return $appointment;
+    }
+
+    private function ensureNotPaused(Collection $services, CarbonImmutable $start): void
+    {
+        if ($paused = $this->availability->pausedOn($services, $start)) {
+            throw ValidationException::withMessages(['service_ids' => ["Usluga „{$paused->name}“ nije dostupna do {$paused->paused_until->format('d.m.Y.')}"]]);
+        }
+    }
+
+    private function confirmsAutomatically(StaffMember $staff, Collection $services, User $client): bool
+    {
+        if ($this->discipline->restrictions($client)['force_pending']) {
+            return false;
+        }
+
+        $modes = $services->pluck('booking_confirmation');
+        if ($modes->contains(BusinessSetting::CONFIRMATION_MANUAL)) {
+            return false;
+        }
+        if ($modes->isNotEmpty() && $modes->every(fn ($mode) => $mode === BusinessSetting::CONFIRMATION_AUTOMATIC)) {
+            return true;
+        }
+
+        return $staff->confirmationMode() === BusinessSetting::CONFIRMATION_AUTOMATIC;
     }
 
     private function ensureBookingRules(CarbonImmutable $start): void

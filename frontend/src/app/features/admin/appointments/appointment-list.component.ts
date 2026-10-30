@@ -17,6 +17,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { AppointmentActionsService } from './appointment-actions.service';
 import { AppointmentFormComponent, AppointmentPrefill } from './appointment-form.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 type Period = 'today' | 'tomorrow' | 'week' | 'month' | 'day';
 
@@ -46,7 +47,9 @@ export class AppointmentListComponent {
   readonly period = signal<Period>('week');
   readonly day = signal<string>(today());
   readonly dayLabel = computed(() => longDate(this.day()));
-  readonly staffFilter = signal<number | null>(null);
+  private readonly auth = inject(AuthService);
+  private readonly ownStaffId = this.auth.isServiceWorker() ? (this.auth.currentUser()?.staff_member_id ?? null) : null;
+  readonly staffFilter = signal<number | null>(this.ownStaffId);
   readonly statusFilter = signal<AppointmentStatus | null>(null);
   readonly search = new FormControl('', { nonNullable: true });
   readonly searchTerm = signal('');
@@ -90,7 +93,9 @@ export class AppointmentListComponent {
   readonly prefill = signal<AppointmentPrefill>({});
 
   constructor() {
-    this.applyDateParam(inject(ActivatedRoute).snapshot.queryParamMap.get('date'));
+    const params = inject(ActivatedRoute).snapshot.queryParamMap;
+    this.applyDateParam(params.get('date'));
+    this.staffFilter.set(Number(params.get('staff')) || this.ownStaffId);
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
     this.appointmentService.refreshPendingCount();
 
@@ -134,6 +139,14 @@ export class AppointmentListComponent {
 
   serviceNames(a: Appointment): string {
     return a.items.map((i) => i.name).join(' + ');
+  }
+
+  canComplete(a: Appointment): boolean {
+    const own = !this.auth.isServiceWorker() || a.staff_member_id === this.ownStaffId;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return own && ['pending', 'confirmed'].includes(a.status) && a.starts_at <= stamp;
   }
 
   actions(a: Appointment): RowAction[] {

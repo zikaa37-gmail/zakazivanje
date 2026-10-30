@@ -7,6 +7,7 @@ import { Appointment } from '../models/appointment.model';
 
 export interface DashboardToday {
   date: string;
+  staff_member_id: number | null;
   appointments: Appointment[];
   next: Appointment | null;
   pending: Appointment[];
@@ -49,8 +50,8 @@ export class DashboardService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/dashboard`;
 
-  today(): Observable<DashboardToday> {
-    return this.http.post<DashboardToday>(`${this.api}/today`, {});
+  today(staffMemberId: number | null = null): Observable<DashboardToday> {
+    return this.http.post<DashboardToday>(`${this.api}/today`, { staff_member_id: staffMemberId });
   }
 
   stats(from: string, to: string): Observable<DashboardStats> {
