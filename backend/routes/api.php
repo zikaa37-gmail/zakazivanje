@@ -47,6 +47,8 @@ Route::post('/bookings', [BookingController::class, 'store'])->middleware(['jwt.
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::get('/auth/quick-logins', [AuthController::class, 'quickLogins']);
+    Route::post('/auth/quick-login', [AuthController::class, 'quickLogin']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail']);
