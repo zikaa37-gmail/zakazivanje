@@ -92,6 +92,32 @@ class AuthController extends Controller
         return response()->json($this->tokensFor($user));
     }
 
+    public function quickLogins()
+    {
+        $labels = [User::ROLE_OWNER => 'Vlasnik', User::ROLE_MANAGER => 'Administrativni radnik', User::ROLE_WORKER => 'Radnik', User::ROLE_CLIENT => 'Klijent'];
+        $emails = config('auth_jwt.quick_login_emails');
+
+        $users = User::whereIn('email', $emails)->where('active', true)->get()
+            ->sortBy(fn (User $user) => array_search($user->email, $emails))
+            ->map(fn (User $user) => [
+                'email' => $user->email,
+                'label' => ($labels[$user->role] ?? $user->role).' ('.$user->first_name.')',
+            ]);
+
+        return response()->json($users->values());
+    }
+
+    public function quickLogin(Request $request)
+    {
+        $data = $request->validate(['email' => ['required', 'email']]);
+        abort_unless(in_array($data['email'], config('auth_jwt.quick_login_emails'), true), 404);
+
+        $user = User::where('email', $data['email'])->where('active', true)->firstOrFail();
+        $user->forceFill(['last_login_at' => now()])->save();
+
+        return response()->json($this->tokensFor($user));
+    }
+
     public function refresh(Request $request)
     {
         $data = $request->validate(['refresh_token' => ['required', 'string']]);

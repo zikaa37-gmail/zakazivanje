@@ -37,6 +37,8 @@ Route::post('/public/visit', [MarketingController::class, 'visit'])->middleware(
 Route::get('/public/gallery/images/{image}', [GalleryController::class, 'image']);
 Route::get('/public/reports/{file}', [ReportController::class, 'file'])->middleware('signed')->name('reports.file');
 
+Route::get('/auth/quick-logins', [AuthController::class, 'quickLogins'])->middleware('throttle:public');
+
 Route::middleware(['jwt.optional', 'throttle:public'])->group(function () {
     Route::post('/availability/slots', [BookingController::class, 'slots']);
     Route::post('/availability/days', [BookingController::class, 'days']);
@@ -47,6 +49,7 @@ Route::post('/bookings', [BookingController::class, 'store'])->middleware(['jwt.
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/quick-login', [AuthController::class, 'quickLogin']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail']);
