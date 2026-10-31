@@ -1,4 +1,4 @@
--- Tabela `zk_password_reset_tokens`: šema i podaci iz lokalne baze (28.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_password_reset_tokens`: šema i podaci iz lokalne baze (31.10.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
