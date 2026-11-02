@@ -10,13 +10,14 @@ export interface BrandColors {
 }
 
 const THEME_KEY = 'zk_theme';
+const BRAND_KEY = 'zk_brand';
 const TOKENS = ['primary', 'secondary', 'tertiary'] as const;
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   readonly theme = signal<AppTheme>(this.readStored());
 
-  private brand: BrandColors = { primary: null, secondary: null, tertiary: null };
+  private brand: BrandColors = this.readStoredBrand();
 
   init(): void {
     this.apply(this.theme());
@@ -31,6 +32,13 @@ export class ThemeService {
   applyBrand(colors: BrandColors): void {
     this.brand = colors;
     this.applyBrandTokens();
+  }
+
+  rememberBrand(colors: BrandColors): void {
+    this.applyBrand(colors);
+    try {
+      localStorage.setItem(BRAND_KEY, JSON.stringify(colors));
+    } catch {}
   }
 
   private apply(theme: AppTheme): void {
@@ -74,6 +82,15 @@ export class ThemeService {
 
     if (!isHexColor(this.brand.primary)) {
       ['--color-chart', '--color-chart-active', '--color-chart-track'].forEach((name) => style.removeProperty(name));
+    }
+  }
+
+  private readStoredBrand(): BrandColors {
+    try {
+      const stored = JSON.parse(localStorage.getItem(BRAND_KEY) ?? 'null') as Partial<BrandColors> | null;
+      return { primary: stored?.primary ?? null, secondary: stored?.secondary ?? null, tertiary: stored?.tertiary ?? null };
+    } catch {
+      return { primary: null, secondary: null, tertiary: null };
     }
   }
 

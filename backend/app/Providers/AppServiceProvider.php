@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\ServeCommand;
 use Illuminate\Cache\RateLimiting\Limit;
 use App\Models\NotificationLog;
+use Illuminate\Foundation\Console\ServeCommand as BaseServeCommand;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSent;
@@ -14,7 +16,10 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        $this->app->extend(BaseServeCommand::class, fn () => new ServeCommand);
+    }
 
     public function boot(): void
     {

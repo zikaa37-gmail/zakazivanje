@@ -85,15 +85,16 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 
 ## Local development
 
-Sve odjednom: `node dev.mjs` iz korena (frontend http://localhost:5110, backend http://127.0.0.1:8110, `/api` ide preko
-`frontend/proxy.conf.json`; na lokalu CORS pušta sve). Portovi 4200 i 8000 su rezervisani za druge projekte.
+Sve odjednom: `node dev.mjs` iz korena. Portovi: frontend 4200 / backend 8000, a ako su zauzeti (drugi projekti) 5110 / 8110 —
+`frontend/serve.mjs` (`npm start`), `App\Console\Commands\ServeCommand` (`php artisan serve`) i `frontend/dev-ports.mjs`.
+`/api` ide preko `frontend/proxy.conf.mjs`, koji pri startu nalazi backend (`API_PORT` iz `dev.mjs`); na lokalu CORS pušta sve.
 
 Backend (from `backend/`):
 
 ```bash
 composer install
 php artisan migrate --seed
-php artisan serve --port=8110
+php artisan serve
 ```
 
 Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, administrativni radnik `radnik@fiskultura.rs` /
@@ -235,7 +236,7 @@ Stranice: `index.html` (uvod i kartice), `vlasnik.html` (vlasnik i administrativ
 `radnik.html`, `klijent.html` (može da se pošalje klijentima) i `prijava-i-nalozi.html`; zajednički `uputstvo.css` i `uputstvo.js` (boje, naziv i logo
 salona iz `GET /api/public/business`, uz neutralne podrazumevane boje). Svaki korak je `<details class="step">` sa `<span class="num">`, zatvoren osim prvog;
 broj u tekstu (`<span class="badge">`) odgovara crvenoj oznaci na slici. Slike sa telefona (390×844) su u `slike/`. Ponovo se snimaju sa
-`node docs/uputstvo/snimi-slike.js frontend/public/uputstvo/slike [ime1,ime2]` dok radi `node dev.mjs` (frontend 5110, backend 8110): skripta se prijavljuje
+`node docs/uputstvo/snimi-slike.js frontend/public/uputstvo/slike [ime1,ime2]` dok radi `node dev.mjs` (`APP_URL`, podrazumevano http://localhost:4200): skripta se prijavljuje
 dugmićima za brzu prijavu, pravi privremenu akciju INSTA10, pauzu usluge i jedan termin klijenta, pa ih na kraju briše (`php artisan tinker`), a slike upisuje
 tek na kraju (upis u `public/` usred snimanja bi osvežio aplikaciju). Posle izmena ekrana ažurirati uputstvo i slike; slika koju nijedna stranica ne koristi se briše.
 PDF se pravi kad se potvrdi da je sve obuhvaćeno.
@@ -248,6 +249,6 @@ tek posle linka iz mejla (`email_verification_sent_at`, važi `User::VERIFICATIO
 nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja (`staff_notes`,
 `staff_note_recipients`): status novo / preuzeto (`taken_by`) / urađeno, pročitano po primaocu, obaveštenje izabranima + uvek
 `business_settings.note_always_notify_ids` (podrazumevano vlasnici i administrativni radnici). Zaposleni mora imati email i telefon.
-Lokalno: `node dev.mjs` (frontend 5110, backend 8110).
+Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

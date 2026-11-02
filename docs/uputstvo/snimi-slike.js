@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const OUT = path.resolve(process.argv[2] || path.join(__dirname, '../../frontend/public/uputstvo/slike'));
-const APP = 'http://localhost:5110';
+const APP = process.env.APP_URL || 'http://localhost:4200';
 const BACKEND = path.resolve(__dirname, '../../backend');
 const CHROME = 'C:/Users/PC/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
 const PHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
