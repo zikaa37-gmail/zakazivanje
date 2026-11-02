@@ -24,7 +24,7 @@ class BusinessSettingController extends Controller
 
         return $request->user()?->isStaff()
             ? $settings
-            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || str_starts_with($key, 'note_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available', 'instagram_user_id', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'], true))->all();
+            : collect($settings)->reject(fn ($v, $key) => str_starts_with($key, 'discipline_') || str_starts_with($key, 'report_auto_') || str_starts_with($key, 'note_') || str_starts_with($key, 'ai_') || in_array($key, ['instagram_token_expires_at', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_oauth_available', 'instagram_user_id', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time'], true))->all();
     }
 
     private function present(BusinessSetting $settings): array
@@ -59,6 +59,9 @@ class BusinessSettingController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:200'],
             'category' => ['required', Rule::in(BusinessSetting::CATEGORIES)],
+            'staff_term' => ['nullable', 'string', 'max:40'],
+            'staff_term_genitive' => ['nullable', 'string', 'max:40', 'required_with:staff_term'],
+            'ai_enabled' => ['sometimes', 'boolean'],
             'description' => ['nullable', 'string', 'max:5000'],
             'address' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
@@ -141,6 +144,7 @@ class BusinessSettingController extends Controller
             'opening_hours.*.closes_at.after' => 'Zatvaranje mora biti posle otvaranja.',
             'shifts.*.ends_at.after' => 'Kraj smene mora biti posle početka.',
             'shifts.*.name.required' => 'Upiši naziv smene.',
+            'staff_term_genitive.required_with' => 'Upiši i oblik „kod tvog …“.',
         ]);
 
         $account = array_key_exists('bank_account', $data) ? $data['bank_account'] : BusinessSetting::current()->bank_account;
@@ -149,6 +153,10 @@ class BusinessSettingController extends Controller
         }
 
         $settings = BusinessSetting::current();
+        if (($data['ai_enabled'] ?? false) && ! ($settings->ai_api_key ?: config('services.anthropic.key'))) {
+            throw ValidationException::withMessages(['ai_enabled' => ['Za AI pomoćnika prvo sačuvaj API ključ.']]);
+        }
+
         DB::transaction(function () use ($settings, $data) {
             $settings->update(collect($data)->except(['opening_hours', 'shifts'])->all());
 

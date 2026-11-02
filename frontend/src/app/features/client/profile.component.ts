@@ -3,9 +3,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { BookingService } from '../../core/services/booking.service';
+import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { ChangePasswordComponent } from '../../shared/components/change-password/change-password.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
@@ -14,7 +16,7 @@ import { InputDirective } from '../../shared/directives/input.directive';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ChangePasswordComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent {
@@ -22,21 +24,13 @@ export class ProfileComponent {
   private toast = inject(ToastService);
   protected auth = inject(AuthService);
   private booking = inject(BookingService);
+  protected business = inject(BusinessSettingService);
   readonly stylists = signal<{ id: number; first_name: string; last_name: string }[]>([]);
 
   readonly communication = COMMUNICATION_OPTIONS;
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly resending = signal(false);
-  readonly passwordOpen = signal(false);
-  readonly passwordSaving = signal(false);
-  readonly passwordError = signal<string | null>(null);
-
-  readonly passwordForm = this.fb.nonNullable.group({
-    current_password: ['', Validators.required],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    password_confirmation: ['', Validators.required],
-  });
   readonly initials = computed(() => {
     const user = this.auth.currentUser();
     return user ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase() : '';
@@ -86,28 +80,6 @@ export class ProfileComponent {
       error: (err) => {
         this.resending.set(false);
         this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.'));
-      },
-    });
-  }
-
-  changePassword(): void {
-    const value = this.passwordForm.getRawValue();
-    if (this.passwordForm.invalid || value.password !== value.password_confirmation) {
-      this.passwordError.set(value.password.length < 8 ? 'Nova lozinka mora imati bar 8 karaktera.' : 'Nove lozinke se ne poklapaju.');
-      return;
-    }
-
-    this.passwordSaving.set(true);
-    this.passwordError.set(null);
-    this.auth.changePassword(value).subscribe({
-      next: (res) => {
-        this.passwordSaving.set(false);
-        this.toast.success(res.message);
-        this.auth.clearSession('/login');
-      },
-      error: (err) => {
-        this.passwordSaving.set(false);
-        this.passwordError.set(apiErrorMessage(err, 'Promena lozinke nije uspela.'));
       },
     });
   }

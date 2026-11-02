@@ -160,7 +160,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $data = $request->validate([
+        $rules = [
             'first_name' => ['required', 'string', 'min:2', 'max:100'],
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
@@ -168,9 +168,15 @@ class AuthController extends Controller
             'preferred_communication' => ['required', Rule::in(User::COMMUNICATION_CHANNELS)],
             'gender' => ['nullable', Rule::in(User::GENDERS)],
             'favorite_staff_member_id' => ['sometimes', 'nullable', 'integer', Rule::exists('staff_members', 'id')->where('active', true)],
-        ]);
+        ];
+        if ($user->isStaff()) {
+            unset($rules['gender'], $rules['favorite_staff_member_id']);
+        }
+        if ($user->isStaff() && $user->staff_member_id) {
+            unset($rules['first_name'], $rules['last_name'], $rules['phone']);
+        }
 
-        $user->update($data);
+        $user->update($request->validate($rules));
 
         return $user;
     }

@@ -44,6 +44,12 @@
     if (business.name) {
       document.querySelectorAll('[data-salon-name]').forEach(function (el) { el.textContent = business.name; });
     }
+    if (business.staff_term) {
+      document.querySelectorAll('[data-staff-term]').forEach(function (el) { el.textContent = business.staff_term; });
+    }
+    if (business.staff_term_genitive) {
+      document.querySelectorAll('[data-staff-term-gen]').forEach(function (el) { el.textContent = business.staff_term_genitive; });
+    }
     if (business.logo) {
       document.querySelectorAll('img[data-salon-logo]').forEach(function (img) {
         img.src = business.logo;

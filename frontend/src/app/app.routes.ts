@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { clientAreaGuard } from './core/guards/client-area.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { managerGuard, staffGuard } from './core/guards/staff.guard';
 import { notSuspendedGuard } from './core/guards/suspended.guard';
@@ -35,6 +36,8 @@ export const routes: Routes = [
   },
   {
     path: '',
+    canActivate: [clientAreaGuard],
+    canActivateChild: [clientAreaGuard],
     loadComponent: () => import('./layout/public-shell.component').then((m) => m.PublicShellComponent),
     children: [
       {
@@ -156,6 +159,11 @@ export const routes: Routes = [
         canActivate: [managerGuard],
         title: 'Zaposleni · Nalozi za prijavu',
         loadComponent: () => import('./features/admin/team/team-list.component').then((m) => m.TeamListComponent),
+      },
+      {
+        path: 'profile',
+        title: 'Profil',
+        loadComponent: () => import('./features/admin/profile/staff-profile.component').then((m) => m.StaffProfileComponent),
       },
       {
         path: 'settings',

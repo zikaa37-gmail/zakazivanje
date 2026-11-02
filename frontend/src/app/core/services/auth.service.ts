@@ -97,7 +97,7 @@ export class AuthService {
       .pipe(tap((res) => this.storeSession(res)));
   }
 
-  updateProfile(payload: Omit<RegisterPayload, 'email' | 'password'>): Observable<User> {
+  updateProfile(payload: Partial<Omit<RegisterPayload, 'email' | 'password'>>): Observable<User> {
     return this.http.put<User>(`${this.api}/profile`, payload).pipe(tap((user) => this.storeUser(user)));
   }
 

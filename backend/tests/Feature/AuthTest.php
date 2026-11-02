@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
@@ -111,6 +112,25 @@ class AuthTest extends TestCase
         ])->assertOk()->assertJsonPath('first_name', 'Jelena');
 
         $this->assertSame('whatsapp', $user->fresh()->preferred_communication);
+    }
+
+    public function test_staff_profile_keeps_client_fields_out_and_linked_worker_data_comes_from_staff_page(): void
+    {
+        $staff = StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'Matović', 'phone' => '060 111 2222']);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $staff->id, 'first_name' => 'Jelena', 'last_name' => 'Matović', 'phone' => '060 111 2222']);
+
+        $this->actingAsJwt($worker)->putJson('/api/auth/profile', [
+            'first_name' => 'Drugo',
+            'gender' => 'female',
+            'favorite_staff_member_id' => $staff->id,
+            'preferred_communication' => 'whatsapp',
+        ])->assertOk();
+
+        $fresh = $worker->fresh();
+        $this->assertSame('Jelena', $fresh->first_name);
+        $this->assertNull($fresh->gender);
+        $this->assertNull($fresh->favorite_staff_member_id);
+        $this->assertSame('whatsapp', $fresh->preferred_communication);
     }
 
     public function test_login_refresh_me_and_logout(): void

@@ -88,13 +88,15 @@
 <ol>
   <li><span class="badge">1</span> Kartica <strong>„Biznis"</strong>.</li>
   <li><span class="badge">2</span> Naziv salona i delatnost.</li>
-  <li>Druga slika: adresa <span class="badge">1</span>, telefon <span class="badge">2</span> i Instagram <span class="badge">3</span> (dovoljno je ime naloga). Tu su i WhatsApp, email, Facebook i opis salona za klijente.</li>
+  <li><strong>Kako klijenti zovu zaposlene</strong> (druga slika): <span class="badge">1</span> izaberite ponuđeni naziv za vašu delatnost (frizer, kozmetičar, maser, trener…) ili ga upišite sami u oba oblika — <span class="badge">2</span> „Tvoj ___" i <span class="badge">3</span> „kod tvog ___". Tako klijent u zakazivanju vidi npr. „Tvoj kozmetičar". Kad je uključen AI pomoćnik (korak 7), dugme „Predloži (AI)" daje još predloga.</li>
+  <li>Treća slika: adresa <span class="badge">1</span>, telefon <span class="badge">2</span> i Instagram <span class="badge">3</span> (dovoljno je ime naloga). Tu su i WhatsApp, email, Facebook i opis salona za klijente.</li>
   <li><span class="badge">3</span> Kliknite <strong>„Sačuvaj"</strong> (dugme je na vrhu stranice).</li>
 </ol>
 <p class="tip">Ako mapa na početnoj pokazuje pogrešno mesto, u polje „Pretraga na mapi" upišite naziv salona kako stoji na Google mapama.</p>
 <a class="open" href="/admin/settings?tab=business" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
-    <figure class="pair"><img src="slike/admin-03-podaci-firme.jpg" alt="Podaci o salonu" loading="lazy" /><img src="slike/admin-03b-kontakt.jpg" alt="Kontakt podaci" loading="lazy" /></figure>
+    <figure class="pair"><img src="slike/admin-03-podaci-firme.jpg" alt="Podaci o salonu" loading="lazy" /><img src="slike/admin-03c-naziv-zaposlenih.jpg" alt="Kako klijenti zovu zaposlene" loading="lazy" /></figure>
+    <figure class="pair"><img src="slike/admin-03b-kontakt.jpg" alt="Kontakt podaci" loading="lazy" /></figure>
   </div>
 </details>
 
@@ -154,15 +156,24 @@
 </details>
 
 <details class="step" id="v-obavestenja">
-  <summary><span class="num">7</span><span class="step-title">Obaveštenja i plaćanje</span></summary>
+  <summary><span class="num">7</span><span class="step-title">Obaveštenja, plaćanje i AI pomoćnik</span></summary>
   <div class="step-body wide">
     <div>
 <p><strong>Obaveštenja</strong> <span class="badge">1</span> (prva slika): koje poruke klijenti dobijaju — termin primljen, potvrđen, otkazan, podsetnik pre termina. Poruke idu mejlom, a po želji klijenta i preko WhatsApp-a. Tu uključujete i automatsko slanje izveštaja vlasniku.</p>
 <p><strong>Plaćanje</strong> <span class="badge">1</span> (druga slika): tekući račun salona. Klijent tada vidi uplatnicu i QR kod za mobilno bankarstvo, a na kasi možete pokazati QR kod sa iznosom.</p>
+<p><strong>AI pomoćnik</strong> <span class="badge">1</span> (treća slika, opciono): AI predlaže kategorije i usluge sa trajanjem i okvirnim cenama i naziv za zaposlene. Uvek prvo vidite predlog i menjate ga pre nego što se išta upiše.</p>
+<ol>
+  <li>Na console.anthropic.com napravite nalog, dopunite kredit i u delu „API keys" napravite ključ (počinje sa sk-ant-). Jedan predlog košta reda veličine par dinara.</li>
+  <li><span class="badge">2</span> Nalepite ključ i kliknite „Proveri i sačuvaj" — aplikacija ga proveri i čuva šifrovano.</li>
+  <li><span class="badge">3</span> Uključite „Uključi AI pomoćnika" i kliknite „Sačuvaj".</li>
+</ol>
+<p class="tip">Bez AI pomoćnika sve radi isto, samo nema dugmadi za AI predloge (Predloži usluge, Predloži naziv zaposlenih).</p>
 <a class="open" href="/admin/settings?tab=notifications" target="_blank" rel="noopener">Otvori obaveštenja</a>
 <a class="open" href="/admin/settings?tab=payments" target="_blank" rel="noopener">Otvori plaćanje</a>
+<a class="open" href="/admin/settings?tab=ai" target="_blank" rel="noopener">Otvori AI pomoćnika</a>
     </div>
     <figure class="pair"><img src="slike/admin-14-obavestenja.jpg" alt="Obaveštenja" loading="lazy" /><img src="slike/admin-15-placanje.jpg" alt="Plaćanje" loading="lazy" /></figure>
+    <figure class="pair"><img src="slike/admin-20-ai.jpg" alt="AI pomoćnik" loading="lazy" /></figure>
   </div>
 </details>
 
@@ -175,12 +186,52 @@
   <li><span class="badge">1</span> <strong>„+ Nova usluga"</strong>.</li>
   <li>Druga slika: naziv <span class="badge">1</span>, trajanje <span class="badge">2</span> i cena <span class="badge">3</span>. Trajanje je važno — po njemu se računaju slobodni termini.</li>
   <li><span class="badge">4</span> <strong>Potvrda termina</strong> za ovu uslugu: „Kao zaposleni", „Ručno" ili „Automatski" (pravilo je u koraku 6).</li>
-  <li>Izaberite kategoriju, za koga je usluga (svi, žene, muškarci) i ko je radi, pa <strong>„Sačuvaj"</strong>.</li>
+  <li>Treća slika: <span class="badge">1</span> <strong>kategorija</strong> — izaberite postojeću ili „+ Nova kategorija…" i upišite naziv. Zatim za koga je usluga (svi, žene, muškarci) i ko je radi, pa <strong>„Sačuvaj"</strong>.</li>
 </ol>
+<p>Na prvoj slici su još <span class="badge">2</span> <strong>„Predloži usluge"</strong> (vidi se samo kad je uključen AI pomoćnik, sledeći korak) i <span class="badge">3</span> kartica <strong>„Kategorije"</strong> (korak posle njega).</p>
 <p class="tip">Promena cene ne menja već zakazane termine.</p>
 <a class="open" href="/admin/services" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure class="pair"><img src="slike/admin-06-usluge.jpg" alt="Usluge" loading="lazy" /><img src="slike/admin-07-nova-usluga.jpg" alt="Nova usluga" loading="lazy" /></figure>
+    <figure class="pair"><img src="slike/admin-07d-kategorija-usluge.jpg" alt="Kategorija usluge" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="v-predlog">
+  <summary><span class="num">8a</span><span class="step-title">Predlog kategorija i usluga</span></summary>
+  <div class="step-body">
+    <div>
+<p>Kad je uključen AI pomoćnik (korak 7), ne morate sve da kucate sami. Usluge → <strong>„Predloži usluge"</strong> ima dve mogućnosti:</p>
+<ul>
+  <li><strong>AI predlog</strong> — opišite šta radite (npr. „kozmetički salon — tretmani lica, trepavice, gel lak"), a AI predloži kategorije, usluge, trajanje i okvirne cene za vaš grad.</li>
+  <li><strong>Šablon za delatnost</strong> (na slici) — uobičajene kategorije i usluge za izabranu delatnost, bez cena.</li>
+</ul>
+<p>U oba slučaja:</p>
+<ol>
+  <li><span class="badge">1</span> Kod šablona izaberite <strong>delatnost</strong> (frizerski salon, kozmetički salon, nokti, masaža…).</li>
+  <li><span class="badge">2</span> Isključite kategorije i usluge koje ne radite; nazive možete da promenite.</li>
+  <li><span class="badge">3</span> Upišite trajanje i cenu. Usluga bez cene se dodaje kao neaktivna — omogućite je kad upišete cenu.</li>
+  <li>Ispod izaberite ko radi nove usluge, pa <span class="badge">4</span> <strong>„Dodaj izabrano"</strong>. Usluge koje već postoje se preskaču.</li>
+</ol>
+    </div>
+    <figure><img src="slike/admin-06d-predlog.jpg" alt="Predlog kategorija i usluga" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="v-kategorije">
+  <summary><span class="num">8b</span><span class="step-title">Kategorije usluga</span></summary>
+  <div class="step-body wide">
+    <div>
+<p>Usluge → kartica <strong>„Kategorije"</strong>. Kategorije grupišu usluge na početnoj i u zakazivanju, ovim redosledom.</p>
+<ol>
+  <li><span class="badge">1</span> Upišite naziv i kliknite <strong>„Dodaj"</strong>.</li>
+  <li><span class="badge">2</span> Strelicama menjate redosled.</li>
+  <li><span class="badge">3</span> Meni „⋮": <strong>Preimenuj</strong>, <strong>Deaktiviraj</strong> / <strong>Aktiviraj</strong> i <strong>Obriši</strong> (samo kategorija bez usluga).</li>
+</ol>
+<p><strong>Deaktivacija</strong> (druga slika): usluge iz kategorije se više ne nude za online zakazivanje, a salon ih i dalje zakazuje i postojeći termini ostaju. Ako želite samo drugi naziv, izaberite <span class="badge">1</span> <strong>„Preimenuj"</strong> — usluge ostaju dostupne. <span class="badge">2</span> <strong>„Deaktiviraj"</strong> potvrđuje deaktivaciju.</p>
+<a class="open" href="/admin/services" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/admin-06b-kategorije.jpg" alt="Kategorije" loading="lazy" /><img src="slike/admin-06c-deaktivacija.jpg" alt="Deaktivacija kategorije" loading="lazy" /></figure>
   </div>
 </details>
 

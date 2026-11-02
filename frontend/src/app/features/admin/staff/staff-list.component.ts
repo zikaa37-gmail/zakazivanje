@@ -46,7 +46,7 @@ export class StaffListComponent {
   private catalog = inject(ServiceCatalogService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
-  private business = inject(BusinessSettingService);
+  protected business = inject(BusinessSettingService);
 
   readonly weekdays = WEEKDAYS;
   readonly palette = PALETTE;

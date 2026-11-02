@@ -130,14 +130,14 @@
           </select>
         </div>
         <div class="field">
-          <label for="client-favorite">Omiljeni frizer</label>
+          <label for="client-favorite">Omiljeni {{ business.staffTerm() }}</label>
           <select id="client-favorite" appInput size="m" formControlName="favorite_staff_member_id" data-testid="client-favorite">
             <option [ngValue]="null">Bilo ko</option>
             @for (m of stylists(); track m.id) {
               <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
             }
           </select>
-          <span class="text-xs muted">Klijentu se pri online zakazivanju odmah nude termini kod ovog frizera.</span>
+          <span class="text-xs muted">Klijentu se pri online zakazivanju odmah nude termini kod ovog {{ business.staffTermGenitive() }}.</span>
         </div>
         <div class="field">
           <label for="client-channel">Obaveštenja preko</label>
@@ -150,7 +150,7 @@
       </div>
       <div class="field">
         <label for="client-note">Napomena</label>
-        <textarea id="client-note" appInput size="m" rows="3" formControlName="note" placeholder="npr. alergija, omiljeni frizer..."></textarea>
+        <textarea id="client-note" appInput size="m" rows="3" formControlName="note" [placeholder]="'npr. alergija, omiljeni ' + business.staffTerm() + '...'"></textarea>
       </div>
     </form>
     <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="client-save">Sačuvaj</app-button>

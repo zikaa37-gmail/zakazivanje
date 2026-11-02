@@ -9,7 +9,7 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | GET | `/health` | provera da backend radi |
 | GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) + `opening_hours` (radno vreme salona) i `shifts` (smene) |
 | GET | `/public/business/cover` | naslovna fotografija salona (fajl, keš 7 dana; `cover_url` u `/public/business`) |
-| GET | `/public/services` | aktivne usluge sa zaposlenima koji ih rade |
+| GET | `/public/services` | usluge koje se nude online (aktivne, u aktivnoj kategoriji), poređane po redosledu kategorija, sa `category` (naziv) i zaposlenima koji ih rade |
 | GET | `/public/reviews` | `{enabled, summary: {average, count, distribution}, items}` — vidljive recenzije (ime skraćeno: „Petar P.“), poslednjih 30 |
 | GET | `/public/gallery` | vidljive slike galerije `[{id, caption, service_id, service_name, kind: work|salon, featured, width, height, url}]` (bez sadržaja slike) |
 | GET | `/public/instagram-media/{token}` | JPEG slika objave koju Instagram preuzima pri objavljivanju (token od 40 znakova) |
@@ -39,7 +39,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/auth/me` | trenutni korisnik |
-| PUT | `/auth/profile` | ime, prezime, telefon, WhatsApp, kanal obaveštenja |
+| PUT | `/auth/profile` | ime, prezime, telefon, WhatsApp, kanal obaveštenja; klijent i `gender`, `favorite_staff_member_id` (osoblju se ignorišu); radniku vezanom za zaposlenog ime i telefon dolaze sa stranice Zaposleni i ne menjaju se ovde |
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
 | PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
 | POST | `/auth/logout` | `{refresh_token}` |
@@ -84,10 +84,20 @@ Vlasnik i radnik — svakodnevni rad.
 
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
-| PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`) |
+| PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`), `staff_term` + `staff_term_genitive` (kako se zovu zaposleni: „Tvoj frizer“ / „kod tvog frizera“), `ai_enabled` (samo uz sačuvan API ključ) |
 | POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); sa `email` zaposleni automatski dobija nalog radnika (`users.staff_member_id`) |
 | POST | `/staff/{id}/active` | `{active}` — deaktivacija umesto brisanja (termini i statistika ostaju, ne nudi se za zakazivanje, nalog radnika se gasi) → zaposleni + `future_appointments` |
-| POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `category`, `staff_member_ids` |
+| POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `service_category_id`, `staff_member_ids`; odgovor nosi i `category` (naziv kategorije) |
+| GET | `/service-categories` | kategorije po redosledu, sa `services_count` i `active_services_count` |
+| POST / PUT | `/service-categories`, `/service-categories/{id}` | `{name}` (jedinstven) |
+| POST | `/service-categories/{id}/active` | `{active}` — deaktivirana kategorija sakriva svoje usluge iz online zakazivanja (salon ih i dalje zakazuje) |
+| DELETE | `/service-categories/{id}` | samo kategorija bez usluga |
+| POST | `/service-categories/reorder` | `{ids}` — redosled na početnoj i u zakazivanju |
+| POST | `/service-categories/apply` | `{categories: [{name, services: [{name, description?, duration_minutes, price?, audience?}]}], staff_member_ids?}` — dodaje predlog (šablon ili AI): postojeće kategorije (po nazivu) se koriste, postojeće usluge se preskaču, usluga bez cene je neaktivna → `{categories_created, services_created, services_skipped}` |
+| GET | `/ai/status` | `{enabled, key_saved, key_from_server, available, model}` |
+| PUT / DELETE | `/ai/key` | `{api_key}` — proverava ključ kod Anthropic-a i čuva ga šifrovano (`business_settings.ai_api_key`); bez ključa u bazi koristi se `ANTHROPIC_API_KEY` iz `.env` |
+| POST | `/ai/service-suggestions` | `{description?}` → `{categories: [...]}` u formatu za `apply` (samo uz uključen AI) |
+| POST | `/ai/staff-term` | `{category?, description?}` → `{options: [{term, genitive}]}` |
 | POST | `/notes/list` | beleške osoblja: `status` (open / taken / done), `taken_by`, `readers`, `unread`, `can_delete` |
 | POST | `/notes/recipients` | zaposleni za obaveštenje `[{user_id, name, role, staff_member_id, always}]` (`user_id: null` = nema nalog) |
 | POST | `/notes` | `{body, recipient_ids}` → obaveštava izabrane + uvek-obaveštene (`note_always_notify_ids`) |

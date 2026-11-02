@@ -43,7 +43,7 @@ class BookingController extends Controller
         }
 
         $slots = $this->availability->slots(
-            $this->availability->servicesInOrder($data['service_ids']),
+            $this->availability->servicesInOrder($data['service_ids'], true),
             $data['staff_member_id'] ?? null,
             $date,
             $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
@@ -64,7 +64,7 @@ class BookingController extends Controller
         ]);
 
         $days = $this->availability->days(
-            $this->availability->servicesInOrder($data['service_ids']),
+            $this->availability->servicesInOrder($data['service_ids'], true),
             $data['staff_member_id'] ?? null,
             CarbonImmutable::parse($data['from']),
             $data['days'] ?? 14,
@@ -72,7 +72,7 @@ class BookingController extends Controller
         );
         $this->discipline->logAvailability($request->user(), ['from' => $data['from'], 'staff_member_id' => $data['staff_member_id'] ?? null]);
 
-        $services = $this->availability->servicesInOrder($data['service_ids']);
+        $services = $this->availability->servicesInOrder($data['service_ids'], true);
         $offPeak = $this->discipline->restrictions($request->user())['off_peak_only'];
 
         return collect($days)
@@ -104,7 +104,7 @@ class BookingController extends Controller
             'promo_code' => ['nullable', 'string', 'max:40'],
         ]);
 
-        $services = $this->availability->servicesInOrder($data['service_ids']);
+        $services = $this->availability->servicesInOrder($data['service_ids'], true);
         $date = isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today();
         $code = $data['promo_code'] ?? null;
 
@@ -141,7 +141,7 @@ class BookingController extends Controller
         try {
             $appointment = $this->bookings->book(
                 $client,
-                $this->availability->servicesInOrder($data['service_ids']),
+                $this->availability->servicesInOrder($data['service_ids'], true),
                 $data['staff_member_id'] ?? null,
                 $start,
                 Appointment::SOURCE_ONLINE,

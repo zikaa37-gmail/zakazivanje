@@ -25,7 +25,7 @@ class FreeSlotsStoryService
     {
         $interval = BusinessSetting::current()->slot_interval_minutes;
 
-        $times = Service::query()->where('active', true)->get()
+        $times = Service::query()->offeredOnline()->get()
             ->flatMap(fn (Service $service) => collect($this->availability->slots(collect([$service]), null, $date))->pluck('time'))
             ->unique()
             ->filter(fn (string $time) => $this->demand->isOffPeak($date->setTimeFromTimeString($time)))

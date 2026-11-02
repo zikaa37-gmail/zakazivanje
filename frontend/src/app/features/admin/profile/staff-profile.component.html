@@ -1,0 +1,59 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Profil</h1>
+    <p class="page-subtitle">{{ user()?.first_name }} {{ user()?.last_name }} · {{ roleLabel() }} · {{ user()?.email }}</p>
+  </div>
+  <a href="/uputstvo/index.html" target="_blank" rel="noopener" appBtn theme="secondary" data-testid="staff-profile-guide">
+    <span appIcon="book-open" aria-hidden="true"></span> Uputstvo
+  </a>
+</div>
+
+<div class="flex flex-col gap-4 max-w-xl">
+  <div class="card">
+    <h2 class="text-base font-semibold">Podaci za prijavu i obaveštenja</h2>
+    @if (linkedToStaff()) {
+      <p class="text-xs muted mt-1" data-testid="staff-profile-linked">
+        Ime, telefon, usluge i radno vreme podešavaju se na stranici
+        @if (auth.isManager()) {
+          <a routerLink="/admin/staff" class="text-primary">Zaposleni</a>.
+        } @else {
+          Zaposleni (vlasnik ili administrativni radnik).
+        }
+      </p>
+    }
+    <app-error-message [message]="error()" />
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="form-grid">
+        <div class="field">
+          <label for="sp-first">Ime</label>
+          <input id="sp-first" appInput size="m" formControlName="first_name" />
+        </div>
+        <div class="field">
+          <label for="sp-last">Prezime</label>
+          <input id="sp-last" appInput size="m" formControlName="last_name" />
+        </div>
+        <div class="field">
+          <label for="sp-phone">Telefon</label>
+          <input id="sp-phone" appInput size="m" type="tel" formControlName="phone" />
+        </div>
+        <div class="field">
+          <label for="sp-whatsapp">WhatsApp (ako je drugi broj)</label>
+          <input id="sp-whatsapp" appInput size="m" type="tel" formControlName="whatsapp_number" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="sp-channel">Obaveštenja (novi termini, beleške, izveštaji) preko</label>
+        <select id="sp-channel" appInput size="m" formControlName="preferred_communication" data-testid="staff-profile-channel">
+          @for (option of communication; track option.value) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex justify-end">
+        <app-button type="submit" size="s" [loading]="saving()" data-testid="staff-profile-save">Sačuvaj</app-button>
+      </div>
+    </form>
+  </div>
+
+  <app-change-password />
+</div>

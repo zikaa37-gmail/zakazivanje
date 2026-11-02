@@ -2,7 +2,8 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
-import { BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
+import { AiStatus, BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode, STAFF_TERMS, StaffTerm } from '../../../core/models/business-setting.model';
+import { AiService } from '../../../core/services/ai.service';
 import { FreeSlotsPreview, InstagramState } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -26,8 +27,8 @@ import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { NoteRecipient, StaffNoteService } from '../../../core/services/staff-note.service';
 
-type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'social' | 'notifications';
-const TABS: Tab[] = ['business', 'look', 'hours', 'booking', 'payments', 'social', 'notifications'];
+type Tab = 'business' | 'look' | 'hours' | 'booking' | 'payments' | 'social' | 'notifications' | 'ai';
+const TABS: Tab[] = ['business', 'look', 'hours', 'booking', 'payments', 'social', 'notifications', 'ai'];
 
 interface DayRow {
   weekday: number;
@@ -68,6 +69,19 @@ export class SettingsComponent {
   private marketing = inject(MarketingService);
   readonly bioLink = this.marketing.link(`${window.location.origin}/`, 'instagram', 'bio');
   private confirm = inject(ConfirmService);
+  private ai = inject(AiService);
+  readonly aiStatus = signal<AiStatus | null>(null);
+  readonly aiKey = new FormControl('', { nonNullable: true });
+  readonly aiBusy = signal(false);
+  readonly aiError = signal<string | null>(null);
+  readonly categoryValue = signal<BusinessCategory>('other');
+  readonly aiTerms = signal<StaffTerm[]>([]);
+  readonly termsLoading = signal(false);
+  readonly categoryLabel = computed(() => BUSINESS_CATEGORIES.find((c) => c.value === this.categoryValue())?.label ?? '');
+  readonly staffTermOptions = computed(() => {
+    const options = [...this.aiTerms(), ...STAFF_TERMS[this.categoryValue()]];
+    return options.filter((o, i) => options.findIndex((x) => x.term === o.term) === i);
+  });
   readonly instagram = signal<InstagramState | null>(null);
   readonly instagramToken = new FormControl('', { nonNullable: true });
   readonly instagramBusy = signal(false);
@@ -105,6 +119,9 @@ export class SettingsComponent {
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     category: this.fb.nonNullable.control<BusinessCategory>('other'),
+    staff_term: this.fb.control<string | null>(null),
+    staff_term_genitive: this.fb.control<string | null>(null),
+    ai_enabled: this.fb.nonNullable.control(false),
     description: this.fb.control<string | null>(null),
     address: this.fb.control<string | null>(null),
     city: this.fb.control<string | null>(null),
@@ -240,6 +257,13 @@ export class SettingsComponent {
       },
     });
 
+    this.loadAiStatus();
+    this.form.controls.category.valueChanges.subscribe((category) => {
+      this.categoryValue.set(category);
+      this.aiTerms.set([]);
+      if (this.saved && category !== this.saved.category) this.pickStaffTerm(STAFF_TERMS[category][0]);
+    });
+
     for (const key of Object.keys(DEFAULT_COLORS) as ColorKey[]) {
       this.form.controls[key].valueChanges.subscribe(() => this.preview());
     }
@@ -251,6 +275,61 @@ export class SettingsComponent {
 
   private shiftRow(name: string, starts: string, ends: string): ShiftRow {
     return { name: new FormControl(name, { nonNullable: true }), starts: new FormControl(starts), ends: new FormControl(ends) };
+  }
+
+  pickStaffTerm(option: StaffTerm): void {
+    this.form.patchValue({ staff_term: option.term, staff_term_genitive: option.genitive });
+    this.form.markAsDirty();
+  }
+
+  suggestStaffTerms(): void {
+    this.termsLoading.set(true);
+    this.ai.staffTerms(this.form.controls.category.value, this.form.controls.description.value).subscribe({
+      next: ({ options }) => {
+        this.termsLoading.set(false);
+        this.aiTerms.set(options);
+      },
+      error: (err) => {
+        this.termsLoading.set(false);
+        this.toast.error(apiErrorMessage(err, 'AI predlog nije uspeo.'));
+      },
+    });
+  }
+
+  loadAiStatus(): void {
+    this.ai.status().subscribe({ next: (status) => this.aiStatus.set(status), error: () => this.aiStatus.set(null) });
+  }
+
+  saveAiKey(): void {
+    const key = this.aiKey.value.trim();
+    if (!key) return;
+    this.aiBusy.set(true);
+    this.aiError.set(null);
+    this.ai.saveKey(key).subscribe({
+      next: (status) => {
+        this.aiBusy.set(false);
+        this.aiStatus.set(status);
+        this.aiKey.reset();
+        this.toast.success('Ključ je proveren i sačuvan. Uključi AI pomoćnika i sačuvaj podešavanja.');
+      },
+      error: (err) => {
+        this.aiBusy.set(false);
+        this.aiError.set(apiErrorMessage(err, 'Ključ nije sačuvan.'));
+      },
+    });
+  }
+
+  async forgetAiKey(): Promise<void> {
+    const ok = await this.confirm.confirm({ title: 'Brisanje API ključa', message: 'AI pomoćnik prestaje da radi dok ne uneseš novi ključ.', confirmLabel: 'Obriši ključ', danger: true });
+    if (!ok) return;
+    this.ai.forgetKey().subscribe({
+      next: (status) => {
+        this.aiStatus.set(status);
+        if (!status.available) this.form.controls.ai_enabled.setValue(false);
+        this.toast.success('Ključ je obrisan.');
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
+    });
   }
 
   openTab(tab: Tab): void {
@@ -505,6 +584,8 @@ export class SettingsComponent {
     const payload: Partial<BusinessSetting> = {
       ...value,
       description: clean(value.description),
+      staff_term: clean(value.staff_term),
+      staff_term_genitive: clean(value.staff_term) ? clean(value.staff_term_genitive) : null,
       address: clean(value.address),
       city: clean(value.city),
       map_query: clean(value.map_query),
@@ -539,6 +620,7 @@ export class SettingsComponent {
         this.saving.set(false);
         this.saved = settings;
         this.syncInstagram(settings);
+        this.loadAiStatus();
         this.coverData.set(undefined);
         if (this.tab() === 'booking') this.loadDemand();
         this.toast.success('Podešavanja su sačuvana.');
@@ -569,6 +651,9 @@ export class SettingsComponent {
     this.form.reset({
       name: settings.name,
       category: settings.category,
+      staff_term: settings.staff_term,
+      staff_term_genitive: settings.staff_term_genitive,
+      ai_enabled: settings.ai_enabled ?? false,
       description: settings.description,
       address: settings.address,
       city: settings.city,

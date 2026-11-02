@@ -36,6 +36,7 @@ export interface SalonService {
   id: number;
   name: string;
   description: string | null;
+  service_category_id: number | null;
   category: string | null;
   audience: ServiceAudience;
   booking_confirmation: ConfirmationMode | null;
@@ -50,7 +51,7 @@ export interface SalonService {
 export interface SalonServicePayload {
   name: string;
   description: string | null;
-  category: string | null;
+  service_category_id: number | null;
   audience: ServiceAudience;
   booking_confirmation: ConfirmationMode | null;
   duration_minutes: number;
@@ -76,4 +77,32 @@ export interface PublicService {
 
 export function isPaused(service: { paused_until: string | null }, date: string): boolean {
   return service.paused_until !== null && date <= service.paused_until;
+}
+
+export interface ServiceCategory {
+  id: number;
+  name: string;
+  sort_order: number;
+  active: boolean;
+  services_count: number;
+  active_services_count: number;
+}
+
+export interface ServiceProposal {
+  name: string;
+  description?: string | null;
+  duration_minutes: number;
+  price: number | null;
+  audience: ServiceAudience;
+}
+
+export interface CategoryProposal {
+  name: string;
+  services: ServiceProposal[];
+}
+
+export interface ApplyProposalsResult {
+  categories_created: number;
+  services_created: number;
+  services_skipped: number;
 }

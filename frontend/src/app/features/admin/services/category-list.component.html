@@ -1,0 +1,70 @@
+<div class="card">
+  <p class="text-sm muted mb-3">Kategorije grupišu usluge na početnoj i u zakazivanju, ovim redosledom. Deaktivirana kategorija sakriva svoje usluge iz online zakazivanja.</p>
+
+  <form class="flex gap-2 mb-1" (ngSubmit)="add()" novalidate>
+    <input appInput size="m" class="flex-1 min-w-0" [formControl]="newName" placeholder="Nova kategorija, npr. Tretmani lica" aria-label="Naziv nove kategorije" data-testid="category-new-name" />
+    <app-button type="submit" [loading]="adding()" data-testid="category-add">
+      <span appIcon="plus" aria-hidden="true"></span> Dodaj
+    </app-button>
+  </form>
+  <app-error-message [message]="addError()" />
+
+  @if (categories().length === 0) {
+    <div class="empty-state">Još nema kategorija.</div>
+  } @else {
+    <div class="flex flex-col mt-2">
+      @for (category of categories(); track category.id; let i = $index; let last = $last) {
+        <div class="flex items-center gap-2 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.opacity-60]="!category.active" [attr.data-testid]="'category-' + category.id">
+          <div class="flex flex-col">
+            <button type="button" appBtn theme="ghost" size="s" [disabled]="i === 0" (click)="move(i, -1)" aria-label="Pomeri gore"><span appIcon="arrow-up" aria-hidden="true"></span></button>
+            <button type="button" appBtn theme="ghost" size="s" [disabled]="last" (click)="move(i, 1)" aria-label="Pomeri dole"><span appIcon="arrow-down" aria-hidden="true"></span></button>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold truncate">{{ category.name }}</div>
+            <div class="text-sm muted">
+              {{ servicesLabel(category.services_count) }}@if (category.services_count !== category.active_services_count) {, aktivnih {{ category.active_services_count }}}
+            </div>
+          </div>
+          @if (!category.active) {
+            <span class="badge badge-neutral">Neaktivna</span>
+          }
+          <app-row-actions [actions]="actionsFor(category)" (selected)="onAction(category, $event)" [attr.data-testid]="'category-actions-' + category.id" />
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (renaming(); as category) {
+  <app-modal [title]="'Preimenuj: ' + category.name" size="s" footerMode="custom" (cancelled)="renaming.set(null)" testId="category-rename-modal">
+    <app-error-message [message]="renameError()" />
+    <form (ngSubmit)="rename()" novalidate>
+      <div class="field">
+        <label for="category-rename">Novi naziv</label>
+        <input id="category-rename" appInput size="m" [formControl]="renameControl" data-testid="category-rename-input" />
+        <span class="text-xs muted">Usluge ostaju u kategoriji, menja se samo naziv koji klijenti vide.</span>
+      </div>
+    </form>
+    <app-button modal-footer size="s" [loading]="saving()" [disabled]="renameControl.invalid" (click)="rename()" data-testid="category-rename-save">Sačuvaj</app-button>
+  </app-modal>
+}
+
+@if (deactivating(); as category) {
+  <app-modal [title]="'Deaktivacija: ' + category.name" size="s" footerMode="custom" (cancelled)="deactivating.set(null)" testId="category-deactivate-modal">
+    <p class="text-sm">
+      @if (category.active_services_count) {
+        <strong>{{ servicesLabel(category.active_services_count) }}</strong> iz ove kategorije više se neće nuditi za online zakazivanje.
+      } @else {
+        Kategorija se više neće prikazivati klijentima.
+      }
+      Salon i dalje može da ih zakaže ručno, a postojeći termini ostaju.
+    </p>
+    <p class="text-sm muted mt-2">Ako želiš samo drugačiji naziv, preimenuj je — usluge ostaju dostupne.</p>
+    <button modal-footer type="button" appBtn theme="secondary" size="s" (click)="openRename(category)" data-testid="category-deactivate-rename">
+      <span appIcon="edit" aria-hidden="true"></span> Preimenuj
+    </button>
+    <button modal-footer type="button" appBtn theme="danger" size="s" (click)="confirmDeactivate()" data-testid="category-deactivate-confirm">
+      <span appIcon="lock" aria-hidden="true"></span> Deaktiviraj
+    </button>
+  </app-modal>
+}

@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Client, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { StaffMember } from '../../../core/models/staff.model';
@@ -36,6 +37,7 @@ export class ClientListComponent {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private staffService = inject(StaffService);
+  protected business = inject(BusinessSettingService);
   readonly stylists = signal<StaffMember[]>([]);
 
   readonly columns = 'minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.6fr) 6.5rem 2.5rem';

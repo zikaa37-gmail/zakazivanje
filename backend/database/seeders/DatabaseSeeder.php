@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\BusinessSetting;
 use App\Models\Promotion;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use App\Models\StaffMember;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -51,6 +52,8 @@ class DatabaseSeeder extends Seeder
         BusinessSetting::current()->update([
             'name' => 'Salon Lepota',
             'category' => 'beauty_salon',
+            'staff_term' => 'frizer',
+            'staff_term_genitive' => 'frizera',
             'description' => 'Salon u centru grada, radimo od 2015.',
             'address' => 'Glavna 1',
             'city' => 'Beograd',
@@ -69,7 +72,8 @@ class DatabaseSeeder extends Seeder
             ['Feniranje', 30, 1200, 'Stilizovanje', Service::AUDIENCE_ALL],
             ['Farbanje', 90, 4500, 'Boja', Service::AUDIENCE_ALL],
         ])->map(fn ($s, $i) => Service::create([
-            'name' => $s[0], 'duration_minutes' => $s[1], 'price' => $s[2], 'category' => $s[3], 'audience' => $s[4], 'sort_order' => $i,
+            'name' => $s[0], 'duration_minutes' => $s[1], 'price' => $s[2], 'audience' => $s[4], 'sort_order' => $i,
+            'service_category_id' => ServiceCategory::firstOrCreate(['name' => $s[3]], ['sort_order' => ServiceCategory::count()])->id,
         ]))->keyBy('name');
 
         $weekdays = fn (array $days, string $from, string $to) => collect($days)
