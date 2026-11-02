@@ -17,8 +17,8 @@ CREATE TABLE `zk_marketing_visits` (
   `logins` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `zk_marketing_visits_visited_on_source_campaign_unique` (`visited_on`,`source`,`campaign`)
-) ENGINE=InnoDB AUTO_INCREMENT=120 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=152 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_marketing_visits` VALUES (1,'2026-10-27','instagram','story-test',1,0),(2,'2026-10-27','direct','',27,0),(29,'2026-10-30','direct','',81,0),(110,'2026-10-31','direct','',9,0),(119,'2026-11-02','direct','',1,0);
+INSERT INTO `zk_marketing_visits` VALUES (1,'2026-10-27','instagram','story-test',1,0),(2,'2026-10-27','direct','',27,0),(29,'2026-10-30','direct','',81,0),(110,'2026-10-31','direct','',9,0),(119,'2026-11-02','direct','',33,0);
 
 SET FOREIGN_KEY_CHECKS=1;

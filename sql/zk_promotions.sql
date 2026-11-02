@@ -31,7 +31,7 @@ CREATE TABLE `zk_promotions` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `zk_promotions_code_unique` (`code`),
   KEY `zk_promotions_type_index` (`type`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO `zk_promotions` VALUES (1,'Šišanje + feniranje',NULL,'package',NULL,NULL,NULL,3200.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,1,'2026-10-21 08:59:47','2026-10-21 08:59:47'),(2,'Srećni utorak −15%',NULL,'discount_percent',NULL,15.00,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'[2]',NULL,0,0,'2026-10-21 08:59:47','2026-10-30 20:52:21'),(3,'Muško šišanje 2+1',NULL,'bundle',NULL,NULL,NULL,NULL,2,1,NULL,NULL,NULL,NULL,NULL,0,1,'2026-10-21 08:59:47','2026-10-21 08:59:47'),(4,'Svaka 10. poseta −50%',NULL,'loyalty',NULL,50.00,NULL,NULL,NULL,NULL,10,NULL,NULL,NULL,NULL,0,0,'2026-10-21 08:59:47','2026-10-30 20:52:28');
 
