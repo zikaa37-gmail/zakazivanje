@@ -45,13 +45,12 @@ export class ServiceSuggestionsComponent {
   private toast = inject(ToastService);
 
   readonly staff = input.required<StaffMember[]>();
-  readonly aiAvailable = input(false);
   readonly applied = output<void>();
   readonly cancelled = output<void>();
 
   readonly businessCategories = BUSINESS_CATEGORIES;
   readonly audiences = AUDIENCE_OPTIONS;
-  readonly source = signal<Source>('preset');
+  readonly source = signal<Source>('ai');
   readonly preset = new FormControl<BusinessCategory>(this.business.settings()?.category ?? 'other', { nonNullable: true });
   readonly description = new FormControl('', { nonNullable: true });
   readonly rows = signal<CategoryRow[]>([]);
@@ -62,7 +61,6 @@ export class ServiceSuggestionsComponent {
   readonly staffSelection = computed(() => this.selectedStaff() ?? new Set(this.staff().filter((s) => s.active).map((s) => s.id)));
 
   constructor() {
-    this.loadPreset();
     this.preset.valueChanges.subscribe(() => this.loadPreset());
   }
 

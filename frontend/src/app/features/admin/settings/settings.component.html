@@ -127,7 +127,7 @@
       @case ('ai') {
         <div class="card" data-testid="ai-card">
           <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="wand" aria-hidden="true"></span> AI pomoćnik</h2>
-          <p class="text-sm muted mb-3">AI (Claude) predlaže kategorije i usluge sa trajanjem i okvirnim cenama i kako da zoveš zaposlene. Uvek prvo vidiš predlog i menjaš ga pre nego što se išta upiše. Kad je isključen, aplikacija radi isto, samo bez AI predloga.</p>
+          <p class="text-sm muted mb-3">AI (Claude) predlaže kategorije i usluge sa trajanjem i okvirnim cenama i kako da zoveš zaposlene. Uvek prvo vidiš predlog i menjaš ga pre nego što se išta upiše. Kad je isključen, aplikacija radi isto, samo se ne prikazuju dugmad za AI predloge.</p>
           <app-error-message [message]="aiError()" />
 
           @if (aiStatus(); as status) {

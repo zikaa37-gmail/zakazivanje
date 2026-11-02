@@ -1,12 +1,10 @@
 <app-modal title="Predlog kategorija i usluga" size="l" footerMode="custom" (cancelled)="cancelled.emit()" testId="suggestions-modal">
-  @if (aiAvailable()) {
-    <div class="chip-group mb-3" role="tablist">
-      <button type="button" class="chip" role="tab" [class.selected]="source() === 'preset'" (click)="setSource('preset')" data-testid="suggestions-source-preset">Šablon za delatnost</button>
-      <button type="button" class="chip" role="tab" [class.selected]="source() === 'ai'" (click)="setSource('ai')" data-testid="suggestions-source-ai">
-        <span appIcon="wand" aria-hidden="true"></span> AI predlog
-      </button>
-    </div>
-  }
+  <div class="chip-group mb-3" role="tablist">
+    <button type="button" class="chip" role="tab" [class.selected]="source() === 'ai'" (click)="setSource('ai')" data-testid="suggestions-source-ai">
+      <span appIcon="wand" aria-hidden="true"></span> AI predlog
+    </button>
+    <button type="button" class="chip" role="tab" [class.selected]="source() === 'preset'" (click)="setSource('preset')" data-testid="suggestions-source-preset">Šablon za delatnost</button>
+  </div>
 
   @if (source() === 'preset') {
     <div class="field">

@@ -9,7 +9,7 @@ const BACKEND = path.resolve(__dirname, '../../backend');
 const CHROME = 'C:/Users/PC/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
 const PHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 const only = process.argv[3] ? process.argv[3].split(',') : null;
-const LOGIN = { owner: 0, manager: 1, worker: 2, client: 3 };
+const LOGIN = { owner: /^\s*Vlasnik/, manager: /^\s*Administrativni/, worker: /^\s*Radnik/, client: /^\s*Klijent/ };
 const shots = new Map();
 
 function tinker(code) {
@@ -21,7 +21,8 @@ function tinker(code) {
 function snapshot() {
   return JSON.parse(
     tinker(
-      'echo json_encode(["appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
+      '$ai = (bool) DB::table("business_settings")->value("ai_enabled"); DB::table("business_settings")->update(["ai_enabled" => 1]); ' +
+      'echo json_encode(["ai" => $ai, "appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
     ),
   );
 }
@@ -41,6 +42,7 @@ function cleanup(s) {
       `DB::table("promotion_service")->whereIn("promotion_id", $promos)->delete(); ` +
       `DB::table("promotions")->whereIn("id", $promos)->delete(); ` +
       paused +
+      ` DB::table("business_settings")->update(["ai_enabled" => ${s.ai ? 1 : 0}]);` +
       ` echo "obrisano termina: " . count($ids) . ", akcija: " . count($promos);`,
   );
   console.log(out);
@@ -145,10 +147,10 @@ async function run(b, before) {
     await settle(p);
     await hideDev(p);
   };
-  const quickLogin = async (p, index, expect) => {
+  const quickLogin = async (p, label, expect) => {
     await p.goto(APP + '/login');
-    await p.waitForSelector(`[data-testid=dev-login-${index}]`);
-    await p.click(`[data-testid=dev-login-${index}]`);
+    await p.waitForSelector('[data-testid^=dev-login-]');
+    await p.locator('[data-testid^=dev-login-]', { hasText: label }).first().click();
     await p.waitForURL(expect, { timeout: 15000 });
     await p.waitForTimeout(1500);
   };
@@ -215,6 +217,8 @@ async function run(b, before) {
   await shot(o, 'admin-06-usluge', [{ sel: '[data-testid=service-add]' }, { sel: '[data-testid=service-suggest]' }, { sel: '[data-testid=services-tab-categories]' }], { scroll: false });
   await o.click('[data-testid=service-suggest]');
   await o.waitForTimeout(800);
+  await o.click('[data-testid=suggestions-source-preset]');
+  await o.waitForTimeout(500);
   await shot(o, 'admin-06d-predlog', [{ sel: '[data-testid=suggestions-preset]' }, { sel: '[data-testid=suggestion-category-0] input[type=checkbox]' }, { sel: '[data-testid=suggestion-category-0] input[type=number]' }, { sel: '[data-testid=suggestions-apply]' }], { scroll: false });
   await closeModal(o);
   await o.click('[data-testid=services-tab-categories]');

@@ -4,9 +4,11 @@
     <p class="page-subtitle">Usluge koje klijenti vide i mogu da zakažu</p>
   </div>
   <div class="flex flex-wrap gap-2">
-    <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest">
-      <span appIcon="wand" aria-hidden="true"></span> Predloži usluge
-    </button>
+    @if (aiAvailable()) {
+      <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest">
+        <span appIcon="wand" aria-hidden="true"></span> Predloži usluge
+      </button>
+    }
     <button type="button" appBtn (click)="openForm()" data-testid="service-add">
       <span appIcon="plus" aria-hidden="true"></span> Nova usluga
     </button>
@@ -25,10 +27,14 @@
 } @else if (loading() && services().length === 0) {
 } @else if (services().length === 0) {
   <div class="card empty-state flex flex-col items-center gap-3">
-    <span>Još nema usluga. Dodaj prvu (naziv, trajanje i cena) ili uzmi predlog za svoju delatnost.</span>
-    <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest-empty">
-      <span appIcon="wand" aria-hidden="true"></span> Predloži kategorije i usluge
-    </button>
+    @if (aiAvailable()) {
+      <span>Još nema usluga. Dodaj prvu (naziv, trajanje i cena) ili neka AI predloži usluge za tvoju delatnost.</span>
+      <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest-empty">
+        <span appIcon="wand" aria-hidden="true"></span> Predloži kategorije i usluge
+      </button>
+    } @else {
+      <span>Još nema usluga. Dodaj prvu (naziv, trajanje i cena).</span>
+    }
   </div>
 } @else {
   <div class="flex flex-col gap-4">
@@ -182,6 +188,6 @@
   </app-modal>
 }
 
-@if (suggestionsOpen()) {
-  <app-service-suggestions [staff]="staff()" [aiAvailable]="aiAvailable()" (applied)="suggestionsApplied()" (cancelled)="suggestionsOpen.set(false)" />
+@if (suggestionsOpen() && aiAvailable()) {
+  <app-service-suggestions [staff]="staff()" (applied)="suggestionsApplied()" (cancelled)="suggestionsOpen.set(false)" />
 }

@@ -7,6 +7,7 @@ import { BusinessSettingService } from '../../core/services/business-setting.ser
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { ChangePasswordComponent } from '../../shared/components/change-password/change-password.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
@@ -15,7 +16,7 @@ import { InputDirective } from '../../shared/directives/input.directive';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ChangePasswordComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent {
@@ -30,23 +31,12 @@ export class ProfileComponent {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly resending = signal(false);
-  readonly passwordOpen = signal(false);
-  readonly passwordSaving = signal(false);
-  readonly passwordError = signal<string | null>(null);
-
-  readonly passwordForm = this.fb.nonNullable.group({
-    current_password: ['', Validators.required],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    password_confirmation: ['', Validators.required],
-  });
   readonly initials = computed(() => {
     const user = this.auth.currentUser();
     return user ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase() : '';
   });
 
   readonly genders = GENDER_OPTIONS;
-  readonly isStaff = this.auth.isStaff;
-  readonly linkedToStaff = computed(() => this.auth.isStaff() && this.auth.currentUser()?.staff_member_id != null);
 
   readonly form = this.fb.nonNullable.group({
     first_name: ['', [Validators.required, Validators.minLength(2)]],
@@ -59,21 +49,10 @@ export class ProfileComponent {
   });
 
   constructor() {
-    if (this.isStaff()) {
-      this.form.controls.gender.disable();
-      this.form.controls.favorite_staff_member_id.disable();
-    }
-    if (this.linkedToStaff()) {
-      this.form.controls.first_name.disable();
-      this.form.controls.last_name.disable();
-      this.form.controls.phone.disable();
-    }
-    if (!this.isStaff()) {
-      this.booking.services().subscribe((services) => {
-        const byId = new Map(services.flatMap((service) => service.staff_members).map((m) => [m.id, m]));
-        this.stylists.set([...byId.values()]);
-      });
-    }
+    this.booking.services().subscribe((services) => {
+      const byId = new Map(services.flatMap((service) => service.staff_members).map((m) => [m.id, m]));
+      this.stylists.set([...byId.values()]);
+    });
     this.auth.loadMe().subscribe({ error: () => undefined });
     const user = this.auth.currentUser();
     if (user) {
@@ -105,38 +84,16 @@ export class ProfileComponent {
     });
   }
 
-  changePassword(): void {
-    const value = this.passwordForm.getRawValue();
-    if (this.passwordForm.invalid || value.password !== value.password_confirmation) {
-      this.passwordError.set(value.password.length < 8 ? 'Nova lozinka mora imati bar 8 karaktera.' : 'Nove lozinke se ne poklapaju.');
-      return;
-    }
-
-    this.passwordSaving.set(true);
-    this.passwordError.set(null);
-    this.auth.changePassword(value).subscribe({
-      next: (res) => {
-        this.passwordSaving.set(false);
-        this.toast.success(res.message);
-        this.auth.clearSession('/login');
-      },
-      error: (err) => {
-        this.passwordSaving.set(false);
-        this.passwordError.set(apiErrorMessage(err, 'Promena lozinke nije uspela.'));
-      },
-    });
-  }
-
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const value = this.form.value;
+    const value = this.form.getRawValue();
     this.saving.set(true);
     this.error.set(null);
-    this.auth.updateProfile({ ...value, whatsapp_number: value.whatsapp_number?.trim() || null }).subscribe({
+    this.auth.updateProfile({ ...value, whatsapp_number: value.whatsapp_number.trim() || null }).subscribe({
       next: () => {
         this.saving.set(false);
         this.toast.success('Profil je sačuvan.');

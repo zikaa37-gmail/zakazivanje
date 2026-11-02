@@ -12,9 +12,6 @@
     @for (item of nav(); track item.path) {
       <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }">{{ item.label }}</a>
     }
-    @if (auth.isStaff()) {
-      <a routerLink="/admin">Salon</a>
-    }
   </nav>
 
   @if (auth.isAuthenticated()) {
