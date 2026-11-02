@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
 import { BookingService } from '../../core/services/booking.service';
+import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
@@ -22,6 +23,7 @@ export class ProfileComponent {
   private toast = inject(ToastService);
   protected auth = inject(AuthService);
   private booking = inject(BookingService);
+  protected business = inject(BusinessSettingService);
   readonly stylists = signal<{ id: number; first_name: string; last_name: string }[]>([]);
 
   readonly communication = COMMUNICATION_OPTIONS;
@@ -43,6 +45,8 @@ export class ProfileComponent {
   });
 
   readonly genders = GENDER_OPTIONS;
+  readonly isStaff = this.auth.isStaff;
+  readonly linkedToStaff = computed(() => this.auth.isStaff() && this.auth.currentUser()?.staff_member_id != null);
 
   readonly form = this.fb.nonNullable.group({
     first_name: ['', [Validators.required, Validators.minLength(2)]],
@@ -55,10 +59,21 @@ export class ProfileComponent {
   });
 
   constructor() {
-    this.booking.services().subscribe((services) => {
-      const byId = new Map(services.flatMap((service) => service.staff_members).map((m) => [m.id, m]));
-      this.stylists.set([...byId.values()]);
-    });
+    if (this.isStaff()) {
+      this.form.controls.gender.disable();
+      this.form.controls.favorite_staff_member_id.disable();
+    }
+    if (this.linkedToStaff()) {
+      this.form.controls.first_name.disable();
+      this.form.controls.last_name.disable();
+      this.form.controls.phone.disable();
+    }
+    if (!this.isStaff()) {
+      this.booking.services().subscribe((services) => {
+        const byId = new Map(services.flatMap((service) => service.staff_members).map((m) => [m.id, m]));
+        this.stylists.set([...byId.values()]);
+      });
+    }
     this.auth.loadMe().subscribe({ error: () => undefined });
     const user = this.auth.currentUser();
     if (user) {
@@ -118,10 +133,10 @@ export class ProfileComponent {
       return;
     }
 
-    const value = this.form.getRawValue();
+    const value = this.form.value;
     this.saving.set(true);
     this.error.set(null);
-    this.auth.updateProfile({ ...value, whatsapp_number: value.whatsapp_number.trim() || null }).subscribe({
+    this.auth.updateProfile({ ...value, whatsapp_number: value.whatsapp_number?.trim() || null }).subscribe({
       next: () => {
         this.saving.set(false);
         this.toast.success('Profil je sačuvan.');

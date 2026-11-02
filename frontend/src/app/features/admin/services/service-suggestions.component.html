@@ -1,0 +1,92 @@
+<app-modal title="Predlog kategorija i usluga" size="l" footerMode="custom" (cancelled)="cancelled.emit()" testId="suggestions-modal">
+  @if (aiAvailable()) {
+    <div class="chip-group mb-3" role="tablist">
+      <button type="button" class="chip" role="tab" [class.selected]="source() === 'preset'" (click)="setSource('preset')" data-testid="suggestions-source-preset">Šablon za delatnost</button>
+      <button type="button" class="chip" role="tab" [class.selected]="source() === 'ai'" (click)="setSource('ai')" data-testid="suggestions-source-ai">
+        <span appIcon="wand" aria-hidden="true"></span> AI predlog
+      </button>
+    </div>
+  }
+
+  @if (source() === 'preset') {
+    <div class="field">
+      <label for="suggestions-preset">Delatnost</label>
+      <select id="suggestions-preset" appInput size="m" [formControl]="preset" data-testid="suggestions-preset">
+        @for (c of businessCategories; track c.value) {
+          <option [ngValue]="c.value">{{ c.label }}</option>
+        }
+      </select>
+      <span class="text-xs muted">Uobičajene usluge za ovu delatnost. Isključi šta ne radiš, promeni nazive i trajanje i upiši cene.</span>
+    </div>
+  } @else {
+    <div class="field">
+      <label for="suggestions-description">Šta radite?</label>
+      <textarea id="suggestions-description" appInput size="m" rows="3" [formControl]="description" placeholder="npr. kozmetički salon — tretmani lica, trepavice i obrve, gel lak, imamo i masažu" data-testid="suggestions-description"></textarea>
+      <span class="text-xs muted">AI predlaže kategorije, usluge, trajanje i okvirne cene za vaš grad. Sve možeš da izmeniš pre dodavanja.</span>
+    </div>
+    <app-button size="s" [loading]="thinking()" (click)="suggest()" data-testid="suggestions-ai-run">
+      <span appIcon="wand" aria-hidden="true"></span> {{ rows().length ? 'Predloži ponovo' : 'Predloži' }}
+    </app-button>
+  }
+
+  <app-error-message [message]="error()" />
+
+  @if (rows().length) {
+    <div class="flex flex-col gap-3 mt-4">
+      @for (category of rows(); track $index) {
+        <div class="card !p-3" [class.opacity-60]="!category.selected.value" [attr.data-testid]="'suggestion-category-' + $index">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" [formControl]="category.selected" [attr.aria-label]="'Dodaj kategoriju ' + category.name.value" />
+            <input appInput size="s" class="font-semibold flex-1 min-w-0" [formControl]="category.name" aria-label="Naziv kategorije" />
+          </div>
+          @if (category.selected.value) {
+            <div class="flex flex-col mt-2">
+              @for (service of category.services; track $index) {
+                <div class="flex flex-col gap-2 py-2 border-b border-[var(--color-bg)] last:border-b-0 sm:flex-row sm:items-center" [class.opacity-60]="!service.selected.value">
+                  <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <input type="checkbox" [formControl]="service.selected" [attr.aria-label]="'Dodaj uslugu ' + service.name.value" />
+                    <input appInput size="s" class="flex-1 min-w-0" [formControl]="service.name" aria-label="Naziv usluge" />
+                  </div>
+                  @if (service.selected.value) {
+                    <div class="flex items-center gap-2 pl-6 sm:pl-0">
+                      <input appInput size="s" class="w-20" type="number" min="5" step="5" inputmode="numeric" [formControl]="service.duration" aria-label="Trajanje u minutima" />
+                      <span class="text-xs muted">min</span>
+                      <input appInput size="s" class="w-24" type="number" min="0" step="50" inputmode="numeric" [formControl]="service.price" placeholder="cena" aria-label="Cena u dinarima" />
+                      <select appInput size="s" class="w-28" [formControl]="service.audience" aria-label="Za koga">
+                        @for (a of audiences; track a.value) {
+                          <option [ngValue]="a.value">{{ a.label }}</option>
+                        }
+                      </select>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (staff().length) {
+      <div class="field mt-4">
+        <label>Ko radi nove usluge</label>
+        <div class="chip-group">
+          @for (member of staff(); track member.id) {
+            <button type="button" class="chip" [class.selected]="staffSelection().has(member.id)" (click)="toggleStaff(member.id)">
+              <span class="color-dot" [style.background]="member.color"></span>
+              {{ member.first_name }} {{ member.last_name }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    @if (missingPrices()) {
+      <p class="text-xs muted mt-2">Usluge bez cene ({{ missingPrices() }}) dodaju se kao neaktivne — omogući ih kad upišeš cenu.</p>
+    }
+  }
+
+  <app-button modal-footer size="s" [loading]="saving()" [disabled]="selectedCount() === 0 && !rows().length" (click)="apply()" data-testid="suggestions-apply">
+    Dodaj izabrano ({{ selectedCount() }})
+  </app-button>
+</app-modal>

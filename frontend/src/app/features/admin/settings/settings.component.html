@@ -16,6 +16,7 @@
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'payments'" (click)="openTab('payments')" data-testid="tab-payments">Plaćanje</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'social'" (click)="openTab('social')" data-testid="tab-social">Instagram i Meta</button>
   <button type="button" class="chip" role="tab" [class.selected]="tab() === 'notifications'" (click)="openTab('notifications')" data-testid="tab-notifications">Obaveštenja</button>
+  <button type="button" class="chip" role="tab" [class.selected]="tab() === 'ai'" (click)="openTab('ai')" data-testid="tab-ai">AI pomoćnik</button>
 </div>
 
 <app-error-message [message]="error()" />
@@ -38,6 +39,30 @@
                 }
               </select>
             </div>
+            <div class="field sm:col-span-2" data-testid="settings-staff-term">
+              <span class="text-sm font-semibold">Kako klijenti zovu zaposlene</span>
+              <div class="chip-group mt-1">
+                @for (option of staffTermOptions(); track option.term) {
+                  <button type="button" class="chip" [class.selected]="form.controls.staff_term.value === option.term" (click)="pickStaffTerm(option)" [attr.data-testid]="'staff-term-' + option.term">{{ option.term }}</button>
+                }
+                @if (aiStatus()?.available) {
+                  <button type="button" appBtn theme="ghost" size="s" [disabled]="termsLoading()" (click)="suggestStaffTerms()" data-testid="staff-term-ai">
+                    <span appIcon="wand" aria-hidden="true"></span> {{ termsLoading() ? 'AI razmišlja…' : 'Predloži (AI)' }}
+                  </button>
+                }
+              </div>
+              <div class="form-grid mt-2">
+                <div class="field">
+                  <label for="s-staff-term">„Tvoj ___"</label>
+                  <input id="s-staff-term" appInput size="m" formControlName="staff_term" placeholder="npr. frizer" data-testid="settings-staff-term-input" />
+                </div>
+                <div class="field">
+                  <label for="s-staff-term-genitive">„kod tvog ___"</label>
+                  <input id="s-staff-term-genitive" appInput size="m" formControlName="staff_term_genitive" placeholder="npr. frizera" data-testid="settings-staff-term-genitive" />
+                </div>
+              </div>
+              <span class="text-xs muted">Koristi se u zakazivanju i profilu klijenta („Tvoj {{ form.controls.staff_term.value || 'radnik' }}", „Termini kod tvog {{ form.controls.staff_term_genitive.value || 'radnika' }}").</span>
+            </div>
             <div class="field">
               <label for="s-address">Adresa</label>
               <input id="s-address" appInput size="m" formControlName="address" />
@@ -48,7 +73,7 @@
             </div>
             <div class="field sm:col-span-2">
               <label for="s-map">Pretraga na mapi (opciono)</label>
-              <input id="s-map" appInput size="m" formControlName="map_query" placeholder="npr. Frizerski salon Pink, Zagorska 8c, Zemun" data-testid="settings-map-query" />
+              <input id="s-map" appInput size="m" formControlName="map_query" placeholder="npr. Salon Lepota, Glavna 1, Beograd" data-testid="settings-map-query" />
               <span class="text-xs muted">Mapa na početnoj traži naziv i adresu. Ako pokazuje pogrešno mesto, upiši tačan naziv sa Google mapa ili koordinate (44.84, 20.40).</span>
             </div>
             <div class="field">
@@ -99,6 +124,41 @@
         </div>
       }
 
+      @case ('ai') {
+        <div class="card" data-testid="ai-card">
+          <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="wand" aria-hidden="true"></span> AI pomoćnik</h2>
+          <p class="text-sm muted mb-3">AI (Claude) predlaže kategorije i usluge sa trajanjem i okvirnim cenama i kako da zoveš zaposlene. Uvek prvo vidiš predlog i menjaš ga pre nego što se išta upiše. Kad je isključen, aplikacija radi isto, samo bez AI predloga.</p>
+          <app-error-message [message]="aiError()" />
+
+          @if (aiStatus(); as status) {
+            @if (status.key_saved) {
+              <p class="text-sm mb-2">API ključ je sačuvan (šifrovan u bazi).</p>
+              <button type="button" appBtn theme="ghost" size="s" class="mb-3" (click)="forgetAiKey()" data-testid="ai-key-forget">Obriši ključ</button>
+            } @else if (status.key_from_server) {
+              <p class="text-sm mb-3">Koristi se API ključ podešen na serveru.</p>
+            }
+            @if (!status.key_saved) {
+              <details class="text-sm mb-3" [open]="!status.key_from_server">
+                <summary class="cursor-pointer font-semibold">{{ status.key_from_server ? 'Unesi svoj ključ' : 'Kako do ključa' }}</summary>
+                <ol class="list-decimal pl-5 mt-2 flex flex-col gap-1 muted">
+                  <li>Na console.anthropic.com napravi nalog i dopuni kredit (Billing). Jedan predlog košta reda veličine par dinara.</li>
+                  <li>U delu „API keys" klikni „Create key" i kopiraj ključ (počinje sa sk-ant-).</li>
+                  <li>Nalepi ga ovde — aplikacija ga proveri pre čuvanja.</li>
+                </ol>
+              </details>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <input appInput size="m" class="flex-1 min-w-0" type="password" autocomplete="off" [formControl]="aiKey" placeholder="sk-ant-…" aria-label="API ključ" data-testid="ai-key-input" />
+                <app-button size="m" [loading]="aiBusy()" [disabled]="!aiKey.value.trim()" (click)="saveAiKey()" data-testid="ai-key-save">Proveri i sačuvaj</app-button>
+              </div>
+            }
+            <app-toggle [checked]="form.controls.ai_enabled.value" [disabled]="!status.key_saved && !status.key_from_server" label="Uključi AI pomoćnika" (checkedChange)="form.controls.ai_enabled.setValue($event)" data-testid="settings-ai-enabled" />
+            @if (!status.key_saved && !status.key_from_server) {
+              <p class="text-xs muted mt-1">Prvo sačuvaj API ključ.</p>
+            }
+            <p class="text-xs muted mt-3">Gde se koristi: Usluge → Predloži usluge (AI predlog), Podešavanja → Biznis → Kako klijenti zovu zaposlene. Model: {{ status.model }}.</p>
+          }
+        </div>
+      }
       @case ('social') {
         <div class="card mb-4" data-testid="instagram-card">
           <h2 class="text-base font-semibold mb-1 flex items-center gap-2"><span appIcon="instagram" aria-hidden="true"></span> Instagram</h2>
@@ -171,7 +231,7 @@
           <h2 class="text-base font-semibold mb-1">Preporuka za Instagram profil salona</h2>
           <ol class="list-decimal pl-5 text-sm flex flex-col gap-2">
             <li><strong>Pređi na poslovni (Business) nalog</strong> — besplatno je: Podešavanja → Tip naloga i alati → Prebaci na profesionalni nalog → Biznis. Bez toga nema statistike ni povezivanja sa aplikacijom. Profil mora biti javan, što je za salon i poželjno.</li>
-            <li><strong>Kategorija i podaci:</strong> kategorija „Frizerski salon", adresa, radno vreme i dugmad Pozovi / Email / Uputstva.</li>
+            <li><strong>Kategorija i podaci:</strong> kategorija koja odgovara delatnosti (npr. „{{ categoryLabel() }}"), adresa, radno vreme i dugmad Pozovi / Email / Uputstva.</li>
             <li>
               <strong>Link u biju</strong> neka bude link sa praćenjem — tako u Pregledu vidiš koliko je ljudi došlo sa Instagrama, registrovalo se i zakazalo:
               <span class="flex flex-wrap items-center gap-2 mt-1">

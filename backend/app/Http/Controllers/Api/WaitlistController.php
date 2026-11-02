@@ -42,10 +42,10 @@ class WaitlistController extends Controller
         abort_unless(BusinessSetting::current()->waitlist_enabled, 422, 'Lista čekanja nije uključena.');
         app(ClientDisciplineService::class)->ensureNotSuspended($request->user());
 
-        $services = $this->availability->servicesInOrder($data['service_ids']);
+        $services = $this->availability->servicesInOrder($data['service_ids'], true);
         $date = CarbonImmutable::parse($data['date']);
         if (! $this->availability->isOpenDay($services, $data['staff_member_id'] ?? null, $date)) {
-            throw ValidationException::withMessages(['date' => ['Za taj dan ne može lista čekanja — salon ili izabrani frizer tada ne radi.']]);
+            throw ValidationException::withMessages(['date' => ['Za taj dan ne može lista čekanja — salon ili izabrani '.BusinessSetting::current()->staffTerm().' tada ne radi.']]);
         }
         $this->bookings->ensureAudience($request->user(), $services);
 

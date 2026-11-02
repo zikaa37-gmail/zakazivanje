@@ -7,6 +7,7 @@ use App\Models\AppointmentItem;
 use App\Models\BusinessSetting;
 use App\Models\Service;
 use App\Services\PriceQuoteService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -17,21 +18,27 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        return Service::query()
+        return $this->ordered(Service::query()
             ->with('staffMembers:id,first_name,last_name')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+            ->get());
     }
 
     public function publicIndex()
     {
-        return Service::query()
-            ->where('active', true)
+        return $this->ordered(Service::query()
+            ->offeredOnline()
             ->with(['staffMembers' => fn ($q) => $q->where('active', true)->select('staff_members.id', 'first_name', 'last_name', 'title')])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get(['id', 'name', 'description', 'category', 'audience', 'duration_minutes', 'price', 'paused_until']);
+            ->get(['id', 'name', 'description', 'service_category_id', 'audience', 'duration_minutes', 'price', 'paused_until']))
+            ->each->setHidden(['serviceCategory', 'service_category_id']);
+    }
+
+    private function ordered(Collection $services): Collection
+    {
+        return $services->sortBy([
+            fn (Service $a, Service $b) => ($a->serviceCategory?->sort_order ?? PHP_INT_MAX) <=> ($b->serviceCategory?->sort_order ?? PHP_INT_MAX),
+            fn (Service $a, Service $b) => $a->sort_order <=> $b->sort_order,
+            fn (Service $a, Service $b) => strnatcasecmp($a->name, $b->name),
+        ])->values();
     }
 
     public function store(Request $request)
@@ -85,7 +92,7 @@ class ServiceController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
-            'category' => ['nullable', 'string', 'max:100'],
+            'service_category_id' => ['nullable', 'integer', 'exists:service_categories,id'],
             'audience' => ['sometimes', Rule::in(Service::AUDIENCES)],
             'booking_confirmation' => ['nullable', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:720'],

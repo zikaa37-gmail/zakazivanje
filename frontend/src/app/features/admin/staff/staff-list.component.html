@@ -97,7 +97,7 @@
         </div>
         <div class="field">
           <label for="staff-title">Pozicija</label>
-          <input id="staff-title" appInput size="m" formControlName="title" placeholder="npr. Frizer" />
+          <input id="staff-title" appInput size="m" formControlName="title" [placeholder]="'npr. ' + business.staffTerm()" />
         </div>
         <div class="field">
           <label for="staff-phone">Telefon <span class="required-mark">*</span></label>

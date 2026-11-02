@@ -3,21 +3,43 @@
     <h1 class="page-title">Usluge</h1>
     <p class="page-subtitle">Usluge koje klijenti vide i mogu da zakažu</p>
   </div>
-  <button type="button" appBtn (click)="openForm()" data-testid="service-add">
-    <span appIcon="plus" aria-hidden="true"></span> Nova usluga
-  </button>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest">
+      <span appIcon="wand" aria-hidden="true"></span> Predloži usluge
+    </button>
+    <button type="button" appBtn (click)="openForm()" data-testid="service-add">
+      <span appIcon="plus" aria-hidden="true"></span> Nova usluga
+    </button>
+  </div>
+</div>
+
+<div class="chip-group mb-4" role="tablist">
+  <button type="button" class="chip" role="tab" [class.selected]="view() === 'services'" (click)="view.set('services')" data-testid="services-tab-services">Usluge</button>
+  <button type="button" class="chip" role="tab" [class.selected]="view() === 'categories'" (click)="view.set('categories')" data-testid="services-tab-categories">Kategorije ({{ categories().length }})</button>
 </div>
 
 <app-error-message [message]="error()" />
 
-@if (loading() && services().length === 0) {
+@if (view() === 'categories') {
+  <app-category-list [categories]="categories()" (changed)="reloadAll()" />
+} @else if (loading() && services().length === 0) {
 } @else if (services().length === 0) {
-  <div class="card empty-state">Još nema usluga. Dodaj prvu (naziv, trajanje i cena).</div>
+  <div class="card empty-state flex flex-col items-center gap-3">
+    <span>Još nema usluga. Dodaj prvu (naziv, trajanje i cena) ili uzmi predlog za svoju delatnost.</span>
+    <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest-empty">
+      <span appIcon="wand" aria-hidden="true"></span> Predloži kategorije i usluge
+    </button>
+  </div>
 } @else {
   <div class="flex flex-col gap-4">
-    @for (group of groups(); track group.category) {
+    @for (group of groups(); track group.id) {
       <div class="card">
-        <h2 class="text-base font-semibold mb-2">{{ group.category }}</h2>
+        <h2 class="text-base font-semibold mb-2">
+          {{ group.category }}
+          @if (!group.active) {
+            <span class="badge badge-neutral ml-2">Kategorija neaktivna — ne nudi se online</span>
+          }
+        </h2>
 
         <div class="hidden md:block">
           <app-data-list [columns]="columns" [headers]="['Naziv', 'Trajanje', 'Cena', 'Rade je', 'Status']">
@@ -108,12 +130,16 @@
       </div>
       <div class="field">
         <label for="service-category">Kategorija</label>
-        <input id="service-category" appInput size="m" formControlName="category" list="service-categories" placeholder="npr. Šišanje" />
-        <datalist id="service-categories">
-          @for (c of categories(); track c) {
-            <option [value]="c"></option>
+        <select id="service-category" appInput size="m" formControlName="service_category_id" data-testid="service-category">
+          <option [ngValue]="null">Bez kategorije (Ostalo)</option>
+          @for (c of categories(); track c.id) {
+            <option [ngValue]="c.id">{{ c.name }}{{ c.active ? '' : ' (neaktivna)' }}</option>
           }
-        </datalist>
+          <option [ngValue]="newCategoryId">+ Nova kategorija…</option>
+        </select>
+        @if (form.controls.service_category_id.value === newCategoryId) {
+          <input appInput size="m" class="mt-2" [formControl]="newCategoryName" placeholder="Naziv nove kategorije" aria-label="Naziv nove kategorije" data-testid="service-category-new" />
+        }
       </div>
       <div class="field">
         <label for="service-description">Opis</label>
@@ -154,4 +180,8 @@
     </div>
     <app-button modal-footer size="s" [disabled]="!pauseUntil.value || pauseUntil.value < today" (click)="confirmPause()" data-testid="service-pause-save">Pauziraj</app-button>
   </app-modal>
+}
+
+@if (suggestionsOpen()) {
+  <app-service-suggestions [staff]="staff()" [aiAvailable]="aiAvailable()" (applied)="suggestionsApplied()" (cancelled)="suggestionsOpen.set(false)" />
 }

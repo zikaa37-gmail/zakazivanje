@@ -33,6 +33,10 @@ class AvailabilityService
 
     public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, ?int $ignoreAppointmentId = null): array
     {
+        if ($services->isEmpty()) {
+            return [];
+        }
+
         $settings = BusinessSetting::current();
         $date = $date->startOfDay();
 
@@ -81,6 +85,10 @@ class AvailabilityService
 
     public function isOpenDay(Collection $services, ?int $staffMemberId, CarbonImmutable $date): bool
     {
+        if ($services->isEmpty()) {
+            return false;
+        }
+
         $settings = BusinessSetting::current();
         if ($date->lt($settings->earliestOnlineStart()->startOfDay()) || $date->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days)) || $this->pausedOn($services, $date)) {
             return false;
@@ -130,9 +138,12 @@ class AvailabilityService
         return $services->first(fn (Service $service) => $service->isPausedOn($date));
     }
 
-    public function servicesInOrder(array $ids): Collection
+    public function servicesInOrder(array $ids, bool $online = false): Collection
     {
-        $services = Service::whereIn('id', $ids)->where('active', true)->get()->keyBy('id');
+        $services = Service::whereIn('id', $ids)
+            ->when($online, fn ($q) => $q->offeredOnline(), fn ($q) => $q->where('active', true))
+            ->get()
+            ->keyBy('id');
 
         return collect($ids)->map(fn ($id) => $services->get($id))->filter()->values();
     }

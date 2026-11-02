@@ -1,10 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Observable, map, of, switchMap, tap } from 'rxjs';
 import { CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/business-setting.model';
-import { AUDIENCE_OPTIONS, DURATION_OPTIONS, SalonService, SalonServicePayload, ServiceAudience, audienceLabel, isPaused } from '../../../core/models/service.model';
+import { AUDIENCE_OPTIONS, DURATION_OPTIONS, SalonService, SalonServicePayload, ServiceAudience, ServiceCategory, audienceLabel, isPaused } from '../../../core/models/service.model';
 import { StaffMember } from '../../../core/models/staff.model';
+import { AiService } from '../../../core/services/ai.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
+import { ServiceCategoryService } from '../../../core/services/service-category.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
@@ -22,16 +25,22 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { DurationPipe } from '../../../shared/pipes/duration.pipe';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
+import { CategoryListComponent } from './category-list.component';
+import { ServiceSuggestionsComponent } from './service-suggestions.component';
+
+const NEW_CATEGORY = -1;
 
 @Component({
   selector: 'app-service-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, CategoryListComponent, ServiceSuggestionsComponent, ButtonDirective, DataListComponent, DataRowComponent, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
   templateUrl: './service-list.component.html',
 })
 export class ServiceListComponent {
   private fb = inject(FormBuilder);
   private catalog = inject(ServiceCatalogService);
+  private categoryService = inject(ServiceCategoryService);
+  private ai = inject(AiService);
   private staffService = inject(StaffService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
@@ -47,16 +56,23 @@ export class ServiceListComponent {
   readonly services = signal<SalonService[]>([]);
   readonly staff = signal<StaffMember[]>([]);
 
-  readonly groups = computed(() => {
-    const map = new Map<string, SalonService[]>();
-    for (const service of this.services()) {
-      const key = service.category || 'Ostalo';
-      map.set(key, [...(map.get(key) ?? []), service]);
-    }
-    return [...map.entries()].map(([category, items]) => ({ category, items }));
-  });
+  readonly categories = signal<ServiceCategory[]>([]);
+  readonly view = signal<'services' | 'categories'>('services');
+  readonly suggestionsOpen = signal(false);
+  readonly aiAvailable = signal(false);
+  readonly newCategoryId = NEW_CATEGORY;
+  readonly newCategoryName = new FormControl('', { nonNullable: true });
 
-  readonly categories = computed(() => [...new Set(this.services().map((s) => s.category).filter(Boolean))] as string[]);
+  readonly groups = computed(() => {
+    const map = new Map<number | null, SalonService[]>();
+    for (const service of this.services()) {
+      map.set(service.service_category_id, [...(map.get(service.service_category_id) ?? []), service]);
+    }
+    return [...map.entries()].map(([id, items]) => {
+      const category = this.categories().find((c) => c.id === id);
+      return { id, category: category?.name ?? items[0].category ?? 'Ostalo', active: category?.active ?? true, items };
+    });
+  });
 
   readonly editing = signal<SalonService | null>(null);
   readonly modalOpen = signal(false);
@@ -66,7 +82,7 @@ export class ServiceListComponent {
 
   readonly form = this.fb.group({
     name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    category: this.fb.control<string | null>(null),
+    service_category_id: this.fb.control<number | null>(null),
     audience: this.fb.nonNullable.control<ServiceAudience>('all'),
     booking_confirmation: this.fb.control<ConfirmationMode | null>(null),
     description: this.fb.control<string | null>(null),
@@ -100,7 +116,24 @@ export class ServiceListComponent {
 
   constructor() {
     this.load();
+    this.loadCategories();
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
+    this.ai.status().subscribe({ next: (status) => this.aiAvailable.set(status.available), error: () => this.aiAvailable.set(false) });
+  }
+
+  loadCategories(): void {
+    this.categoryService.list().subscribe((categories) => this.categories.set(categories));
+  }
+
+  reloadAll(): void {
+    this.load();
+    this.loadCategories();
+  }
+
+  suggestionsApplied(): void {
+    this.suggestionsOpen.set(false);
+    this.view.set('services');
+    this.reloadAll();
   }
 
   load(): void {
@@ -147,7 +180,7 @@ export class ServiceListComponent {
     const payload: SalonServicePayload = {
       name: service.name,
       description: service.description,
-      category: service.category,
+      service_category_id: service.service_category_id,
       audience: service.audience,
       booking_confirmation: service.booking_confirmation,
       duration_minutes: service.duration_minutes,
@@ -160,7 +193,7 @@ export class ServiceListComponent {
     this.catalog.update(service.id, payload).subscribe({
       next: () => {
         this.toast.success(message);
-        this.load();
+        this.reloadAll();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Čuvanje nije uspelo.')),
     });
@@ -171,7 +204,7 @@ export class ServiceListComponent {
     this.formError.set(null);
     this.form.reset({
       name: service?.name ?? '',
-      category: service?.category ?? null,
+      service_category_id: service?.service_category_id ?? null,
       audience: service?.audience ?? 'all',
       booking_confirmation: service?.booking_confirmation ?? null,
       description: service?.description ?? null,
@@ -180,6 +213,7 @@ export class ServiceListComponent {
       active: service?.active ?? true,
       paused_until: service?.paused_until ?? null,
     });
+    this.newCategoryName.reset();
     this.selectedStaff.set(new Set(service?.staff_members.map((s) => s.id) ?? this.staff().map((s) => s.id)));
     this.modalOpen.set(true);
   }
@@ -201,31 +235,45 @@ export class ServiceListComponent {
     }
 
     const value = this.form.getRawValue();
+    const creatingCategory = value.service_category_id === NEW_CATEGORY;
+    if (creatingCategory && this.newCategoryName.value.trim().length < 2) {
+      this.formError.set('Upiši naziv nove kategorije.');
+      return;
+    }
+
     const payload: SalonServicePayload = {
       ...value,
       price: Number(value.price),
       duration_minutes: Number(value.duration_minutes),
-      category: value.category?.trim() || null,
       description: value.description?.trim() || null,
       paused_until: value.paused_until || null,
       staff_member_ids: [...this.selectedStaff()],
     };
 
     const service = this.editing();
+    const categoryId$: Observable<number | null> = creatingCategory
+      ? this.categoryService.create(this.newCategoryName.value.trim()).pipe(
+          tap(() => this.loadCategories()),
+          map((category) => category.id),
+          tap((id) => this.form.controls.service_category_id.setValue(id)),
+        )
+      : of(value.service_category_id);
     this.saving.set(true);
     this.formError.set(null);
-    (service ? this.catalog.update(service.id, payload) : this.catalog.create(payload)).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.modalOpen.set(false);
-        this.toast.success('Usluga je sačuvana.');
-        this.load();
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.formError.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
-      },
-    });
+    categoryId$
+      .pipe(switchMap((service_category_id) => (service ? this.catalog.update(service.id, { ...payload, service_category_id }) : this.catalog.create({ ...payload, service_category_id }))))
+      .subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.modalOpen.set(false);
+          this.toast.success('Usluga je sačuvana.');
+          this.reloadAll();
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.formError.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
+        },
+      });
   }
 
   private async remove(service: SalonService): Promise<void> {
@@ -239,7 +287,7 @@ export class ServiceListComponent {
     this.catalog.delete(service.id).subscribe({
       next: () => {
         this.toast.success('Usluga je obrisana.');
-        this.load();
+        this.reloadAll();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
     });

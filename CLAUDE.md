@@ -195,6 +195,16 @@ kojima sada postoji slobodan termin (najviše na 30 min), link `/book?services=&
 zakazivanje tog dana gasi prijavu. Pun dan je u `/book` isprekidan i može se izabrati; prekidač `waitlist_enabled`.
 Usluge su na početnoj i u `/book` grupisane po kategoriji (`groupByCategory()` u `service.model.ts`, bez
 kategorije → „Ostalo") sa filterom kategorija (`.chip-scroll`) — frizerske i kozmetičke usluge istog salona.
+Kategorije usluga: tabela `service_categories` (naziv, `sort_order`, `active`), `services.service_category_id`; usluga u JSON-u nosi
+`category` (naziv). Usluge → tab „Kategorije“ (dodavanje, preimenovanje, redosled strelicama, deaktivacija uz ponudu da se preimenuje,
+brisanje samo prazne). Deaktivirana kategorija sakriva svoje usluge iz online zakazivanja (`Service::offeredOnline()`,
+`AvailabilityService::servicesInOrder($ids, true)`), salon ih i dalje zakazuje. „Predloži usluge“ (`<app-service-suggestions>`): šablon po
+delatnosti (`core/utils/service-presets.ts`) ili AI predlog → pregled i izmena → `POST /service-categories/apply` (usluga bez cene je neaktivna).
+AI pomoćnik: Podešavanja → AI pomoćnik (`ai_enabled`, ključ šifrovan u `business_settings.ai_api_key`, rezerva `ANTHROPIC_API_KEY`),
+`AiService` (Claude, `claude-opus-5-5`, strukturisan JSON, serverski fallback) — svaka nova AI funkcija ide kroz `AiService::json()` i
+prikazuje se samo kad je `ai_available`. Naziv zaposlenog: `staff_term` / `staff_term_genitive` (Podešavanja → Biznis, lista po delatnosti
+`STAFF_TERMS` ili AI), u frontendu `BusinessSettingService.staffTerm()` / `staffTermGenitive()` — ne pisati „frizer“ u kodu.
+Profil osoblja nema klijentska polja (pol, omiljeni radnik); radniku vezanom za zaposlenog ime i telefon dolaze sa stranice Zaposleni.
 Izveštaji (#58): `/admin/reports` (vlasnik i radnik; zaposleni-radnik vidi samo svoj) — zbirni ili po zaposlenom,
 dan / nedelja / mesec; `ReportService` (brojke, `pdf/report` blade), „Otvori PDF", „Pošalji na mejl / WhatsApp"
 (`ReportNotification`, WhatsApp dobija potpisan link na PDF u `storage/app/reports`, briše se posle 7 dana);

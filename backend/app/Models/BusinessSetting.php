@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['name', 'category', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request', 'cover_image', 'waitlist_enabled', 'report_auto_enabled', 'report_auto_daily', 'report_auto_weekly', 'report_auto_monthly', 'report_auto_channel', 'discipline_enabled', 'discipline_window_days', 'discipline_cancel_points', 'discipline_late_cancel_points', 'discipline_no_show_points', 'discipline_yellow_points', 'discipline_orange_points', 'discipline_red_points', 'discipline_auto_suspend', 'discipline_yellow_min_days', 'discipline_yellow_horizon_days', 'discipline_yellow_off_peak', 'discipline_off_peak_percent', 'map_query', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time', 'note_always_notify_ids'])]
-#[Hidden(['cover_image', 'instagram_token'])]
-#[Appends(['cover_url', 'instagram_connected'])]
+#[Fillable(['name', 'category', 'staff_term', 'staff_term_genitive', 'ai_enabled', 'ai_api_key', 'description', 'address', 'city', 'phone', 'whatsapp_number', 'email', 'website', 'instagram', 'facebook', 'tiktok', 'youtube', 'pib', 'registration_number', 'logo', 'theme_primary', 'theme_secondary', 'theme_tertiary', 'booking_confirmation', 'slot_interval_minutes', 'booking_lead_minutes', 'booking_horizon_days', 'booking_min_days_ahead', 'cancellation_days_before', 'allow_guest_booking', 'notify_booking_received', 'notify_booking_confirmed', 'notify_booking_cancelled', 'reminder_hours', 'notify_admin_new_booking', 'bank_account', 'payee_name', 'payee_address', 'payment_code', 'online_payment_enabled', 'reviews_enabled', 'notify_review_request', 'cover_image', 'waitlist_enabled', 'report_auto_enabled', 'report_auto_daily', 'report_auto_weekly', 'report_auto_monthly', 'report_auto_channel', 'discipline_enabled', 'discipline_window_days', 'discipline_cancel_points', 'discipline_late_cancel_points', 'discipline_no_show_points', 'discipline_yellow_points', 'discipline_orange_points', 'discipline_red_points', 'discipline_auto_suspend', 'discipline_yellow_min_days', 'discipline_yellow_horizon_days', 'discipline_yellow_off_peak', 'discipline_off_peak_percent', 'map_query', 'instagram_feed_enabled', 'instagram_insights_enabled', 'instagram_publishing_enabled', 'instagram_free_slots_enabled', 'instagram_free_slots_days', 'instagram_free_slots_time', 'note_always_notify_ids'])]
+#[Hidden(['cover_image', 'instagram_token', 'ai_api_key'])]
+#[Appends(['cover_url', 'instagram_connected', 'ai_available'])]
 class BusinessSetting extends Model
 {
     public const CATEGORIES = [
@@ -68,6 +68,8 @@ class BusinessSetting extends Model
             'instagram_free_slots_enabled' => 'boolean',
             'instagram_free_slots_days' => 'array',
             'instagram_token' => 'encrypted',
+            'ai_enabled' => 'boolean',
+            'ai_api_key' => 'encrypted',
             'instagram_token_expires_at' => 'datetime',
         ];
     }
@@ -75,6 +77,16 @@ class BusinessSetting extends Model
     protected function coverUrl(): Attribute
     {
         return Attribute::get(fn () => $this->cover_image ? '/public/business/cover?v='.$this->updated_at?->timestamp : null);
+    }
+
+    public function staffTerm(): string
+    {
+        return $this->staff_term ?: 'radnik';
+    }
+
+    protected function aiAvailable(): Attribute
+    {
+        return Attribute::get(fn () => (bool) $this->ai_enabled && (bool) ($this->ai_api_key ?: config('services.anthropic.key')));
     }
 
     protected function instagramConnected(): Attribute

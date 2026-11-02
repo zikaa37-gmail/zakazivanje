@@ -193,6 +193,7 @@ async function run(b, before) {
 
   await go(o, '/admin/settings?tab=business', 1500, '#s-name');
   await shot(o, 'admin-03-podaci-firme', [{ sel: '[data-testid=tab-business]' }, { sel: '#s-name' }, { sel: '[data-testid=settings-save]' }], { scroll: false });
+  await shot(o, 'admin-03c-naziv-zaposlenih', [{ sel: '[data-testid=settings-staff-term] .chip-group' }, { sel: '#s-staff-term' }, { sel: '#s-staff-term-genitive' }]);
   await shot(o, 'admin-03b-kontakt', [{ sel: '#s-address' }, { sel: '#s-phone' }, { sel: '#s-instagram' }]);
   await o.click('[data-testid=tab-look]');
   await shot(o, 'admin-04-logo-boje', [{ sel: '[data-testid=tab-look]' }, { sel: '[data-testid=cover-card]' }], { scroll: false });
@@ -206,13 +207,31 @@ async function run(b, before) {
   await shot(o, 'admin-14-obavestenja', [{ sel: '[data-testid=tab-notifications]' }], { scroll: false });
   await o.click('[data-testid=tab-payments]');
   await shot(o, 'admin-15-placanje', [{ sel: '[data-testid=tab-payments]' }], { scroll: false });
+  await o.click('[data-testid=tab-ai]');
+  await o.waitForTimeout(600);
+  await shot(o, 'admin-20-ai', [{ sel: '[data-testid=tab-ai]' }, { sel: '[data-testid=ai-key-input]' }, { sel: '[data-testid=settings-ai-enabled]' }], { scroll: false });
 
   await go(o, '/admin/services', 1500, '.row-actions-trigger');
-  await shot(o, 'admin-06-usluge', [{ sel: '[data-testid=service-add]' }], { scroll: false });
+  await shot(o, 'admin-06-usluge', [{ sel: '[data-testid=service-add]' }, { sel: '[data-testid=service-suggest]' }, { sel: '[data-testid=services-tab-categories]' }], { scroll: false });
+  await o.click('[data-testid=service-suggest]');
+  await o.waitForTimeout(800);
+  await shot(o, 'admin-06d-predlog', [{ sel: '[data-testid=suggestions-preset]' }, { sel: '[data-testid=suggestion-category-0] input[type=checkbox]' }, { sel: '[data-testid=suggestion-category-0] input[type=number]' }, { sel: '[data-testid=suggestions-apply]' }], { scroll: false });
+  await closeModal(o);
+  await o.click('[data-testid=services-tab-categories]');
+  await o.waitForTimeout(600);
+  await guide(o, 'move', "return document.querySelector('[data-testid^=category-] button[aria-label=\"Pomeri dole\"]')?.parentElement");
+  await shot(o, 'admin-06b-kategorije', [{ sel: '[data-testid=category-new-name]' }, { sel: '[data-guide=move]' }, { sel: '[data-testid^=category-actions-] .row-actions-trigger' }], { scroll: false });
+  await clickVisible(o, '[data-testid^=category-actions-] .row-actions-trigger');
+  await clickMenuItem(o, 'Deaktiviraj');
+  await shot(o, 'admin-06c-deaktivacija', [{ sel: '[data-testid=category-deactivate-rename]' }, { sel: '[data-testid=category-deactivate-confirm]' }], { scroll: false });
+  await closeModal(o);
+  await o.click('[data-testid=services-tab-services]');
+  await o.waitForTimeout(600);
   await o.click('[data-testid=service-add]');
   await o.waitForTimeout(600);
   await guide(o, 'confirmation', "return document.querySelector('[data-testid=service-confirmation-staff]')?.parentElement");
   await shot(o, 'admin-07-nova-usluga', [{ sel: '[data-testid=service-name]' }, { sel: '[data-testid=service-duration]' }, { sel: '[data-testid=service-price]' }, { sel: '[data-guide=confirmation]' }], { scroll: false });
+  await shot(o, 'admin-07d-kategorija-usluge', [{ sel: '[data-testid=service-category]' }]);
   await closeModal(o);
   await o.evaluate((name) => {
     const rows = [...document.querySelectorAll('.row-actions-trigger')].filter((t) => t.getBoundingClientRect().width > 0);

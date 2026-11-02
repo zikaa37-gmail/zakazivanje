@@ -58,6 +58,8 @@ const ICON_NAMES = [
   'copy',
   'wand',
   'arrow-right',
+  'arrow-up',
+  'arrow-down',
   'arrow-left',
   'rotate-ccw',
   'activity',

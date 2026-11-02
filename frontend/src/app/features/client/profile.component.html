@@ -18,6 +18,9 @@
 
   <div class="card">
     <h2 class="text-base font-semibold">Lični podaci</h2>
+    @if (linkedToStaff()) {
+      <p class="text-xs muted mt-1" data-testid="profile-staff-note">Ime, telefon, usluge i radno vreme menjaju se na stranici Zaposleni (vlasnik ili administrativni radnik).</p>
+    }
     <app-error-message [message]="error()" />
     <form [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="form-grid">
@@ -34,7 +37,8 @@
         <label for="p-phone">Telefon</label>
         <input id="p-phone" appInput size="m" type="tel" formControlName="phone" />
       </div>
-      <div class="field">
+      @if (!isStaff()) {
+        <div class="field">
           <label for="p-gender">Usluge za</label>
           <select id="p-gender" appInput size="m" formControlName="gender" data-testid="profile-gender">
             <option [ngValue]="null">Nije izabrano</option>
@@ -42,17 +46,18 @@
               <option [ngValue]="option.value">{{ option.label }}</option>
             }
           </select>
-      </div>
-      <div class="field">
-        <label for="p-favorite">Omiljeni frizer</label>
-        <select id="p-favorite" appInput size="m" formControlName="favorite_staff_member_id" data-testid="profile-favorite">
-          <option [ngValue]="null">Bilo ko</option>
-          @for (m of stylists(); track m.id) {
-            <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
-          }
-        </select>
-        <span class="text-xs muted">Pri zakazivanju se odmah nude termini kod njega/nje.</span>
-      </div>
+        </div>
+        <div class="field">
+          <label for="p-favorite">Omiljeni {{ business.staffTerm() }}</label>
+          <select id="p-favorite" appInput size="m" formControlName="favorite_staff_member_id" data-testid="profile-favorite">
+            <option [ngValue]="null">Bilo ko</option>
+            @for (m of stylists(); track m.id) {
+              <option [ngValue]="m.id">{{ m.first_name }} {{ m.last_name }}</option>
+            }
+          </select>
+          <span class="text-xs muted">Pri zakazivanju se odmah nude termini kod njega/nje.</span>
+        </div>
+      }
       <div class="field">
         <label for="p-channel">Obaveštenja preko</label>
         <select id="p-channel" appInput size="m" formControlName="preferred_communication">

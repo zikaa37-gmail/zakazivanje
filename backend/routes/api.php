@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AppointmentPaymentController;
 use App\Http\Controllers\Api\AuthController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffMemberController;
@@ -151,6 +153,20 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{service}', [ServiceController::class, 'update']);
     Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+
+    Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
+    Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
+    Route::post('/service-categories/reorder', [ServiceCategoryController::class, 'reorder']);
+    Route::post('/service-categories/apply', [ServiceCategoryController::class, 'apply']);
+    Route::put('/service-categories/{category}', [ServiceCategoryController::class, 'update']);
+    Route::post('/service-categories/{category}/active', [ServiceCategoryController::class, 'setActive']);
+    Route::delete('/service-categories/{category}', [ServiceCategoryController::class, 'destroy']);
+
+    Route::get('/ai/status', [AiController::class, 'status']);
+    Route::put('/ai/key', [AiController::class, 'saveKey'])->middleware('throttle:booking');
+    Route::delete('/ai/key', [AiController::class, 'forgetKey']);
+    Route::post('/ai/service-suggestions', [AiController::class, 'serviceSuggestions'])->middleware('throttle:booking');
+    Route::post('/ai/staff-term', [AiController::class, 'staffTerm'])->middleware('throttle:booking');
 
     Route::post('/promotions/list', [PromotionController::class, 'index']);
     Route::post('/promotions', [PromotionController::class, 'store']);

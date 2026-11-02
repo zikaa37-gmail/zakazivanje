@@ -18,6 +18,9 @@ export class BusinessSettingService {
   });
   readonly name = computed(() => this.settings()?.name ?? 'Zakazivanje');
   readonly logo = computed(() => this.settings()?.logo ?? null);
+  readonly staffTerm = computed(() => this.settings()?.staff_term || 'radnik');
+  readonly staffTermGenitive = computed(() => this.settings()?.staff_term_genitive || 'radnika');
+  readonly aiAvailable = computed(() => this.settings()?.ai_available ?? false);
 
   load(): Observable<BusinessSetting> {
     return this.http
