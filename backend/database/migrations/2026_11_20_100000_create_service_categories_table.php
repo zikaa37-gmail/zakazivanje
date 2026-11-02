@@ -9,17 +9,32 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('service_categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 100)->unique();
-            $table->unsignedInteger('sort_order')->default(0);
-            $table->boolean('active')->default(true);
-            $table->timestamps();
-        });
+        if (Schema::hasTable('service_categories')) {
+            DB::statement('ALTER TABLE '.DB::getTablePrefix().'service_categories ENGINE = InnoDB');
+        } else {
+            Schema::create('service_categories', function (Blueprint $table) {
+                $table->engine('InnoDB');
+                $table->id();
+                $table->string('name', 100)->unique();
+                $table->unsignedInteger('sort_order')->default(0);
+                $table->boolean('active')->default(true);
+                $table->timestamps();
+            });
+        }
+
+        if (! Schema::hasColumn('services', 'service_category_id')) {
+            Schema::table('services', function (Blueprint $table) {
+                $table->unsignedBigInteger('service_category_id')->nullable()->after('description');
+            });
+        }
 
         Schema::table('services', function (Blueprint $table) {
-            $table->foreignId('service_category_id')->nullable()->after('description')->constrained('service_categories')->nullOnDelete();
+            $table->foreign('service_category_id')->references('id')->on('service_categories')->nullOnDelete();
         });
+
+        if (! Schema::hasColumn('services', 'category')) {
+            return;
+        }
 
         $names = DB::table('services')
             ->whereNotNull('category')
@@ -31,7 +46,8 @@ return new class extends Migration
             ->pluck('name');
 
         foreach ($names->values() as $i => $name) {
-            $id = DB::table('service_categories')->insertGetId(['name' => $name, 'sort_order' => $i, 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
+            $id = DB::table('service_categories')->where('name', $name)->value('id')
+                ?? DB::table('service_categories')->insertGetId(['name' => $name, 'sort_order' => $i, 'active' => true, 'created_at' => now(), 'updated_at' => now()]);
             DB::table('services')->whereRaw('TRIM(category) = ?', [$name])->update(['service_category_id' => $id]);
         }
 
