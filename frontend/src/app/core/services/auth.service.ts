@@ -17,6 +17,11 @@ interface TokenResponse {
   user: User;
 }
 
+export interface QuickLogin {
+  email: string;
+  label: string;
+}
+
 export interface MessageResponse {
   message: string;
 }
@@ -62,6 +67,14 @@ export class AuthService {
     return this.http
       .post<TokenResponse>(`${this.api}/login`, { email, password, referral: this.marketing.referral() }, quiet())
       .pipe(tap((res) => this.storeSession(res)));
+  }
+
+  quickLogins(): Observable<QuickLogin[]> {
+    return this.http.get<QuickLogin[]>(`${this.api}/quick-logins`, quiet());
+  }
+
+  quickLogin(email: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.api}/quick-login`, { email }, quiet()).pipe(tap((res) => this.storeSession(res)));
   }
 
   register(payload: RegisterPayload): Observable<MessageResponse> {

@@ -33,11 +33,11 @@
     <a class="auth-link !mt-1" routerLink="/register" [queryParams]="returnUrl() ? { returnUrl: returnUrl() } : {}" data-testid="login-register">Nemaš nalog? Registruj se</a>
     <a class="auth-link !mt-1" routerLink="/">Nazad na početnu</a>
 
-    @if (devLogins.length) {
+    @if (devLogins().length) {
       <div class="dev-logins" data-testid="dev-logins">
         <p class="dev-logins-title">Brza prijava (test)</p>
         <div class="grid grid-cols-2 gap-2">
-          @for (login of devLogins; track login.email) {
+          @for (login of devLogins(); track login.email) {
             <button type="button" appBtn theme="secondary" [disabled]="loading()" (click)="quickLogin(login)" [attr.data-testid]="'dev-login-' + $index">
               {{ login.label }}
             </button>

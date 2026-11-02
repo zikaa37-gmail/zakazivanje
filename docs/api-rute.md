@@ -23,6 +23,8 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | POST | `/bookings` | `{service_ids, staff_member_id?, starts_at "Y-m-d H:i", note?, promo_code?, guest?}` — gost: `{first_name, last_name, phone, email?}`; `null` zaposleni = prvi slobodan |
 | POST | `/auth/register` | registracija klijenta → mejl za aktivaciju (važi 3 dana; `next?` = povratak posle aktivacije; ponovna registracija nepotvrđenog mejla šalje novi link; `website` i `started_at` su zaštita od botova) |
 | POST | `/auth/login` | `{email, password}` → `{access_token, refresh_token, user}` |
+| GET | `/auth/quick-logins` | brza prijava (test): `[{email, label}]` za mejlove iz `QUICK_LOGIN_EMAILS`; prazno = isključeno |
+| POST | `/auth/quick-login` | `{email}` → tokeni, samo za mejl sa liste (inače 404) |
 | POST | `/auth/refresh` | `{refresh_token}` → novi par tokena (stari se opoziva) |
 | POST | `/auth/verify-email` | `{token}` iz linka u mejlu → aktivira nalog i vraća `{access_token, refresh_token, user}` |
 | POST | `/auth/resend-verification` | `{email, next?}` |
