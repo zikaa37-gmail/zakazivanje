@@ -1,4 +1,4 @@
--- Tabela `zk_staff_note_recipients`: šema i podaci iz lokalne baze (31.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_note_recipients`: šema i podaci iz lokalne baze (02.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -18,5 +18,6 @@ CREATE TABLE `zk_staff_note_recipients` (
   CONSTRAINT `zk_staff_note_recipients_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_staff_note_recipients` VALUES (2,5,NULL),(2,73,NULL),(2,74,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;

@@ -1,4 +1,4 @@
--- Tabela `zk_staff_notes`: šema i podaci iz lokalne baze (31.10.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_notes`: šema i podaci iz lokalne baze (02.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -25,7 +25,8 @@ CREATE TABLE `zk_staff_notes` (
   CONSTRAINT `zk_staff_notes_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_resolved_by_foreign` FOREIGN KEY (`resolved_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_taken_by_foreign` FOREIGN KEY (`taken_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_staff_notes` VALUES (2,71,'test poruka',71,'2026-11-02 09:35:13','2026-11-02 09:35:16',71,'2026-11-02 09:34:49','2026-11-02 09:35:16');
 
 SET FOREIGN_KEY_CHECKS=1;
