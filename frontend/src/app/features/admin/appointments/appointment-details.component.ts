@@ -2,7 +2,9 @@ import { Component, OnInit, computed, inject, input, output, signal } from '@ang
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
+import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { StaffMember } from '../../../core/models/staff.model';
+import { AppointmentService } from '../../../core/services/appointment.service';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { PaymentService } from '../../../core/services/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -12,6 +14,7 @@ import { longDate, timeOf } from '../../../core/utils/dates';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { PaymentDialogComponent } from '../../../shared/components/payment-dialog/payment-dialog.component';
+import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
@@ -23,7 +26,7 @@ import { AppointmentActionsService } from './appointment-actions.service';
 @Component({
   selector: 'app-appointment-details',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SrDateTimePipe, TimePickerComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
   templateUrl: './appointment-details.component.html',
 })
 export class AppointmentDetailsComponent implements OnInit {
@@ -33,6 +36,7 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly closed = output<void>();
 
   private actionsService = inject(AppointmentActionsService);
+  private appointmentService = inject(AppointmentService);
   private payments = inject(PaymentService);
   private toast = inject(ToastService);
   private business = inject(BusinessSettingService);
@@ -45,6 +49,9 @@ export class AppointmentDetailsComponent implements OnInit {
 
   readonly statuses = STATUS_LABELS;
   readonly moving = signal(false);
+  readonly transferring = signal(false);
+  readonly alternatives = signal<ColleagueRef[] | null>(null);
+  readonly startTime = computed(() => timeOf(this.appointment().starts_at));
   readonly saving = signal(false);
   readonly moveStaff = new FormControl<number | null>(null);
   readonly moveDate = new FormControl<string>('', { nonNullable: true });
@@ -80,6 +87,27 @@ export class AppointmentDetailsComponent implements OnInit {
 
   async act(action: string): Promise<void> {
     if (await this.actionsService.run(this.appointment(), action)) this.changed.emit();
+  }
+
+  toggleTransfer(): void {
+    this.transferring.update((open) => !open);
+    if (!this.transferring()) return;
+    this.alternatives.set(null);
+    this.appointmentService.alternatives(this.appointment().id).subscribe({
+      next: (list) => this.alternatives.set(list),
+      error: (err) => {
+        this.alternatives.set([]);
+        this.toast.error(apiErrorMessage(err, 'Učitavanje kolega nije uspelo.'));
+      },
+    });
+  }
+
+  async transfer(colleague: ColleagueRef): Promise<void> {
+    if (await this.actionsService.transfer(this.appointment(), colleague)) this.changed.emit();
+  }
+
+  async askClient(): Promise<void> {
+    if (await this.actionsService.askClientToReschedule(this.appointment())) this.changed.emit();
   }
 
   async move(): Promise<void> {

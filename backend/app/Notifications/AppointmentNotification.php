@@ -27,10 +27,16 @@ class AppointmentNotification extends Notification implements ShouldQueue
 
     public const RESCHEDULED = 'appointment_rescheduled';
 
+    public const TRANSFERRED = 'appointment_transferred';
+
+    public const RESCHEDULE_REQUEST = 'appointment_reschedule_request';
+
     public function __construct(
         public Appointment $appointment,
         public string $type,
         public ?string $recurrenceLabel = null,
+        public ?string $previousStaffName = null,
+        public bool $timeChanged = false,
     ) {
         $this->afterCommit();
     }
@@ -72,14 +78,18 @@ class AppointmentNotification extends Notification implements ShouldQueue
         }
 
         if ($this->type !== self::CANCELLED && $notifiable->password !== null) {
-            $message->action('Moji termini', rtrim(config('app.frontend_url'), '/').'/my-appointments');
+            $message->action($this->type === self::RESCHEDULE_REQUEST ? 'Izaberi novi termin' : 'Moji termini', $this->link());
         }
 
-        if (in_array($this->type, [self::CONFIRMED, self::REMINDER, self::CANCELLED, self::RESCHEDULED], true)) {
+        if ($this->offersFreeChange()) {
+            $message->line($this->freeChangeLine($business));
+        }
+
+        if (in_array($this->type, [self::CONFIRMED, self::REMINDER, self::CANCELLED, self::RESCHEDULED, self::TRANSFERRED], true)) {
             $message->attachData(IcsCalendar::forAppointment($a, $this->type === self::CANCELLED), 'termin.ics', ['mime' => 'text/calendar']);
         }
 
-        if ($this->type !== self::CANCELLED) {
+        if ($this->type !== self::CANCELLED && ! $this->offersFreeChange()) {
             $message->line($business->cancellation_days_before > 0
                 ? 'Ako ne možeš da dođeš, otkaži '.$business->cancellationLabel().($business->phone ? ' ili pozovi '.$business->phone : '').'.'
                 : 'Ako ne možeš da dođeš, javi nam se.');
@@ -98,7 +108,31 @@ class AppointmentNotification extends Notification implements ShouldQueue
             $this->services().' · '.$this->staff(),
             $this->recurrenceLabel ? 'Ponavlja se '.$this->recurrenceLabel.'.' : null,
             $this->type === self::RECEIVED ? 'Javićemo ti kad potvrdimo termin.' : null,
+            $this->offersFreeChange() ? $this->intro() : null,
+            $this->offersFreeChange() ? $this->freeChangeLine($business) : null,
+            $this->offersFreeChange() && $notifiable->password !== null ? $this->link() : null,
         ]));
+    }
+
+    private function offersFreeChange(): bool
+    {
+        return in_array($this->type, [self::TRANSFERRED, self::RESCHEDULE_REQUEST], true);
+    }
+
+    private function link(): string
+    {
+        $base = rtrim(config('app.frontend_url'), '/').'/my-appointments';
+
+        return $this->type === self::RESCHEDULE_REQUEST ? $base.'?reschedule='.$this->appointment->id : $base;
+    }
+
+    private function freeChangeLine(BusinessSetting $business): string
+    {
+        $call = $business->phone ? ' ili da nas pozoveš na '.$business->phone : '';
+
+        return $this->type === self::RESCHEDULE_REQUEST
+            ? 'Pomeranje i otkazivanje ovog termina su bez ikakvih posledica. Možeš i da nas pozoveš'.($business->phone ? ' na '.$business->phone : '').'.'
+            : 'Ako ti ne odgovara, termin možeš da pomeriš ili otkažeš bez ikakvih posledica'.$call.'.';
     }
 
     private function title(): string
@@ -109,6 +143,8 @@ class AppointmentNotification extends Notification implements ShouldQueue
             self::CANCELLED => 'termin je otkazan',
             self::REMINDER => 'podsetnik za termin',
             self::RESCHEDULED => 'termin je pomeren',
+            self::TRANSFERRED => 'promena za tvoj termin',
+            self::RESCHEDULE_REQUEST => 'molimo te da pomeriš termin',
         };
     }
 
@@ -120,6 +156,10 @@ class AppointmentNotification extends Notification implements ShouldQueue
             self::CANCELLED => 'Nažalost, termin je otkazan. Izaberi novi termin kad ti odgovara.',
             self::REMINDER => 'Podsećamo te na termin:',
             self::RESCHEDULED => 'Tvoj termin je pomeren. Novo vreme:',
+            self::TRANSFERRED => $this->previousStaffName
+                ? "Došlo je do promene: tvoj termin će raditi {$this->staff()} (ranije: {$this->previousStaffName}).".($this->timeChanged ? ' Termin je i pomeren, novo vreme je ispod.' : '')
+                : "Tvoj termin će raditi {$this->staff()}.",
+            self::RESCHEDULE_REQUEST => "Nažalost, {$this->staff()} ne može da radi u tvom terminu. Izaberi novo vreme koje ti odgovara.",
         };
     }
 

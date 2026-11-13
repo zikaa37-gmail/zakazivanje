@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'paid_at', 'payment_method', 'tip'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'paid_at', 'payment_method', 'tip'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -25,6 +25,10 @@ class Appointment extends Model
     public const STATUSES = [self::STATUS_PENDING, self::STATUS_CONFIRMED, self::STATUS_COMPLETED, self::STATUS_CANCELLED, self::STATUS_NO_SHOW];
 
     public const BLOCKING_STATUSES = [self::STATUS_PENDING, self::STATUS_CONFIRMED];
+
+    public const FREE_CHANGE_TRANSFERRED = 'transferred';
+
+    public const FREE_CHANGE_SALON_REQUEST = 'salon_request';
 
     public const PAYMENT_METHODS = ['cash', 'card', 'bank'];
 

@@ -144,6 +144,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/share/share.component').then((m) => m.ShareComponent),
       },
       {
+        path: 'absences',
+        title: 'Odsustva',
+        loadComponent: () => import('./features/admin/absences/absences.component').then((m) => m.AbsencesComponent),
+      },
+      {
         path: 'notes',
         title: 'Beleške',
         loadComponent: () => import('./features/admin/notes/notes.component').then((m) => m.NotesComponent),

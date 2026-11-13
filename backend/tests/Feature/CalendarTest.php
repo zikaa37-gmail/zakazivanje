@@ -74,7 +74,7 @@ class CalendarTest extends TestCase
             ->assertJsonPath('ends_at', '2026-10-21 15:00')
             ->assertJsonPath('staff_member_id', $this->milica->id);
 
-        Notification::assertSentTo($this->client, AppointmentNotification::class, fn ($n) => $n->type === AppointmentNotification::RESCHEDULED);
+        Notification::assertSentTo($this->client, AppointmentNotification::class, fn ($n) => $n->type === AppointmentNotification::TRANSFERRED && $n->timeChanged);
     }
 
     public function test_reschedule_rejects_conflicts_wrong_staff_and_closed_statuses(): void

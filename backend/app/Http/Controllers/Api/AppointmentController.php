@@ -13,6 +13,7 @@ use App\Services\AvailabilityService;
 use App\Services\BookingService;
 use App\Services\ClientDisciplineService;
 use App\Services\RecurrenceService;
+use App\Services\StaffAbsenceService;
 use App\Services\WaitlistService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -188,26 +189,32 @@ class AppointmentController extends Controller
         $end = $start->addMinutes($appointment->items->sum('duration_minutes'));
         $previousDate = CarbonImmutable::parse($appointment->starts_at)->toDateString();
         $previousStaff = $appointment->staff_member_id;
+        $previousStart = CarbonImmutable::parse($appointment->starts_at);
 
-        $moved = DB::transaction(function () use ($appointment, $staff, $start, $end) {
+        $transferred = $previousStaff !== $staff->id;
+
+        $moved = DB::transaction(function () use ($appointment, $staff, $start, $end, $transferred) {
             StaffMember::whereKey($staff->id)->lockForUpdate()->first();
 
             if (! $this->availability->isFree($staff->id, $start, $end, $appointment->id)) {
                 throw ValidationException::withMessages(['starts_at' => ['U tom terminu je već zauzeto.']]);
             }
 
-            $changed = $appointment->staff_member_id !== $staff->id || ! CarbonImmutable::parse($appointment->starts_at)->equalTo($start);
+            $changed = $transferred || ! CarbonImmutable::parse($appointment->starts_at)->equalTo($start);
             $appointment->update([
                 'staff_member_id' => $staff->id,
                 'starts_at' => $start,
                 'ends_at' => $end,
                 'reminder_sent_at' => null,
+                'free_change_reason' => $transferred ? Appointment::FREE_CHANGE_TRANSFERRED : $appointment->free_change_reason,
             ]);
 
             return $changed;
         });
 
-        if ($moved && ($data['notify'] ?? true)) {
+        if ($transferred && ($data['notify'] ?? true)) {
+            $this->notifier->transferred($appointment, $previousStaff, $request->user(), $previousStart->notEqualTo($start));
+        } elseif ($moved && ($data['notify'] ?? true)) {
             $this->notifier->rescheduled($appointment);
         }
         if ($moved) {
@@ -215,6 +222,28 @@ class AppointmentController extends Controller
         }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
+    }
+
+    public function alternatives(Appointment $appointment, StaffAbsenceService $absences)
+    {
+        return $absences->alternatives($appointment->load('items'))
+            ->map(fn (StaffMember $s) => $s->only(['id', 'first_name', 'last_name', 'color']))
+            ->values();
+    }
+
+    public function askReschedule(Appointment $appointment)
+    {
+        if (! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true) || ! $appointment->starts_at->isFuture()) {
+            throw ValidationException::withMessages(['appointment' => ['Klijentu se šalje samo za predstojeći termin.']]);
+        }
+        if (! $appointment->client) {
+            throw ValidationException::withMessages(['appointment' => ['Termin nema klijenta.']]);
+        }
+
+        $appointment->update(['free_change_reason' => Appointment::FREE_CHANGE_SALON_REQUEST]);
+        $this->notifier->rescheduleRequested($appointment);
+
+        return ['message' => 'Klijentu je poslata poruka da izabere novi termin.', 'appointment' => $appointment];
     }
 
     public function cancel(Request $request, Appointment $appointment)

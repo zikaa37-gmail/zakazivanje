@@ -3,6 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
+import { ColleagueRef } from '../models/staff-absence.model';
 import { AdminAppointmentPayload, Appointment, AppointmentStatus, BlockedTime, Recurrence } from '../models/appointment.model';
 
 export interface AppointmentFilters {
@@ -48,6 +49,14 @@ export class AppointmentService {
 
   reschedule(id: number, staffMemberId: number, startsAt: string): Observable<Appointment> {
     return this.http.post<Appointment>(`${this.api}/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
+  }
+
+  alternatives(id: number): Observable<ColleagueRef[]> {
+    return this.http.get<ColleagueRef[]>(`${this.api}/${id}/alternatives`, { context: new HttpContext().set(SKIP_LOADER, true) });
+  }
+
+  askReschedule(id: number): Observable<{ message: string; appointment: Appointment }> {
+    return this.http.post<{ message: string; appointment: Appointment }>(`${this.api}/${id}/ask-reschedule`, {});
   }
 
   blockedTimes(from: string, to: string): Observable<BlockedTime[]> {

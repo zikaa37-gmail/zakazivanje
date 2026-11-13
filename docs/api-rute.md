@@ -70,11 +70,18 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
-| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje |
+| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i administrativnim radnicima) |
+| GET | `/appointments/{id}/alternatives` | kolege koje rade te usluge i slobodne su u isto vreme |
+| POST | `/appointments/{id}/ask-reschedule` | klijentu poruka sa linkom `/my-appointments?reschedule={id}`; `free_change_reason = salon_request` (pomeranje / otkazivanje bez roka i bez poena discipline) |
 | POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik dobija samo svoj; administrativni radnik vidi samo svoj (ako radi usluge), ostale samo šalje |
 | POST | `/reports/pdf` | isti upit → PDF |
 | POST | `/reports/send` | isti upit + `{channel: mail \| whatsapp}` → PDF prijavljenom korisniku; administrativni radnik šalje vlasnicima |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
+| POST | `/staff-absences/list` | `{status?, include_past?}` — odsustva (radnik koji radi usluge vidi svoja i ona koja je upisao) |
+| POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / administrativni radnik → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
+| GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
+| DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
+| POST | `/staff-absences/pending-count`, `/staff-absences/{id}/approve`, `/staff-absences/{id}/reject` | samo vlasnik / administrativni radnik; zaposleni dobija obaveštenje |
 | POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |
 | POST / DELETE | `/waitlist/list`, `/waitlist/{id}` | aktivne prijave na listu čekanja |

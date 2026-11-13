@@ -21,10 +21,13 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
 
     public const CLIENT_RESCHEDULED = 'admin_client_rescheduled';
 
+    public const TRANSFERRED = 'admin_transferred';
+
     public function __construct(
         public Appointment $appointment,
         public string $type,
         public ?string $previousStart = null,
+        public ?string $previousStaffName = null,
     ) {
         $this->afterCommit();
     }
@@ -53,6 +56,7 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
         $title = match ($this->type) {
             self::NEW_BOOKING => $pending ? 'Novi termin čeka potvrdu' : 'Novi termin',
             self::CLIENT_RESCHEDULED => $pending ? 'Klijent je pomerio termin — čeka potvrdu' : 'Klijent je pomerio termin',
+            self::TRANSFERRED => 'Termin je prebačen: '.$a->staffMember?->first_name,
             default => 'Klijent je otkazao termin',
         };
 
@@ -62,9 +66,10 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
             ->line('**'.$a->starts_at->format('d.m.Y. H:i').' – '.$a->ends_at->format('H:i').'**')
             ->line($a->items->pluck('name')->join(' + ').' · '.$a->staffMember?->first_name)
             ->when($this->previousStart, fn ($m) => $m->line('Ranije: '.Carbon::parse($this->previousStart)->format('d.m.Y. H:i')))
+            ->when($this->previousStaffName, fn ($m) => $m->line('Prethodno: '.$this->previousStaffName))
             ->line('Klijent: '.$client->first_name.' '.$client->last_name.($client->phone ? ', '.$client->phone : ''))
             ->when($a->note, fn ($m) => $m->line('Napomena: '.$a->note))
-            ->action($pending && $this->type !== self::CLIENT_CANCELLED ? 'Potvrdi termin' : 'Otvori termine', rtrim(config('app.frontend_url'), '/').'/admin/appointments')
+            ->action($pending && ! in_array($this->type, [self::CLIENT_CANCELLED, self::TRANSFERRED], true) ? 'Potvrdi termin' : 'Otvori termine', rtrim(config('app.frontend_url'), '/').'/admin/appointments')
             ->salutation(BusinessSetting::current()->name);
     }
 }

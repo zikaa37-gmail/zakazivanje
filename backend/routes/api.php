@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\ShareController;
+use App\Http\Controllers\Api\StaffAbsenceController;
 use App\Http\Controllers\Api\StaffMemberController;
 use App\Http\Controllers\Api\StaffNoteController;
 use App\Http\Controllers\Api\TeamController;
@@ -101,6 +102,8 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments/{appointment}/paid', [AppointmentPaymentController::class, 'markPaid']);
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
+    Route::get('/appointments/{appointment}/alternatives', [AppointmentController::class, 'alternatives']);
+    Route::post('/appointments/{appointment}/ask-reschedule', [AppointmentController::class, 'askReschedule'])->middleware('throttle:booking');
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
 
     Route::post('/reports', [ReportController::class, 'show']);
@@ -119,6 +122,11 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/blocked-times/list', [BlockedTimeController::class, 'index']);
     Route::post('/blocked-times', [BlockedTimeController::class, 'store']);
     Route::delete('/blocked-times/{blockedTime}', [BlockedTimeController::class, 'destroy']);
+
+    Route::post('/staff-absences/list', [StaffAbsenceController::class, 'index']);
+    Route::post('/staff-absences', [StaffAbsenceController::class, 'store']);
+    Route::get('/staff-absences/{absence}/appointments', [StaffAbsenceController::class, 'appointments']);
+    Route::delete('/staff-absences/{absence}', [StaffAbsenceController::class, 'destroy']);
 });
 
 Route::middleware(['jwt', 'role:owner'])->group(function () {
@@ -143,6 +151,10 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
     Route::post('/staff/{staffMember}/active', [StaffMemberController::class, 'setActive']);
+
+    Route::post('/staff-absences/pending-count', [StaffAbsenceController::class, 'pendingCount']);
+    Route::post('/staff-absences/{absence}/approve', [StaffAbsenceController::class, 'approve']);
+    Route::post('/staff-absences/{absence}/reject', [StaffAbsenceController::class, 'reject']);
 
     Route::post('/team/list', [TeamController::class, 'index']);
     Route::post('/team', [TeamController::class, 'store']);

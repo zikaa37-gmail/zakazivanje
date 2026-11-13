@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
+use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\AdminAppointmentNotification;
 use App\Notifications\AppointmentNotification;
@@ -83,6 +84,32 @@ class AppointmentNotifier
         if ($settings->notify_admin_new_booking) {
             Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart));
         }
+    }
+
+    public function transferred(Appointment $appointment, ?int $previousStaffId, ?User $by = null, bool $timeChanged = false): void
+    {
+        $previous = StaffMember::find($previousStaffId);
+
+        if ($appointment->starts_at->isFuture()) {
+            $client = User::find($appointment->client_id);
+            if ($client && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
+                $client->notify(new AppointmentNotification($appointment, AppointmentNotification::TRANSFERRED, null, $previous?->first_name, $timeChanged));
+            }
+        }
+
+        $recipients = User::where('active', true)
+            ->whereNotNull('email')
+            ->where(fn ($q) => $q->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])
+                ->orWhereIn('staff_member_id', array_filter([$appointment->staff_member_id, $previousStaffId])))
+            ->when($by, fn ($q) => $q->whereKeyNot($by->id))
+            ->get();
+
+        Notification::send($recipients, new AdminAppointmentNotification($appointment, AdminAppointmentNotification::TRANSFERRED, null, $previous ? trim($previous->first_name.' '.$previous->last_name) : null));
+    }
+
+    public function rescheduleRequested(Appointment $appointment): void
+    {
+        $this->toClient($appointment, AppointmentNotification::RESCHEDULE_REQUEST);
     }
 
     public function reminder(Appointment $appointment): void
