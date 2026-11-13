@@ -99,6 +99,11 @@
               <span class="badge mt-1" [class]="'badge mt-1 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
             </div>
           </div>
+          @if (a.free_change_reason && a.can_cancel) {
+            <div class="text-sm mt-3 rounded-lg bg-[var(--color-bg)] p-2" [attr.data-testid]="'my-free-change-' + a.id">
+              {{ a.free_change_reason === 'transferred' ? 'Salon je promenio ko radi tvoj termin.' : 'Salon te moli da izabereš novo vreme.' }} Pomeranje i otkazivanje su bez ikakvih posledica.
+            </div>
+          }
           <div class="flex items-center justify-between border-t border-[var(--color-border)] mt-3 pt-3">
             @if (a.can_cancel) {
               <span class="flex gap-4">

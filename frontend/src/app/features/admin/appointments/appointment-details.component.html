@@ -8,6 +8,9 @@
       @if (appointment().source === 'online') {
         <span class="badge badge-neutral">Online</span>
       }
+      @if (appointment().free_change_reason) {
+        <span class="badge badge-info" data-testid="details-free-change">{{ appointment().free_change_reason === 'transferred' ? 'Prebačen — klijent menja bez posledica' : 'Klijent zamoljen da pomeri' }}</span>
+      }
     </div>
 
     <div>
@@ -84,6 +87,10 @@
         <button type="button" appBtn theme="secondary" size="s" (click)="act('completed')" data-testid="details-completed">Završen</button>
         <button type="button" appBtn theme="secondary" size="s" (click)="act('no_show')">Nije došao</button>
         <button type="button" appBtn theme="secondary" size="s" (click)="moving.set(!moving())" data-testid="details-move">Pomeri</button>
+        <button type="button" appBtn theme="secondary" size="s" (click)="toggleTransfer()" data-testid="details-transfer"><span appIcon="users" aria-hidden="true"></span> Prebaci kolegi</button>
+        @if (appointment().client) {
+          <button type="button" appBtn theme="secondary" size="s" (click)="askClient()" data-testid="details-ask-reschedule"><span appIcon="send" aria-hidden="true"></span> Zamoli da pomeri</button>
+        }
         <button type="button" appBtn theme="danger" size="s" (click)="act('cancel')" data-testid="details-cancel">Otkaži</button>
         @if (appointment().recurrence?.active) {
           <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="act('cancel-series')">Otkaži i sve sledeće</button>
@@ -92,6 +99,26 @@
         <button type="button" appBtn theme="secondary" size="s" (click)="act('confirmed')">Vrati na potvrđen</button>
       }
     </div>
+
+    @if (transferring() && active()) {
+      <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-2" data-testid="details-transfer-panel">
+        <div class="text-sm font-semibold">Slobodni u isto vreme</div>
+        @if (alternatives() === null) {
+          <app-spinner [size]="20" />
+        } @else if (alternatives()!.length === 0) {
+          <span class="text-sm muted">Niko od kolega koji rade ove usluge nije slobodan u {{ startTime() }}. Pomeri termin ili zamoli klijenta da sam izabere novo vreme.</span>
+        } @else {
+          <div class="chip-group">
+            @for (c of alternatives(); track c.id) {
+              <button type="button" class="chip" (click)="transfer(c)" [attr.data-testid]="'details-transfer-' + c.id">
+                <span class="color-dot" [style.background]="c.color || 'var(--color-primary)'"></span> {{ c.first_name }} {{ c.last_name }}
+              </button>
+            }
+          </div>
+          <span class="text-xs muted">Klijent, oba zaposlena i vlasnik dobijaju obaveštenje. Klijent može da otkaže ili pomeri bez posledica.</span>
+        }
+      </div>
+    }
 
     @if (moving() && active()) {
       <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-2" data-testid="details-move-form">

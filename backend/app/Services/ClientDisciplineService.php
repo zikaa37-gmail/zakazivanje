@@ -31,7 +31,7 @@ class ClientDisciplineService
         $appointments = Appointment::query()
             ->where('client_id', $client->id)
             ->where(fn ($q) => $q
-                ->where(fn ($q) => $q->where('status', Appointment::STATUS_CANCELLED)->where('cancelled_by', 'client')->where('cancelled_at', '>=', $since))
+                ->where(fn ($q) => $q->where('status', Appointment::STATUS_CANCELLED)->where('cancelled_by', 'client')->whereNull('free_change_reason')->where('cancelled_at', '>=', $since))
                 ->orWhere(fn ($q) => $q->where('status', Appointment::STATUS_NO_SHOW)->where('starts_at', '>=', $since)))
             ->get(['status', 'starts_at', 'cancelled_at']);
 

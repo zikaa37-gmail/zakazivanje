@@ -45,7 +45,7 @@ class MyAppointmentController extends Controller
         }
 
         $bookings->cancel($appointment, 'client');
-        ClientActivity::dispatch($request->user(), ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at)]);
+        ClientActivity::dispatch($request->user(), ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at), 'free_change' => $appointment->free_change_reason !== null]);
         app(ClientDisciplineService::class)->refresh($request->user());
         $notifier->cancelledByClient($appointment);
         $waitlist->slotFreed($appointment);
@@ -69,6 +69,7 @@ class MyAppointmentController extends Controller
 
         $previous = $appointment->starts_at->format('Y-m-d H:i');
         $previousStaff = $appointment->staff_member_id;
+        $freeChange = $appointment->free_change_reason !== null;
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i', $data['starts_at']);
         app(ClientDisciplineService::class)->ensureCanBook($request->user(), $start, ClientActivity::RESCHEDULE_FAILED);
         try {
@@ -77,7 +78,10 @@ class MyAppointmentController extends Controller
             ClientActivity::dispatch($request->user(), ClientActivity::RESCHEDULE_FAILED, ['appointment_id' => $appointment->id, 'starts_at' => $data['starts_at'], 'reason' => collect($e->errors())->flatten()->first()]);
             throw $e;
         }
-        ClientActivity::dispatch($request->user(), ClientActivity::RESCHEDULED, ['appointment_id' => $appointment->id, 'from' => $previous, 'to' => $data['starts_at']]);
+        ClientActivity::dispatch($request->user(), ClientActivity::RESCHEDULED, ['appointment_id' => $appointment->id, 'from' => $previous, 'to' => $data['starts_at'], 'free_change' => $freeChange]);
+        if ($freeChange) {
+            $moved->update(['free_change_reason' => null]);
+        }
 
         if ($previous !== $moved->starts_at->format('Y-m-d H:i') || $moved->wasChanged('staff_member_id')) {
             $notifier->rescheduledByClient($moved, $previous);
@@ -98,7 +102,12 @@ class MyAppointmentController extends Controller
 
     private function canCancel(Appointment $appointment): bool
     {
-        return in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)
-            && now()->lt(BusinessSetting::current()->cancellationDeadline($appointment->starts_at));
+        if (! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)) {
+            return false;
+        }
+
+        return $appointment->free_change_reason
+            ? $appointment->starts_at->isFuture()
+            : now()->lt(BusinessSetting::current()->cancellationDeadline($appointment->starts_at));
     }
 }

@@ -33,6 +33,7 @@ export interface Appointment {
   paid_at: string | null;
   payment_method: PaymentMethod | null;
   tip: number;
+  free_change_reason?: 'transferred' | 'salon_request' | null;
   can_cancel?: boolean;
   can_pay?: boolean;
   can_review?: boolean;

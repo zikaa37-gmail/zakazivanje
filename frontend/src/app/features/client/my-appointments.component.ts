@@ -44,6 +44,7 @@ export class MyAppointmentsComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private reviewTarget = Number(this.route.snapshot.queryParamMap.get('review')) || null;
+  private rescheduleTarget = Number(this.route.snapshot.queryParamMap.get('reschedule')) || null;
   readonly visibleMonth = signal(today());
   readonly selectedDay = signal<string | null>(null);
   readonly allAppointments = signal<Appointment[]>([]);
@@ -150,12 +151,22 @@ export class MyAppointmentsComponent {
         this.appointments.set(list);
         this.loading.set(false);
         this.openReviewTarget(list);
+        this.openRescheduleTarget(list);
       },
       error: (err) => {
         this.error.set(apiErrorMessage(err, 'Učitavanje termina nije uspelo.'));
         this.loading.set(false);
       },
     });
+  }
+
+  private openRescheduleTarget(list: Appointment[]): void {
+    if (!this.rescheduleTarget) return;
+    const target = list.find((a) => a.id === this.rescheduleTarget);
+    this.rescheduleTarget = null;
+    this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    if (target?.can_cancel) this.rescheduling.set(target);
+    else this.toast.info('Ovaj termin više ne može da se pomeri — javi nam se telefonom.');
   }
 
   private openReviewTarget(list: Appointment[]): void {

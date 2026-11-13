@@ -5,6 +5,7 @@ import { userRoleLabel } from '../core/models/user.model';
 import { AuthService } from '../core/services/auth.service';
 import { AppointmentService } from '../core/services/appointment.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
+import { StaffAbsenceService } from '../core/services/staff-absence.service';
 import { StaffNoteService } from '../core/services/staff-note.service';
 import { IconDirective, IconName } from '../shared/directives/icon.directive';
 
@@ -34,6 +35,7 @@ export class AdminShellComponent {
   protected business = inject(BusinessSettingService);
   protected appointments = inject(AppointmentService);
   protected notes = inject(StaffNoteService);
+  protected absences = inject(StaffAbsenceService);
 
   readonly menuOpen = signal(false);
   readonly initials = computed(() => {
@@ -51,6 +53,7 @@ export class AdminShellComponent {
     { path: '/admin/calendar', label: 'Kalendar', icon: 'calendar', section: 'daily' },
     { path: '/admin/appointments', label: 'Termini', icon: 'check-square', section: 'daily' },
     { path: '/admin/notes', label: 'Beleške', icon: 'message-square', section: 'daily' },
+    { path: '/admin/absences', label: 'Odsustva', icon: 'clock', section: 'daily' },
     { path: '/admin/clients', label: 'Klijenti', icon: 'user', section: 'daily', managerOnly: true },
     { path: '/admin/reviews', label: 'Recenzije', icon: 'star', section: 'daily', managerOnly: true },
     { path: '/admin/reports', label: 'Izveštaji', icon: 'file-text', section: 'daily', managerOnly: true },
@@ -77,6 +80,7 @@ export class AdminShellComponent {
   constructor() {
     this.appointments.refreshPendingCount();
     this.notes.refreshUnreadCount();
+    if (this.auth.isManager()) this.absences.refreshPendingCount();
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe((event) => {
       this.menuOpen.set(false);
       this.url.set(event.urlAfterRedirects);

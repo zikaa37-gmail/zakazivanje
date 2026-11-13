@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../../core/models/appointment.model';
+import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -58,6 +59,46 @@ export class AppointmentActionsService {
       return true;
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'Akcija nije uspela.'));
+      return false;
+    }
+  }
+
+  async transfer(a: Appointment, colleague: ColleagueRef): Promise<Appointment | null> {
+    const ok = await this.confirm.confirm({
+      title: 'Prebacivanje na kolegu',
+      message: `Prebaciti termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na ${colleague.first_name}? Obaveštenje dobijaju klijent, oba zaposlena i vlasnik, a klijent može da otkaže ili pomeri bez posledica.`,
+      confirmLabel: 'Prebaci',
+      cancelLabel: 'Ne',
+      danger: false,
+    });
+    if (!ok) return null;
+
+    try {
+      const moved = await firstValueFrom(this.appointments.reschedule(a.id, colleague.id, a.starts_at.slice(0, 16)));
+      this.toast.success(`Termin je prebačen na ${colleague.first_name}.`);
+      return moved;
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'Prebacivanje nije uspelo.'));
+      return null;
+    }
+  }
+
+  async askClientToReschedule(a: Appointment): Promise<boolean> {
+    const ok = await this.confirm.confirm({
+      title: 'Zamoli klijenta da pomeri termin',
+      message: `${a.client?.first_name} dobija poruku sa linkom da sam izabere novo vreme. Pomeranje i otkazivanje ovog termina su za klijenta bez posledica. Dok ne izabere, termin ostaje gde jeste.`,
+      confirmLabel: 'Pošalji',
+      cancelLabel: 'Ne',
+      danger: false,
+    });
+    if (!ok) return false;
+
+    try {
+      const res = await firstValueFrom(this.appointments.askReschedule(a.id));
+      this.toast.success(res.message);
+      return true;
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.'));
       return false;
     }
   }
