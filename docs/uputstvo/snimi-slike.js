@@ -18,11 +18,27 @@ function tinker(code) {
   return res.stdout.trim();
 }
 
+function isoDay(offset) {
+  const d = new Date(Date.now() + offset * 86400000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function upcoming() {
+  const found = JSON.parse(
+    tinker(
+      '$a = DB::table("appointments")->join("staff_members", "staff_members.id", "=", "appointments.staff_member_id")->where("starts_at", ">=", today()->addDay())->whereIn("status", ["pending", "confirmed"])->whereNotNull("client_id")->orderBy("starts_at")->first(["appointments.id", "starts_at", "first_name", "last_name"]); ' +
+      'echo json_encode($a ? ["id" => $a->id, "date" => substr($a->starts_at, 0, 10), "staff" => $a->first_name . " " . $a->last_name] : null);',
+    ),
+  );
+  if (found) found.days = Math.round((new Date(found.date + 'T00:00:00') - new Date(isoDay(0) + 'T00:00:00')) / 86400000);
+  return found;
+}
+
 function snapshot() {
   return JSON.parse(
     tinker(
       '$ai = (bool) DB::table("business_settings")->value("ai_enabled"); DB::table("business_settings")->update(["ai_enabled" => 1]); ' +
-      'echo json_encode(["ai" => $ai, "appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
+      'echo json_encode(["ai" => $ai, "appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "absences" => (int) DB::table("staff_absences")->max("id"), "blocks" => (int) DB::table("blocked_times")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
     ),
   );
 }
@@ -38,6 +54,8 @@ function cleanup(s) {
       `DB::table("appointment_items")->whereIn("appointment_id", $ids)->delete(); ` +
       `DB::table("appointments")->whereIn("id", $ids)->delete(); ` +
       `DB::table("client_activity_logs")->where("id", ">", ${s.activity})->delete(); ` +
+      `DB::table("staff_absences")->where("id", ">", ${s.absences})->delete(); ` +
+      `DB::table("blocked_times")->where("id", ">", ${s.blocks})->delete(); ` +
       `$promos = DB::table("promotions")->where("id", ">", ${s.promotions})->pluck("id"); ` +
       `DB::table("promotion_service")->whereIn("promotion_id", $promos)->delete(); ` +
       `DB::table("promotions")->whereIn("id", $promos)->delete(); ` +
@@ -205,6 +223,13 @@ async function run(b, before) {
   await o.waitForTimeout(400);
   await guide(o, 'confirmation', "return document.querySelector('[data-testid^=confirmation-]')?.parentElement");
   await shot(o, 'admin-13-pravila-zakazivanja', [{ sel: '[data-guide=confirmation]' }]);
+  const feeWasOn = await o.locator('[data-testid=cancellation-free-late]').count();
+  const toggleFee = () => o.evaluate(() => document.querySelector('input[data-testid=cancellation-fee-enabled]')?.click());
+  if (!feeWasOn) await toggleFee();
+  await o.waitForTimeout(400);
+  await guide(o, 'fee-toggle', "return document.querySelector('input[data-testid=cancellation-fee-enabled]')?.closest('label')");
+  await shot(o, 'admin-13b-naplata-otkazivanja', [{ sel: '[data-guide=fee-toggle]' }, { sel: '[data-testid=cancellation-free-late]' }, { sel: '[data-testid=cancellation-fee-type]' }], { block: 'center' });
+  if (!feeWasOn) await toggleFee();
   await o.click('[data-testid=tab-notifications]');
   await shot(o, 'admin-14-obavestenja', [{ sel: '[data-testid=tab-notifications]' }], { scroll: false });
   await o.click('[data-testid=tab-payments]');
@@ -341,6 +366,7 @@ async function run(b, before) {
     await closeModal(o);
   }
   await closeModal(o);
+  await closeModal(o);
 
   await go(o, '/admin/calendar', 2500, '[data-testid=calendar-grid]');
   await shot(o, 'rad-03-kalendar', [{ sel: '[data-testid=calendar-new]' }, { sel: '[data-testid=calendar-block]' }, { sel: '[data-testid=view-day]' }], { scroll: false });
@@ -348,6 +374,22 @@ async function run(b, before) {
   await o.waitForTimeout(800);
   await shot(o, 'rad-04-novi-termin', [{ sel: 'input[data-testid=appointment-client-search]' }], { scroll: false });
   await closeModal(o);
+  const next = upcoming();
+  if (next) {
+    await o.click('[data-testid=view-day]');
+    for (let i = 0; i < next.days; i++) {
+      await o.click('[data-testid=calendar-next]');
+      await o.waitForTimeout(300);
+    }
+    await o.waitForTimeout(1500);
+    await clickVisible(o, `[data-testid=event-${next.id}]`);
+    await o.waitForTimeout(600);
+    if (await clickVisible(o, '[data-testid=details-transfer]')) {
+      await o.waitForTimeout(1500);
+      await shot(o, 'rad-06c-prebaci', [{ sel: '[data-testid=details-transfer]' }, { sel: '[data-testid=details-transfer-panel]' }]);
+    } else console.log('NEMA PREBACIVANJA', JSON.stringify(next));
+    await closeModal(o);
+  }
 
   await go(o, '/admin/appointments', 2500, '[data-testid^=appointment-actions-]');
   await o.evaluate(() => {
@@ -380,6 +422,25 @@ async function run(b, before) {
   await shot(o, 'rad-11-beleske', [{ sel: '[data-testid=note-body]' }, { sel: '[data-guide=recipients]' }, { sel: '[data-testid=note-send]' }], { scroll: false });
   await o.fill('[data-testid=note-body]', '');
 
+  await go(o, '/admin/absences', 1500, '[data-testid=absence-form]');
+  await o.click('[data-testid=absence-type-sick]');
+  if (next) await o.selectOption('[data-testid=absence-staff]', { label: next.staff });
+  await o.fill('[data-testid=absence-from]', next?.date ?? isoDay(1));
+  await o.fill('[data-testid=absence-to]', next?.date ?? isoDay(1));
+  await o.fill('[data-testid=absence-note]', 'temperatura');
+  await guide(o, 'types', "return document.querySelector('[data-testid=absence-type-sick]')?.parentElement");
+  await shot(o, 'rad-12-odsustva', [{ sel: '[data-testid=absence-staff]' }, { sel: '[data-guide=types]' }, { sel: '[data-testid=absence-from]' }, { sel: '[data-testid=absence-save]' }], { scroll: false });
+  await o.click('[data-testid=absence-save]');
+  await o.waitForTimeout(5000);
+  if (await o.evaluate(() => {
+    const btn = document.querySelector('[data-testid^=absence-appointments-]');
+    if (btn && !document.querySelector('[data-testid=absence-affected], [data-testid=absence-no-appointments]')) btn.click();
+    return !!btn;
+  })) {
+    await o.waitForTimeout(1500);
+    await shot(o, 'rad-12b-odsustvo-termini', [{ sel: '[data-testid^=affected-call-]' }, { sel: '[data-testid^=affected-transfer-]' }, { sel: '[data-testid^=affected-ask-]' }, { sel: '[data-testid^=affected-cancel-]' }], { block: 'start' });
+  }
+
   const m = await ctxFor();
   await quickLogin(m, LOGIN.manager, /admin/);
   await go(m, '/admin/reports', 2000, '[data-testid=report-send-mail]');
@@ -395,6 +456,8 @@ async function run(b, before) {
   await shot(w, 'radnik-03-moj-pazar', [{ sel: '[data-testid=dashboard-my-cash]' }]);
   await go(w, '/admin/calendar', 2500, '[data-testid=calendar-grid]');
   await shot(w, 'radnik-04-kalendar', [{ sel: '[data-testid=calendar-staff]' }, { sel: '[data-testid=calendar-new]' }], { scroll: false });
+  await go(w, '/admin/absences', 1500, '[data-testid=absence-form]');
+  await shot(w, 'radnik-05-odsustvo', [{ sel: '[data-testid=absence-type-sick]' }, { sel: '[data-testid=absence-from]' }, { sel: '[data-testid=absence-save]' }], { scroll: false });
 
   const a = await ctxFor();
   await go(a, '/', 2500);
@@ -427,6 +490,13 @@ async function run(b, before) {
   if (!pick) console.log('NEMA USLUGE ZA IZBOR');
   await c.waitForTimeout(400);
   await shot(c, 'klijent-04-usluga', [{ sel: '[data-testid^=book-service-].selected' }, { sel: '[data-testid=book-next]' }], { scroll: false });
+  if (await clickVisible(c, '[data-testid=book-linked-toggle]')) {
+    await c.waitForTimeout(400);
+    await clickVisible(c, '[data-testid^=book-linked-]:not([data-testid=book-linked-toggle])');
+    await shot(c, 'klijent-04c-povezane', [{ sel: '[data-testid=book-linked] label' }, { sel: '[data-testid^=book-linked-].selected' }], { block: 'start' });
+    await clickVisible(c, '[data-testid=book-linked-toggle]');
+    await c.evaluate(() => window.scrollTo(0, 0));
+  }
   await c.click('[data-testid=book-next]');
   await c.waitForTimeout(1200);
   await shot(c, 'klijent-05-frizer', [{ sel: '[data-testid^=book-staff-]' }], { scroll: false });
