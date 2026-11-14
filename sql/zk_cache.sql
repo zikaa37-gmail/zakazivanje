@@ -1,4 +1,4 @@
--- Tabela `zk_cache`: šema i podaci iz lokalne baze (02.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_cache`: šema i podaci iz lokalne baze (14.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
