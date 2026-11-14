@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AppointmentItem;
 use App\Models\BusinessSetting;
+use App\Models\CancellationFee;
 use App\Models\Service;
 use App\Services\PriceQuoteService;
 use Illuminate\Database\Eloquent\Collection;
@@ -99,6 +100,9 @@ class ServiceController extends Controller
             'price' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'active' => ['boolean'],
             'paused_until' => ['nullable', 'date_format:Y-m-d'],
+            'cancellation_fee_type' => ['nullable', Rule::in([CancellationFee::TYPE_NONE, ...CancellationFee::TYPES])],
+            'cancellation_fee_value' => ['nullable', 'numeric', 'min:0', 'max:1000000', Rule::when($request->input('cancellation_fee_type') === CancellationFee::TYPE_PERCENT, ['max:100'])],
+            'cancellation_free_late' => ['nullable', 'integer', 'between:0,10'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'staff_member_ids' => ['array'],
             'staff_member_ids.*' => ['integer', 'exists:staff_members,id'],

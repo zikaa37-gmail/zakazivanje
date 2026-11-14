@@ -1,3 +1,4 @@
+import { CancellationDiscountType } from './cancellation-fee.model';
 import { CommunicationChannel, Gender } from './user.model';
 
 export type DisciplineZone = 'green' | 'yellow' | 'orange' | 'red';
@@ -66,6 +67,8 @@ export interface Client {
   zone_until: string | null;
   zone_reason: string | null;
   zone_changed_at: string | null;
+  cancellation_discount_type?: CancellationDiscountType | null;
+  cancellation_discount_value?: number | null;
 }
 
 export interface ClientPayload {
@@ -78,6 +81,8 @@ export interface ClientPayload {
   whatsapp_number: string | null;
   preferred_communication: CommunicationChannel;
   note: string | null;
+  cancellation_discount_type?: CancellationDiscountType | null;
+  cancellation_discount_value?: number | null;
 }
 
 export interface Paginated<T> {

@@ -17,8 +17,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password'])]
-#[Hidden(['password', 'remember_token', 'email_verification_token', ...self::DISCIPLINE_FIELDS])]
+#[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password', 'cancellation_discount_type', 'cancellation_discount_value'])]
+#[Hidden(['password', 'remember_token', 'email_verification_token', ...self::DISCIPLINE_FIELDS, ...self::CANCELLATION_FIELDS])]
 #[Appends(['suspended'])]
 class User extends Authenticatable
 {
@@ -57,12 +57,15 @@ class User extends Authenticatable
 
     public const DISCIPLINE_FIELDS = ['discipline_zone', 'discipline_points', 'zone_manual', 'zone_until', 'zone_reason', 'zone_changed_at'];
 
+    public const CANCELLATION_FIELDS = ['cancellation_discount_type', 'cancellation_discount_value'];
+
     protected function casts(): array
     {
         return [
             'favorite_staff_member_id' => 'integer',
             'staff_member_id' => 'integer',
             'discipline_points' => 'float',
+            'cancellation_discount_value' => 'float',
             'zone_manual' => 'boolean',
             'zone_until' => 'date:Y-m-d',
             'zone_changed_at' => 'datetime',

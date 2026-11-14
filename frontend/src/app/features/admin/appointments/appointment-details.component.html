@@ -72,6 +72,10 @@
       </div>
     }
 
+    @if (feeEnabled() && appointment().client_id) {
+      <app-client-fees [clientId]="appointment().client_id" [appointmentId]="appointment().id" />
+    }
+
     @if (appointment().note) {
       <div class="text-sm"><span class="muted">Napomena klijenta:</span> {{ appointment().note }}</div>
     }
@@ -92,6 +96,9 @@
           <button type="button" appBtn theme="secondary" size="s" (click)="askClient()" data-testid="details-ask-reschedule"><span appIcon="send" aria-hidden="true"></span> Zamoli da pomeri</button>
         }
         <button type="button" appBtn theme="danger" size="s" (click)="act('cancel')" data-testid="details-cancel">Otkaži</button>
+        @if (appointment().client) {
+          <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="act('cancel-by-client')" data-testid="details-cancel-by-client">Klijent otkazao</button>
+        }
         @if (appointment().recurrence?.active) {
           <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="act('cancel-series')">Otkaži i sve sledeće</button>
         }

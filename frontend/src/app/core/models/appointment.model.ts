@@ -35,6 +35,8 @@ export interface Appointment {
   tip: number;
   free_change_reason?: 'transferred' | 'salon_request' | null;
   can_cancel?: boolean;
+  can_reschedule?: boolean;
+  late_cancel?: boolean;
   can_pay?: boolean;
   can_review?: boolean;
   review?: { id: number; rating: number; comment: string | null; reply: string | null } | null;

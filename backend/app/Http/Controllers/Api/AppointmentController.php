@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
+use App\Services\CancellationFeeService;
 use App\Services\ClientDisciplineService;
 use App\Services\RecurrenceService;
 use App\Services\StaffAbsenceService;
@@ -261,7 +262,12 @@ class AppointmentController extends Controller
         }
 
         $byClient = (bool) ($data['by_client'] ?? false);
-        $this->bookings->cancel($appointment, $byClient ? 'client' : 'admin');
+        $fee = DB::transaction(function () use ($appointment, $byClient) {
+            $fee = $byClient ? app(CancellationFeeService::class)->record($appointment) : null;
+            $this->bookings->cancel($appointment, $byClient ? 'client' : 'admin');
+
+            return $fee;
+        });
         if ($byClient && $appointment->client) {
             ClientActivity::dispatch($appointment->client, ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at), 'by_salon' => true], $request->user());
             $this->discipline->refresh($appointment->client);
@@ -269,7 +275,7 @@ class AppointmentController extends Controller
         $this->notifier->cancelledBySalon($appointment);
         $this->waitlist->slotFreed($appointment);
 
-        return ['message' => 'Termin je otkazan.'];
+        return ['message' => $fee && $fee->amount > 0 ? 'Termin je otkazan. Klijentu je upisana naknada za kasno otkazivanje: '.number_format($fee->amount, 0, ',', '.').' din.' : 'Termin je otkazan.', 'cancellation_fee' => $fee];
     }
 
     public function recurrences()

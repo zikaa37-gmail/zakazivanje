@@ -14,6 +14,7 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
+import { ClientFeesComponent } from './client-fees.component';
 
 const ACTIVITY_LABELS: Record<string, string> = {
   login: 'Prijava',
@@ -39,7 +40,7 @@ const REASONS: Record<string, string> = {
 @Component({
   selector: 'app-client-history',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
   templateUrl: './client-history.component.html',
 })
 export class ClientHistoryComponent implements OnInit {

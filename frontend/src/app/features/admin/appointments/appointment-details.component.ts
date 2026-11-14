@@ -21,12 +21,13 @@ import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
+import { ClientFeesComponent } from '../clients/client-fees.component';
 import { AppointmentActionsService } from './appointment-actions.service';
 
 @Component({
   selector: 'app-appointment-details',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ClientFeesComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
   templateUrl: './appointment-details.component.html',
 })
 export class AppointmentDetailsComponent implements OnInit {
@@ -46,6 +47,7 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly showIps = signal(false);
   readonly canTakePayment = computed(() => this.appointment().total > 0 && !['cancelled', 'no_show'].includes(this.appointment().status));
   readonly hasBankAccount = computed(() => !!this.business.settings()?.bank_account);
+  readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
 
   readonly statuses = STATUS_LABELS;
   readonly moving = signal(false);

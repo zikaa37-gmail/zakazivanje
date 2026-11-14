@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CancellationFee;
 use App\Models\ClientActivityLog;
 use App\Models\User;
 use App\Services\ClientDisciplineService;
@@ -97,7 +98,7 @@ class ClientController extends Controller
 
     private function present(User $user): array
     {
-        return [...$user->makeVisible(User::DISCIPLINE_FIELDS)->toArray(), 'has_account' => $user->password !== null];
+        return [...$user->makeVisible([...User::DISCIPLINE_FIELDS, ...User::CANCELLATION_FIELDS])->toArray(), 'has_account' => $user->password !== null];
     }
 
     public function destroy(User $client)
@@ -121,6 +122,8 @@ class ClientController extends Controller
             'gender' => ['nullable', Rule::in(User::GENDERS)],
             'favorite_staff_member_id' => ['nullable', 'integer', 'exists:staff_members,id'],
             'note' => ['nullable', 'string', 'max:2000'],
+            'cancellation_discount_type' => ['nullable', Rule::in(CancellationFee::DISCOUNT_TYPES)],
+            'cancellation_discount_value' => ['nullable', 'numeric', 'min:0', 'max:1000000', Rule::when($request->input('cancellation_discount_type') === CancellationFee::DISCOUNT_PERCENT, ['max:100'])],
             'active' => ['boolean'],
         ]);
     }

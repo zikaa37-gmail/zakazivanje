@@ -433,6 +433,47 @@
           <app-toggle [checked]="form.controls.allow_guest_booking.value" label="Gost može da zakaže bez naloga (ime + telefon)" (checkedChange)="form.controls.allow_guest_booking.setValue($event)" />
         </div>
 
+        <div class="card max-w-2xl mb-4" data-testid="settings-cancellation-fee">
+          <h2 class="text-base font-semibold">Naplata kasnog otkazivanja</h2>
+          <p class="text-sm muted mb-2">
+            Kad je uključeno, klijent može da otkaže i posle roka ({{ cancellationLabel() }}), ali je to kasno otkazivanje. Prvih nekoliko je bez naplate
+            uz opomenu i odbrojavanje, a posle toga se svako kasno otkazivanje naplaćuje. Termin prebačen kolegi ili pomeren na molbu salona se ne računa.
+          </p>
+          <app-toggle [checked]="form.controls.cancellation_fee_enabled.value" label="Naplaćuj kasno otkazivanje" (checkedChange)="form.controls.cancellation_fee_enabled.setValue($event)" data-testid="cancellation-fee-enabled" />
+          @if (form.controls.cancellation_fee_enabled.value) {
+            <div class="form-grid mt-3">
+              <div class="field">
+                <label for="s-free-late">Kasnih otkazivanja bez naplate</label>
+                <input id="s-free-late" appInput size="m" type="number" min="0" max="10" formControlName="cancellation_free_late" data-testid="cancellation-free-late" />
+              </div>
+              <div class="field">
+                <label for="s-fee-window">Broje se u poslednjih (dana)</label>
+                <input id="s-fee-window" appInput size="m" type="number" min="30" max="730" formControlName="cancellation_fee_window_days" />
+              </div>
+              <div class="field">
+                <label for="s-fee-type">Naknada</label>
+                <select id="s-fee-type" appInput size="m" formControlName="cancellation_fee_type" data-testid="cancellation-fee-type">
+                  @for (o of cancellationFeeTypes; track o.value) {
+                    <option [ngValue]="o.value">{{ o.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label for="s-fee-value">{{ form.controls.cancellation_fee_type.value === 'percent' ? 'Procenat (%)' : 'Iznos (din.)' }}</label>
+                <input id="s-fee-value" appInput size="m" type="number" min="0" formControlName="cancellation_fee_value" data-testid="cancellation-fee-value" />
+              </div>
+              <div class="field sm:col-span-2">
+                <label for="s-fee-note">Objašnjenje za klijenta</label>
+                <textarea id="s-fee-note" appInput rows="3" formControlName="cancellation_fee_note" [placeholder]="defaultCancellationNote"></textarea>
+              </div>
+            </div>
+            <p class="text-xs muted mt-2">
+              Ovo je podrazumevano za sve usluge. Usluga može da ima svoju naknadu i broj otkazivanja bez naplate (Usluge → Izmeni), npr. masaža strože od šišanja.
+              Klijentu se umanjenje ili oslobađanje podešava u Klijenti → Izmeni, a pojedinačna naknada se oprašta ili menja iz detalja termina.
+            </p>
+          }
+        </div>
+
         <div class="card max-w-2xl mb-4">
           <h2 class="text-base font-semibold">Recenzije</h2>
           <p class="text-sm muted mb-2">Klijenti ocenjuju završene termine (1–5 zvezdica i komentar); prosek i utisci se vide na sajtu.</p>

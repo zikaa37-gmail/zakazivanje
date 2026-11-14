@@ -1,3 +1,5 @@
+import { CancellationFeeType } from './cancellation-fee.model';
+
 export type BusinessCategory =
   | 'hair_salon'
   | 'barber'
@@ -71,6 +73,12 @@ export interface BusinessSetting {
   booking_horizon_days: number;
   booking_min_days_ahead: number;
   cancellation_days_before: number;
+  cancellation_fee_enabled?: boolean;
+  cancellation_free_late?: number;
+  cancellation_fee_window_days?: number;
+  cancellation_fee_type?: CancellationFeeType;
+  cancellation_fee_value?: number;
+  cancellation_fee_note?: string | null;
   allow_guest_booking: boolean;
   notify_booking_received: boolean;
   notify_booking_confirmed: boolean;
