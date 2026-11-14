@@ -279,6 +279,11 @@ povezan termin odmah posle prvog kod slobodnog zaposlenog (`AvailabilityService:
 `chainPlanner()` je jedino mesto za proveru niza, koristi ga i dostupnost), isti `appointments.link_group`, cena iz zajedničkog `quote`.
 Klijent pomera grupu zajedno (`moveChainByClient`), a pri otkazivanju bira koje termine (`linked_ids`, podrazumevano svi); kasno otkazivanje
 grupe je jedna naknada. Prekidač `linked_booking_enabled` (Podešavanja → Zakazivanje). Osoblje pomera i otkazuje termine pojedinačno.
+Obaveštenja uživo (Pusher): `Realtime` servis (`PUSHER_*` u `.env`, bez njih ne radi ništa) šalje događaj `appointment` posle odgovora (`defer`)
+na `private-salon` (osoblje) i `private-user-{id}` (klijent); poziva se samo iz `AppointmentNotifier` (i `changedSilently()` kad nema
+poruke), potpis kanala `POST /realtime/auth`. Frontend `RealtimeService` (pusher-js se učitava lenjo, ključ iz `/public/business` → `realtime`)
+prikazuje poruku (radnik vezan za zaposlenog samo za svoje, bez sopstvenih akcija) i podiže `version`, na koji kalendar, lista termina,
+pregled i Moji termini tiho osvežavaju (`quiet` = bez globalnog loadera).
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

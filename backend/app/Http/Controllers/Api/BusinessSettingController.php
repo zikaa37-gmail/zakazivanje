@@ -10,6 +10,7 @@ use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\ReportNotification;
 use App\Services\InstagramService;
+use App\Services\Realtime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -40,6 +41,7 @@ class BusinessSettingController extends Controller
                 'closes_at' => $week->get($day)?->closes_at,
             ])->all(),
             'instagram_oauth_available' => app(InstagramService::class)->oauthAvailable(),
+            'realtime' => app(Realtime::class)->publicConfig(),
             'shifts' => Shift::query()->orderBy('sort_order')->orderBy('starts_at')->get(['id', 'name', 'starts_at', 'ends_at', 'sort_order']),
         ];
     }

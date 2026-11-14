@@ -217,6 +217,8 @@ class AppointmentController extends Controller
             $this->notifier->transferred($appointment, $previousStaff, $request->user(), $previousStart->notEqualTo($start));
         } elseif ($moved && ($data['notify'] ?? true)) {
             $this->notifier->rescheduled($appointment);
+        } elseif ($moved) {
+            $this->notifier->changedSilently($appointment, [$previousStaff]);
         }
         if ($moved) {
             $this->waitlist->slotFreedAt($previousDate, $previousStaff, $appointment->client_id);
@@ -261,6 +263,7 @@ class AppointmentController extends Controller
 
         if ($data['scope'] === 'series' && $appointment->recurrence) {
             $count = $this->recurrences->stop($appointment->recurrence, CarbonImmutable::parse($appointment->starts_at));
+            $this->notifier->changedSilently($appointment);
             $this->waitlist->slotFreed($appointment);
 
             return ['message' => "Otkazano termina: {$count}. Ponavljanje je zaustavljeno."];

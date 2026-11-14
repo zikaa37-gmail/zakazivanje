@@ -25,6 +25,7 @@ import { AppointmentActionsService } from '../appointments/appointment-actions.s
 import { AppointmentDetailsComponent } from '../appointments/appointment-details.component';
 import { AppointmentFormComponent, AppointmentPrefill } from '../appointments/appointment-form.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { RealtimeService } from '../../../core/services/realtime.service';
 
 type View = 'day' | 'week' | 'month';
 
@@ -78,6 +79,7 @@ function mondayOf(date: string): string {
 })
 export class CalendarComponent {
   private appointmentService = inject(AppointmentService);
+  private realtime = inject(RealtimeService);
   private staffService = inject(StaffService);
   private actionsService = inject(AppointmentActionsService);
   private confirm = inject(ConfirmService);
@@ -204,6 +206,9 @@ export class CalendarComponent {
   readonly legend = Object.entries(STATUS_LABELS).map(([key, value]) => ({ key, label: value.label }));
 
   constructor() {
+    effect(() => {
+      if (this.realtime.version()) untracked(() => this.refreshQuietly());
+    });
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
 
     effect(() => {
@@ -242,6 +247,11 @@ export class CalendarComponent {
   openDay(date: string): void {
     this.date.set(date);
     this.setView('day');
+  }
+
+  private refreshQuietly(): void {
+    const { from, to } = this.range();
+    this.load(from, to, true);
   }
 
   reload(): void {
@@ -458,10 +468,10 @@ export class CalendarComponent {
     };
   }
 
-  private load(from: string, to: string): void {
-    this.loading.set(true);
+  private load(from: string, to: string, quiet = false): void {
+    this.loading.set(!quiet);
     this.error.set(null);
-    this.appointmentService.list({ from, to, staff_member_id: null, status: null, search: null }).subscribe({
+    this.appointmentService.list({ from, to, staff_member_id: null, status: null, search: null }, quiet).subscribe({
       next: (list) => {
         this.appointments.set(list);
         this.loading.set(false);

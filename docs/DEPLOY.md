@@ -93,6 +93,18 @@ Objavljivanje (Podeli → „Objavi na Instagram", story „Slobodni termini") t
 `/api/public/instagram-media/{token}`. Zakazane objave šalje `instagram:publish-scheduled` (na 5 minuta, preko postojećeg
 cron-a za `schedule:run`). Lokalno objavljivanje ne radi jer Instagram ne vidi `localhost`.
 
+## Obaveštenja uživo (Pusher, opciono)
+
+Osoblje odmah vidi nov termin, otkazivanje, pomeranje i prebacivanje (poruka u uglu + osvežen kalendar, lista, pregled i broj
+na čekanju), a klijent potvrdu, otkazivanje i pomeranje od strane salona u „Moji termini“.
+
+1. pusher.com → Channels → Create app (cluster `eu`).
+2. App Keys → u `deploy/.env` (i lokalno u `backend/.env`): `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET`,
+   `PUSHER_APP_CLUSTER=eu`. Frontend ključ i cluster dobija iz `GET /api/public/business` (`realtime`), ne iz build-a.
+3. „Client events“ ne treba uključivati — kanali su privatni i potpisuje ih `/api/realtime/auth`.
+
+Bez ključeva se ništa ne šalje i aplikacija radi kao ranije (mejl / WhatsApp ostaju nezavisni).
+
 ## Provera
 
 - `https://zakazivanje.fiskultura.rs/` učitava aplikaciju.

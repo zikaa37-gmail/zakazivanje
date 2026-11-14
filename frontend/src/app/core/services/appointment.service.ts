@@ -21,8 +21,8 @@ export class AppointmentService {
 
   readonly pendingCount = signal(0);
 
-  list(filters: AppointmentFilters): Observable<Appointment[]> {
-    return this.http.post<Appointment[]>(`${this.api}/list`, filters);
+  list(filters: AppointmentFilters, quiet = false): Observable<Appointment[]> {
+    return this.http.post<Appointment[]>(`${this.api}/list`, filters, { context: new HttpContext().set(SKIP_LOADER, quiet) });
   }
 
   refreshPendingCount(): void {
