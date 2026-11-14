@@ -1,4 +1,4 @@
--- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (02.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (14.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -27,6 +27,6 @@ CREATE TABLE `zk_staff_members` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Jelena','Matović','Frizer (muški i ženski)','0653167338','devtestzikaa@gmail.com','#15803d',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-11-02 11:19:07',1,NULL),(2,'Marko','Matović','Muški frizer','0654761380','marko@fiskultura.rs','#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-11-02 11:19:39',1,NULL),(3,'Sandra','Afrika','Ženski frizer',NULL,'sandra@fiskultura.rs','#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-10-30 21:47:46',1,NULL);
+INSERT INTO `zk_staff_members` VALUES (1,'Jelena','Matović','Frizer (muški i ženski)','0653167338','devtestzikaa@gmail.com','#15803d',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-11-02 11:19:07',1,NULL),(2,'Marko','Matović','Muški frizer','0654761380','marko@fiskultura.rs','#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-11-02 11:19:39',1,NULL),(3,'Sandra','Afrika','Ženski frizer','+381 64 218 5307','sandra@fiskultura.rs','#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-11-13 23:00:00',1,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
