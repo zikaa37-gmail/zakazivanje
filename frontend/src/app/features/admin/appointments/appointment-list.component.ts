@@ -18,6 +18,7 @@ import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { AppointmentActionsService } from './appointment-actions.service';
 import { AppointmentFormComponent, AppointmentPrefill } from './appointment-form.component';
 import { AuthService } from '../../../core/services/auth.service';
+import { RealtimeService } from '../../../core/services/realtime.service';
 
 type Period = 'today' | 'tomorrow' | 'week' | 'month' | 'day';
 
@@ -36,6 +37,7 @@ const PERIODS: { value: Period; label: string }[] = [
 })
 export class AppointmentListComponent {
   private appointmentService = inject(AppointmentService);
+  private realtime = inject(RealtimeService);
   private staffService = inject(StaffService);
   private appointmentActions = inject(AppointmentActionsService);
   private destroyRef = inject(DestroyRef);
@@ -93,6 +95,9 @@ export class AppointmentListComponent {
   readonly prefill = signal<AppointmentPrefill>({});
 
   constructor() {
+    effect(() => {
+      if (this.realtime.version()) untracked(() => this.reload(true));
+    });
     const params = inject(ActivatedRoute).snapshot.queryParamMap;
     this.applyDateParam(params.get('date'));
     this.staffFilter.set(Number(params.get('staff')) || this.ownStaffId);
@@ -125,8 +130,8 @@ export class AppointmentListComponent {
     this.period.set('day');
   }
 
-  reload(): void {
-    this.load({ ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), search: this.searchTerm() || null });
+  reload(quiet = false): void {
+    this.load({ ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), search: this.searchTerm() || null }, quiet);
   }
 
   startTime(a: Appointment): string {
@@ -167,10 +172,10 @@ export class AppointmentListComponent {
     this.reload();
   }
 
-  private load(filters: { from: string; to: string; staff_member_id: number | null; status: AppointmentStatus | null; search: string | null }): void {
-    this.loading.set(true);
+  private load(filters: { from: string; to: string; staff_member_id: number | null; status: AppointmentStatus | null; search: string | null }, quiet = false): void {
+    this.loading.set(!quiet);
     this.error.set(null);
-    this.appointmentService.list(filters).subscribe({
+    this.appointmentService.list(filters, quiet).subscribe({
       next: (list) => {
         this.appointments.set(list);
         this.loading.set(false);

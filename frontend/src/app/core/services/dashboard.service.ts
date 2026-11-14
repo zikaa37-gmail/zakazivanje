@@ -50,8 +50,8 @@ export class DashboardService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/dashboard`;
 
-  today(staffMemberId: number | null = null): Observable<DashboardToday> {
-    return this.http.post<DashboardToday>(`${this.api}/today`, { staff_member_id: staffMemberId });
+  today(staffMemberId: number | null = null, quiet = false): Observable<DashboardToday> {
+    return this.http.post<DashboardToday>(`${this.api}/today`, { staff_member_id: staffMemberId }, { context: new HttpContext().set(SKIP_LOADER, quiet) });
   }
 
   stats(from: string, to: string): Observable<DashboardStats> {

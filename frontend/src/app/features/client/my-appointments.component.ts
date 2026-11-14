@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, STATUS_LABELS } from '../../core/models/appointment.model';
 import { BookingService } from '../../core/services/booking.service';
@@ -21,6 +21,7 @@ import { WaitlistEntry, WaitlistService } from '../../core/services/waitlist.ser
 import { StarsComponent } from '../../shared/components/stars/stars.component';
 import { RescheduleComponent } from './reschedule.component';
 import { ReviewFormComponent } from './review-form.component';
+import { RealtimeService } from '../../core/services/realtime.service';
 
 @Component({
   selector: 'app-my-appointments',
@@ -30,6 +31,7 @@ import { ReviewFormComponent } from './review-form.component';
 })
 export class MyAppointmentsComponent {
   private booking = inject(BookingService);
+  private realtime = inject(RealtimeService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   protected business = inject(BusinessSettingService);
@@ -76,6 +78,9 @@ export class MyAppointmentsComponent {
   });
 
   constructor() {
+    effect(() => {
+      if (this.realtime.version()) untracked(() => this.load(true));
+    });
     if (this.reviewTarget) this.scope.set('past');
     this.load();
     this.loadWaitlist();
@@ -158,10 +163,10 @@ export class MyAppointmentsComponent {
     this.load();
   }
 
-  load(): void {
-    this.loading.set(true);
+  load(quiet = false): void {
+    this.loading.set(!quiet);
     this.error.set(null);
-    this.booking.mine(this.scope()).subscribe({
+    this.booking.mine(this.scope(), quiet).subscribe({
       next: (list) => {
         this.appointments.set(list);
         this.loading.set(false);

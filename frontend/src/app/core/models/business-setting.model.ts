@@ -37,6 +37,7 @@ export interface BusinessSetting {
   staff_term_genitive: string | null;
   ai_enabled?: boolean;
   ai_available?: boolean;
+  realtime?: { key: string; cluster: string } | null;
   description: string | null;
   address: string | null;
   city: string | null;

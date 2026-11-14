@@ -21,6 +21,7 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { AppointmentDetailsComponent } from '../appointments/appointment-details.component';
+import { RealtimeService } from '../../../core/services/realtime.service';
 
 type Period = '7' | '30' | '90' | 'month';
 
@@ -67,6 +68,7 @@ function readChartsPreference(): boolean {
 })
 export class DashboardComponent {
   private dashboard = inject(DashboardService);
+  private realtime = inject(RealtimeService);
   private auth = inject(AuthService);
   protected readonly isOwner = this.auth.isOwner;
   readonly canFilterStaff = computed(() => !this.auth.isServiceWorker());
@@ -166,6 +168,9 @@ export class DashboardComponent {
   readonly moneyTick = (value: number) => (value >= 1000 ? `${Math.round(value / 100) / 10}K` : String(value));
 
   constructor() {
+    effect(() => {
+      if (this.realtime.version()) untracked(() => this.loadToday(true));
+    });
     this.loadToday();
     this.staffService.list().subscribe((staff) => {
       this.staff.set(staff);
@@ -284,8 +289,8 @@ export class DashboardComponent {
     this.loadToday();
   }
 
-  private loadToday(): void {
-    this.dashboard.today(this.canFilterStaff() ? this.staffFilter() : null).subscribe({
+  private loadToday(quiet = false): void {
+    this.dashboard.today(this.canFilterStaff() ? this.staffFilter() : null, quiet).subscribe({
       next: (data) => this.todayData.set(data),
       error: (err) => this.error.set(apiErrorMessage(err, 'Učitavanje pregleda nije uspelo.')),
     });

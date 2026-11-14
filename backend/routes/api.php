@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\RealtimeController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceCategoryController;
@@ -65,6 +66,7 @@ Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 Route::middleware('jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/realtime/auth', [RealtimeController::class, 'auth']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::put('/auth/favorite-staff', [AuthController::class, 'favoriteStaff']);

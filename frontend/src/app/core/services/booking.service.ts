@@ -44,8 +44,8 @@ export class BookingService {
     return this.http.post<Appointment>(`${this.api}/bookings`, { ...payload, referral: this.marketing.referral() });
   }
 
-  mine(scope: 'upcoming' | 'past'): Observable<Appointment[]> {
-    return this.http.post<Appointment[]>(`${this.api}/my-appointments/list`, { scope });
+  mine(scope: 'upcoming' | 'past', quiet = false): Observable<Appointment[]> {
+    return this.http.post<Appointment[]>(`${this.api}/my-appointments/list`, { scope }, { context: new HttpContext().set(SKIP_LOADER, quiet) });
   }
 
   rescheduleMine(id: number, staffMemberId: number | null, startsAt: string): Observable<Appointment> {

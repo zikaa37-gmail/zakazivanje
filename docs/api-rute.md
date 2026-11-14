@@ -39,6 +39,7 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/auth/me` | trenutni korisnik |
+| POST | `/realtime/auth` | `{socket_id, channel_name}` — Pusher potpis za privatni kanal (`private-salon` za osoblje, `private-user-{id}` za sebe); 404 bez ključeva |
 | PUT | `/auth/profile` | ime, prezime, telefon, WhatsApp, kanal obaveštenja; klijent i `gender`, `favorite_staff_member_id` (osoblju se ignorišu); radniku vezanom za zaposlenog ime i telefon dolaze sa stranice Zaposleni i ne menjaju se ovde |
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
 | PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
