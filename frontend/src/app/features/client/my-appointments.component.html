@@ -38,7 +38,9 @@
               <span [class]="'badge ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
               @if (a.can_cancel) {
                 <span class="flex gap-3">
-                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)">Promeni</button>
+                  @if (a.can_reschedule ?? true) {
+                    <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)">Promeni</button>
+                  }
                   <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)">Otkaži</button>
                 </span>
               }
@@ -75,6 +77,13 @@
   }
 
 
+  @if (feeStatus()?.open_amount; as debt) {
+    <div class="card mb-3 text-sm" style="background: var(--color-warning-tint); color: var(--color-warning); border-color: transparent" data-testid="my-fee-debt">
+      <div class="font-semibold">Neplaćena naknada za kasno otkazivanje: {{ debt | rsd }}</div>
+      Plaća se pri sledećem dolasku u salon.
+    </div>
+  }
+
   @if (loading() && appointments().length === 0) {
   } @else if (appointments().length === 0) {
     <div class="card empty-state">
@@ -107,7 +116,9 @@
           <div class="flex items-center justify-between border-t border-[var(--color-border)] mt-3 pt-3">
             @if (a.can_cancel) {
               <span class="flex gap-4">
-                <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
+                @if (a.can_reschedule ?? true) {
+                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
+                }
                 <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži</button>
               </span>
             } @else if (a.review) {
@@ -139,12 +150,29 @@
     </div>
     @if (scope() === 'upcoming') {
       <div class="card mt-3 text-sm" style="background: var(--color-info-tint); color: var(--color-info); border-color: transparent">
-        Promena i otkazivanje termina mogući su {{ cancellationText() }}. Posle toga pozovi salon.
+        @if (feeStatus(); as fee) {
+          Promena i otkazivanje termina bez posledica mogući su {{ cancellationText() }}. Posle toga termin možeš samo da otkažeš, i to je kasno otkazivanje.
+          @if (!fee.exempt) {
+            <span data-testid="my-fee-countdown">
+              @if (fee.free_left > 0) {
+                Bez naplate ti je ostalo još {{ fee.free_left }} od {{ fee.free_total }}, a posle toga se svako kasno otkazivanje naplaćuje.
+              } @else {
+                Iskoristio/la si sva kasna otkazivanja bez naplate, pa se svako sledeće naplaćuje.
+              }
+            </span>
+          }
+        } @else {
+          Promena i otkazivanje termina mogući su {{ cancellationText() }}. Posle toga pozovi salon.
+        }
       </div>
     }
   }
   }
 </div>
+
+@if (lateCancel(); as late) {
+  <app-late-cancel-dialog [preview]="late.preview" [summary]="cancelSummary(late.appointment)" (confirmed)="confirmLateCancel()" (closed)="lateCancel.set(null)" />
+}
 
 @if (reviewing(); as appointment) {
   <app-review-form [appointment]="appointment" (saved)="onReviewed()" (closed)="reviewing.set(null)" />

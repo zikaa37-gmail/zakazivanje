@@ -152,6 +152,21 @@
         <label for="client-note">Napomena</label>
         <textarea id="client-note" appInput size="m" rows="3" formControlName="note" [placeholder]="'npr. alergija, omiljeni ' + business.staffTerm() + '...'"></textarea>
       </div>
+      @if (feeEnabled()) {
+        <div class="field" data-testid="client-cancellation-discount">
+          <label for="client-fee-discount">Naknada za kasno otkazivanje</label>
+          <select id="client-fee-discount" appInput size="m" formControlName="cancellation_discount_type" data-testid="client-fee-discount">
+            <option [ngValue]="null">Kao za sve klijente</option>
+            @for (d of discountTypes; track d.value) {
+              <option [ngValue]="d.value">{{ d.label }}</option>
+            }
+          </select>
+          @if (form.controls.cancellation_discount_type.value === 'percent' || form.controls.cancellation_discount_type.value === 'fixed') {
+            <input appInput size="m" class="mt-2" type="number" min="0" formControlName="cancellation_discount_value" [attr.aria-label]="form.controls.cancellation_discount_type.value === 'percent' ? 'Umanjenje u procentima' : 'Umanjenje u dinarima'" [placeholder]="form.controls.cancellation_discount_type.value === 'percent' ? 'Umanjenje (%)' : 'Umanjenje (din.)'" data-testid="client-fee-discount-value" />
+          }
+          <span class="text-xs muted">Za pojedinačan slučaj naknada se oprašta ili menja iz detalja otkazanog termina.</span>
+        </div>
+      }
     </form>
     <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="client-save">Sačuvaj</app-button>
   </app-modal>

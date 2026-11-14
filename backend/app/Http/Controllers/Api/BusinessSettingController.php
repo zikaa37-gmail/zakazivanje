@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
+use App\Models\CancellationFee;
 use App\Models\OpeningHour;
 use App\Models\Shift;
 use App\Models\User;
@@ -95,6 +96,12 @@ class BusinessSettingController extends Controller
             'booking_min_days_ahead' => ['sometimes', 'integer', Rule::in([0, 1, 2])],
             'cancellation_days_before' => ['sometimes', 'integer', Rule::in([0, 1, 2, 3])],
             'allow_guest_booking' => ['sometimes', 'boolean'],
+            'cancellation_fee_enabled' => ['sometimes', 'boolean'],
+            'cancellation_free_late' => ['sometimes', 'integer', 'between:0,10'],
+            'cancellation_fee_window_days' => ['sometimes', 'integer', 'between:30,730'],
+            'cancellation_fee_type' => ['sometimes', Rule::in(CancellationFee::TYPES)],
+            'cancellation_fee_value' => ['sometimes', 'numeric', 'min:0', 'max:1000000', Rule::when($request->input('cancellation_fee_type') === CancellationFee::TYPE_PERCENT, ['max:100'])],
+            'cancellation_fee_note' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'notify_booking_received' => ['sometimes', 'boolean'],
             'notify_booking_confirmed' => ['sometimes', 'boolean'],
             'notify_booking_cancelled' => ['sometimes', 'boolean'],

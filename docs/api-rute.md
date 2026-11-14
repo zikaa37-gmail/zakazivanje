@@ -43,14 +43,16 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |
 | PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
 | POST | `/auth/logout` | `{refresh_token}` |
-| POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel` |
+| POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel`, `can_reschedule`, `late_cancel` |
 | POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; salonu mejl sa starim vremenom |
 | POST | `/my-waitlist/list`, `/my-waitlist` | lista čekanja klijenta / prijava `{service_ids, staff_member_id?, date, part: any \| morning \| afternoon}` (jedna po danu) |
 | DELETE | `/my-waitlist/{id}` | odjava |
 | POST | `/my-appointments/{id}/review` | `{rating 1–5, comment?}` — samo završen termin; izmena do 30 dana |
 | POST | `/my-appointments/{id}/payment` | IPS podaci za uplatu `{amount, account, payee, payment_code, model, reference, purpose, payload, qr}` — samo ako je uključeno plaćanje unapred |
 | POST | `/my-appointments/{id}/slip` | PDF uplatnica |
-| POST | `/my-appointments/{id}/cancel` | otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina) |
+| POST | `/my-appointments/{id}/cancel` | `{accept_late?}` — otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina). Uz `cancellation_fee_enabled` i posle roka do početka, ali samo uz `accept_late: true`; vraća `cancellation_fee` |
+| POST | `/my-appointments/{id}/cancel-preview` | `{late, free, number, free_total, free_left_after, next_amount, amount, note, deadline_label}` — odbrojavanje i naknada pre kasnog otkazivanja |
+| GET | `/my-cancellation-status` | `{enabled, free_total, used, free_left, window_days, exempt, open_amount, note}` |
 
 ## Osoblje (`jwt` + `role:owner,worker`)
 
@@ -81,6 +83,11 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / administrativni radnik → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
+| POST | `/cancellation-fees/list` | `{client_id?, status?: free\|open\|paid\|waived}` — naknade za kasno otkazivanje |
+| GET | `/clients/{id}/cancellation-status` | odbrojavanje i dug klijenta (kao `/my-cancellation-status`) |
+| GET | `/appointments/{id}/cancel-preview` | šta bi „Klijent otkazao“ sada upisao (`/appointments/{id}/cancel` sa `by_client` upisuje naknadu) |
+| POST | `/cancellation-fees/{id}/paid` | `{payment_method: cash\|card\|bank}` — naknada naplaćena |
+| POST | `/cancellation-fees/{id}/waive`, `/cancellation-fees/{id}/adjust` | `{reason}` / `{amount, reason}` — samo vlasnik / administrativni radnik |
 | POST | `/staff-absences/pending-count`, `/staff-absences/{id}/approve`, `/staff-absences/{id}/reject` | samo vlasnik / administrativni radnik; zaposleni dobija obaveštenje |
 | POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |

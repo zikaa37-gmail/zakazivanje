@@ -164,6 +164,24 @@
           }
         </div>
       </div>
+      @if (feeEnabled()) {
+        <div class="field" data-testid="service-cancellation-fee">
+          <label for="service-fee-type">Naknada za kasno otkazivanje</label>
+          <select id="service-fee-type" appInput size="m" formControlName="cancellation_fee_type" data-testid="service-fee-type">
+            @for (t of feeTypes; track t.value) {
+              <option [ngValue]="t.value">{{ t.label }}</option>
+            }
+          </select>
+          @if (form.controls.cancellation_fee_type.value && form.controls.cancellation_fee_type.value !== 'none') {
+            <input appInput size="m" class="mt-2" type="number" min="0" formControlName="cancellation_fee_value" [attr.aria-label]="form.controls.cancellation_fee_type.value === 'percent' ? 'Procenat' : 'Iznos u dinarima'" [placeholder]="form.controls.cancellation_fee_type.value === 'percent' ? 'Procenat (%)' : 'Iznos (din.)'" data-testid="service-fee-value" />
+          }
+          @if (form.controls.cancellation_fee_type.value !== 'none') {
+            <label for="service-free-late" class="mt-2">Kasnih otkazivanja bez naplate</label>
+            <input id="service-free-late" appInput size="m" type="number" min="0" max="10" formControlName="cancellation_free_late" placeholder="Kao za ceo salon" data-testid="service-free-late" />
+          }
+          <p class="text-xs muted mt-1">Npr. masaža: zaposleni često dolazi samo zbog tog termina, pa može da ima veću naknadu i 0 otkazivanja bez naplate.</p>
+        </div>
+      }
       <app-toggle [checked]="form.controls.active.value" label="Aktivna (vidljiva klijentima)" (checkedChange)="form.controls.active.setValue($event)" />
       @if (form.controls.active.value) {
         <div class="field mt-3">

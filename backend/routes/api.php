@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BlockedTimeController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BusinessSettingController;
+use App\Http\Controllers\Api\CancellationFeeController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
@@ -74,6 +75,8 @@ Route::middleware('jwt')->group(function () {
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
+    Route::post('/my-appointments/{appointment}/cancel-preview', [MyAppointmentController::class, 'cancelPreview']);
+    Route::get('/my-cancellation-status', [MyAppointmentController::class, 'cancellationStatus']);
     Route::post('/my-appointments/{appointment}/review', [ReviewController::class, 'store'])->middleware('throttle:booking');
     Route::post('/my-appointments/{appointment}/payment', [AppointmentPaymentController::class, 'clientDetails']);
     Route::post('/my-appointments/{appointment}/slip', [AppointmentPaymentController::class, 'clientSlip']);
@@ -127,6 +130,10 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/staff-absences', [StaffAbsenceController::class, 'store']);
     Route::get('/staff-absences/{absence}/appointments', [StaffAbsenceController::class, 'appointments']);
     Route::delete('/staff-absences/{absence}', [StaffAbsenceController::class, 'destroy']);
+    Route::post('/cancellation-fees/list', [CancellationFeeController::class, 'index']);
+    Route::get('/clients/{client}/cancellation-status', [CancellationFeeController::class, 'clientStatus']);
+    Route::get('/appointments/{appointment}/cancel-preview', [CancellationFeeController::class, 'preview']);
+    Route::post('/cancellation-fees/{fee}/paid', [CancellationFeeController::class, 'paid']);
 });
 
 Route::middleware(['jwt', 'role:owner'])->group(function () {
@@ -155,6 +162,8 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/staff-absences/pending-count', [StaffAbsenceController::class, 'pendingCount']);
     Route::post('/staff-absences/{absence}/approve', [StaffAbsenceController::class, 'approve']);
     Route::post('/staff-absences/{absence}/reject', [StaffAbsenceController::class, 'reject']);
+    Route::post('/cancellation-fees/{fee}/waive', [CancellationFeeController::class, 'waive']);
+    Route::post('/cancellation-fees/{fee}/adjust', [CancellationFeeController::class, 'adjust']);
 
     Route::post('/team/list', [TeamController::class, 'index']);
     Route::post('/team', [TeamController::class, 'store']);

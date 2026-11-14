@@ -267,6 +267,13 @@ Odsustva (bolovanje / odmor): `/admin/absences`, `StaffAbsence` + `StaffAbsenceS
 vreme, `AvailabilityService`), „Pošalji da sam pomeri“ (`ask-reschedule`), otkazivanje. Prebacivanje (promena zaposlenog u `reschedule`, i iz detalja
 termina „Prebaci kolegi“) obaveštava klijenta, oba zaposlena i menadžere. `appointments.free_change_reason` (`transferred` / `salon_request`): klijent
 pomera i otkazuje bez roka, a to otkazivanje ne donosi poene discipline.
+Naplata kasnog otkazivanja: `cancellation_fee_enabled` (Podešavanja → Zakazivanje) — posle roka `cancellation_days_before` klijent može samo da otkaže
+(ne i da pomeri) uz `accept_late`; `CancellationFeeService` je jedino mesto za pravila. Svako kasno otkazivanje je red u `cancellation_fees`
+(`free` dok traje odbrojavanje `cancellation_free_late` u `cancellation_fee_window_days`, pa `open` → `paid` / `waived`; oprošteno se ne broji).
+Iznos: `fixed` / `percent` / `service_plus_fixed` za salon, a usluga ga nadjačava (`services.cancellation_fee_*`, `none` = bez naknade i bez brojanja,
+manji `cancellation_free_late` usluge u terminu važi); klijentu umanjenje `users.cancellation_discount_*` (`fixed` / `percent` / `exempt`). Klijent vidi
+odbrojavanje i objašnjenje (`cancellation_fee_note`) u `<app-late-cancel-dialog>` i dug u Moji termini; salon „Klijent otkazao“ upisuje naknadu, a
+`<app-client-fees>` (detalji termina, istorijat klijenta) beleži naplatu, a menadžer oprašta ili menja iznos uz razlog. `free_change_reason` je izuzet.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

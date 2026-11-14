@@ -5,6 +5,8 @@ import { CONFIRMATION_OPTIONS, ConfirmationMode } from '../../../core/models/bus
 import { AUDIENCE_OPTIONS, DURATION_OPTIONS, SalonService, SalonServicePayload, ServiceAudience, ServiceCategory, audienceLabel, isPaused } from '../../../core/models/service.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AiService } from '../../../core/services/ai.service';
+import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { CANCELLATION_FEE_TYPES, ServiceCancellationFeeType } from '../../../core/models/cancellation-fee.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { ServiceCategoryService } from '../../../core/services/service-category.service';
@@ -44,6 +46,14 @@ export class ServiceListComponent {
   private staffService = inject(StaffService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
+  private business = inject(BusinessSettingService);
+
+  readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
+  readonly feeTypes: { value: ServiceCancellationFeeType | null; label: string }[] = [
+    { value: null, label: 'Kao za ceo salon' },
+    { value: 'none', label: 'Bez naknade' },
+    ...CANCELLATION_FEE_TYPES.map((t) => ({ value: t.value, label: t.label })),
+  ];
 
   readonly columns = 'minmax(0, 2.2fr) 6rem 7rem minmax(0, 1.6fr) 6.5rem 2.5rem';
   readonly durations = DURATION_OPTIONS;
@@ -90,6 +100,9 @@ export class ServiceListComponent {
     price: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
     active: this.fb.nonNullable.control(true),
     paused_until: this.fb.control<string | null>(null),
+    cancellation_fee_type: this.fb.control<ServiceCancellationFeeType | null>(null),
+    cancellation_fee_value: this.fb.control<number | null>(null, [Validators.min(0)]),
+    cancellation_free_late: this.fb.control<number | null>(null, [Validators.min(0), Validators.max(10)]),
   });
 
   readonly today = today();
@@ -187,6 +200,9 @@ export class ServiceListComponent {
       price: service.price,
       active: service.active,
       paused_until: service.paused_until,
+      cancellation_fee_type: service.cancellation_fee_type ?? null,
+      cancellation_fee_value: service.cancellation_fee_value ?? null,
+      cancellation_free_late: service.cancellation_free_late ?? null,
       staff_member_ids: service.staff_members.map((s) => s.id),
       ...changes,
     };
@@ -212,6 +228,9 @@ export class ServiceListComponent {
       price: service?.price ?? null,
       active: service?.active ?? true,
       paused_until: service?.paused_until ?? null,
+      cancellation_fee_type: service?.cancellation_fee_type ?? null,
+      cancellation_fee_value: service?.cancellation_fee_value ?? null,
+      cancellation_free_late: service?.cancellation_free_late ?? null,
     });
     this.newCategoryName.reset();
     this.selectedStaff.set(new Set(service?.staff_members.map((s) => s.id) ?? this.staff().map((s) => s.id)));
@@ -247,6 +266,8 @@ export class ServiceListComponent {
       duration_minutes: Number(value.duration_minutes),
       description: value.description?.trim() || null,
       paused_until: value.paused_until || null,
+      cancellation_fee_value: value.cancellation_fee_type && value.cancellation_fee_type !== 'none' && value.cancellation_fee_value !== null ? Number(value.cancellation_fee_value) : null,
+      cancellation_free_late: value.cancellation_free_late === null || (value.cancellation_free_late as unknown) === '' ? null : Number(value.cancellation_free_late),
       staff_member_ids: [...this.selectedStaff()],
     };
 

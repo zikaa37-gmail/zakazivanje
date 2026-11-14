@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { CancellationFeeService } from '../../../core/services/cancellation-fee.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
@@ -15,6 +16,7 @@ export class AppointmentActionsService {
   private appointments = inject(AppointmentService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
+  private fees = inject(CancellationFeeService);
 
   actions(a: Appointment): RowAction[] {
     const list: RowAction[] = [];
@@ -31,6 +33,20 @@ export class AppointmentActionsService {
     return [...list, ...contactActions(a.client?.phone)];
   }
 
+  private async feeNote(a: Appointment): Promise<string> {
+    if (!a.client) return '';
+    try {
+      const preview = await firstValueFrom(this.fees.previewForSalon(a.id));
+      if (!preview.late) return '';
+      if (!preview.free) return ` Kasno je — upisuje se naknada od ${preview.amount!.toLocaleString('sr-RS')} din.`;
+      return preview.free_left_after === null
+        ? ' Kasno je, ali je klijent oslobođen naknade.'
+        : ` Kasno je, bez naplate (posle ovog klijentu ostaje još ${preview.free_left_after} bez naplate).`;
+    } catch {
+      return '';
+    }
+  }
+
   async run(a: Appointment, action: string): Promise<boolean> {
     if (openContact(action, a.client?.phone)) return false;
 
@@ -38,12 +54,13 @@ export class AppointmentActionsService {
       if (action === 'cancel' || action === 'cancel-series' || action === 'cancel-by-client') {
         const series = action === 'cancel-series';
         const byClient = action === 'cancel-by-client';
+        const feeNote = byClient ? await this.feeNote(a) : '';
         const ok = await this.confirm.confirm({
           title: series ? 'Otkazivanje niza' : byClient ? 'Klijent je otkazao' : 'Otkazivanje termina',
           message: series
             ? `Otkazati ovaj i sve sledeće termine za ${a.client?.first_name} ${a.client?.last_name}? Ponavljanje se zaustavlja.`
             : byClient
-              ? `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na zahtev klijenta? Računa se kao otkazivanje klijenta.`
+              ? `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na zahtev klijenta? Računa se kao otkazivanje klijenta.${feeNote}`
               : `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)})?`,
           confirmLabel: 'Otkaži',
           cancelLabel: 'Ne',

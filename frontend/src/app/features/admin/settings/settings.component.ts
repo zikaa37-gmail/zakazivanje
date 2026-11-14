@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { AiStatus, BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode, STAFF_TERMS, StaffTerm } from '../../../core/models/business-setting.model';
 import { AiService } from '../../../core/services/ai.service';
+import { CANCELLATION_FEE_TYPES, CancellationFeeType } from '../../../core/models/cancellation-fee.model';
 import { FreeSlotsPreview, InstagramState } from '../../../core/models/marketing.model';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -151,6 +152,12 @@ export class SettingsComponent {
     booking_horizon_days: this.fb.nonNullable.control(60),
     booking_min_days_ahead: this.fb.nonNullable.control(1),
     cancellation_days_before: this.fb.nonNullable.control(1),
+    cancellation_fee_enabled: this.fb.nonNullable.control(false),
+    cancellation_free_late: this.fb.nonNullable.control(2, [Validators.min(0), Validators.max(10)]),
+    cancellation_fee_window_days: this.fb.nonNullable.control(365, [Validators.min(30), Validators.max(730)]),
+    cancellation_fee_type: this.fb.nonNullable.control<CancellationFeeType>('percent'),
+    cancellation_fee_value: this.fb.nonNullable.control(50, [Validators.min(0)]),
+    cancellation_fee_note: this.fb.control<string | null>(null),
     allow_guest_booking: this.fb.nonNullable.control(true),
     notify_booking_received: this.fb.nonNullable.control(true),
     notify_booking_confirmed: this.fb.nonNullable.control(true),
@@ -219,6 +226,13 @@ export class SettingsComponent {
     { value: 2, label: 'Najkasnije 2 dana pre' },
     { value: 3, label: 'Najkasnije 3 dana pre' },
   ];
+  readonly cancellationFeeTypes = CANCELLATION_FEE_TYPES;
+
+  cancellationLabel(): string {
+    return this.cancellationOptions.find((o) => o.value === this.form.controls.cancellation_days_before.value)?.label.toLowerCase() ?? '';
+  }
+
+  readonly defaultCancellationNote = 'Kada se termin otkaže u poslednjem trenutku, to vreme ostaje prazno — teško ga je popuniti, a zaposleni koji je došao zbog tebe gubi i vreme i zaradu. Zato se kasno otkazivanje, posle nekoliko opomena, naplaćuje.';
   readonly leadOptions = [
     { value: 0, label: 'Bez ograničenja' },
     { value: 30, label: '30 minuta' },
@@ -573,7 +587,7 @@ export class SettingsComponent {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       const payments = this.form.controls.bank_account.invalid || this.form.controls.payment_code.invalid;
-      const discipline = Object.entries(this.form.controls).some(([key, control]) => key.startsWith('discipline_') && control.invalid);
+      const discipline = Object.entries(this.form.controls).some(([key, control]) => (key.startsWith('discipline_') || key.startsWith('cancellation_')) && control.invalid);
       this.tab.set(payments ? 'payments' : discipline ? 'booking' : 'business');
       this.error.set(payments ? 'Proveri tekući račun i šifru plaćanja.' : discipline ? 'Proveri brojeve u delu Disciplina klijenata.' : 'Proveri naziv i email.');
       return;
@@ -589,6 +603,7 @@ export class SettingsComponent {
       address: clean(value.address),
       city: clean(value.city),
       map_query: clean(value.map_query),
+      cancellation_fee_note: clean(value.cancellation_fee_note),
       instagram_feed_enabled: value.instagram_feed_enabled,
       instagram_insights_enabled: value.instagram_insights_enabled,
       instagram_free_slots_time: value.instagram_free_slots_time || '09:00',
@@ -683,6 +698,12 @@ export class SettingsComponent {
       booking_horizon_days: settings.booking_horizon_days,
       booking_min_days_ahead: settings.booking_min_days_ahead,
       cancellation_days_before: settings.cancellation_days_before,
+      cancellation_fee_enabled: settings.cancellation_fee_enabled ?? false,
+      cancellation_free_late: settings.cancellation_free_late ?? 2,
+      cancellation_fee_window_days: settings.cancellation_fee_window_days ?? 365,
+      cancellation_fee_type: settings.cancellation_fee_type ?? 'percent',
+      cancellation_fee_value: settings.cancellation_fee_value ?? 50,
+      cancellation_fee_note: settings.cancellation_fee_note ?? null,
       allow_guest_booking: settings.allow_guest_booking,
       notify_booking_received: settings.notify_booking_received,
       notify_booking_confirmed: settings.notify_booking_confirmed,

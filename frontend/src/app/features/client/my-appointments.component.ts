@@ -2,6 +2,9 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, STATUS_LABELS } from '../../core/models/appointment.model';
 import { BookingService } from '../../core/services/booking.service';
+import { CancellationPreview, CancellationStatus } from '../../core/models/cancellation-fee.model';
+import { CancellationFeeService } from '../../core/services/cancellation-fee.service';
+import { LateCancelDialogComponent } from './late-cancel-dialog.component';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -21,7 +24,7 @@ import { ReviewFormComponent } from './review-form.component';
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
+  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -29,6 +32,11 @@ export class MyAppointmentsComponent {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   protected business = inject(BusinessSettingService);
+  private fees = inject(CancellationFeeService);
+
+  readonly lateCancel = signal<{ appointment: Appointment; preview: CancellationPreview } | null>(null);
+  readonly feeStatus = signal<CancellationStatus | null>(null);
+  readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
 
   readonly statuses = STATUS_LABELS;
   readonly scope = signal<'upcoming' | 'past'>('upcoming');
@@ -69,6 +77,11 @@ export class MyAppointmentsComponent {
     if (this.reviewTarget) this.scope.set('past');
     this.load();
     this.loadWaitlist();
+    this.loadFeeStatus();
+  }
+
+  loadFeeStatus(): void {
+    this.fees.myStatus().subscribe({ next: (status) => this.feeStatus.set(status.enabled ? status : null), error: () => this.feeStatus.set(null) });
   }
 
   loadWaitlist(): void {
@@ -165,7 +178,7 @@ export class MyAppointmentsComponent {
     const target = list.find((a) => a.id === this.rescheduleTarget);
     this.rescheduleTarget = null;
     this.router.navigate([], { queryParams: {}, replaceUrl: true });
-    if (target?.can_cancel) this.rescheduling.set(target);
+    if (target?.can_reschedule ?? target?.can_cancel) this.rescheduling.set(target);
     else this.toast.info('Ovaj termin više ne može da se pomeri — javi nam se telefonom.');
   }
 
@@ -199,6 +212,27 @@ export class MyAppointmentsComponent {
   }
 
   async cancel(a: Appointment): Promise<void> {
+    if (a.late_cancel) {
+      this.fees.previewForClient(a.id).subscribe({
+        next: (preview) => (preview.late ? this.lateCancel.set({ appointment: a, preview }) : this.confirmCancel(a)),
+        error: (err) => this.toast.error(apiErrorMessage(err, 'Otkazivanje nije uspelo.')),
+      });
+      return;
+    }
+    await this.confirmCancel(a);
+  }
+
+  cancelSummary(a: Appointment): string {
+    return `${this.serviceNames(a)}, ${this.weekday(a)} ${this.day(a)}. u ${this.time(a)}.`;
+  }
+
+  confirmLateCancel(): void {
+    const target = this.lateCancel();
+    this.lateCancel.set(null);
+    if (target) this.doCancel(target.appointment, true);
+  }
+
+  private async confirmCancel(a: Appointment): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Otkazivanje termina',
       message: `Otkazati ${this.serviceNames(a)} (${this.weekday(a)} ${this.day(a)}. u ${this.time(a)})?`,
@@ -206,11 +240,16 @@ export class MyAppointmentsComponent {
       cancelLabel: 'Ne',
     });
     if (!ok) return;
+    this.doCancel(a, false);
+  }
 
-    this.booking.cancelMine(a.id).subscribe({
-      next: () => {
-        this.toast.success('Termin je otkazan.');
+  private doCancel(a: Appointment, acceptLate: boolean): void {
+    this.booking.cancelMine(a.id, acceptLate).subscribe({
+      next: (res) => {
+        const fee = res.cancellation_fee;
+        this.toast.success(fee && fee.amount > 0 ? `Termin je otkazan. Naknada od ${fee.amount.toLocaleString('sr-RS')} din. plaća se pri sledećem dolasku.` : 'Termin je otkazan.');
         this.load();
+        this.loadFeeStatus();
         if (this.mode() === 'calendar') this.loadAll();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Otkazivanje nije uspelo.')),

@@ -36,6 +36,8 @@
         </div>
       </div>
 
+      <app-client-fees [clientId]="h.client.id" [showAll]="true" />
+
       @if (isManager()) {
         <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="card flex flex-col gap-2" novalidate data-testid="client-zone-form">
           <h3 class="font-semibold">Ručna zona</h3>

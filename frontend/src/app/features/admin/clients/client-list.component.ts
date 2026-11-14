@@ -1,4 +1,5 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { CANCELLATION_DISCOUNT_TYPES, CancellationDiscountType } from '../../../core/models/cancellation-fee.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -38,6 +39,8 @@ export class ClientListComponent {
   private toast = inject(ToastService);
   private staffService = inject(StaffService);
   protected business = inject(BusinessSettingService);
+  readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
+  readonly discountTypes = CANCELLATION_DISCOUNT_TYPES;
   readonly stylists = signal<StaffMember[]>([]);
 
   readonly columns = 'minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1.6fr) 6.5rem 2.5rem';
@@ -67,6 +70,8 @@ export class ClientListComponent {
     gender: this.fb.control<Gender | null>(null),
     favorite_staff_member_id: this.fb.control<number | null>(null),
     note: this.fb.control<string | null>(null),
+    cancellation_discount_type: this.fb.control<CancellationDiscountType | null>(null),
+    cancellation_discount_value: this.fb.control<number | null>(null, [Validators.min(0)]),
   });
 
   readonly zones = ZONES;
@@ -147,6 +152,8 @@ export class ClientListComponent {
       gender: client?.gender ?? null,
       favorite_staff_member_id: client?.favorite_staff_member_id ?? null,
       note: client?.note ?? null,
+      cancellation_discount_type: client?.cancellation_discount_type ?? null,
+      cancellation_discount_value: client?.cancellation_discount_value ?? null,
     });
     this.modalOpen.set(true);
   }
@@ -164,6 +171,7 @@ export class ClientListComponent {
       email: value.email?.trim() || null,
       whatsapp_number: value.whatsapp_number?.trim() || null,
       note: value.note?.trim() || null,
+      cancellation_discount_value: value.cancellation_discount_type && value.cancellation_discount_type !== 'exempt' && value.cancellation_discount_value !== null ? Number(value.cancellation_discount_value) : null,
     };
 
     const client = this.editing();

@@ -1,3 +1,4 @@
+import { ServiceCancellationFeeType } from './cancellation-fee.model';
 import { ConfirmationMode } from './business-setting.model';
 import { Gender } from './user.model';
 
@@ -45,6 +46,9 @@ export interface SalonService {
   active: boolean;
   paused_until: string | null;
   sort_order: number;
+  cancellation_fee_type?: ServiceCancellationFeeType | null;
+  cancellation_fee_value?: number | null;
+  cancellation_free_late?: number | null;
   staff_members: { id: number; first_name: string; last_name: string }[];
 }
 
@@ -58,6 +62,9 @@ export interface SalonServicePayload {
   price: number;
   active: boolean;
   paused_until: string | null;
+  cancellation_fee_type?: ServiceCancellationFeeType | null;
+  cancellation_fee_value?: number | null;
+  cancellation_free_late?: number | null;
   staff_member_ids: number[];
 }
 

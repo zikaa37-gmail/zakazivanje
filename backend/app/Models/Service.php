@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'description', 'service_category_id', 'audience', 'booking_confirmation', 'duration_minutes', 'price', 'active', 'paused_until', 'sort_order'])]
+#[Fillable(['name', 'description', 'service_category_id', 'audience', 'booking_confirmation', 'duration_minutes', 'price', 'active', 'paused_until', 'sort_order', 'cancellation_fee_type', 'cancellation_fee_value', 'cancellation_free_late'])]
 #[Appends(['category'])]
 #[Hidden(['serviceCategory'])]
 class Service extends Model
@@ -38,6 +38,8 @@ class Service extends Model
             'service_category_id' => 'integer',
             'paused_until' => 'date:Y-m-d',
             'sort_order' => 'integer',
+            'cancellation_fee_value' => 'float',
+            'cancellation_free_late' => 'integer',
         ];
     }
 

@@ -1,3 +1,4 @@
+import { CancellationFee } from '../models/cancellation-fee.model';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -51,7 +52,7 @@ export class BookingService {
     return this.http.post<Appointment>(`${this.api}/my-appointments/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
   }
 
-  cancelMine(id: number): Observable<Appointment> {
-    return this.http.post<Appointment>(`${this.api}/my-appointments/${id}/cancel`, {});
+  cancelMine(id: number, acceptLate = false): Observable<Appointment & { cancellation_fee: CancellationFee | null }> {
+    return this.http.post<Appointment & { cancellation_fee: CancellationFee | null }>(`${this.api}/my-appointments/${id}/cancel`, { accept_late: acceptLate });
   }
 }
