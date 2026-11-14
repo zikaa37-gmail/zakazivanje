@@ -34,12 +34,15 @@
           <div class="card">
             <div class="font-semibold">{{ serviceNames(a) }}</div>
             <div class="text-sm muted">{{ time(a) }} · {{ a.staff_member?.first_name }} {{ a.staff_member?.last_name }}</div>
+            @if (linkedOf(a).length) {
+              <div class="text-xs muted mt-1"><span appIcon="link" [iconSize]="12" aria-hidden="true"></span> Povezano — {{ linkedLabel(a) }}</div>
+            }
             <div class="flex items-center justify-between mt-2">
               <span [class]="'badge ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
               @if (a.can_cancel) {
                 <span class="flex gap-3">
                   @if (a.can_reschedule ?? true) {
-                    <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)">Promeni</button>
+                    <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="reschedule(a)">Promeni</button>
                   }
                   <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)">Otkaži</button>
                 </span>
@@ -105,6 +108,9 @@
             <div class="min-w-0 flex-1">
               <div class="font-semibold">{{ serviceNames(a) }}</div>
               <div class="text-sm muted">{{ time(a) }} · {{ a.staff_member?.first_name }} {{ a.staff_member?.last_name }}</div>
+              @if (linkedOf(a).length) {
+                <div class="text-xs muted mt-1" [attr.data-testid]="'my-linked-' + a.id"><span appIcon="link" [iconSize]="12" aria-hidden="true"></span> Povezan termin — {{ linkedLabel(a) }}</div>
+              }
               <span class="badge mt-1" [class]="'badge mt-1 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
             </div>
           </div>
@@ -117,7 +123,7 @@
             @if (a.can_cancel) {
               <span class="flex gap-4">
                 @if (a.can_reschedule ?? true) {
-                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="rescheduling.set(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
+                  <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="reschedule(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
                 }
                 <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži</button>
               </span>
@@ -170,8 +176,25 @@
   }
 </div>
 
+@if (groupCancel(); as group) {
+  <app-modal title="Otkazivanje povezanih termina" confirmLabel="Otkaži označene" cancelLabel="Odustani" [danger]="true" (confirmed)="confirmGroupCancel()" (cancelled)="groupCancel.set(null)" testId="group-cancel-modal">
+    <p class="text-sm mb-3">Ovi termini su zakazani zajedno. Označeni se otkazuju — skini oznaku sa onog koji zadržavaš.</p>
+    <div class="flex flex-col gap-2">
+      @for (m of group.members; track m.id) {
+        <label class="flex items-start gap-3 rounded-lg border border-[var(--color-border)] p-3 cursor-pointer" [attr.data-testid]="'group-cancel-' + m.id">
+          <input type="checkbox" class="mt-1" [checked]="group.selected.includes(m.id)" (change)="toggleGroupMember(m.id)" />
+          <span class="min-w-0">
+            <span class="font-semibold block">{{ serviceNames(m) }}</span>
+            <span class="text-sm muted">{{ weekday(m) }} {{ day(m) }}. u {{ time(m) }} · {{ m.staff_member?.first_name }} {{ m.staff_member?.last_name }}</span>
+          </span>
+        </label>
+      }
+    </div>
+  </app-modal>
+}
+
 @if (lateCancel(); as late) {
-  <app-late-cancel-dialog [preview]="late.preview" [summary]="cancelSummary(late.appointment)" (confirmed)="confirmLateCancel()" (closed)="lateCancel.set(null)" />
+  <app-late-cancel-dialog [preview]="late.preview" [summary]="late.summary" (confirmed)="confirmLateCancel()" (closed)="lateCancel.set(null)" />
 }
 
 @if (reviewing(); as appointment) {

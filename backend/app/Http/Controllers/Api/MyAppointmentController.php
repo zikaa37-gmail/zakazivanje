@@ -46,35 +46,42 @@ class MyAppointmentController extends Controller
     {
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
-        return $fees->preview($appointment);
+        return $fees->preview($appointment, $this->linkedToCancel($request, $appointment));
     }
 
     public function cancel(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier, WaitlistService $waitlist, CancellationFeeService $fees)
     {
         abort_unless($appointment->client_id === $request->user()->id, 404);
 
-        if (! $this->canCancel($appointment)) {
+        $linked = $this->linkedToCancel($request, $appointment);
+        $all = collect([$appointment])->concat($linked);
+
+        if ($all->contains(fn (Appointment $a) => ! $this->canCancel($a))) {
             $label = BusinessSetting::current()->cancellationLabel();
             throw ValidationException::withMessages(['appointment' => ["Otkazivanje je moguće {$label} — pozovi salon."]]);
         }
 
-        $preview = $fees->preview($appointment);
+        $preview = $fees->preview($appointment, $linked);
         if ($preview['late'] && ! $request->boolean('accept_late')) {
             throw ValidationException::withMessages(['accept_late' => ['Potvrdi kasno otkazivanje.']]);
         }
 
-        $fee = DB::transaction(function () use ($appointment, $bookings, $fees) {
-            $fee = $fees->record($appointment);
-            $bookings->cancel($appointment, 'client');
+        $fee = DB::transaction(function () use ($appointment, $linked, $all, $bookings, $fees) {
+            $fee = $fees->record($appointment, $linked);
+            $all->each(fn (Appointment $a) => $bookings->cancel($a, 'client'));
 
             return $fee;
         });
-        ClientActivity::dispatch($request->user(), ClientActivity::CANCELLED, ['appointment_id' => $appointment->id, 'starts_at' => $appointment->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($appointment->starts_at), 'free_change' => $appointment->free_change_reason !== null]);
+        foreach ($all as $cancelled) {
+            ClientActivity::dispatch($request->user(), ClientActivity::CANCELLED, ['appointment_id' => $cancelled->id, 'starts_at' => $cancelled->starts_at->format('Y-m-d H:i'), 'hours_before' => (int) now()->diffInHours($cancelled->starts_at), 'free_change' => $cancelled->free_change_reason !== null]);
+        }
         app(ClientDisciplineService::class)->refresh($request->user());
-        $notifier->cancelledByClient($appointment);
-        $waitlist->slotFreed($appointment);
+        foreach ($all as $cancelled) {
+            $notifier->cancelledByClient($cancelled);
+            $waitlist->slotFreed($cancelled);
+        }
 
-        return [...$appointment->toArray(), 'cancellation_fee' => $fee];
+        return [...$appointment->toArray(), 'cancelled_ids' => $all->pluck('id')->all(), 'cancellation_fee' => $fee];
     }
 
     public function reschedule(Request $request, Appointment $appointment, BookingService $bookings, AppointmentNotifier $notifier, WaitlistService $waitlist)
@@ -86,7 +93,11 @@ class MyAppointmentController extends Controller
             'starts_at' => ['required', 'date_format:Y-m-d H:i'],
         ]);
 
-        if (! $this->canMove($appointment)) {
+        $group = $appointment->linkedSiblings()->push($appointment)->sortBy('starts_at')->values();
+        $appointment = $group->first();
+        $previousStarts = $group->mapWithKeys(fn (Appointment $a) => [$a->id => $a->starts_at->format('Y-m-d H:i')]);
+
+        if ($group->contains(fn (Appointment $a) => ! $this->canMove($a))) {
             $label = BusinessSetting::current()->cancellationLabel();
             throw ValidationException::withMessages(['appointment' => ["Promena termina je moguća {$label} — pozovi salon."]]);
         }
@@ -111,8 +122,29 @@ class MyAppointmentController extends Controller
             $notifier->rescheduledByClient($moved, $previous);
             $waitlist->slotFreedAt(substr($previous, 0, 10), $previousStaff, $moved->client_id);
         }
+        foreach ($group->slice(1) as $member) {
+            $notifier->rescheduledByClient($member->refresh(), $previousStarts[$member->id], false);
+        }
 
         return [...$moved->toArray(), 'can_cancel' => $this->canCancel($moved), 'can_reschedule' => $this->canMove($moved), 'late_cancel' => app(CancellationFeeService::class)->isLate($moved), 'can_pay' => $this->canPay($moved)];
+    }
+
+    private function linkedToCancel(Request $request, Appointment $appointment)
+    {
+        $ids = $request->validate([
+            'linked_ids' => ['nullable', 'array'],
+            'linked_ids.*' => ['integer', 'distinct'],
+        ])['linked_ids'] ?? [];
+        if ($ids === []) {
+            return collect();
+        }
+
+        $linked = $appointment->linkedSiblings()->whereIn('id', $ids)->values();
+        if ($linked->count() !== count(array_diff($ids, [$appointment->id]))) {
+            throw ValidationException::withMessages(['linked_ids' => ['Povezani termin nije pronađen.']]);
+        }
+
+        return $linked;
     }
 
     private function canPay(Appointment $appointment): bool

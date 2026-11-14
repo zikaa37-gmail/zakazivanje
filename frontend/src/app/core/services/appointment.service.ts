@@ -51,6 +51,10 @@ export class AppointmentService {
     return this.http.post<Appointment>(`${this.api}/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
   }
 
+  linked(id: number): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.api}/${id}/linked`, { context: new HttpContext().set(SKIP_LOADER, true) });
+  }
+
   alternatives(id: number): Observable<ColleagueRef[]> {
     return this.http.get<ColleagueRef[]>(`${this.api}/${id}/alternatives`, { context: new HttpContext().set(SKIP_LOADER, true) });
   }

@@ -486,6 +486,12 @@
           <app-toggle [checked]="form.controls.waitlist_enabled.value" label="Uključena lista čekanja" (checkedChange)="form.controls.waitlist_enabled.setValue($event)" data-testid="settings-waitlist" />
         </div>
 
+        <div class="card max-w-2xl mb-4">
+          <h2 class="text-base font-semibold">Povezane usluge</h2>
+          <p class="text-sm muted mb-2">Klijent pri zakazivanju može da označi „Odmah posle i druga usluga“ i izabere još usluga (npr. masažu posle frizure). One se zakazuju kao povezan termin odmah posle prvog, kod onoga ko je tada slobodan, i pomeraju se zajedno. Pri otkazivanju klijent bira da li otkazuje sve ili samo deo.</p>
+          <app-toggle [checked]="form.controls.linked_booking_enabled.value" label="Klijenti mogu da zakažu povezane usluge" (checkedChange)="form.controls.linked_booking_enabled.setValue($event)" data-testid="settings-linked-booking" />
+        </div>
+
         <div class="card max-w-2xl">
           <h2 class="text-base font-semibold">Potvrda termina</h2>
           <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>

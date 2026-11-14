@@ -31,7 +31,7 @@ class AvailabilityService
         return (int) $services->sum('duration_minutes');
     }
 
-    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, ?int $ignoreAppointmentId = null): array
+    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, int|array|null $ignoreAppointmentId = null, array $linkedSegments = []): array
     {
         if ($services->isEmpty()) {
             return [];
@@ -68,16 +68,21 @@ class AvailabilityService
 
         ksort($slots);
 
+        if ($linkedSegments !== []) {
+            $planner = $this->chainPlanner($linkedSegments, $date, (array) $ignoreAppointmentId);
+            $slots = array_filter($slots, fn ($ids, $time) => $planner($date->setTimeFromTimeString($time)->addMinutes($duration)) !== null, ARRAY_FILTER_USE_BOTH);
+        }
+
         return collect($slots)->map(fn ($ids, $time) => ['time' => $time, 'staff_member_ids' => array_values(array_unique($ids))])->values()->all();
     }
 
-    public function days(Collection $services, ?int $staffMemberId, CarbonImmutable $from, int $count, ?int $ignoreAppointmentId = null): array
+    public function days(Collection $services, ?int $staffMemberId, CarbonImmutable $from, int $count, int|array|null $ignoreAppointmentId = null, array $linkedSegments = []): array
     {
         return collect(range(0, $count - 1))
             ->map(fn ($i) => $from->addDays($i))
             ->map(fn (CarbonImmutable $day) => [
                 'date' => $day->toDateString(),
-                'available' => count($this->slots($services, $staffMemberId, $day, $ignoreAppointmentId)) > 0,
+                'available' => count($this->slots($services, $staffMemberId, $day, $ignoreAppointmentId, $linkedSegments)) > 0,
                 'open' => $this->isOpenDay($services, $staffMemberId, $day),
             ])
             ->all();
@@ -104,12 +109,61 @@ class AvailabilityService
             ->contains(fn ($hours) => $start->gte($start->setTimeFromTimeString($hours['starts_at'])) && $end->lte($start->setTimeFromTimeString($hours['ends_at'])));
     }
 
-    public function isFree(int $staffMemberId, CarbonImmutable $start, CarbonImmutable $end, ?int $ignoreAppointmentId = null): bool
+    public function isFree(int $staffMemberId, CarbonImmutable $start, CarbonImmutable $end, int|array|null $ignoreAppointmentId = null): bool
     {
         return ! $this->overlapsAny($this->busyIntervals($staffMemberId, $start, $end, $ignoreAppointmentId), $start, $end);
     }
 
-    private function busyIntervals(int $staffMemberId, CarbonImmutable $from, CarbonImmutable $to, ?int $ignoreAppointmentId = null): Collection
+    public function linkedSegments(Collection $linked): array
+    {
+        if ($linked->isEmpty()) {
+            return [];
+        }
+
+        if ($this->eligibleStaff($linked)->isNotEmpty()) {
+            return [$linked->values()];
+        }
+
+        return $linked->map(fn (Service $service) => collect([$service]))->values()->all();
+    }
+
+    public function chainPlanner(array $segments, CarbonImmutable $date, array $ignoreAppointmentIds = [], ?int $firstStaffId = null, array $preferredStaff = []): \Closure
+    {
+        $day = $date->startOfDay();
+        $openingHours = OpeningHour::week();
+
+        $plans = collect($segments)->values()->map(fn (Collection $services, int $i) => [
+            'services' => $services,
+            'duration' => $this->duration($services),
+            'staff' => $this->eligibleStaff($services, $i === 0 ? $firstStaffId : null)
+                ->map(fn (StaffMember $staff) => [
+                    'model' => $staff,
+                    'hours' => $staff->hoursOn($day, $openingHours),
+                    'busy' => $this->busyIntervals($staff->id, $day, $day->endOfDay(), $ignoreAppointmentIds),
+                ])
+                ->sortBy(fn ($c) => ($preferredStaff[$i] ?? null) === $c['model']->id ? -1 : $c['busy']->count())
+                ->values(),
+        ]);
+
+        return function (CarbonImmutable $start) use ($plans, $day): ?array {
+            $chain = [];
+            $at = $start;
+            foreach ($plans as $plan) {
+                $end = $at->addMinutes($plan['duration']);
+                $pick = $plan['staff']->first(fn ($c) => ! $this->overlapsAny($c['busy'], $at, $end)
+                    && $c['hours']->contains(fn ($h) => $at->gte($day->setTimeFromTimeString($h['starts_at'])) && $end->lte($day->setTimeFromTimeString($h['ends_at']))));
+                if (! $pick) {
+                    return null;
+                }
+                $chain[] = ['staff' => $pick['model'], 'services' => $plan['services'], 'starts_at' => $at, 'ends_at' => $end];
+                $at = $end;
+            }
+
+            return $chain;
+        };
+    }
+
+    private function busyIntervals(int $staffMemberId, CarbonImmutable $from, CarbonImmutable $to, int|array|null $ignoreAppointmentId = null): Collection
     {
         $appointments = Appointment::query()
             ->blocking()

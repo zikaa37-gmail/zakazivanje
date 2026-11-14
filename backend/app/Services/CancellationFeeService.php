@@ -36,10 +36,10 @@ class CancellationFeeService
         return BusinessSetting::current()->cancellation_fee_note ?: self::DEFAULT_NOTE;
     }
 
-    public function status(User $client, ?Appointment $appointment = null): array
+    public function status(User $client, ?Collection $appointments = null): array
     {
         $settings = BusinessSetting::current();
-        $allowed = $this->freeAllowed($appointment);
+        $allowed = $this->freeAllowed($appointments);
         $used = $this->usedLate($client);
 
         return [
@@ -54,19 +54,20 @@ class CancellationFeeService
         ];
     }
 
-    public function preview(Appointment $appointment): array
+    public function preview(Appointment $appointment, ?Collection $also = null): array
     {
         $client = $appointment->client ?? User::find($appointment->client_id);
-        if (! $client || ! $this->isLate($appointment)) {
+        $late = $this->lateOnes($appointment, $also);
+        if (! $client || $late->isEmpty()) {
             return ['late' => false];
         }
 
-        $base = $this->baseAmount($appointment);
+        $base = $this->baseAmountOf($late);
         if ($base <= 0) {
             return ['late' => false];
         }
 
-        $status = $this->status($client, $appointment);
+        $status = $this->status($client, $late);
         $free = $status['free_left'] > 0 || $status['exempt'];
         $amount = $free ? 0.0 : $this->applyDiscount($client, $base);
 
@@ -83,20 +84,21 @@ class CancellationFeeService
         ];
     }
 
-    public function record(Appointment $appointment): ?CancellationFee
+    public function record(Appointment $appointment, ?Collection $also = null): ?CancellationFee
     {
-        $preview = $this->preview($appointment);
+        $preview = $this->preview($appointment, $also);
         if (! $preview['late']) {
             return null;
         }
 
         $client = User::find($appointment->client_id);
+        $late = $this->lateOnes($appointment, $also);
 
         return CancellationFee::create([
-            'appointment_id' => $appointment->id,
+            'appointment_id' => $late->first()->id,
             'client_id' => $appointment->client_id,
             'late_number' => $preview['number'],
-            'base_amount' => $this->baseAmount($appointment),
+            'base_amount' => $this->baseAmountOf($late),
             'amount' => $preview['amount'],
             'status' => $preview['free'] ? CancellationFee::STATUS_FREE : CancellationFee::STATUS_OPEN,
             'reason' => $client?->cancellation_discount_type === CancellationFee::DISCOUNT_EXEMPT ? 'Klijent je oslobođen naknade.' : null,
@@ -158,14 +160,24 @@ class CancellationFeeService
             ->count();
     }
 
-    private function freeAllowed(?Appointment $appointment): int
+    private function lateOnes(Appointment $appointment, ?Collection $also): Collection
+    {
+        return collect([$appointment])->concat($also ?? [])->filter(fn (Appointment $a) => $this->isLate($a))->values();
+    }
+
+    private function baseAmountOf(Collection $appointments): float
+    {
+        return round($appointments->sum(fn (Appointment $a) => $this->baseAmount($a)), 2);
+    }
+
+    private function freeAllowed(?Collection $appointments): int
     {
         $default = BusinessSetting::current()->cancellation_free_late;
-        if (! $appointment) {
+        if (! $appointments || $appointments->isEmpty()) {
             return $default;
         }
 
-        return $this->services($appointment)
+        return $appointments->flatMap(fn (Appointment $a) => $this->services($a))
             ->map(fn (?Service $s) => $s?->cancellation_free_late ?? $default)
             ->push($default)
             ->min();

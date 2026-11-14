@@ -14,11 +14,18 @@
           @for (item of appointment.items; track item.id; let last = $last) { {{ item.name }}{{ last ? '' : ' + ' }} }
           · {{ appointment.staff_member?.first_name }} {{ appointment.staff_member?.last_name }}
         </div>
+        @for (part of appointment.linked ?? []; track part.id) {
+          <div class="text-sm muted mt-1" [attr.data-testid]="'booking-success-linked-' + part.id">
+            <span appIcon="link" [iconSize]="12" aria-hidden="true"></span> Zatim u {{ bookedTime(part) }}:
+            @for (item of part.items; track item.id; let last = $last) { {{ item.name }}{{ last ? '' : ' + ' }} }
+            · {{ part.staff_member?.first_name }} {{ part.staff_member?.last_name }}
+          </div>
+        }
         <div class="flex items-center justify-between mt-2">
           <span class="badge" [class.badge-warning]="appointment.status === 'pending'" [class.badge-success]="appointment.status === 'confirmed'">
             {{ appointment.status === 'pending' ? 'Na čekanju' : 'Potvrđen' }}
           </span>
-          <span class="font-bold">{{ appointment.total | rsd }}</span>
+          <span class="font-bold">{{ bookedTotal(appointment) | rsd }}</span>
         </div>
       </div>
       <div class="flex flex-col gap-2 mt-4">
@@ -92,6 +99,31 @@
           </div>
           }
           <p class="text-xs muted mt-2">Možeš da izabereš i više usluga u istom terminu.</p>
+          @if (linkedEnabled() && draft().serviceIds.length && linkedChoices().length) {
+            <div class="card mt-3" data-testid="book-linked">
+              <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" class="mt-1" [checked]="draft().linkedOn" (change)="toggleLinked()" data-testid="book-linked-toggle" />
+                <span>
+                  <span class="font-semibold block">Odmah posle i druga usluga</span>
+                  <span class="text-sm muted">Zakazuje se kao povezan termin, jedan za drugim — i kad je radi neko drugi, u drugoj prostoriji.</span>
+                </span>
+              </label>
+              @if (draft().linkedOn) {
+                <div class="flex flex-col gap-2 mt-3">
+                  @for (service of linkedChoices(); track service.id) {
+                    <button type="button" class="choice-card" [class.selected]="draft().linkedIds.includes(service.id)" (click)="toggleLinkedService(service.id)" [attr.data-testid]="'book-linked-' + service.id">
+                      <div class="min-w-0 flex-1">
+                        <div class="font-semibold">{{ service.name }}</div>
+                        <div class="text-sm muted">{{ service.duration_minutes | duration }}@if (service.category) { · {{ service.category }}}</div>
+                      </div>
+                      <div class="font-semibold whitespace-nowrap">{{ service.price | rsd }}</div>
+                      <span class="choice-check"><span appIcon="check" [iconSize]="14" aria-hidden="true"></span></span>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
         }
       }
 
@@ -191,6 +223,19 @@
             </div>
             <button type="button" class="summary-edit" (click)="goTo(0)" data-testid="book-edit-services">Izmeni</button>
           </div>
+          @if (linkedServices().length) {
+            <div class="flex items-start gap-3" data-testid="book-summary-linked">
+              <span class="avatar avatar-initials avatar-sm"><span appIcon="link" [iconSize]="14"></span></span>
+              <div class="flex-1">
+                <div class="text-sm muted">Odmah zatim, u {{ linkedStart() }}</div>
+                @for (service of linkedServices(); track service.id) {
+                  <div class="font-semibold">{{ service.name }}</div>
+                }
+                <div class="text-sm muted">{{ linkedDuration() | duration }} · radi onaj ko je tada slobodan</div>
+              </div>
+              <button type="button" class="summary-edit" (click)="goTo(0)">Izmeni</button>
+            </div>
+          }
           <div class="flex items-center gap-3">
             <span class="avatar avatar-initials avatar-sm"><span appIcon="user" [iconSize]="14"></span></span>
             <div class="font-semibold flex-1">{{ staffLabel() }}</div>

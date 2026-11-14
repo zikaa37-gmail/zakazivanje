@@ -101,7 +101,23 @@ export class BookComponent {
 
   readonly selectedServices = computed(() => this.services().filter((s) => this.draft().serviceIds.includes(s.id)));
   readonly totalDuration = computed(() => this.selectedServices().reduce((sum, s) => sum + s.duration_minutes, 0));
-  readonly regularPrice = computed(() => this.selectedServices().reduce((sum, s) => sum + s.price, 0));
+
+  readonly linkedEnabled = computed(() => this.business.settings()?.linked_booking_enabled ?? false);
+  readonly linkedChoices = computed(() => this.visibleServices().filter((s) => !this.draft().serviceIds.includes(s.id)));
+  readonly linkedIds = computed(() => {
+    const d = this.draft();
+    if (!this.linkedEnabled() || !d.linkedOn) return [];
+    return d.linkedIds.filter((id) => !d.serviceIds.includes(id) && this.services().some((s) => s.id === id));
+  });
+  readonly linkedServices = computed(() => this.linkedIds().map((id) => this.services().find((s) => s.id === id)!).filter(Boolean));
+  readonly linkedDuration = computed(() => this.linkedServices().reduce((sum, s) => sum + s.duration_minutes, 0));
+  readonly linkedStart = computed(() => {
+    const time = this.draft().time;
+    if (!time) return '';
+    const minutes = Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5)) + this.totalDuration();
+    return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+  });
+  readonly regularPrice = computed(() => [...this.selectedServices(), ...this.linkedServices()].reduce((sum, s) => sum + s.price, 0));
 
   readonly staffOptions = computed<StaffOption[]>(() => {
     const selected = this.selectedServices();
@@ -144,7 +160,8 @@ export class BookComponent {
 
   readonly summary = computed(() => {
     const d = this.draft();
-    const parts = [this.selectedServices().map((s) => s.name).join(' + ')];
+    const linked = this.linkedServices().map((s) => s.name).join(' + ');
+    const parts = [this.selectedServices().map((s) => s.name).join(' + ') + (linked ? `, zatim ${linked}` : '')];
     if (d.step >= 2) parts.push(this.staffLabel());
     if (d.date && d.time && d.step >= 3) parts.push(`${weekdayShort(d.date)} ${parseDate(d.date).getDate()}.${parseDate(d.date).getMonth() + 1}. u ${d.time}`);
     return parts.filter(Boolean).join(' · ');
@@ -182,20 +199,20 @@ export class BookComponent {
     effect(() => {
       const key = this.daysKey();
       if (!key) return;
-      untracked(() => this.loadDays(this.draft().serviceIds, this.draft().staffMemberId, this.windowStart()));
+      untracked(() => this.loadDays(this.draft().serviceIds, this.draft().staffMemberId, this.windowStart(), this.linkedIds()));
     });
 
     effect(() => {
       const key = this.slotsKey();
       if (!key) return;
-      untracked(() => this.loadSlots(this.draft().serviceIds, this.draft().staffMemberId, this.draft().date!));
+      untracked(() => this.loadSlots(this.draft().serviceIds, this.draft().staffMemberId, this.draft().date!, this.linkedIds()));
     });
 
     effect(() => {
       const key = this.quoteKey();
       if (!key) return;
       untracked(() =>
-        this.booking.quote(this.draft().serviceIds, this.draft().date, this.draft().promoCode || null).subscribe({
+        this.booking.quote(this.draft().serviceIds, this.draft().date, this.draft().promoCode || null, this.linkedIds()).subscribe({
           next: (q) => this.quote.set(q),
           error: () => this.quote.set(null),
         }),
@@ -205,17 +222,17 @@ export class BookComponent {
 
   private readonly daysKey = computed(() => {
     const d = this.draft();
-    return d.step === 2 && d.serviceIds.length ? `${d.serviceIds.join(',')}|${d.staffMemberId}|${this.windowStart()}` : null;
+    return d.step === 2 && d.serviceIds.length ? `${d.serviceIds.join(',')}|${this.linkedIds().join(',')}|${d.staffMemberId}|${this.windowStart()}` : null;
   });
 
   private readonly slotsKey = computed(() => {
     const d = this.draft();
-    return d.step === 2 && d.date ? `${d.serviceIds.join(',')}|${d.staffMemberId}|${d.date}` : null;
+    return d.step === 2 && d.date ? `${d.serviceIds.join(',')}|${this.linkedIds().join(',')}|${d.staffMemberId}|${d.date}` : null;
   });
 
   private readonly quoteKey = computed(() => {
     const d = this.draft();
-    return d.step === 3 ? `${d.serviceIds.join(',')}|${d.date}|${this.auth.isAuthenticated()}|${d.promoCode}` : null;
+    return d.step === 3 ? `${d.serviceIds.join(',')}|${this.linkedIds().join(',')}|${d.date}|${this.auth.isAuthenticated()}|${d.promoCode}` : null;
   });
 
   weekday(date: string): string {
@@ -241,11 +258,21 @@ export class BookComponent {
     this.draftService.patch({
       audience,
       serviceIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      linkedIds: this.draft().linkedIds.filter((x) => x !== id),
       staffMemberId: null,
       staffChosen: false,
       date: null,
       time: null,
     });
+  }
+
+  toggleLinked(): void {
+    this.draftService.patch({ linkedOn: !this.draft().linkedOn, date: null, time: null });
+  }
+
+  toggleLinkedService(id: number): void {
+    const ids = this.draft().linkedIds;
+    this.draftService.patch({ linkedIds: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id], date: null, time: null });
   }
 
   rememberStaff(): void {
@@ -377,6 +404,7 @@ export class BookComponent {
         starts_at: `${d.date} ${d.time}`,
         note: d.note.trim() || null,
         promo_code: d.promoCode && this.quote()?.code_applied ? d.promoCode : null,
+        linked_service_ids: this.linkedIds(),
         ...(guest ? { guest: { first_name: g.first_name.trim(), last_name: g.last_name.trim(), phone: g.phone.trim(), email: g.email.trim() || null } } : {}),
       })
       .subscribe({
@@ -395,6 +423,14 @@ export class BookComponent {
           }
         },
       });
+  }
+
+  bookedTime(appointment: Appointment): string {
+    return appointment.starts_at.slice(11, 16);
+  }
+
+  bookedTotal(appointment: Appointment): number {
+    return appointment.total + (appointment.linked ?? []).reduce((sum, a) => sum + a.total, 0);
   }
 
   bookedDate(appointment: Appointment): string {
@@ -423,9 +459,9 @@ export class BookComponent {
     this.draftService.patch({ note: (event.target as HTMLTextAreaElement).value });
   }
 
-  private loadDays(serviceIds: number[], staffId: number | null, from: string): void {
+  private loadDays(serviceIds: number[], staffId: number | null, from: string, linkedIds: number[]): void {
     this.daysLoading.set(true);
-    this.booking.days(serviceIds, staffId, from, WINDOW).subscribe({
+    this.booking.days(serviceIds, staffId, from, WINDOW, null, linkedIds).subscribe({
       next: (days) => {
         this.days.set(days);
         this.daysLoading.set(false);
@@ -439,9 +475,9 @@ export class BookComponent {
     });
   }
 
-  private loadSlots(serviceIds: number[], staffId: number | null, date: string): void {
+  private loadSlots(serviceIds: number[], staffId: number | null, date: string, linkedIds: number[]): void {
     this.slotsLoading.set(true);
-    this.booking.slots(serviceIds, staffId, date).subscribe({
+    this.booking.slots(serviceIds, staffId, date, null, linkedIds).subscribe({
       next: (slots) => {
         this.slots.set(slots);
         this.slotsLoading.set(false);

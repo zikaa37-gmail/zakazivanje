@@ -17,10 +17,10 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | POST | `/public/visit` | `{source, campaign?}` — beleži posetu po izvoru (`?izvor=` / `?source=` / `utm_source`, `&kampanja=`); osoblje se ne broji. `login`, `register` i `bookings` primaju `referral: {source, campaign}` |
 | GET | `/public/reports/{file}` | potpisan link (7 dana) na PDF izveštaja poslat preko WhatsApp-a |
 | GET | `/public/gallery/images/{id}` | sama slika (keš 7 dana; `?v=` se menja pri izmeni) |
-| POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?}` → `[{date, available, open}]` (`open` = neko tog dana radi — pun dan je `open` ali ne `available`) |
-| POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
-| POST | `/bookings/quote` | cena sa akcijama (za prijavljenog klijenta računa i loyalty / N+M); `promo_code?` → `code_applied`, `code_error` |
-| POST | `/bookings` | `{service_ids, staff_member_id?, starts_at "Y-m-d H:i", note?, promo_code?, guest?}` — gost: `{first_name, last_name, phone, email?}`; `null` zaposleni = prvi slobodan |
+| POST | `/availability/days` | `{service_ids, staff_member_id?, from, days?, linked_service_ids?}` → `[{date, available, open}]` (`open` = neko tog dana radi — pun dan je `open` ali ne `available`) |
+| POST | `/availability/slots` | `{service_ids, staff_member_id?, date, ignore_appointment_id?, linked_service_ids?}` (sopstveni termin prijavljenog klijenta se ne računa kao zauzet; uz `linked_service_ids` samo vremena posle kojih je povezana usluga odmah slobodna kod nekog zaposlenog; za `ignore_appointment_id` iz povezane grupe server sam dodaje ostale termine grupe) → `[{time, staff_member_ids}]` (radno vreme − zauzeti termini − blokade, pravila iz Podešavanja) |
+| POST | `/bookings/quote` | cena sa akcijama (za prijavljenog klijenta računa i loyalty / N+M); `promo_code?` → `code_applied`, `code_error`; `linked_service_ids?` ulaze u cenu |
+| POST | `/bookings` | `{service_ids, staff_member_id?, starts_at "Y-m-d H:i", note?, promo_code?, linked_service_ids?, guest?}` — gost: `{first_name, last_name, phone, email?}`; `null` zaposleni = prvi slobodan; `linked_service_ids` = povezani termin(i) odmah posle, kod slobodnog zaposlenog, isti `link_group` (vraća `linked`; uz `linked_booking_enabled`) |
 | POST | `/auth/register` | registracija klijenta → mejl za aktivaciju (važi 3 dana; `next?` = povratak posle aktivacije; ponovna registracija nepotvrđenog mejla šalje novi link; `website` i `started_at` su zaštita od botova) |
 | POST | `/auth/login` | `{email, password}` → `{access_token, refresh_token, user}` |
 | GET | `/auth/quick-logins` | brza prijava (test): `[{email, label}]` za mejlove iz `QUICK_LOGIN_EMAILS`; prazno = isključeno |
@@ -44,14 +44,14 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | PUT | `/auth/favorite-staff` | `{staff_member_id \| null}` — omiljeni frizer klijenta (aktivan zaposleni) |
 | POST | `/auth/logout` | `{refresh_token}` |
 | POST | `/my-appointments/list` | `{scope: upcoming \| past}` → termini sa `can_cancel`, `can_reschedule`, `late_cancel` |
-| POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; salonu mejl sa starim vremenom |
+| POST | `/my-appointments/{id}/reschedule` | `{starts_at, staff_member_id?}` — klijent pomera termin (povezana grupa se pomera cela, `starts_at` važi za prvi termin) (isti rok kao otkazivanje, pravila online zakazivanja; `null` zaposleni = prvo trenutni, pa bilo ko); u ručnom režimu termin ponovo čeka potvrdu; salonu mejl sa starim vremenom |
 | POST | `/my-waitlist/list`, `/my-waitlist` | lista čekanja klijenta / prijava `{service_ids, staff_member_id?, date, part: any \| morning \| afternoon}` (jedna po danu) |
 | DELETE | `/my-waitlist/{id}` | odjava |
 | POST | `/my-appointments/{id}/review` | `{rating 1–5, comment?}` — samo završen termin; izmena do 30 dana |
 | POST | `/my-appointments/{id}/payment` | IPS podaci za uplatu `{amount, account, payee, payment_code, model, reference, purpose, payload, qr}` — samo ako je uključeno plaćanje unapred |
 | POST | `/my-appointments/{id}/slip` | PDF uplatnica |
-| POST | `/my-appointments/{id}/cancel` | `{accept_late?}` — otkazivanje (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina). Uz `cancellation_fee_enabled` i posle roka do početka, ali samo uz `accept_late: true`; vraća `cancellation_fee` |
-| POST | `/my-appointments/{id}/cancel-preview` | `{late, free, number, free_total, free_left_after, next_amount, amount, note, deadline_label}` — odbrojavanje i naknada pre kasnog otkazivanja |
+| POST | `/my-appointments/{id}/cancel` | `{accept_late?, linked_ids?}` — otkazivanje (`linked_ids` = i ti termini iz iste povezane grupe; vraća `cancelled_ids`, kasno otkazivanje grupe je jedna naknada) (do roka iz `cancellation_days_before`; 1 = najkasnije dan pre termina). Uz `cancellation_fee_enabled` i posle roka do početka, ali samo uz `accept_late: true`; vraća `cancellation_fee` |
+| POST | `/my-appointments/{id}/cancel-preview` | `{linked_ids?}` → `{late, free, number, free_total, free_left_after, next_amount, amount, note, deadline_label}` — odbrojavanje i naknada pre kasnog otkazivanja |
 | GET | `/my-cancellation-status` | `{enabled, free_total, used, free_left, window_days, exempt, open_amount, note}` |
 
 ## Osoblje (`jwt` + `role:owner,worker`)
@@ -73,6 +73,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i administrativnim radnicima) |
+| GET | `/appointments/{id}/linked` | ostali aktivni termini iste povezane grupe |
 | GET | `/appointments/{id}/alternatives` | kolege koje rade te usluge i slobodne su u isto vreme |
 | POST | `/appointments/{id}/ask-reschedule` | klijentu poruka sa linkom `/my-appointments?reschedule={id}`; `free_change_reason = salon_request` (pomeranje / otkazivanje bez roka i bez poena discipline) |
 | POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik dobija samo svoj; administrativni radnik vidi samo svoj (ako radi usluge), ostale samo šalje |

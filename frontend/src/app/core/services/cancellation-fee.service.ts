@@ -24,8 +24,8 @@ export class CancellationFeeService {
     return this.http.get<CancellationPreview>(`${this.api}/appointments/${appointmentId}/cancel-preview`);
   }
 
-  previewForClient(appointmentId: number): Observable<CancellationPreview> {
-    return this.http.post<CancellationPreview>(`${this.api}/my-appointments/${appointmentId}/cancel-preview`, {});
+  previewForClient(appointmentId: number, linkedIds: number[] = []): Observable<CancellationPreview> {
+    return this.http.post<CancellationPreview>(`${this.api}/my-appointments/${appointmentId}/cancel-preview`, { linked_ids: linkedIds });
   }
 
   myStatus(): Observable<CancellationStatus> {

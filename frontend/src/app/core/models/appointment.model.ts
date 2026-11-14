@@ -34,6 +34,8 @@ export interface Appointment {
   payment_method: PaymentMethod | null;
   tip: number;
   free_change_reason?: 'transferred' | 'salon_request' | null;
+  link_group?: string | null;
+  linked?: Appointment[];
   can_cancel?: boolean;
   can_reschedule?: boolean;
   late_cancel?: boolean;
@@ -86,6 +88,7 @@ export interface BookingPayload {
   starts_at: string;
   note: string | null;
   promo_code?: string | null;
+  linked_service_ids?: number[];
   guest?: GuestDetails;
 }
 
