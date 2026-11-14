@@ -12,7 +12,7 @@
   <div class="top-inner">
     <a class="brand" href="index.html"><img data-salon-logo alt="" hidden /><span class="brand-text"><span class="brand-name" data-salon-name>Vaš salon</span><span class="brand-sub">Uputstvo za online zakazivanje</span></span></a>
     <h1>Svakodnevni rad</h1>
-    <p>Pregled, kalendar, termini, naplata, beleške, klijenti, recenzije i izveštaji. Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu.</p>
+    <p>Pregled, kalendar, termini, naplata, prebacivanje kolegi, kasna otkazivanja, odsustva, beleške, klijenti, recenzije i izveštaji. Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu.</p>
   </div>
 </header>
 <nav class="guides" aria-label="Uputstva"><div class="guides-inner">
@@ -38,6 +38,7 @@
   <li><span class="badge">3</span> <strong>„Završen"</strong> (na telefonu samo kvačica) se pojavi kod termina koji je počeo, a nije završen. Jednim klikom ga označite kao završen; naplatu i bakšiš zatim upišete klikom na termin.</li>
   <li>Druga slika (samo vlasnik): statistika za 7, 30 ili 90 dana — zarada, broj termina, popunjenost, najtraženije usluge, odakle dolaze klijenti. <span class="badge">1</span> „Prikaži grafikone" uključuje grafikone.</li>
 </ol>
+<p class="tip">Dok je aplikacija otvorena, nov online termin, otkazivanje, pomeranje ili prebacivanje odmah se pojavi kao <strong>poruka gore desno</strong>, a Pregled, Kalendar, Termini i broj „na čekanju" se sami osveže — ne morate da učitavate stranicu ponovo. Radnik dobija poruke samo za svoje termine.</p>
 <a class="open" href="/admin/dashboard" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure class="pair"><img src="slike/rad-01-pregled.jpg" alt="Pregled" loading="lazy" /><img src="slike/rad-02-statistika.jpg" alt="Statistika" loading="lazy" /></figure>
@@ -113,8 +114,67 @@
   </div>
 </details>
 
+<details class="step" id="s-prebaci">
+  <summary><span class="num">6</span><span class="step-title">Prebacite termin kolegi ili zamolite klijenta da pomeri</span></summary>
+  <div class="step-body">
+    <div>
+<p>U detaljima termina (klik na termin):</p>
+<ol>
+  <li><span class="badge">1</span> <strong>„Prebaci kolegi"</strong> — kada zaposleni ne može, a klijent bi došao u isto vreme.</li>
+  <li><span class="badge">2</span> Ponuđeni su samo kolege koji rade te usluge i <strong>slobodni su u to vreme</strong>. Kliknite ime i termin je prebačen.</li>
+  <li>Klijent, oba zaposlena i vlasnik dobijaju obaveštenje. Klijent tada može da pomeri ili otkaže termin <strong>bez posledica</strong> (ne računa se kao kasno otkazivanje), a u detaljima piše „Prebačen".</li>
+  <li><strong>„Zamoli da pomeri"</strong> šalje klijentu poruku da sam izabere novo vreme — i tada menja termin bez posledica.</li>
+</ol>
+<p>Prevlačenje termina u kalendaru u kolonu drugog zaposlenog takođe je prebacivanje.</p>
+<p class="tip">Ako je klijent zakazao <strong>povezane usluge</strong> (npr. frizura pa masaža), u detaljima piše „Povezan termin" sa vremenom i zaposlenim. Salon ih pomera i otkazuje jedan po jedan.</p>
+    </div>
+    <figure><img src="slike/rad-06c-prebaci.jpg" alt="Prebacivanje termina kolegi" loading="lazy" /></figure>
+  </div>
+</details>
+
+<details class="step" id="s-kasno">
+  <summary><span class="num">7</span><span class="step-title">Kasno otkazivanje i naknada</span></summary>
+  <div class="step-body text">
+    <div>
+<p>Radi samo ako je vlasnik uključio <a href="vlasnik.html#v-pravila">naplatu kasnog otkazivanja</a>.</p>
+<ol>
+  <li>Klijent koji otkaže posle roka vidi koliko mu je ostalo otkazivanja bez naplate, a posle toga iznos naknade. Kad otkaže, naknada se upiše sama.</li>
+  <li>Kad klijent javi telefonom, u detaljima termina kliknite <strong>„Klijent otkazao"</strong> — naknada se upiše po istim pravilima.</li>
+  <li>U detaljima termina i u Klijenti → „Istorijat i zona" vidi se blok <strong>„kasno otkazivanje"</strong> sa iznosom. Kad klijent plati, kliknite <strong>„Naplaćeno: Gotovina / Kartica / Uplata na račun"</strong>.</li>
+  <li>Vlasnik i administrativni radnik mogu da <strong>„Promeni iznos"</strong> ili <strong>„Oprosti"</strong> naknadu, uz razlog (npr. bolest). Oproštena se ne broji.</li>
+</ol>
+<p>Termin prebačen kolegi ili pomeren na molbu salona nikad se ne računa kao kasno otkazivanje.</p>
+    </div>
+  </div>
+</details>
+
+<details class="step" id="s-odsustva">
+  <summary><span class="num">8</span><span class="step-title">Odsustva — bolovanje i odmor</span></summary>
+  <div class="step-body wide">
+    <div>
+<p>Meni → <strong>Odsustva</strong>.</p>
+<ol>
+  <li><span class="badge">1</span> Ko odsustvuje.</li>
+  <li><span class="badge">2</span> Razlog: <strong>Bolovanje</strong>, <strong>Odmor</strong> ili <strong>Drugo</strong>.</li>
+  <li><span class="badge">3</span> Od – do (uključujući poslednji dan) i, po želji, napomena.</li>
+  <li><span class="badge">4</span> <strong>„Upiši odsustvo"</strong> — kad upiše vlasnik ili administrativni radnik, odmah je odobreno i ti dani se zatvaraju za zakazivanje. Kad upiše radnik, stoji „Na čekanju" dok ga vi ne <strong>„Odobri"</strong> ili <strong>„Odbij"</strong> (broj u meniju pokazuje koliko čeka).</li>
+</ol>
+<p>Druga slika — <strong>„Termini tog perioda"</strong> pokazuje termine koji su već zakazani u tim danima. Za svaki:</p>
+<ol>
+  <li><span class="badge">1</span> telefon klijenta (na telefonu odmah poziv) i WhatsApp;</li>
+  <li><span class="badge">2</span> <strong>„Prebaci: ime kolege"</strong> — kolega slobodan u isto vreme;</li>
+  <li><span class="badge">3</span> <strong>„Pošalji da sam pomeri"</strong> — klijent dobija poruku i bira novo vreme bez posledica;</li>
+  <li><span class="badge">4</span> <strong>„Otkaži"</strong>.</li>
+</ol>
+<p>„Ukloni" briše odsustvo i ponovo otvara te dane.</p>
+<a class="open" href="/admin/absences" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+    <figure class="pair"><img src="slike/rad-12-odsustva.jpg" alt="Upis odsustva" loading="lazy" /><img src="slike/rad-12b-odsustvo-termini.jpg" alt="Termini u danima odsustva" loading="lazy" /></figure>
+  </div>
+</details>
+
 <details class="step" id="s-beleske">
-  <summary><span class="num">6</span><span class="step-title">Beleške za osoblje</span></summary>
+  <summary><span class="num">9</span><span class="step-title">Beleške za osoblje</span></summary>
   <div class="step-body">
     <div>
 <p>Meni → <strong>Beleške</strong> (vide ih sve uloge, i radnici). Za stvari koje treba da znaju ostali: „nestalo je farbe 7.1", „pokvario se fen".</p>
@@ -134,7 +194,7 @@
 </details>
 
 <details class="step" id="s-klijenti">
-  <summary><span class="num">7</span><span class="step-title">Klijenti</span></summary>
+  <summary><span class="num">10</span><span class="step-title">Klijenti</span></summary>
   <div class="step-body">
     <div>
 <p>Stranicu Klijenti vide vlasnik i administrativni radnik.</p>
@@ -157,7 +217,7 @@
 </details>
 
 <details class="step" id="s-recenzije">
-  <summary><span class="num">8</span><span class="step-title">Recenzije</span></summary>
+  <summary><span class="num">11</span><span class="step-title">Recenzije</span></summary>
   <div class="step-body">
     <div>
 <p>Ovde stižu ocene klijenata posle završenih termina. Možete da <strong>odgovorite</strong> (odgovor se vidi javno) ili da <strong>sakrijete</strong> neprikladnu ocenu. Vidi se i prosečna ocena po zaposlenom.</p>
@@ -168,7 +228,7 @@
 </details>
 
 <details class="step" id="s-izvestaji">
-  <summary><span class="num">9</span><span class="step-title">Izveštaji</span></summary>
+  <summary><span class="num">12</span><span class="step-title">Izveštaji</span></summary>
   <div class="step-body wide">
     <div>
 <p><strong>Vlasnik</strong> (prva slika):</p>
@@ -198,7 +258,7 @@
   <summary><span class="num">?</span><span class="step-title">Zaposleni ide na odmor</span></summary>
   <div class="step-body text">
     <div>
-<p>U kalendaru „Blokiraj vreme" za te dane, ili ga u Zaposleni → „⋮" privremeno deaktivirajte.</p>
+<p>Upišite ga u <a href="#s-odsustva">Odsustva</a> — dani se zatvaraju za zakazivanje, a već zakazane termine tu prebacite kolegi ili zamolite klijente da pomere. Za nekoliko sati dovoljno je „Blokiraj vreme" u kalendaru.</p>
     </div>
   </div>
 </details>
@@ -207,7 +267,7 @@
   <summary><span class="num">?</span><span class="step-title">Ne vidim neki deo menija</span></summary>
   <div class="step-body text">
     <div>
-<p>Radnik vidi samo Pregled, Kalendar, Termine i Beleške. Administrativni radnik ne vidi finansijsku statistiku. Ako nekome treba više, vlasnik mu menja ulogu u Zaposleni → Nalozi za prijavu.</p>
+<p>Radnik vidi samo Pregled, Kalendar, Termine, Odsustva i Beleške. Administrativni radnik ne vidi finansijsku statistiku. Ako nekome treba više, vlasnik mu menja ulogu u Zaposleni → Nalozi za prijavu.</p>
     </div>
   </div>
 </details>
