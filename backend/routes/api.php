@@ -106,6 +106,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
     Route::post('/appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
     Route::get('/appointments/{appointment}/alternatives', [AppointmentController::class, 'alternatives']);
+    Route::get('/appointments/{appointment}/linked', [AppointmentController::class, 'linked']);
     Route::post('/appointments/{appointment}/ask-reschedule', [AppointmentController::class, 'askReschedule'])->middleware('throttle:booking');
     Route::post('/recurrences/list', [AppointmentController::class, 'recurrences']);
 

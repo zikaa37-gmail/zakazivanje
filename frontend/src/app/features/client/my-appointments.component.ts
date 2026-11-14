@@ -5,6 +5,7 @@ import { BookingService } from '../../core/services/booking.service';
 import { CancellationPreview, CancellationStatus } from '../../core/models/cancellation-fee.model';
 import { CancellationFeeService } from '../../core/services/cancellation-fee.service';
 import { LateCancelDialogComponent } from './late-cancel-dialog.component';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { BusinessSettingService } from '../../core/services/business-setting.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -24,7 +25,7 @@ import { ReviewFormComponent } from './review-form.component';
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
+  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, ModalComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -34,7 +35,8 @@ export class MyAppointmentsComponent {
   protected business = inject(BusinessSettingService);
   private fees = inject(CancellationFeeService);
 
-  readonly lateCancel = signal<{ appointment: Appointment; preview: CancellationPreview } | null>(null);
+  readonly lateCancel = signal<{ appointment: Appointment; preview: CancellationPreview; linkedIds: number[]; summary: string } | null>(null);
+  readonly groupCancel = signal<{ members: Appointment[]; selected: number[] } | null>(null);
   readonly feeStatus = signal<CancellationStatus | null>(null);
   readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
 
@@ -178,7 +180,7 @@ export class MyAppointmentsComponent {
     const target = list.find((a) => a.id === this.rescheduleTarget);
     this.rescheduleTarget = null;
     this.router.navigate([], { queryParams: {}, replaceUrl: true });
-    if (target?.can_reschedule ?? target?.can_cancel) this.rescheduling.set(target);
+    if (target && (target.can_reschedule ?? target.can_cancel)) this.reschedule(target);
     else this.toast.info('Ovaj termin više ne može da se pomeri — javi nam se telefonom.');
   }
 
@@ -211,15 +213,53 @@ export class MyAppointmentsComponent {
     return a.items.map((i) => i.name).join(' + ');
   }
 
+  linkedOf(a: Appointment): Appointment[] {
+    if (!a.link_group) return [];
+    const pool = this.mode() === 'calendar' ? this.allAppointments() : this.appointments();
+    return pool
+      .filter((x) => x.link_group === a.link_group && x.id !== a.id && (x.status === 'pending' || x.status === 'confirmed'))
+      .sort((x, y) => x.starts_at.localeCompare(y.starts_at));
+  }
+
+  linkedLabel(a: Appointment): string {
+    return this.linkedOf(a)
+      .map((x) => `${x.starts_at < a.starts_at ? 'pre toga' : 'zatim'} u ${this.time(x)}: ${this.serviceNames(x)}${x.staff_member ? ' · ' + x.staff_member.first_name : ''}`)
+      .join('; ');
+  }
+
+  reschedule(a: Appointment): void {
+    this.rescheduling.set([a, ...this.linkedOf(a)].sort((x, y) => x.starts_at.localeCompare(y.starts_at))[0]);
+  }
+
   async cancel(a: Appointment): Promise<void> {
+    const linked = this.linkedOf(a).filter((x) => x.can_cancel);
+    if (linked.length) {
+      const members = [a, ...linked].sort((x, y) => x.starts_at.localeCompare(y.starts_at));
+      this.groupCancel.set({ members, selected: members.map((m) => m.id) });
+      return;
+    }
     if (a.late_cancel) {
-      this.fees.previewForClient(a.id).subscribe({
-        next: (preview) => (preview.late ? this.lateCancel.set({ appointment: a, preview }) : this.confirmCancel(a)),
-        error: (err) => this.toast.error(apiErrorMessage(err, 'Otkazivanje nije uspelo.')),
-      });
+      this.previewLate([a]);
       return;
     }
     await this.confirmCancel(a);
+  }
+
+  toggleGroupMember(id: number): void {
+    this.groupCancel.update((g) => (g ? { ...g, selected: g.selected.includes(id) ? g.selected.filter((x) => x !== id) : [...g.selected, id] } : g));
+  }
+
+  confirmGroupCancel(): void {
+    const group = this.groupCancel();
+    if (!group) return;
+    const chosen = group.members.filter((m) => group.selected.includes(m.id));
+    if (!chosen.length) {
+      this.toast.info('Označi bar jedan termin koji otkazuješ.');
+      return;
+    }
+    this.groupCancel.set(null);
+    if (chosen.some((m) => m.late_cancel)) this.previewLate(chosen);
+    else this.doCancel(chosen[0], false, chosen.slice(1).map((m) => m.id));
   }
 
   cancelSummary(a: Appointment): string {
@@ -229,7 +269,24 @@ export class MyAppointmentsComponent {
   confirmLateCancel(): void {
     const target = this.lateCancel();
     this.lateCancel.set(null);
-    if (target) this.doCancel(target.appointment, true);
+    if (target) this.doCancel(target.appointment, true, target.linkedIds);
+  }
+
+  private previewLate(chosen: Appointment[]): void {
+    const [first, ...rest] = chosen;
+    const linkedIds = rest.map((m) => m.id);
+    this.fees.previewForClient(first.id, linkedIds).subscribe({
+      next: (preview) => {
+        if (preview.late) {
+          this.lateCancel.set({ appointment: first, preview, linkedIds, summary: chosen.map((m) => this.cancelSummary(m)).join(' ') });
+        } else if (rest.length) {
+          this.doCancel(first, false, linkedIds);
+        } else {
+          this.confirmCancel(first);
+        }
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Otkazivanje nije uspelo.')),
+    });
   }
 
   private async confirmCancel(a: Appointment): Promise<void> {
@@ -243,11 +300,12 @@ export class MyAppointmentsComponent {
     this.doCancel(a, false);
   }
 
-  private doCancel(a: Appointment, acceptLate: boolean): void {
-    this.booking.cancelMine(a.id, acceptLate).subscribe({
+  private doCancel(a: Appointment, acceptLate: boolean, linkedIds: number[] = []): void {
+    this.booking.cancelMine(a.id, acceptLate, linkedIds).subscribe({
       next: (res) => {
         const fee = res.cancellation_fee;
-        this.toast.success(fee && fee.amount > 0 ? `Termin je otkazan. Naknada od ${fee.amount.toLocaleString('sr-RS')} din. plaća se pri sledećem dolasku.` : 'Termin je otkazan.');
+        const done = res.cancelled_ids.length > 1 ? 'Termini su otkazani.' : 'Termin je otkazan.';
+        this.toast.success(fee && fee.amount > 0 ? `${done} Naknada od ${fee.amount.toLocaleString('sr-RS')} din. plaća se pri sledećem dolasku.` : done);
         this.load();
         this.loadFeeStatus();
         if (this.mode() === 'calendar') this.loadAll();

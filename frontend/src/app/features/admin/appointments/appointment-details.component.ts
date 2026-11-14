@@ -53,6 +53,7 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly moving = signal(false);
   readonly transferring = signal(false);
   readonly alternatives = signal<ColleagueRef[] | null>(null);
+  readonly linked = signal<Appointment[]>([]);
   readonly startTime = computed(() => timeOf(this.appointment().starts_at));
   readonly saving = signal(false);
   readonly moveStaff = new FormControl<number | null>(null);
@@ -75,6 +76,12 @@ export class AppointmentDetailsComponent implements OnInit {
     this.moveStaff.setValue(a.staff_member_id);
     this.moveDate.setValue(a.starts_at.slice(0, 10));
     this.moveTime.setValue(timeOf(a.starts_at));
+    if (a.link_group) this.appointmentService.linked(a.id).subscribe({ next: (list) => this.linked.set(list), error: () => this.linked.set([]) });
+  }
+
+  linkedLine(other: Appointment): string {
+    const relation = other.starts_at < this.appointment().starts_at ? 'Pre toga' : 'Zatim';
+    return `${relation} u ${timeOf(other.starts_at)}: ${other.items.map((i) => i.name).join(' + ')} · ${other.staff_member?.first_name ?? ''} ${other.staff_member?.last_name ?? ''}`.trim();
   }
 
   markPaid(method: PaymentMethod | null): void {

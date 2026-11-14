@@ -274,6 +274,11 @@ Iznos: `fixed` / `percent` / `service_plus_fixed` za salon, a usluga ga nadjača
 manji `cancellation_free_late` usluge u terminu važi); klijentu umanjenje `users.cancellation_discount_*` (`fixed` / `percent` / `exempt`). Klijent vidi
 odbrojavanje i objašnjenje (`cancellation_fee_note`) u `<app-late-cancel-dialog>` i dug u Moji termini; salon „Klijent otkazao“ upisuje naknadu, a
 `<app-client-fees>` (detalji termina, istorijat klijenta) beleži naplatu, a menadžer oprašta ili menja iznos uz razlog. `free_change_reason` je izuzet.
+Povezane usluge (dve prostorije): u `/book` „Odmah posle i druga usluga“ → lista ostalih usluga (`linked_service_ids`); `BookingService` pravi
+povezan termin odmah posle prvog kod slobodnog zaposlenog (`AvailabilityService::linkedSegments()` — jedan zaposleni za sve ili po usluga,
+`chainPlanner()` je jedino mesto za proveru niza, koristi ga i dostupnost), isti `appointments.link_group`, cena iz zajedničkog `quote`.
+Klijent pomera grupu zajedno (`moveChainByClient`), a pri otkazivanju bira koje termine (`linked_ids`, podrazumevano svi); kasno otkazivanje
+grupe je jedna naknada. Prekidač `linked_booking_enabled` (Podešavanja → Zakazivanje). Osoblje pomera i otkazuje termine pojedinačno.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

@@ -20,24 +20,24 @@ export class BookingService {
     return this.http.get<PublicService[]>(`${this.api}/public/services`);
   }
 
-  days(serviceIds: number[], staffMemberId: number | null, from: string, days = 14, ignoreAppointmentId: number | null = null): Observable<DayAvailability[]> {
+  days(serviceIds: number[], staffMemberId: number | null, from: string, days = 14, ignoreAppointmentId: number | null = null, linkedServiceIds: number[] = []): Observable<DayAvailability[]> {
     return this.http.post<DayAvailability[]>(
       `${this.api}/availability/days`,
-      { service_ids: serviceIds, staff_member_id: staffMemberId, from, days, ignore_appointment_id: ignoreAppointmentId },
+      { service_ids: serviceIds, staff_member_id: staffMemberId, from, days, ignore_appointment_id: ignoreAppointmentId, linked_service_ids: linkedServiceIds },
       quiet(),
     );
   }
 
-  slots(serviceIds: number[], staffMemberId: number | null, date: string, ignoreAppointmentId: number | null = null): Observable<Slot[]> {
+  slots(serviceIds: number[], staffMemberId: number | null, date: string, ignoreAppointmentId: number | null = null, linkedServiceIds: number[] = []): Observable<Slot[]> {
     return this.http.post<Slot[]>(
       `${this.api}/availability/slots`,
-      { service_ids: serviceIds, staff_member_id: staffMemberId, date, ignore_appointment_id: ignoreAppointmentId },
+      { service_ids: serviceIds, staff_member_id: staffMemberId, date, ignore_appointment_id: ignoreAppointmentId, linked_service_ids: linkedServiceIds },
       quiet(),
     );
   }
 
-  quote(serviceIds: number[], date: string | null, promoCode: string | null = null): Observable<Quote> {
-    return this.http.post<Quote>(`${this.api}/bookings/quote`, { service_ids: serviceIds, date, promo_code: promoCode }, quiet());
+  quote(serviceIds: number[], date: string | null, promoCode: string | null = null, linkedServiceIds: number[] = []): Observable<Quote> {
+    return this.http.post<Quote>(`${this.api}/bookings/quote`, { service_ids: serviceIds, date, promo_code: promoCode, linked_service_ids: linkedServiceIds }, quiet());
   }
 
   book(payload: BookingPayload): Observable<Appointment> {
@@ -52,7 +52,7 @@ export class BookingService {
     return this.http.post<Appointment>(`${this.api}/my-appointments/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
   }
 
-  cancelMine(id: number, acceptLate = false): Observable<Appointment & { cancellation_fee: CancellationFee | null }> {
-    return this.http.post<Appointment & { cancellation_fee: CancellationFee | null }>(`${this.api}/my-appointments/${id}/cancel`, { accept_late: acceptLate });
+  cancelMine(id: number, acceptLate = false, linkedIds: number[] = []): Observable<Appointment & { cancellation_fee: CancellationFee | null; cancelled_ids: number[] }> {
+    return this.http.post<Appointment & { cancellation_fee: CancellationFee | null; cancelled_ids: number[] }>(`${this.api}/my-appointments/${id}/cancel`, { accept_late: acceptLate, linked_ids: linkedIds });
   }
 }

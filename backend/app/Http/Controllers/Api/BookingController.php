@@ -34,6 +34,8 @@ class BookingController extends Controller
             'staff_member_id' => ['nullable', 'integer'],
             'date' => ['required', 'date_format:Y-m-d'],
             'ignore_appointment_id' => ['nullable', 'integer'],
+            'linked_service_ids' => ['nullable', 'array'],
+            'linked_service_ids.*' => ['integer', 'distinct'],
         ]);
 
         $date = CarbonImmutable::parse($data['date']);
@@ -42,11 +44,13 @@ class BookingController extends Controller
             return [];
         }
 
+        [$ignore, $segments] = $this->chainContext($request, $data);
         $slots = $this->availability->slots(
             $this->availability->servicesInOrder($data['service_ids'], true),
             $data['staff_member_id'] ?? null,
             $date,
-            $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
+            $ignore,
+            $segments,
         );
 
         return $this->offPeakOnly($request->user(), $date, $slots);
@@ -61,14 +65,18 @@ class BookingController extends Controller
             'from' => ['required', 'date_format:Y-m-d'],
             'days' => ['nullable', 'integer', 'min:1', 'max:31'],
             'ignore_appointment_id' => ['nullable', 'integer'],
+            'linked_service_ids' => ['nullable', 'array'],
+            'linked_service_ids.*' => ['integer', 'distinct'],
         ]);
 
+        [$ignore, $segments] = $this->chainContext($request, $data);
         $days = $this->availability->days(
             $this->availability->servicesInOrder($data['service_ids'], true),
             $data['staff_member_id'] ?? null,
             CarbonImmutable::parse($data['from']),
             $data['days'] ?? 14,
-            $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null),
+            $ignore,
+            $segments,
         );
         $this->discipline->logAvailability($request->user(), ['from' => $data['from'], 'staff_member_id' => $data['staff_member_id'] ?? null]);
 
@@ -76,7 +84,7 @@ class BookingController extends Controller
         $offPeak = $this->discipline->restrictions($request->user())['off_peak_only'];
 
         return collect($days)
-            ->map(function ($day) use ($request, $data, $services, $offPeak) {
+            ->map(function ($day) use ($request, $data, $services, $offPeak, $ignore, $segments) {
                 $date = CarbonImmutable::parse($day['date']);
                 if (! $day['open'] || ! $day['available']) {
                     return $day;
@@ -85,7 +93,7 @@ class BookingController extends Controller
                     return [...$day, 'available' => false];
                 }
                 if ($offPeak) {
-                    $slots = $this->availability->slots($services, $data['staff_member_id'] ?? null, $date, $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null));
+                    $slots = $this->availability->slots($services, $data['staff_member_id'] ?? null, $date, $ignore, $segments);
 
                     return [...$day, 'available' => $this->offPeakOnly($request->user(), $date, $slots) !== []];
                 }
@@ -102,9 +110,11 @@ class BookingController extends Controller
             'service_ids.*' => ['integer', 'distinct'],
             'date' => ['nullable', 'date_format:Y-m-d'],
             'promo_code' => ['nullable', 'string', 'max:40'],
+            'linked_service_ids' => ['nullable', 'array'],
+            'linked_service_ids.*' => ['integer', 'distinct'],
         ]);
 
-        $services = $this->availability->servicesInOrder($data['service_ids'], true);
+        $services = $this->availability->servicesInOrder([...$data['service_ids'], ...array_diff($data['linked_service_ids'] ?? [], $data['service_ids'])], true);
         $date = isset($data['date']) ? CarbonImmutable::parse($data['date']) : CarbonImmutable::today();
         $code = $data['promo_code'] ?? null;
 
@@ -122,6 +132,8 @@ class BookingController extends Controller
             'starts_at' => ['required', 'date_format:Y-m-d H:i'],
             'note' => ['nullable', 'string', 'max:500'],
             'promo_code' => ['nullable', 'string', 'max:40'],
+            'linked_service_ids' => ['nullable', 'array'],
+            'linked_service_ids.*' => ['integer', 'distinct', 'exists:services,id'],
             'guest' => [$request->user() ? 'prohibited' : 'required', 'array'],
             'guest.first_name' => ['required_with:guest', 'string', 'min:2', 'max:100'],
             'guest.last_name' => ['required_with:guest', 'string', 'min:1', 'max:100'],
@@ -147,6 +159,7 @@ class BookingController extends Controller
                 Appointment::SOURCE_ONLINE,
                 $data['note'] ?? null,
                 promoCode: $data['promo_code'] ?? null,
+                linked: $this->linkedServices($data),
             );
         } catch (ValidationException $e) {
             ClientActivity::dispatch($client, ClientActivity::BOOKING_FAILED, ['starts_at' => $data['starts_at'], 'service_ids' => $data['service_ids'], 'reason' => collect($e->errors())->flatten()->first()]);
@@ -160,7 +173,38 @@ class BookingController extends Controller
 
         $this->notifier->booked($appointment);
 
-        return response()->json($appointment, 201);
+        return response()->json([...$appointment->toArray(), 'linked' => $appointment->linkedSiblings()], 201);
+    }
+
+    private function linkedServices(array $data)
+    {
+        $ids = array_values(array_diff($data['linked_service_ids'] ?? [], $data['service_ids']));
+        if ($ids === []) {
+            return collect();
+        }
+        if (! BusinessSetting::current()->linked_booking_enabled) {
+            throw ValidationException::withMessages(['linked_service_ids' => ['Povezano zakazivanje nije uključeno.']]);
+        }
+
+        return $this->availability->servicesInOrder($ids, true);
+    }
+
+    private function chainContext(Request $request, array $data): array
+    {
+        $own = $this->ownAppointmentId($request, $data['ignore_appointment_id'] ?? null);
+        if ($own) {
+            $siblings = Appointment::find($own)->linkedSiblings();
+
+            return [
+                [$own, ...$siblings->pluck('id')->all()],
+                $siblings->map(fn (Appointment $a) => $this->availability->servicesInOrder($a->items->pluck('service_id')->filter()->values()->all()))
+                    ->filter(fn ($services) => $services->isNotEmpty())->values()->all(),
+            ];
+        }
+
+        $linked = $this->linkedServices($data);
+
+        return [null, $this->availability->linkedSegments($linked)];
     }
 
     private function offPeakOnly(?User $client, CarbonImmutable $date, array $slots): array

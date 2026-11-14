@@ -12,6 +12,7 @@ use App\Models\WaitlistEntry;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class BookingService
@@ -32,13 +33,15 @@ class BookingService
         ?string $adminNote = null,
         ?int $recurrenceId = null,
         ?string $promoCode = null,
+        ?Collection $linked = null,
     ): Appointment {
         if ($services->isEmpty()) {
             throw ValidationException::withMessages(['service_ids' => ['Izaberi bar jednu uslugu.']]);
         }
-        $this->ensureAudience($client, $services);
+        $linked = ($linked ?? collect())->reject(fn (Service $s) => $services->contains('id', $s->id))->values();
+        $this->ensureAudience($client, $services->concat($linked));
 
-        return DB::transaction(function () use ($client, $services, $staffMemberId, $start, $source, $note, $adminNote, $recurrenceId, $promoCode) {
+        return DB::transaction(function () use ($client, $services, $staffMemberId, $start, $source, $note, $adminNote, $recurrenceId, $promoCode, $linked) {
             $online = $source === Appointment::SOURCE_ONLINE;
             $end = $start->addMinutes($this->availability->duration($services));
 
@@ -64,11 +67,15 @@ class BookingService
                 throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
             }
 
-            $quote = $this->quoteFor($client, $services, $start, $promoCode);
+            $chain = $linked->isEmpty() ? [] : $this->planLinked($linked, $end, $online);
+
+            $quote = $this->quoteFor($client, $services->concat($linked), $start, $promoCode);
             if ($promoCode && $quote['code_error']) {
                 throw ValidationException::withMessages(['promo_code' => [$quote['code_error']]]);
             }
             $automatic = $source !== Appointment::SOURCE_ONLINE || $this->confirmsAutomatically($staff, $services, $client);
+            $items = $this->items($services->concat($linked), $quote);
+            $group = $chain === [] ? null : (string) Str::uuid();
 
             $appointment = Appointment::create([
                 'client_id' => $client->id,
@@ -79,14 +86,30 @@ class BookingService
                 'status' => $automatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
                 'confirmed_at' => $automatic ? now() : null,
                 'source' => $source,
-                'price' => $quote['subtotal'],
-                'discount' => $quote['discount'],
-                'total' => $quote['total'],
+                ...($group ? $this->totals($items, $services) : ['price' => $quote['subtotal'], 'discount' => $quote['discount'], 'total' => $quote['total']]),
                 'note' => $note,
                 'admin_note' => $adminNote,
+                'link_group' => $group,
             ]);
 
-            $appointment->items()->saveMany($this->items($services, $quote));
+            $appointment->items()->saveMany($this->itemsFor($items, $services));
+
+            foreach ($chain as $part) {
+                $linkedAutomatic = $source !== Appointment::SOURCE_ONLINE || $this->confirmsAutomatically($part['staff'], $part['services'], $client);
+                $linkedAppointment = Appointment::create([
+                    'client_id' => $client->id,
+                    'staff_member_id' => $part['staff']->id,
+                    'starts_at' => $part['starts_at'],
+                    'ends_at' => $part['ends_at'],
+                    'status' => $linkedAutomatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
+                    'confirmed_at' => $linkedAutomatic ? now() : null,
+                    'source' => $source,
+                    ...$this->totals($items, $part['services']),
+                    'note' => $note,
+                    'link_group' => $group,
+                ]);
+                $linkedAppointment->items()->saveMany($this->itemsFor($items, $part['services']));
+            }
             WaitlistEntry::query()->active()->where('client_id', $client->id)->whereDate('date', $start->toDateString())->update(['fulfilled_at' => now()]);
 
             return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color', 'client:id,first_name,last_name,phone,email']);
@@ -95,6 +118,11 @@ class BookingService
 
     public function moveByClient(Appointment $appointment, ?int $staffMemberId, CarbonImmutable $start): Appointment
     {
+        $siblings = $appointment->linkedSiblings();
+        if ($siblings->isNotEmpty()) {
+            return $this->moveChainByClient($appointment, $siblings, $staffMemberId, $start);
+        }
+
         return DB::transaction(function () use ($appointment, $staffMemberId, $start) {
             $services = $this->availability->servicesInOrder($appointment->items->pluck('service_id')->filter()->values()->all());
             if ($services->isEmpty()) {
@@ -130,6 +158,42 @@ class BookingService
             ]);
 
             return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color']);
+        });
+    }
+
+    public function moveChainByClient(Appointment $appointment, Collection $siblings, ?int $staffMemberId, CarbonImmutable $start): Appointment
+    {
+        $group = $siblings->push($appointment)->sortBy('starts_at')->values();
+
+        return DB::transaction(function () use ($group, $appointment, $staffMemberId, $start) {
+            $segments = $group->map(fn (Appointment $a) => $this->availability->servicesInOrder($a->items->pluck('service_id')->filter()->values()->all()))->all();
+            if (collect($segments)->contains(fn (Collection $services) => $services->isEmpty())) {
+                throw ValidationException::withMessages(['starts_at' => ['Usluge iz ovog termina više ne postoje — pozovi salon.']]);
+            }
+
+            $this->ensureBookingRules($start);
+            $this->ensureNotPaused(collect($segments)->flatten(1), $start);
+            $this->lockStaffFor($segments);
+
+            $chain = $this->availability->chainPlanner($segments, $start, $group->pluck('id')->all(), $staffMemberId, $group->pluck('staff_member_id')->all())($start);
+            if (! $chain) {
+                throw ValidationException::withMessages(['starts_at' => ['Termin je u međuvremenu zauzet. Izaberi drugo vreme.']]);
+            }
+
+            foreach ($group as $i => $member) {
+                $part = $chain[$i];
+                $automatic = $this->confirmsAutomatically($part['staff'], $part['services'], $member->client);
+                $member->update([
+                    'staff_member_id' => $part['staff']->id,
+                    'starts_at' => $part['starts_at'],
+                    'ends_at' => $part['ends_at'],
+                    'status' => $automatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
+                    'confirmed_at' => $automatic ? now() : null,
+                    'reminder_sent_at' => null,
+                ]);
+            }
+
+            return $appointment->refresh()->load(['items', 'staffMember:id,first_name,last_name,title,color']);
         });
     }
 
@@ -213,6 +277,47 @@ class BookingService
         if ($start->gt(CarbonImmutable::today()->addDays($settings->booking_horizon_days)->endOfDay())) {
             throw ValidationException::withMessages(['starts_at' => ["Zakazivanje je moguće najviše {$settings->booking_horizon_days} dana unapred."]]);
         }
+    }
+
+    private function planLinked(Collection $linked, CarbonImmutable $from, bool $online): array
+    {
+        if ($online) {
+            $this->ensureNotPaused($linked, $from);
+        }
+        $segments = $this->availability->linkedSegments($linked);
+        if (collect($segments)->contains(fn (Collection $services) => $this->availability->eligibleStaff($services)->isEmpty())) {
+            throw ValidationException::withMessages(['linked_service_ids' => ['Povezanu uslugu trenutno ne radi niko od zaposlenih.']]);
+        }
+        $this->lockStaffFor($segments);
+
+        $chain = $this->availability->chainPlanner($segments, $from)($from);
+        if (! $chain) {
+            throw ValidationException::withMessages(['starts_at' => ['Povezana usluga nije slobodna odmah posle ovog termina. Izaberi drugo vreme.']]);
+        }
+
+        return $chain;
+    }
+
+    private function lockStaffFor(array $segments): void
+    {
+        $ids = collect($segments)->flatMap(fn (Collection $services) => $this->availability->eligibleStaff($services)->pluck('id'))->unique()->values();
+        StaffMember::whereKey($ids)->lockForUpdate()->get();
+    }
+
+    private function totals(array $items, Collection $services): array
+    {
+        $own = collect($this->itemsFor($items, $services));
+        $price = round($own->sum('price'), 2);
+        $discount = round($own->sum('discount'), 2);
+
+        return ['price' => $price, 'discount' => $discount, 'total' => round(max(0, $price - $discount), 2)];
+    }
+
+    private function itemsFor(array $items, Collection $services): array
+    {
+        $ids = $services->pluck('id')->all();
+
+        return array_values(array_filter($items, fn (AppointmentItem $item) => in_array($item->service_id, $ids, true)));
     }
 
     private function items(Collection $services, array $quote): array

@@ -225,6 +225,11 @@ class AppointmentController extends Controller
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
     }
 
+    public function linked(Appointment $appointment)
+    {
+        return $appointment->linkedSiblings();
+    }
+
     public function alternatives(Appointment $appointment, StaffAbsenceService $absences)
     {
         return $absences->alternatives($appointment->load('items'))

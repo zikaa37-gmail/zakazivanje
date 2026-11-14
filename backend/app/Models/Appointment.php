@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'paid_at', 'payment_method', 'tip'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'paid_at', 'payment_method', 'tip', 'link_group'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -76,6 +77,21 @@ class Appointment extends Model
     public function items(): HasMany
     {
         return $this->hasMany(AppointmentItem::class);
+    }
+
+    public function linkedSiblings(): Collection
+    {
+        if (! $this->link_group) {
+            return new Collection;
+        }
+
+        return self::query()
+            ->where('link_group', $this->link_group)
+            ->whereKeyNot($this->id)
+            ->blocking()
+            ->with(['items', 'staffMember:id,first_name,last_name,title,color'])
+            ->orderBy('starts_at')
+            ->get();
     }
 
     public function scopeBlocking(Builder $query): Builder

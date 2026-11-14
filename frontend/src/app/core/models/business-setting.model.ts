@@ -93,6 +93,7 @@ export interface BusinessSetting {
   reviews_enabled: boolean;
   notify_review_request: boolean;
   waitlist_enabled: boolean;
+  linked_booking_enabled?: boolean;
   report_auto_enabled: boolean;
   note_always_notify_ids?: number[] | null;
   report_auto_daily: boolean;

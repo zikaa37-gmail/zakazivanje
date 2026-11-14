@@ -5,6 +5,11 @@
     Sada: <span class="font-semibold text-[var(--color-text)]">{{ current() }}</span>
     · {{ appointment().items[0]?.name }}{{ appointment().items.length > 1 ? ' +' + (appointment().items.length - 1) : '' }}
   </div>
+  @if (appointment().link_group) {
+    <div class="text-sm rounded-lg bg-[var(--color-bg)] p-2 mb-3" data-testid="reschedule-linked">
+      <span appIcon="link" [iconSize]="14" aria-hidden="true"></span> Povezani termini se pomeraju zajedno — ponuđena su samo vremena kad su slobodni svi, jedan za drugim.
+    </div>
+  }
 
   @if (staffOptions().length > 1) {
     <div class="chip-group mb-3">

@@ -11,11 +11,13 @@ export interface BookingDraft {
   note: string;
   audience: Gender | null;
   promoCode: string;
+  linkedOn: boolean;
+  linkedIds: number[];
 }
 
 const KEY = 'zk_booking_draft';
 
-const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '', audience: null, promoCode: '' };
+const EMPTY: BookingDraft = { step: 0, serviceIds: [], staffMemberId: null, staffChosen: false, date: null, time: null, note: '', audience: null, promoCode: '', linkedOn: false, linkedIds: [] };
 
 @Injectable({ providedIn: 'root' })
 export class BookingDraftService {

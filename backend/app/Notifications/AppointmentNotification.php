@@ -73,6 +73,10 @@ class AppointmentNotification extends Notification implements ShouldQueue
             $message->line('Termin se ponavlja '.$this->recurrenceLabel.'.');
         }
 
+        foreach ($this->linkedLines() as $line) {
+            $message->line($line);
+        }
+
         if ($address = trim(implode(', ', array_filter([$business->address, $business->city])))) {
             $message->line('Adresa: '.$address);
         }
@@ -107,11 +111,25 @@ class AppointmentNotification extends Notification implements ShouldQueue
             $this->when(),
             $this->services().' · '.$this->staff(),
             $this->recurrenceLabel ? 'Ponavlja se '.$this->recurrenceLabel.'.' : null,
+            ...$this->linkedLines(),
             $this->type === self::RECEIVED ? 'Javićemo ti kad potvrdimo termin.' : null,
             $this->offersFreeChange() ? $this->intro() : null,
             $this->offersFreeChange() ? $this->freeChangeLine($business) : null,
             $this->offersFreeChange() && $notifiable->password !== null ? $this->link() : null,
         ]));
+    }
+
+    private function linkedLines(): array
+    {
+        if (! in_array($this->type, [self::RECEIVED, self::CONFIRMED], true)) {
+            return [];
+        }
+
+        return $this->appointment->linkedSiblings()
+            ->filter(fn (Appointment $a) => $a->starts_at->gte($this->appointment->starts_at))
+            ->map(fn (Appointment $a) => 'Odmah zatim, u '.$a->starts_at->format('H:i').': '.$a->items->pluck('name')->join(' + ').($a->staffMember ? ' · '.trim($a->staffMember->first_name.' '.$a->staffMember->last_name) : ''))
+            ->values()
+            ->all();
     }
 
     private function offersFreeChange(): bool

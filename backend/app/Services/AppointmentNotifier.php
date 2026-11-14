@@ -16,14 +16,17 @@ class AppointmentNotifier
     public function booked(Appointment $appointment, ?string $recurrenceLabel = null): void
     {
         $settings = BusinessSetting::current();
-        $confirmed = $appointment->status === Appointment::STATUS_CONFIRMED;
+        $linked = $appointment->linkedSiblings();
+        $confirmed = $appointment->status === Appointment::STATUS_CONFIRMED && $linked->every(fn (Appointment $a) => $a->status === Appointment::STATUS_CONFIRMED);
 
         if ($confirmed ? $settings->notify_booking_confirmed : $settings->notify_booking_received) {
             $this->toClient($appointment, $confirmed ? AppointmentNotification::CONFIRMED : AppointmentNotification::RECEIVED, $recurrenceLabel);
         }
 
         if ($appointment->source === Appointment::SOURCE_ONLINE && $settings->notify_admin_new_booking) {
-            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::NEW_BOOKING));
+            foreach ($linked->prepend($appointment) as $part) {
+                Notification::send($this->salonRecipients($part), new AdminAppointmentNotification($part, AdminAppointmentNotification::NEW_BOOKING));
+            }
         }
     }
 
@@ -72,12 +75,12 @@ class AppointmentNotifier
         }
     }
 
-    public function rescheduledByClient(Appointment $appointment, string $previousStart): void
+    public function rescheduledByClient(Appointment $appointment, string $previousStart, bool $notifyClient = true): void
     {
         $settings = BusinessSetting::current();
         $pending = $appointment->status === Appointment::STATUS_PENDING;
 
-        if ($pending ? $settings->notify_booking_received : $settings->notify_booking_confirmed) {
+        if ($notifyClient && ($pending ? $settings->notify_booking_received : $settings->notify_booking_confirmed)) {
             $this->toClient($appointment, $pending ? AppointmentNotification::RECEIVED : AppointmentNotification::RESCHEDULED);
         }
 
