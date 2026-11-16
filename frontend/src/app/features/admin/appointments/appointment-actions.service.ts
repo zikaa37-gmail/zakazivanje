@@ -10,6 +10,7 @@ import { apiErrorMessage } from '../../../core/utils/api-error';
 import { contactActions, openContact } from '../../../core/utils/contact';
 import { timeOf } from '../../../core/utils/dates';
 import { RowAction } from '../../../shared/components/row-actions/row-actions.component';
+import { clientName } from '../../../core/utils/client-name';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentActionsService {
@@ -58,10 +59,10 @@ export class AppointmentActionsService {
         const ok = await this.confirm.confirm({
           title: series ? 'Otkazivanje niza' : byClient ? 'Klijent je otkazao' : 'Otkazivanje termina',
           message: series
-            ? `Otkazati ovaj i sve sledeće termine za ${a.client?.first_name} ${a.client?.last_name}? Ponavljanje se zaustavlja.`
+            ? `Otkazati ovaj i sve sledeće termine za ${clientName(a.client)}? Ponavljanje se zaustavlja.`
             : byClient
-              ? `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na zahtev klijenta? Računa se kao otkazivanje klijenta.${feeNote}`
-              : `Otkazati termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)})?`,
+              ? `Otkazati termin ${clientName(a.client)} (${timeOf(a.starts_at)}) na zahtev klijenta? Računa se kao otkazivanje klijenta.${feeNote}`
+              : `Otkazati termin ${clientName(a.client)} (${timeOf(a.starts_at)})?`,
           confirmLabel: 'Otkaži',
           cancelLabel: 'Ne',
         });
@@ -83,7 +84,7 @@ export class AppointmentActionsService {
   async transfer(a: Appointment, colleague: ColleagueRef): Promise<Appointment | null> {
     const ok = await this.confirm.confirm({
       title: 'Prebacivanje na kolegu',
-      message: `Prebaciti termin ${a.client?.first_name} ${a.client?.last_name} (${timeOf(a.starts_at)}) na ${colleague.first_name}? Obaveštenje dobijaju klijent, oba zaposlena i vlasnik, a klijent može da otkaže ili pomeri bez posledica.`,
+      message: `Prebaciti termin ${clientName(a.client)} (${timeOf(a.starts_at)}) na ${colleague.first_name}? Obaveštenje dobijaju klijent, oba zaposlena i vlasnik, a klijent može da otkaže ili pomeri bez posledica.`,
       confirmLabel: 'Prebaci',
       cancelLabel: 'Ne',
       danger: false,
@@ -103,7 +104,7 @@ export class AppointmentActionsService {
   async askClientToReschedule(a: Appointment): Promise<boolean> {
     const ok = await this.confirm.confirm({
       title: 'Zamoli klijenta da pomeri termin',
-      message: `${a.client?.first_name} dobija poruku sa linkom da sam izabere novo vreme. Pomeranje i otkazivanje ovog termina su za klijenta bez posledica. Dok ne izabere, termin ostaje gde jeste.`,
+      message: `${a.client?.nickname || a.client?.first_name} dobija poruku sa linkom da sam izabere novo vreme. Pomeranje i otkazivanje ovog termina su za klijenta bez posledica. Dok ne izabere, termin ostaje gde jeste.`,
       confirmLabel: 'Pošalji',
       cancelLabel: 'Ne',
       danger: false,
@@ -124,7 +125,7 @@ export class AppointmentActionsService {
     if (ask) {
       const ok = await this.confirm.confirm({
         title: 'Pomeranje termina',
-        message: `Pomeriti termin ${a.client?.first_name} ${a.client?.last_name} na ${startsAt.slice(8, 10)}.${startsAt.slice(5, 7)}. u ${startsAt.slice(11, 16)}? Klijent dobija obaveštenje.`,
+        message: `Pomeriti termin ${clientName(a.client)} na ${startsAt.slice(8, 10)}.${startsAt.slice(5, 7)}. u ${startsAt.slice(11, 16)}? Klijent dobija obaveštenje.`,
         confirmLabel: 'Pomeri',
         cancelLabel: 'Ne',
         danger: false,

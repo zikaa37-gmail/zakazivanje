@@ -86,6 +86,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/clients/list` | `{search?, page?, zone?}` → paginirano, `has_account`, `discipline_zone`, `discipline_points`, `zone_*` |
 | POST | `/clients/{id}/activity` | `{before_id?}` → `{client, stats (termini, otkazivanja, nedolasci, pouzdanost), logs (100, najnoviji prvi), has_more}` |
 | POST / PUT | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski) |
+| PUT | `/clients/{id}/nickname` | `{nickname: string \| null}` — nadimak (bilo ko iz osoblja; klijent ga nikad ne dobija) |
 | POST | `/appointments/list` | `{from, to, staff_member_id?, status?, search?}` |
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
 | POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |

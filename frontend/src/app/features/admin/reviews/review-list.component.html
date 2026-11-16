@@ -69,7 +69,7 @@
           <p class="mt-2 text-sm muted">Bez komentara</p>
         }
         <p class="text-sm muted mt-1">
-          {{ review.client?.first_name }} {{ review.client?.last_name }} · {{ services(review) }}
+          {{ review.client | clientName }} · {{ services(review) }}
           @if (review.staff_member) {
             · {{ review.staff_member.first_name }}
           }

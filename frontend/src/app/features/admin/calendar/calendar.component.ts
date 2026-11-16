@@ -28,6 +28,7 @@ import { AppointmentDetailsComponent } from '../appointments/appointment-details
 import { AppointmentFormComponent, AppointmentPrefill } from '../appointments/appointment-form.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { clientName, clientShortName } from '../../../core/utils/client-name';
 
 type View = 'day' | 'week' | 'month';
 
@@ -214,7 +215,7 @@ export class CalendarComponent {
   readonly monthItems = computed<MonthCalendarItem[]>(() =>
     this.visibleAppointments().map((a) => ({
       date: a.starts_at.slice(0, 10),
-      label: `${timeOf(a.starts_at)} ${a.client?.first_name ?? ''} ${a.client?.last_name?.[0] ?? ''}.`,
+      label: `${timeOf(a.starts_at)} ${clientShortName(a.client)}`,
       color: a.staff_member?.color,
       muted: a.status === 'cancelled' || a.status === 'no_show',
     })),
@@ -297,7 +298,7 @@ export class CalendarComponent {
   }
 
   eventTitle(a: Appointment): string {
-    return `${timeOf(a.starts_at)} ${a.client?.first_name ?? ''} ${a.client?.last_name ?? ''}`.trim();
+    return `${timeOf(a.starts_at)} ${clientName(a.client)}`.trim();
   }
 
   eventServices(a: Appointment): string {

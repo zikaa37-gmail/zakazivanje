@@ -137,7 +137,7 @@ class CancellationFeeService
         return CancellationFee::query()
             ->when($filters['client_id'] ?? null, fn ($q, $id) => $q->where('client_id', $id))
             ->when($filters['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
-            ->with(['appointment:id,starts_at,staff_member_id,total', 'appointment.items:id,appointment_id,name', 'client:id,first_name,last_name,phone', 'decider:id,first_name,last_name'])
+            ->with(['appointment:id,starts_at,staff_member_id,total', 'appointment.items:id,appointment_id,name', 'client:id,first_name,last_name,nickname,phone', 'decider:id,first_name,last_name'])
             ->orderByRaw("status = 'open' desc")
             ->orderByDesc('id')
             ->limit(200)

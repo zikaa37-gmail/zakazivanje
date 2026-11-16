@@ -65,7 +65,7 @@ class ChatController extends Controller
 
         $sessions = $this->chat->visibleTo($user)
             ->when(($data['status'] ?? 'active') === 'active', fn ($q) => $q->active(), fn ($q) => $q->inactive())
-            ->with(['client:id,first_name,last_name,phone', 'assignee:id,first_name,last_name', 'appointment.items', 'appointment.staffMember:id,first_name,last_name'])
+            ->with(['client:id,first_name,last_name,nickname,phone', 'assignee:id,first_name,last_name', 'appointment.items', 'appointment.staffMember:id,first_name,last_name'])
             ->withCount('messages')
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
@@ -89,7 +89,7 @@ class ChatController extends Controller
     public function show(Request $request, ChatSession $session)
     {
         abort_unless($this->chat->canSee($request->user(), $session), 404);
-        $session->load(['client:id,first_name,last_name,phone,email', 'assignee:id,first_name,last_name', 'messages.author:id,first_name,last_name,role', 'appointment.items', 'appointment.staffMember:id,first_name,last_name']);
+        $session->load(['client:id,first_name,last_name,nickname,phone,email', 'assignee:id,first_name,last_name', 'messages.author:id,first_name,last_name,role', 'appointment.items', 'appointment.staffMember:id,first_name,last_name']);
         $this->chat->markRead($session, $request->user());
 
         $earlier = ChatSession::where('client_id', $session->client_id)->whereKeyNot($session->id)->where('id', '<', $session->id)
@@ -97,7 +97,7 @@ class ChatController extends Controller
 
         return [
             ...$this->presentSession($session, true),
-            'client' => $session->client?->only(['id', 'first_name', 'last_name', 'phone', 'email']),
+            'client' => $session->client?->only(['id', 'first_name', 'last_name', 'nickname', 'phone', 'email']),
             'earlier' => $earlier->map(fn (ChatSession $s) => $this->presentSession($s, true))->values(),
             'unread_count' => $this->chat->unreadCount($request->user()),
         ];
@@ -147,7 +147,7 @@ class ChatController extends Controller
         return [
             'id' => $session->id,
             'client_id' => $session->client_id,
-            'client_name' => $session->relationLoaded('client') && $session->client ? trim($session->client->first_name.' '.$session->client->last_name) : null,
+            'client_name' => $session->relationLoaded('client') && $session->client ? $session->client->salonName() : null,
             'active' => $session->isActive(),
             'expires_at' => $session->expires_at?->toIso8601String(),
             'closed_at' => $session->closed_at?->toIso8601String(),

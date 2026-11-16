@@ -112,7 +112,7 @@ class BookingService
             }
             WaitlistEntry::query()->active()->where('client_id', $client->id)->whereDate('date', $start->toDateString())->update(['fulfilled_at' => now()]);
 
-            return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color', 'client:id,first_name,last_name,phone,email']);
+            return $appointment->load(['items', 'staffMember:id,first_name,last_name,title,color', 'client:id,first_name,last_name,nickname,phone,email']);
         });
     }
 

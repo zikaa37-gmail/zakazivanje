@@ -1,4 +1,4 @@
-<app-modal [title]="appointment().client?.first_name + ' ' + appointment().client?.last_name" footerMode="none" (cancelled)="closed.emit()" testId="appointment-details">
+<app-modal [title]="clientLabel()" footerMode="none" (cancelled)="closed.emit()" testId="appointment-details">
   <div class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center gap-2">
       <span [class]="'badge ' + statuses[appointment().status].badge">{{ statuses[appointment().status].label }}</span>
@@ -25,6 +25,10 @@
         </div>
       }
     </div>
+
+    @if (appointment().client; as client) {
+      <app-client-nickname [clientId]="client.id" [nickname]="nickname()" [fullName]="client.first_name + ' ' + client.last_name" (saved)="nicknameSaved($event)" />
+    }
 
     <div class="flex flex-wrap gap-3 text-sm">
       @if (callHref()) {

@@ -140,7 +140,7 @@
 }
 
 @if (selected(); as appointment) {
-  <app-appointment-details [appointment]="appointment" [staff]="staff()" (changed)="onDetailsChanged()" (closed)="selected.set(null)" />
+  <app-appointment-details [appointment]="appointment" [staff]="staff()" (changed)="onDetailsChanged()" (refresh)="reload()" (closed)="selected.set(null)" />
 }
 
 @if (blockOpen()) {

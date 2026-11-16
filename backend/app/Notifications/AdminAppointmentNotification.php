@@ -55,7 +55,7 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
             'kind' => 'appointment',
             'title' => $this->title(),
             'body' => implode(' · ', array_filter([
-                $a->client?->fullName(),
+                $a->client?->salonName(),
                 $a->starts_at->format('d.m.').' u '.$a->starts_at->format('H:i'),
                 $a->items->pluck('name')->join(' + '),
                 $a->staffMember?->first_name,
@@ -87,13 +87,13 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
         $title = $this->title();
 
         return (new MailMessage)
-            ->subject($title.': '.$client->first_name.' '.$client->last_name.', '.$a->starts_at->format('d.m. H:i'))
+            ->subject($title.': '.$client->salonName().', '.$a->starts_at->format('d.m. H:i'))
             ->greeting($title)
             ->line('**'.$a->starts_at->format('d.m.Y. H:i').' – '.$a->ends_at->format('H:i').'**')
             ->line($a->items->pluck('name')->join(' + ').' · '.$a->staffMember?->first_name)
             ->when($this->previousStart, fn ($m) => $m->line('Ranije: '.Carbon::parse($this->previousStart)->format('d.m.Y. H:i')))
             ->when($this->previousStaffName, fn ($m) => $m->line('Prethodno: '.$this->previousStaffName))
-            ->line('Klijent: '.$client->first_name.' '.$client->last_name.($client->phone ? ', '.$client->phone : ''))
+            ->line('Klijent: '.$client->salonName().($client->phone ? ', '.$client->phone : ''))
             ->when($a->note, fn ($m) => $m->line('Napomena: '.$a->note))
             ->action($pending && ! in_array($this->type, [self::CLIENT_CANCELLED, self::TRANSFERRED], true) ? 'Potvrdi termin' : 'Otvori termine', rtrim(config('app.frontend_url'), '/').'/admin/appointments')
             ->salutation(BusinessSetting::current()->name);

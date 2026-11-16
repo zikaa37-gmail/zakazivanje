@@ -25,11 +25,13 @@ import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { ClientFeesComponent } from '../clients/client-fees.component';
 import { AppointmentActionsService } from './appointment-actions.service';
+import { ClientNicknameComponent } from '../../../shared/components/client-nickname/client-nickname.component';
+import { clientName } from '../../../core/utils/client-name';
 
 @Component({
   selector: 'app-appointment-details',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ClientFeesComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
+  imports: [ClientNicknameComponent, ReactiveFormsModule, ButtonComponent, ClientFeesComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
   templateUrl: './appointment-details.component.html',
 })
 export class AppointmentDetailsComponent implements OnInit {
@@ -38,6 +40,7 @@ export class AppointmentDetailsComponent implements OnInit {
   protected chat = inject(ChatService);
   readonly staff = input<StaffMember[]>([]);
   readonly changed = output<void>();
+  readonly refresh = output<void>();
   readonly closed = output<void>();
 
   private actionsService = inject(AppointmentActionsService);
@@ -65,6 +68,16 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly moveTime = new FormControl<string | null>(null);
   readonly tip = new FormControl<number | null>(null);
 
+  private readonly nicknameOverride = signal<{ value: string | null } | null>(null);
+  readonly nickname = computed(() => {
+    const override = this.nicknameOverride();
+    return override ? override.value : (this.appointment().client?.nickname ?? null);
+  });
+  readonly clientLabel = computed(() => {
+    const client = this.appointment().client;
+    return client ? clientName({ ...client, nickname: this.nickname() }) : '';
+  });
+
   readonly active = computed(() => ['pending', 'confirmed'].includes(this.appointment().status));
   readonly when = computed(() => `${longDate(this.appointment().starts_at)} · ${timeOf(this.appointment().starts_at)} – ${timeOf(this.appointment().ends_at)}`);
   readonly eligibleStaff = computed(() => {
@@ -74,6 +87,11 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly contacts = computed(() => contactChannels(this.appointment().client?.phone));
   readonly callHref = computed(() => this.contacts().find((c) => c.id === 'call')?.href ?? null);
   readonly messageLinks = computed(() => this.contacts().filter((c) => c.id !== 'call'));
+
+  nicknameSaved(nickname: string | null): void {
+    this.nicknameOverride.set({ value: nickname });
+    this.refresh.emit();
+  }
 
   ngOnInit(): void {
     const a = this.appointment();
@@ -122,7 +140,7 @@ export class AppointmentDetailsComponent implements OnInit {
   messageClient(): void {
     const a = this.appointment();
     if (!a.client) return;
-    void this.router.navigate(['/admin/chat'], { queryParams: { client: a.client.id, appointment: a.id, name: `${a.client.first_name} ${a.client.last_name}` } });
+    void this.router.navigate(['/admin/chat'], { queryParams: { client: a.client.id, appointment: a.id, name: this.clientLabel() } });
   }
 
   async askClient(): Promise<void> {

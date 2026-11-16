@@ -63,7 +63,7 @@
       <header class="chat-conv-head">
         <button type="button" class="btn-icon chat-back" aria-label="Nazad" (click)="back()"><span appIcon="arrow-left" aria-hidden="true"></span></button>
         <div class="min-w-0 flex-1">
-          <div class="font-semibold truncate">{{ d.client?.first_name }} {{ d.client?.last_name }}</div>
+          <div class="font-semibold truncate">{{ d.client | clientName }}</div>
           <div class="text-xs muted truncate">
             @if (d.client?.phone) {
               <a [href]="'tel:' + d.client!.phone">{{ d.client!.phone }}</a> ·

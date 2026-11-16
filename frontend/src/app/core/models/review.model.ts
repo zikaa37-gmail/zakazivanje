@@ -32,7 +32,7 @@ export interface Review {
   reply: string | null;
   replied_at: string | null;
   created_at: string;
-  client?: { id: number; first_name: string; last_name: string; email: string | null; phone: string | null } | null;
+  client?: { id: number; first_name: string; last_name: string; nickname?: string | null; email: string | null; phone: string | null } | null;
   staff_member?: { id: number; first_name: string; last_name: string; color: string | null } | null;
   appointment?: { id: number; starts_at: string; items: { name: string }[] } | null;
 }

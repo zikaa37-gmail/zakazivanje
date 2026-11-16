@@ -13,13 +13,14 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
 type VisibilityFilter = 'all' | 'visible' | 'hidden';
 
 @Component({
   selector: 'app-review-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, ReviewSummaryComponent, SrDatePipe, StarsComponent],
+  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, ReviewSummaryComponent, SrDatePipe, StarsComponent],
   templateUrl: './review-list.component.html',
 })
 export class ReviewListComponent {

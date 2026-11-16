@@ -25,11 +25,13 @@ import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { canPlaceCalls, contactActions, openContact } from '../../../core/utils/contact';
 import { ClientHistoryComponent } from './client-history.component';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
+import { clientName } from '../../../core/utils/client-name';
 
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
+  imports: [ClientNamePipe, ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
   templateUrl: './client-list.component.html',
 })
 export class ClientListComponent {
@@ -63,6 +65,7 @@ export class ClientListComponent {
   readonly form = this.fb.group({
     first_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     last_name: this.fb.nonNullable.control('', Validators.required),
+    nickname: this.fb.control<string | null>(null),
     phone: this.fb.nonNullable.control('', Validators.required),
     email: this.fb.control<string | null>(null, Validators.email),
     whatsapp_number: this.fb.control<string | null>(null),
@@ -145,6 +148,7 @@ export class ClientListComponent {
     this.form.reset({
       first_name: client?.first_name ?? '',
       last_name: client?.last_name ?? '',
+      nickname: client?.nickname ?? null,
       phone: client?.phone ?? '',
       email: client?.email ?? null,
       whatsapp_number: client?.whatsapp_number ?? null,
@@ -168,6 +172,7 @@ export class ClientListComponent {
     const value = this.form.getRawValue();
     const payload: ClientPayload = {
       ...value,
+      nickname: value.nickname?.trim() || null,
       email: value.email?.trim() || null,
       whatsapp_number: value.whatsapp_number?.trim() || null,
       note: value.note?.trim() || null,
@@ -194,7 +199,7 @@ export class ClientListComponent {
   private async remove(client: Client): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Brisanje klijenta',
-      message: `Obrisati klijenta ${client.first_name} ${client.last_name}?`,
+      message: `Obrisati klijenta ${clientName(client)}?`,
       confirmLabel: 'Obriši',
     });
     if (!ok) return;

@@ -188,6 +188,10 @@ nedelje, 2–4 = smenski) + `rotation_starts_on` (ponedeljak 1. nedelje), `staff
 `StaffMember::hoursOn($date, OpeningHour::week())` je jedini izvor radnog vremena za dan (nedelja rotacije ∩ salon) —
 koriste ga dostupnost, pregled i (kao `hoursOn()` u `core/utils/schedule.ts`) kalendar. Smena mora biti u radnom
 vremenu salona (validacija), a kad se salon skrati, sati zaposlenih se seku.
+Nadimak klijenta: `users.nickname` (upisuje bilo ko iz osoblja — detalji termina, istorijat, forma klijenta; `PUT /clients/{id}/nickname`). U `$hidden`,
+`User::toArray()` ga dodaje samo kad je prijavljen neko iz osoblja — klijent nikad ne vidi nadimak. U salonu se prikazuje umesto imena i prezimena:
+backend `User::salonName()` (obaveštenja, toast, izveštaji, chat za osoblje), frontend pipe `clientName` / `clientName()` iz `core/utils/client-name.ts`;
+pri učitavanju klijenta sa listom kolona dodati `nickname`. Lista klijenata pokazuje i pravo ime, pretraga radi i po nadimku.
 Omiljeni frizer: `users.favorite_staff_member_id` (profil, admin → klijenti, „Zapamti kao mog frizera" u koraku
 „Kod koga?" → `PUT /auth/favorite-staff`); `/book` ga stavlja prvog sa oznakom „Tvoj frizer" i unapred bira, pa se
 nude samo njegovi termini (klijent može da promeni).

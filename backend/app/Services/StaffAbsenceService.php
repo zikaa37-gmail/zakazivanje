@@ -99,7 +99,7 @@ class StaffAbsenceService
             ->blocking()
             ->where('staff_member_id', $absence->staff_member_id)
             ->whereBetween('starts_at', [$from, $to])
-            ->with(['items', 'client:id,first_name,last_name,phone,email'])
+            ->with(['items', 'client:id,first_name,last_name,nickname,phone,email'])
             ->orderBy('starts_at')
             ->get()
             ->map(fn (Appointment $a) => [

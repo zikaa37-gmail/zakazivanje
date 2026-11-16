@@ -37,7 +37,7 @@ class AppointmentPaymentController extends Controller
             'tip' => isset($data['method']) ? round((float) ($data['tip'] ?? 0), 2) : 0,
         ]);
 
-        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
+        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);
     }
 
     public function clientDetails(Request $request, Appointment $appointment)

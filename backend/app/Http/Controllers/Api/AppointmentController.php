@@ -52,8 +52,9 @@ class AppointmentController extends Controller
             ->when($search !== '', fn ($q) => $q->whereHas('client', fn ($c) => $c
                 ->where('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('nickname', 'like', "%{$search}%")
                 ->orWhere('phone', 'like', "%{$search}%")))
-            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active'])
+            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active'])
             ->orderBy('starts_at')
             ->limit(500)
             ->get();
@@ -224,7 +225,7 @@ class AppointmentController extends Controller
             $this->waitlist->slotFreedAt($previousDate, $previousStaff, $appointment->client_id);
         }
 
-        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone,email', 'recurrence:id,interval_weeks,active']);
+        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);
     }
 
     public function linked(Appointment $appointment)
@@ -290,7 +291,7 @@ class AppointmentController extends Controller
     {
         return AppointmentRecurrence::query()
             ->where('active', true)
-            ->with(['client:id,first_name,last_name,phone', 'staffMember:id,first_name,last_name,color'])
+            ->with(['client:id,first_name,last_name,nickname,phone', 'staffMember:id,first_name,last_name,color'])
             ->orderBy('weekday')
             ->orderBy('start_time')
             ->get();

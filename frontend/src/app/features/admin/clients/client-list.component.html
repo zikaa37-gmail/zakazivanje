@@ -34,7 +34,7 @@
             <div class="flex items-center gap-3 min-w-0">
               <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
               <div class="min-w-0">
-                <div class="font-semibold truncate">{{ client.first_name }} {{ client.last_name }}</div>
+                <div class="font-semibold truncate">{{ client | clientName }}@if (client.nickname) {<span class="font-normal muted text-sm"> · {{ client.first_name }} {{ client.last_name }}</span>}</div>
                 <div class="text-xs muted truncate">{{ client.email || '—' }}</div>
               </div>
             </div>
@@ -62,7 +62,7 @@
           <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
           <div class="min-w-0 flex-1">
             <div class="font-semibold truncate">
-              {{ client.first_name }} {{ client.last_name }}
+              {{ client | clientName }}@if (client.nickname) {<span class="font-normal muted text-sm"> · {{ client.first_name }} {{ client.last_name }}</span>}
               @if (client.discipline_zone !== 'green') {
                 <span class="badge ml-1" [class]="zoneInfo[client.discipline_zone].badge">{{ zoneInfo[client.discipline_zone].label }}</span>
               }
@@ -107,6 +107,11 @@
         <div class="field">
           <label for="client-last">Prezime <span class="required-mark">*</span></label>
           <input id="client-last" appInput size="m" formControlName="last_name" data-testid="client-last-name" />
+        </div>
+        <div class="field">
+          <label for="client-nickname">Nadimak</label>
+          <input id="client-nickname" appInput size="m" formControlName="nickname" maxlength="60" placeholder="npr. Pera Plavi" data-testid="client-nickname" />
+          <span class="text-xs muted">Vidi ga samo salon — tada se u salonu prikazuje umesto imena i prezimena. Klijent ga ne vidi.</span>
         </div>
         <div class="field">
           <label for="client-phone">Telefon <span class="required-mark">*</span></label>

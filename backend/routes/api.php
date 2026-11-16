@@ -120,6 +120,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
 
     Route::post('/clients/list', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
+    Route::put('/clients/{client}/nickname', [ClientController::class, 'nickname']);
 
     Route::post('/appointments/list', [AppointmentController::class, 'index']);
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);

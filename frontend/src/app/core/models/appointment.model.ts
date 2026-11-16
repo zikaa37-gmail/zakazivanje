@@ -28,7 +28,7 @@ export interface Appointment {
   admin_note: string | null;
   items: AppointmentItem[];
   staff_member?: { id: number; first_name: string; last_name: string; title?: string | null; color: string | null };
-  client?: { id: number; first_name: string; last_name: string; phone: string | null; email: string | null };
+  client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null };
   recurrence?: { id: number; interval_weeks: number; active: boolean } | null;
   paid_at: string | null;
   payment_method: PaymentMethod | null;
@@ -110,7 +110,7 @@ export interface Recurrence {
   starts_on: string;
   ends_on: string | null;
   skipped_dates: string[] | null;
-  client: { id: number; first_name: string; last_name: string; phone: string | null };
+  client: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null };
   staff_member: { id: number; first_name: string; last_name: string; color: string | null };
 }
 

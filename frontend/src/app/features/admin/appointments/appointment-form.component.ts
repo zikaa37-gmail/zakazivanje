@@ -24,6 +24,7 @@ import { TimePickerComponent } from '../../../shared/components/time-picker/time
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
+import { clientName } from '../../../core/utils/client-name';
 
 export interface AppointmentPrefill {
   date?: string;
@@ -70,7 +71,7 @@ export class AppointmentFormComponent implements OnInit {
   readonly clientOptions = computed<SelectSearchOption<number>[]>(() =>
     this.clientResults().map((c) => ({
       value: c.id,
-      label: `${c.first_name} ${c.last_name}`,
+      label: clientName(c),
       hint: [c.phone, c.email, c.discipline_zone !== 'green' ? `zona: ${ZONE_BY_VALUE[c.discipline_zone].label.toLowerCase()}` : null].filter(Boolean).join(' · '),
     })),
   );

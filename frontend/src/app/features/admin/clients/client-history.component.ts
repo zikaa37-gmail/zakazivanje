@@ -15,6 +15,9 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { ClientFeesComponent } from './client-fees.component';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
+import { ClientNicknameComponent } from '../../../shared/components/client-nickname/client-nickname.component';
+import { clientName } from '../../../core/utils/client-name';
 
 const ACTIVITY_LABELS: Record<string, string> = {
   login: 'Prijava',
@@ -40,7 +43,7 @@ const REASONS: Record<string, string> = {
 @Component({
   selector: 'app-client-history',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
+  imports: [ClientNamePipe, ClientNicknameComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
   templateUrl: './client-history.component.html',
 })
 export class ClientHistoryComponent implements OnInit {
@@ -142,7 +145,7 @@ export class ClientHistoryComponent implements OnInit {
     if (zone === 'red') {
       const ok = await this.confirm.confirm({
         title: 'Suspenzija naloga',
-        message: `${this.client()?.first_name} ${this.client()?.last_name} posle prijave vidi da je nalog suspendovan i ne može da zakazuje. Nastaviti?`,
+        message: `${clientName(this.client())} posle prijave vidi da je nalog suspendovan i ne može da zakazuje. Nastaviti?`,
         confirmLabel: 'Suspenduj',
       });
       if (!ok) return;
@@ -171,5 +174,13 @@ export class ClientHistoryComponent implements OnInit {
       reason: client.zone_manual ? client.zone_reason : null,
       until: client.zone_until,
     });
+  }
+
+  nicknameSaved(nickname: string | null): void {
+    const history = this.history();
+    if (!history) return;
+    const client = { ...history.client, nickname };
+    this.history.set({ ...history, client });
+    this.changed.emit(client);
   }
 }

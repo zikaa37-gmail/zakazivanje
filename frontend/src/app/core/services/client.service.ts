@@ -29,6 +29,10 @@ export class ClientService {
     return this.http.put<Client>(`${this.api}/${id}`, payload);
   }
 
+  setNickname(id: number, nickname: string | null): Observable<Client> {
+    return this.http.put<Client>(`${this.api}/${id}/nickname`, { nickname });
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }

@@ -21,6 +21,7 @@ import { AppointmentActionsService } from './appointment-actions.service';
 import { AppointmentFormComponent, AppointmentPrefill } from './appointment-form.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
 type Period = 'today' | 'tomorrow' | 'week' | 'month' | 'day';
 
@@ -34,7 +35,7 @@ const PERIODS: { value: Period; label: string }[] = [
 @Component({
   selector: 'app-appointment-list',
   standalone: true,
-  imports: [ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
+  imports: [ClientNamePipe, ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
   templateUrl: './appointment-list.component.html',
 })
 export class AppointmentListComponent {
