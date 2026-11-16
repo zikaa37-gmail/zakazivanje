@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\ChatMessageNotification;
+use App\Services\Realtime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -85,6 +86,36 @@ class ChatTest extends TestCase
             ->assertJsonPath('sessions.0.client_name', 'Petar Petrović')
             ->assertJsonPath('sessions.0.unread', 1)
             ->assertJsonPath('sessions.0.last_message', 'Da li radite u subotu?');
+    }
+
+    public function test_client_sees_only_own_conversations(): void
+    {
+        $other = User::factory()->create(['first_name' => 'Mika', 'last_name' => 'Mikić']);
+        $appointment = $this->appointmentWith($this->ana);
+        $this->clientSays('Poruka Petra', $appointment->id);
+        $petarSession = ChatSession::sole();
+        $this->actingAsJwt($this->owner)->postJson("/api/chat/sessions/{$petarSession->id}/messages", ['body' => 'Odgovor Petru'])->assertCreated();
+
+        $this->actingAsJwt($other)->postJson('/api/chat/my')->assertOk()->assertJsonCount(0, 'sessions')->assertJsonPath('unread_count', 0);
+        $this->assertSame(0, $this->unread($other));
+
+        $this->actingAsJwt($other)->postJson('/api/chat/my/messages', ['body' => 'Moj termin', 'appointment_id' => $appointment->id])
+            ->assertUnprocessable()->assertJsonValidationErrors('appointment_id');
+        $this->actingAsJwt($other)->postJson('/api/chat/my/messages', ['body' => 'Poruka Mike'])->assertCreated();
+
+        $this->assertSame(2, ChatSession::count());
+        $this->actingAsJwt($other)->postJson('/api/chat/my')->assertOk()
+            ->assertJsonCount(1, 'sessions')
+            ->assertJsonCount(1, 'sessions.0.messages')
+            ->assertJsonPath('sessions.0.messages.0.body', 'Poruka Mike');
+        $this->actingAsJwt($this->client)->postJson('/api/chat/my')->assertOk()
+            ->assertJsonCount(1, 'sessions')
+            ->assertJsonPath('sessions.0.messages.1.body', 'Odgovor Petru');
+
+        $this->actingAsJwt($other)->getJson("/api/chat/sessions/{$petarSession->id}")->assertForbidden();
+        $this->actingAsJwt($other)->postJson("/api/chat/sessions/{$petarSession->id}/messages", ['body' => 'x'])->assertForbidden();
+        $this->actingAsJwt($other)->postJson('/api/chat/sessions/list')->assertForbidden();
+        $this->assertFalse(app(Realtime::class)->canJoin($other, Realtime::userChannel($this->client->id)));
     }
 
     public function test_worker_sees_only_chats_about_own_appointments(): void

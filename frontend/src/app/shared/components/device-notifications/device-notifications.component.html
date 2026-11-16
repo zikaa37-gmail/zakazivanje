@@ -12,7 +12,13 @@
         <button type="button" appBtn size="s" class="mt-3" [disabled]="push.busy()" (click)="enable()" data-testid="push-enable">Uključi obaveštenja</button>
       }
       @case ('denied') {
-        <p class="text-sm muted mt-1">Obaveštenja su blokirana za ovaj sajt. Dozvoli ih u podešavanjima pregledača (ikonica katanca pored adrese → Obaveštenja → Dozvoli), pa osveži stranicu.</p>
+        <p class="text-sm muted mt-1">Pregledač je zapamtio da je za ovaj sajt izabrano „Blokiraj“ obaveštenja, pa više ne pita. Da ih dozvoliš:</p>
+        <ol class="text-sm mt-2 ml-5 list-decimal">
+          <li>klikni ikonicu levo od adrese sajta (podešavanja sajta — klizači, katanac ili „i“),</li>
+          <li>kod <strong>Obaveštenja</strong> izaberi <strong>Dozvoli</strong>,</li>
+          <li>osveži stranicu i ovde uključi obaveštenja.</li>
+        </ol>
+        <p class="text-sm muted mt-2">Na telefonu: Chrome → ⋮ → Podešavanja → Podešavanja sajtova → Obaveštenja.</p>
       }
       @case ('needs-install') {
         <p class="text-sm muted mt-1">Na iPhone-u obaveštenja rade kad se aplikacija doda na početni ekran:</p>
