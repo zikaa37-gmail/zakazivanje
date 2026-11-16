@@ -8,7 +8,7 @@ use GdImage;
 
 class AppManifestController extends Controller
 {
-    private const SIZES = [180, 192, 512];
+    private const SIZES = [32, 64, 180, 192, 512];
 
     private const FALLBACK_COLOR = '#0f766e';
 
@@ -48,7 +48,7 @@ class AppManifestController extends Controller
         imagefill($canvas, 0, 0, imagecolorallocate($canvas, $r, $g, $b));
 
         if ($logo) {
-            $padding = (int) round($size * ($maskable ? 0.2 : 0.08));
+            $padding = (int) round($size * ($maskable ? 0.2 : ($size <= 64 ? 0 : 0.08)));
             $box = $size - 2 * $padding;
             $scale = min($box / imagesx($logo), $box / imagesy($logo));
             $w = (int) round(imagesx($logo) * $scale);
@@ -68,7 +68,7 @@ class AppManifestController extends Controller
         imagepng($canvas);
         $png = ob_get_clean();
 
-        return response($png, 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=604800']);
+        return response($png, 200, ['Content-Type' => 'image/png', 'Cache-Control' => request()->has('v') ? 'public, max-age=604800' : 'public, max-age=300']);
     }
 
     private function color(BusinessSetting $business): string

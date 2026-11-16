@@ -1,9 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { BusinessSettingService } from './core/services/business-setting.service';
 import { MarketingService } from './core/services/marketing.service';
 import { PushService } from './core/services/push.service';
 import { RealtimeService } from './core/services/realtime.service';
 import { ThemeService } from './core/services/theme.service';
+import { applyAppIcons } from './core/utils/app-icons';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 import { SpinnerComponent } from './shared/components/spinner/spinner.component';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
@@ -24,5 +26,10 @@ export class AppComponent {
     inject(MarketingService).capture();
     inject(RealtimeService);
     inject(PushService);
+    const business = inject(BusinessSettingService);
+    effect(() => {
+      const settings = business.settings();
+      if (settings) applyAppIcons(settings.logo, settings.name);
+    });
   }
 }
