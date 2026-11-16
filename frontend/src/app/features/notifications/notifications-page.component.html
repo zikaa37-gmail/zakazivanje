@@ -1,0 +1,67 @@
+<div [class]="auth.isStaff() ? '' : 'content-container py-6 max-w-2xl'" data-testid="notifications-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Obaveštenja</h1>
+      <p class="page-subtitle">Sve što je stiglo u zvonce — i ranija, već pročitana obaveštenja.</p>
+    </div>
+    @if (inbox.unreadCount() > 0) {
+      <button type="button" class="notif-link" (click)="markAllRead()" data-testid="notifications-read-all">Označi sve kao pročitano</button>
+    }
+  </div>
+
+  <div class="notif-tabs" role="tablist">
+    @for (tab of tabs; track tab.value) {
+      <button type="button" role="tab" class="notif-tab" [class.active]="filter() === tab.value" [attr.aria-selected]="filter() === tab.value" (click)="select(tab.value)" [attr.data-testid]="'notifications-tab-' + tab.value">
+        {{ tab.label }}
+        @if (tab.value === 'unread' && inbox.unreadCount() > 0) {
+          <span class="notif-tab-count">{{ inbox.unreadCount() }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  @if (loading() && items().length === 0) {
+  } @else if (items().length === 0) {
+    <div class="empty-state" data-testid="notifications-empty">
+      <span appIcon="bell" [iconSize]="28" aria-hidden="true"></span>
+      <p>{{ filter() === 'unread' ? 'Sve je pročitano.' : 'Još nema obaveštenja.' }}</p>
+    </div>
+  } @else {
+    @for (group of groups(); track group.label) {
+      <h2 class="notif-day">{{ group.label }}</h2>
+      <div class="card notif-list">
+        @for (item of group.items; track item.id) {
+          <div class="notif-item" [class.unread]="!item.read_at" [attr.data-testid]="'notification-' + item.id">
+            <button type="button" class="notif-main" (click)="openItem(item)">
+              <span class="notif-dot" aria-hidden="true"></span>
+              <span class="notif-text">
+                <span class="notif-title">{{ item.title }}</span>
+                @if (item.body) {
+                  <span class="notif-body">{{ item.body }}</span>
+                }
+                <span class="notif-time">{{ time(item) }}</span>
+              </span>
+              @if (item.link) {
+                <span appIcon="arrow-right" [iconSize]="16" class="notif-chevron" aria-hidden="true"></span>
+              }
+            </button>
+            @if (!item.read_at) {
+              <button type="button" class="notif-check" (click)="markRead(item)" aria-label="Označi kao pročitano" title="Označi kao pročitano" [attr.data-testid]="'notification-read-' + item.id">
+                <span appIcon="check" [iconSize]="16" aria-hidden="true"></span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+    @if (hasMore()) {
+      <div class="text-center mt-4">
+        <button type="button" appBtn theme="secondary" size="s" [disabled]="loading()" (click)="load(filter(), true)" data-testid="notifications-more">Prikaži starija</button>
+      </div>
+    }
+  }
+
+  <div class="mt-6">
+    <app-device-notifications />
+  </div>
+</div>

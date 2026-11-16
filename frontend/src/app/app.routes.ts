@@ -68,6 +68,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/client/my-appointments.component').then((m) => m.MyAppointmentsComponent),
       },
       {
+        path: 'notifications',
+        title: 'Obaveštenja',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/notifications/notifications-page.component').then((m) => m.NotificationsPageComponent),
+      },
+      {
         path: 'suspended',
         title: 'Nalog je suspendovan',
         loadComponent: () => import('./features/client/suspended.component').then((m) => m.SuspendedComponent),
@@ -152,6 +158,11 @@ export const routes: Routes = [
         path: 'chat',
         title: 'Poruke',
         loadComponent: () => import('./features/admin/chat/chat-page.component').then((m) => m.ChatPageComponent),
+      },
+      {
+        path: 'notifications',
+        title: 'Obaveštenja',
+        loadComponent: () => import('./features/notifications/notifications-page.component').then((m) => m.NotificationsPageComponent),
       },
       {
         path: 'notes',

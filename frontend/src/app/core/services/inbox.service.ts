@@ -1,5 +1,6 @@
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
 import { AuthService } from './auth.service';
@@ -17,7 +18,7 @@ export interface InboxItem {
   created_at: string;
 }
 
-interface InboxPage {
+export interface InboxPage {
   items: InboxItem[];
   has_more: boolean;
   unread_count: number;
@@ -36,6 +37,7 @@ export class InboxService {
   readonly filter = signal<InboxFilter>('unread');
   readonly hasMore = signal(false);
   readonly loading = signal(false);
+  readonly receivedCount = signal(0);
 
   constructor() {
     effect(() => {
@@ -56,7 +58,13 @@ export class InboxService {
     });
   }
 
-  load(filter: InboxFilter = this.filter(), more = false): void {
+  page(filter: InboxFilter, beforeId: number | null = null): Observable<InboxPage> {
+    return this.http
+      .post<InboxPage>(`${this.api}/list`, { filter, before_id: beforeId }, quiet())
+      .pipe(tap((page) => this.unreadCount.set(page.unread_count)));
+  }
+
+  load(filter: InboxFilter =this.filter(), more = false): void {
     this.filter.set(filter);
     const beforeId = more ? this.items().at(-1)?.id : undefined;
     if (!more) this.items.set([]);
@@ -94,6 +102,7 @@ export class InboxService {
 
   received(item: Omit<InboxItem, 'read_at' | 'created_at'>): void {
     this.unreadCount.update((count) => count + 1);
+    this.receivedCount.update((count) => count + 1);
     if (this.items().some((i) => i.id === item.id)) return;
     this.items.update((items) => [{ ...item, read_at: null, created_at: new Date().toISOString() }, ...items]);
   }
