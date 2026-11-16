@@ -103,6 +103,6 @@ class PushTest extends TestCase
         $response = $this->get('/api/public/app-icon/192.png')->assertOk();
         $this->assertSame('image/png', $response->headers->get('Content-Type'));
         $this->assertSame([192, 192], array_slice(getimagesizefromstring($response->getContent()), 0, 2));
-        $this->get('/api/public/app-icon/64.png')->assertNotFound();
+        $this->get('/api/public/app-icon/16.png')->assertNotFound();
     }
 }

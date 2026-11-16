@@ -27,7 +27,7 @@ specifične za ovu aplikaciju.
     .env
     artisan
   ```
-- **Slike** (logo biznisa, avatar): base64 u bazi, bez `storage:link`.
+- **Slike** (logo biznisa, avatar): base64 u bazi, bez `storage:link`. Favicon i PWA ikonice prave se iz logoa (`/api/public/app-icon/{32|64|180|192|512}.png`).
 
 ## Stanje na serveru
 
