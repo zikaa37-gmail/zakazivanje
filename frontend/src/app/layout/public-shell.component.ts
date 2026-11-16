@@ -2,6 +2,8 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
+import { ChatService } from '../core/services/chat.service';
+import { ChatWidgetComponent } from '../shared/components/chat-widget/chat-widget.component';
 import { InboxBellComponent } from '../shared/components/inbox-bell/inbox-bell.component';
 import { SocialLinksComponent } from '../shared/components/social-links/social-links.component';
 import { IconDirective, IconName } from '../shared/directives/icon.directive';
@@ -16,12 +18,14 @@ interface NavItem {
 @Component({
   selector: 'app-public-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconDirective, SocialLinksComponent, InboxBellComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconDirective, SocialLinksComponent, InboxBellComponent, ChatWidgetComponent],
   templateUrl: './public-shell.component.html',
   styleUrl: './public-shell.component.scss',
 })
 export class PublicShellComponent {
   protected auth = inject(AuthService);
+  private chat = inject(ChatService);
+  readonly showChat = computed(() => this.auth.isAuthenticated() && !this.auth.isStaff() && this.chat.enabled());
   protected business = inject(BusinessSettingService);
 
   readonly initials = computed(() => {

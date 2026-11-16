@@ -8,6 +8,7 @@ import { User } from '../models/user.model';
 import { AppointmentService } from './appointment.service';
 import { AuthService } from './auth.service';
 import { BusinessSettingService } from './business-setting.service';
+import { ChatEvent, ChatService } from './chat.service';
 import { InboxItem, InboxService } from './inbox.service';
 import { ToastService } from './toast.service';
 
@@ -24,6 +25,7 @@ export interface RealtimeEvent {
 const STAFF_CHANNEL = 'private-salon';
 const EVENT = 'appointment';
 const INBOX_EVENT = 'inbox';
+const CHAT_EVENT = 'chat';
 const APPOINTMENT_KIND = 'appointment';
 
 @Injectable({ providedIn: 'root' })
@@ -34,6 +36,7 @@ export class RealtimeService {
   private toast = inject(ToastService);
   private appointments = inject(AppointmentService);
   private inbox = inject(InboxService);
+  private chat = inject(ChatService);
 
   readonly events = new Subject<RealtimeEvent>();
   readonly version = signal(0);
@@ -78,6 +81,7 @@ export class RealtimeService {
     this.client.connection.bind('state_change', ({ current }: { current: string }) => this.connected.set(current === 'connected'));
     const personal = this.client.subscribe(userChannel);
     personal.bind(INBOX_EVENT, (item: Omit<InboxItem, 'read_at' | 'created_at'>) => this.handleInbox(item));
+    personal.bind(CHAT_EVENT, (event: ChatEvent) => this.chat.received(event));
     const appointments = appointmentChannel === userChannel ? personal : this.client.subscribe(appointmentChannel);
     appointments.bind(EVENT, (event: RealtimeEvent) => this.handle(event));
   }

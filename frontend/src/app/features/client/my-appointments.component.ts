@@ -22,6 +22,7 @@ import { StarsComponent } from '../../shared/components/stars/stars.component';
 import { RescheduleComponent } from './reschedule.component';
 import { ReviewFormComponent } from './review-form.component';
 import { RealtimeService } from '../../core/services/realtime.service';
+import { ChatService } from '../../core/services/chat.service';
 
 @Component({
   selector: 'app-my-appointments',
@@ -32,6 +33,7 @@ import { RealtimeService } from '../../core/services/realtime.service';
 export class MyAppointmentsComponent {
   private booking = inject(BookingService);
   private realtime = inject(RealtimeService);
+  protected chat = inject(ChatService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   protected business = inject(BusinessSettingService);
@@ -230,6 +232,10 @@ export class MyAppointmentsComponent {
     return this.linkedOf(a)
       .map((x) => `${x.starts_at < a.starts_at ? 'pre toga' : 'zatim'} u ${this.time(x)}: ${this.serviceNames(x)}${x.staff_member ? ' · ' + x.staff_member.first_name : ''}`)
       .join('; ');
+  }
+
+  message(a: Appointment): void {
+    this.chat.openWidget({ id: a.id, starts_at: a.starts_at.slice(0, 16), services: a.items.map((i) => i.name).join(' + '), staff: a.staff_member?.first_name ?? null });
   }
 
   reschedule(a: Appointment): void {

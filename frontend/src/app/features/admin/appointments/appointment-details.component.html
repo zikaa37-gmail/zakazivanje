@@ -97,6 +97,9 @@
         <button type="button" appBtn theme="secondary" size="s" (click)="act('no_show')">Nije došao</button>
         <button type="button" appBtn theme="secondary" size="s" (click)="moving.set(!moving())" data-testid="details-move">Pomeri</button>
         <button type="button" appBtn theme="secondary" size="s" (click)="toggleTransfer()" data-testid="details-transfer"><span appIcon="users" aria-hidden="true"></span> Prebaci kolegi</button>
+        @if (appointment().client && chat.enabled()) {
+          <button type="button" appBtn theme="secondary" size="s" (click)="messageClient()" data-testid="details-message"><span appIcon="message-square" aria-hidden="true"></span> Poruka klijentu</button>
+        }
         @if (appointment().client) {
           <button type="button" appBtn theme="secondary" size="s" (click)="askClient()" data-testid="details-ask-reschedule"><span appIcon="send" aria-hidden="true"></span> Zamoli da pomeri</button>
         }

@@ -1,0 +1,126 @@
+@use 'themes/breakpoints' as bp;
+
+.chat-fab {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(72px + env(safe-area-inset-bottom) + 0.75rem);
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 6px 18px var(--shadow-color);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-primary-active);
+  }
+}
+
+.chat-fab-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.chat-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  padding-top: calc(0.6rem + env(safe-area-inset-top));
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.chat-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: contain;
+  background: var(--color-surface);
+}
+
+.chat-title {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.chat-close {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.chat-about {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: var(--color-primary-tint);
+  color: var(--color-primary-text);
+  font-size: 0.8rem;
+}
+
+.chat-error {
+  padding: 0.45rem 0.75rem;
+  background: var(--color-danger-tint);
+  color: var(--color-danger);
+  font-size: 0.8rem;
+}
+
+@include bp.md-up {
+  .chat-fab {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .chat-panel {
+    inset: auto 1.5rem 1.5rem auto;
+    width: 380px;
+    height: min(600px, calc(100dvh - 3rem));
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px var(--shadow-color);
+  }
+
+  .chat-head {
+    padding-top: 0.6rem;
+  }
+}

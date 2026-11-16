@@ -292,6 +292,15 @@ WhatsApp-a i prekidača obaveštenja, bez onoga ko je radnju uradio i bez klijen
 uvek, radnik samo za svog zaposlenog. Nova obaveštenja za korisnika idu kroz `toInbox()` + `Inbox`. Pusher događaj `inbox` na
 `private-user-{id}` (osoblje sluša i taj kanal); frontend `InboxService` + `<app-inbox-bell>` (zaglavlje, a na desktopu admina u bočnom
 meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“.
+Poruke sa klijentima (chat): `chat_sessions` (klijent, opciono termin, `expires_at` = kraj dana, `closed_at`, `assigned_to` = ko je prvi
+odgovorio), `chat_messages`, `chat_reads` (`last_read_message_id` po korisniku); pravila samo u `ChatService` (klijentova poruka otvara novi
+razgovor ako nema aktivnog, odgovor osoblja ponovo otvara završen; vlasnik i administrativni radnik vide sve, radnik samo razgovore o svojim
+terminima; nepročitano za osoblje = poruke klijenta). Pusher događaj `chat` na `private-user-{id}`; `chat:notify-unread` (na 5 min) šalje
+klijentu mejl / WhatsApp za poruke salona nepročitane 15 min (`notified_at`). Prekidač `chat_enabled` (podrazumevano uključen, Podešavanja →
+Zakazivanje). Frontend: `ChatService`, `<app-chat-thread>` (deljen prikaz i unos), klijent `<app-chat-widget>` (dugme dole desno u javnoj
+školjci, „Poruka salonu“ na terminu, `?chat=1`), osoblje `/admin/chat` (Aktivni / Završeni, `?session=` ili `?client=&appointment=&name=` za
+novu poruku iz detalja termina). Uslove nad spojenim tabelama ne pisati kao `whereRaw` sa imenima tabela — lokalna i produkciona baza imaju
+prefiks `zk_`, a testovi (SQLite) nemaju.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

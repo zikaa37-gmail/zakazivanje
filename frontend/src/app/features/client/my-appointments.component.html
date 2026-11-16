@@ -126,6 +126,9 @@
                   <button type="button" class="text-sm font-semibold text-[var(--color-primary-text)]" (click)="reschedule(a)" [attr.data-testid]="'my-reschedule-' + a.id">Promeni termin</button>
                 }
                 <button type="button" class="text-sm font-semibold text-[var(--color-danger)]" (click)="cancel(a)" [attr.data-testid]="'my-cancel-' + a.id">Otkaži</button>
+                @if (chat.enabled()) {
+                  <button type="button" class="text-[var(--color-primary-text)]" (click)="message(a)" aria-label="Poruka salonu o ovom terminu" title="Poruka salonu" [attr.data-testid]="'my-message-' + a.id"><span appIcon="message-square" [iconSize]="18" aria-hidden="true"></span></button>
+                }
               </span>
             } @else if (a.review) {
               <span class="flex items-center gap-2" [attr.data-testid]="'my-review-' + a.id">

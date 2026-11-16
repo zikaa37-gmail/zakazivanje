@@ -118,6 +118,7 @@ class BusinessSettingController extends Controller
             'notify_review_request' => ['sometimes', 'boolean'],
             'waitlist_enabled' => ['sometimes', 'boolean'],
             'linked_booking_enabled' => ['sometimes', 'boolean'],
+            'chat_enabled' => ['sometimes', 'boolean'],
             'report_auto_enabled' => ['sometimes', 'boolean'],
             'report_auto_daily' => ['sometimes', 'boolean'],
             'report_auto_weekly' => ['sometimes', 'boolean'],

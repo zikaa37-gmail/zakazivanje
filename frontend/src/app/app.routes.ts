@@ -149,6 +149,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/absences/absences.component').then((m) => m.AbsencesComponent),
       },
       {
+        path: 'chat',
+        title: 'Poruke',
+        loadComponent: () => import('./features/admin/chat/chat-page.component').then((m) => m.ChatPageComponent),
+      },
+      {
         path: 'notes',
         title: 'Beleške',
         loadComponent: () => import('./features/admin/notes/notes.component').then((m) => m.NotesComponent),

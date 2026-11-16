@@ -39,6 +39,16 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/auth/me` | trenutni korisnik |
+| POST | `/chat/unread-count` | `{count}` — nepročitane poruke (klijent: od salona; osoblje: od klijenata u vidljivim razgovorima) |
+| POST | `/chat/my` | klijent: poslednjih 10 razgovora sa porukama + `unread_count` |
+| POST | `/chat/my/messages` | klijent: `{body, appointment_id?}` — otvara razgovor ako nema aktivnog (403 kad je `chat_enabled` isključen) |
+| POST | `/chat/my/read` | klijent: označi sve pročitano |
+| POST | `/chat/sessions/list` | osoblje: `{status: active\|closed}` → `{sessions (unread, last_message), unread_count}` |
+| GET | `/chat/sessions/{id}` | osoblje: razgovor sa porukama i 3 ranija razgovora klijenta; označava pročitano |
+| POST | `/chat/sessions/{id}/messages` | osoblje: `{body}` (ponovo otvara završen razgovor) |
+| POST | `/chat/sessions/{id}/read` | osoblje: označi pročitano |
+| POST | `/chat/sessions/{id}/close` | osoblje: završi razgovor |
+| POST | `/chat/start` | osoblje: `{client_id, appointment_id?, body}` — klijent mora imati nalog (422) |
 | POST | `/inbox/list` | `{filter: unread\|all, before_id?}` → `{items, has_more, unread_count}` — moja obaveštenja (30 po strani) |
 | POST | `/inbox/unread-count` | `{count}` |
 | POST | `/inbox/{id}/read` | označi pročitano → `{count}` |

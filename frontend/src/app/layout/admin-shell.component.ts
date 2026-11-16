@@ -7,6 +7,7 @@ import { AppointmentService } from '../core/services/appointment.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
 import { StaffAbsenceService } from '../core/services/staff-absence.service';
 import { StaffNoteService } from '../core/services/staff-note.service';
+import { ChatService } from '../core/services/chat.service';
 import { InboxBellComponent } from '../shared/components/inbox-bell/inbox-bell.component';
 import { IconDirective, IconName } from '../shared/directives/icon.directive';
 
@@ -37,6 +38,7 @@ export class AdminShellComponent {
   protected appointments = inject(AppointmentService);
   protected notes = inject(StaffNoteService);
   protected absences = inject(StaffAbsenceService);
+  protected chat = inject(ChatService);
 
   readonly menuOpen = signal(false);
   readonly initials = computed(() => {
@@ -53,6 +55,7 @@ export class AdminShellComponent {
     { path: '/admin/dashboard', label: 'Pregled', icon: 'activity', section: 'daily' },
     { path: '/admin/calendar', label: 'Kalendar', icon: 'calendar', section: 'daily' },
     { path: '/admin/appointments', label: 'Termini', icon: 'check-square', section: 'daily' },
+    { path: '/admin/chat', label: 'Poruke', icon: 'send', section: 'daily' },
     { path: '/admin/notes', label: 'Beleške', icon: 'message-square', section: 'daily' },
     { path: '/admin/absences', label: 'Odsustva', icon: 'clock', section: 'daily' },
     { path: '/admin/clients', label: 'Klijenti', icon: 'user', section: 'daily', managerOnly: true },
@@ -74,7 +77,7 @@ export class AdminShellComponent {
   private router = inject(Router);
   private readonly url = signal(this.router.url);
   readonly section = signal<NavSection>(this.sectionOf(this.router.url));
-  readonly allowed = computed(() => this.allNav.filter((item) => !item.managerOnly || this.auth.isManager()));
+  readonly allowed = computed(() => this.allNav.filter((item) => (!item.managerOnly || this.auth.isManager()) && (item.path !== '/admin/chat' || this.chat.enabled())));
   readonly hasSections = computed(() => this.allowed().some((item) => item.section === 'manage'));
   readonly nav = computed(() => (this.hasSections() ? this.allowed().filter((item) => item.section === this.section()) : this.allowed()));
 
