@@ -284,6 +284,12 @@ na `private-salon` (osoblje) i `private-user-{id}` (klijent); poziva se samo iz 
 poruke), potpis kanala `POST /realtime/auth`. Frontend `RealtimeService` (pusher-js se učitava lenjo, ključ iz `/public/business` → `realtime`)
 prikazuje poruku (radnik vezan za zaposlenog samo za svoje, bez sopstvenih akcija) i podiže `version`, na koji kalendar, lista termina,
 pregled i Moji termini tiho osvežavaju (`quiet` = bez globalnog loadera).
+Centar obaveštenja (zvonce): `inbox_notifications` (po korisniku, `read_at`, briše se posle 180 dana `model:prune`); upisuje ga samo
+`Inbox::deliver($users, $notification)` preko `toInbox()` u klasi obaveštenja (naslov, tekst, relativan `link`), nezavisno od mejla /
+WhatsApp-a i prekidača obaveštenja, bez onoga ko je radnju uradio i bez klijenta bez naloga; termini: vlasnik i administrativni radnici
+uvek, radnik samo za svog zaposlenog. Nova obaveštenja za korisnika idu kroz `toInbox()` + `Inbox`. Pusher događaj `inbox` na
+`private-user-{id}` (osoblje sluša i taj kanal); frontend `InboxService` + `<app-inbox-bell>` (zaglavlje, a na desktopu admina u bočnom
+meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

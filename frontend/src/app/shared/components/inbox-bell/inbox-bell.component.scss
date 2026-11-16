@@ -1,0 +1,236 @@
+@use 'themes/breakpoints' as bp;
+
+:host {
+  display: inline-flex;
+}
+
+.bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-primary-tint);
+  }
+}
+
+.bell-count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.inbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  background: var(--color-overlay);
+}
+
+.inbox-panel {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--header-height) - 1rem);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 12px 32px var(--shadow-color);
+}
+
+.inbox-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.inbox-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.inbox-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--color-primary-text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.inbox-close {
+  display: inline-flex;
+  border: 0;
+  padding: 0.25rem;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.inbox-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inbox-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &.active {
+    color: var(--color-primary-text);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+  }
+}
+
+.inbox-tab-count {
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--color-primary-tint);
+  font-size: 0.7rem;
+}
+
+.inbox-list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.inbox-empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.inbox-item {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-bg);
+  }
+
+  &.unread {
+    background: var(--color-primary-tint);
+
+    .inbox-dot {
+      background: var(--color-primary);
+    }
+
+    .inbox-item-title {
+      font-weight: 700;
+    }
+  }
+}
+
+.inbox-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 0.4rem;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.inbox-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.inbox-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.inbox-item-body {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.inbox-item-time {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.inbox-more {
+  width: 100%;
+  padding: 0.75rem;
+  border: 0;
+  background: none;
+  color: var(--color-primary-text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+@include bp.md-up {
+  .inbox-backdrop {
+    background: transparent;
+  }
+
+  .inbox-panel {
+    top: calc(var(--header-height) + 0.25rem);
+    left: auto;
+    right: 1rem;
+    width: 400px;
+    max-height: min(560px, calc(100dvh - var(--header-height) - 2rem));
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .inbox-panel-sidebar {
+    top: 1rem;
+    left: calc(248px + 0.5rem);
+    right: auto;
+  }
+}

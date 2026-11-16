@@ -52,11 +52,20 @@ class WaitlistService
             ->get()
             ->each(function (WaitlistEntry $entry) use (&$sent) {
                 $times = $this->freeTimes($entry);
-                if ($times === [] || ! $entry->client || app(ClientDisciplineService::class)->hidesDate($entry->client, CarbonImmutable::parse($entry->date)) || $entry->client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) === []) {
+                $client = $entry->client;
+                if ($times === [] || ! $client || app(ClientDisciplineService::class)->hidesDate($client, CarbonImmutable::parse($entry->date))) {
+                    return;
+                }
+                $canSend = $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== [];
+                if (! $canSend && $client->password === null) {
                     return;
                 }
                 $entry->update(['notified_at' => now()]);
-                $entry->client->notify(new WaitlistNotification($entry, $times));
+                $notification = new WaitlistNotification($entry, $times);
+                app(Inbox::class)->deliver([$client], $notification);
+                if ($canSend) {
+                    $client->notify($notification);
+                }
                 $sent++;
             });
 

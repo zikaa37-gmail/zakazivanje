@@ -42,6 +42,18 @@ class ClientDisciplineNotification extends Notification implements ShouldQueue
         return ['mail'];
     }
 
+    public function toInbox(object $notifiable): array
+    {
+        $name = $this->client->fullName();
+
+        return [
+            'kind' => 'discipline',
+            'title' => $this->type === self::BLOCKED_ATTEMPT ? "Klijent {$name} pokušava da zakaže" : "Klijent {$name} je prešao u višu zonu",
+            'body' => 'Zona: '.(self::ZONE_LABELS[$this->client->discipline_zone] ?? $this->client->discipline_zone),
+            'link' => '/admin/clients?history='.$this->client->id,
+        ];
+    }
+
     public function toMail(object $notifiable): MailMessage
     {
         $business = BusinessSetting::current()->name;

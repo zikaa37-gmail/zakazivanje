@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
+import { InboxBellComponent } from '../shared/components/inbox-bell/inbox-bell.component';
 import { SocialLinksComponent } from '../shared/components/social-links/social-links.component';
 import { IconDirective, IconName } from '../shared/directives/icon.directive';
 
@@ -15,7 +16,7 @@ interface NavItem {
 @Component({
   selector: 'app-public-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconDirective, SocialLinksComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconDirective, SocialLinksComponent, InboxBellComponent],
   templateUrl: './public-shell.component.html',
   styleUrl: './public-shell.component.scss',
 })

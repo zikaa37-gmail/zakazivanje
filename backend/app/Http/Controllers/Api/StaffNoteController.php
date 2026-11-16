@@ -8,6 +8,7 @@ use App\Models\StaffMember;
 use App\Models\StaffNote;
 use App\Models\User;
 use App\Notifications\StaffNoteNotification;
+use App\Services\Inbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -90,7 +91,9 @@ class StaffNoteController extends Controller
         $recipients = User::whereKey($ids)->whereIn('role', User::STAFF_ROLES)->where('active', true)->whereKeyNot($user->id)->get();
         $note->recipients()->sync($recipients->pluck('id'));
         foreach ($recipients as $recipient) {
-            $recipient->notify(new StaffNoteNotification($note));
+            $notification = new StaffNoteNotification($note);
+            app(Inbox::class)->deliver([$recipient], $notification);
+            $recipient->notify($notification);
         }
 
         return response()->json($this->present($note->load(self::WITH), $user), 201);

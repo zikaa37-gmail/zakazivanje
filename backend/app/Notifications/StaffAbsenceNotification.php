@@ -37,6 +37,16 @@ class StaffAbsenceNotification extends Notification implements ShouldQueue
         return $this->type;
     }
 
+    public function toInbox(User $notifiable): array
+    {
+        return [
+            'kind' => 'absence',
+            'title' => $this->title(),
+            'body' => $this->summary(),
+            'link' => '/admin/absences?absence='.$this->absence->id,
+        ];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         $message = (new MailMessage)

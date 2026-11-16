@@ -38,6 +38,17 @@ class ReviewRequestNotification extends Notification implements ShouldQueue
         return $this->appointment->id;
     }
 
+    public function toInbox(User $notifiable): array
+    {
+        return [
+            'kind' => 'review',
+            'title' => 'Kako je bilo? Oceni posetu',
+            'body' => $this->services(),
+            'link' => '/my-appointments?review='.$this->appointment->id,
+            'appointment_id' => $this->appointment->id,
+        ];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         $business = BusinessSetting::current();

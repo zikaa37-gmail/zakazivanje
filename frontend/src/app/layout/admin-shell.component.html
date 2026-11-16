@@ -13,6 +13,7 @@
       <div class="shell-brand-name">{{ business.name() }}</div>
       <div class="shell-brand-role">{{ roleLabel() }}</div>
     </div>
+    <app-inbox-bell class="shell-bell-desktop" placement="sidebar" />
   </div>
 
   @if (hasSections()) {
@@ -72,7 +73,8 @@
   @if (appointments.pendingCount() > 0) {
     <a routerLink="/admin/appointments" class="badge badge-warning">{{ appointments.pendingCount() }} na čekanju</a>
   }
-  <span class="avatar avatar-initials avatar-sm ml-auto">{{ initials() }}</span>
+  <app-inbox-bell class="ml-auto" />
+  <span class="avatar avatar-initials avatar-sm">{{ initials() }}</span>
 </header>
 
 <main class="shell-main">

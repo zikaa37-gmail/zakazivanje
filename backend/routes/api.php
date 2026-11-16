@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\InstagramPostController;
 use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
+use App\Http\Controllers\Api\InboxController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
 use App\Http\Controllers\Api\RealtimeController;
@@ -67,6 +68,10 @@ Route::middleware('jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/realtime/auth', [RealtimeController::class, 'auth']);
+    Route::post('/inbox/list', [InboxController::class, 'index']);
+    Route::post('/inbox/unread-count', [InboxController::class, 'unreadCount']);
+    Route::post('/inbox/read-all', [InboxController::class, 'markAllRead']);
+    Route::post('/inbox/{id}/read', [InboxController::class, 'markRead'])->whereNumber('id');
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::put('/auth/favorite-staff', [AuthController::class, 'favoriteStaff']);

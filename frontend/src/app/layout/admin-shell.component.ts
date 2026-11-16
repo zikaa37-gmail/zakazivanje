@@ -7,6 +7,7 @@ import { AppointmentService } from '../core/services/appointment.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
 import { StaffAbsenceService } from '../core/services/staff-absence.service';
 import { StaffNoteService } from '../core/services/staff-note.service';
+import { InboxBellComponent } from '../shared/components/inbox-bell/inbox-bell.component';
 import { IconDirective, IconName } from '../shared/directives/icon.directive';
 
 type NavSection = 'daily' | 'manage';
@@ -23,7 +24,7 @@ interface NavItem {
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, IconDirective],
+  imports: [RouterOutlet, RouterLink, IconDirective, InboxBellComponent],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',
   host: {

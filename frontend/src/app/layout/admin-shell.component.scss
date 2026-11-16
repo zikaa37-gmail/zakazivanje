@@ -41,6 +41,11 @@ $sidebar: 248px;
   padding: 1.25rem 1.25rem 1rem;
 }
 
+.shell-bell-desktop {
+  display: none;
+  margin-left: auto;
+}
+
 .shell-logo {
   width: 40px;
   height: 40px;
@@ -206,6 +211,10 @@ $sidebar: 248px;
   .shell-backdrop,
   .shell-topbar {
     display: none;
+  }
+
+  .shell-bell-desktop {
+    display: inline-flex;
   }
 
   .shell-main {

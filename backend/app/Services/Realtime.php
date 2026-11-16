@@ -59,6 +59,11 @@ class Realtime
         }
     }
 
+    public function toUser(int $userId, string $event, array $data): void
+    {
+        $this->push(self::userChannel($userId), $data, $event);
+    }
+
     public function describe(Appointment $appointment, bool $withClient = true): string
     {
         $appointment->loadMissing(['items', 'staffMember', 'client']);
@@ -86,19 +91,19 @@ class Realtime
         ];
     }
 
-    private function push(string $channel, array $data): void
+    private function push(string $channel, array $data, string $event = self::EVENT): void
     {
         if (! $this->configured()) {
             return;
         }
 
-        defer(fn () => $this->send($channel, $data));
+        defer(fn () => $this->send($channel, $event, $data));
     }
 
-    protected function send(string $channel, array $data): void
+    protected function send(string $channel, string $event, array $data): void
     {
         try {
-            $this->client()->trigger($channel, self::EVENT, $data);
+            $this->client()->trigger($channel, $event, $data);
         } catch (Throwable $e) {
             Log::warning('Realtime push failed: '.$e->getMessage());
         }
