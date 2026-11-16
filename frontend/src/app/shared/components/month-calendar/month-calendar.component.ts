@@ -6,6 +6,7 @@ export interface MonthCalendarItem {
   label: string;
   color?: string | null;
   muted?: boolean;
+  count?: number;
 }
 
 const WEEKDAYS = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
@@ -21,6 +22,7 @@ export class MonthCalendarComponent {
   readonly items = input<MonthCalendarItem[]>([]);
   readonly maxPerDay = input(3);
   readonly selected = input<string | null>(null);
+  readonly caption = input('');
   readonly testId = input('', { alias: 'data-testid' });
 
   readonly dayClicked = output<string>();
@@ -44,7 +46,7 @@ export class MonthCalendarComponent {
       for (let d = 0; d < 7; d++) {
         const date = addDays(start, w * 7 + d);
         const items = byDate.get(date) ?? [];
-        days.push({ date, day: parseDate(date).getDate(), inMonth: date.slice(0, 7) === monthKey, items: items.slice(0, this.maxPerDay()), more: Math.max(0, items.length - this.maxPerDay()), count: items.length });
+        days.push({ date, day: parseDate(date).getDate(), inMonth: date.slice(0, 7) === monthKey, items: items.slice(0, this.maxPerDay()), more: Math.max(0, items.length - this.maxPerDay()), count: items.reduce((sum, item) => sum + (item.count ?? 1), 0) });
       }
       if (w < 4 || days.some((d) => d.inMonth)) weeks.push(days);
     }

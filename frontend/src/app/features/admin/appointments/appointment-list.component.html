@@ -8,31 +8,44 @@
   </button>
 </div>
 
-<div class="flex flex-wrap items-center gap-2 mb-4">
-  <div class="chip-group">
-    @for (p of periods; track p.value) {
-      <button type="button" class="chip" [class.selected]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'period-' + p.value">{{ p.label }}</button>
-    }
-    @if (period() === 'day') {
-      <button type="button" class="chip selected" aria-pressed="true" data-testid="period-day">{{ dayLabel() }}</button>
-    }
+<div class="sticky-toolbar mb-4" data-testid="appointment-filters">
+  <div class="flex items-center gap-2">
+    <div class="chip-scroll flex-1 min-w-0">
+      @for (p of periods; track p.value) {
+        <button type="button" class="chip shrink-0" [class.selected]="period() === p.value" (click)="period.set(p.value)" [attr.data-testid]="'period-' + p.value">{{ p.label }}</button>
+      }
+      @if (period() === 'day') {
+        <button type="button" class="chip selected shrink-0" aria-pressed="true" (click)="openPicker()" data-testid="period-day">{{ dayLabel() }}</button>
+      }
+    </div>
+    <button type="button" appBtn theme="secondary" size="s" class="shrink-0" (click)="openPicker()" aria-label="Izaberi datum u kalendaru" title="Izaberi datum" data-testid="period-calendar">
+      <span appIcon="calendar" aria-hidden="true"></span><span class="hidden sm:inline">Kalendar</span>
+    </button>
   </div>
-  <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni">
-    <option value="">Svi zaposleni</option>
-    @for (m of staff(); track m.id) {
-      <option [value]="m.id" [selected]="m.id === staffFilter()">{{ m.first_name }} {{ m.last_name }}</option>
-    }
-  </select>
-  <select appInput class="!w-auto" [value]="statusFilter() ?? ''" (change)="statusFilter.set($any($event.target).value || null)" aria-label="Status" data-testid="status-filter">
-    <option value="">Svi statusi</option>
-    @for (s of statusOptions; track s.value) {
-      <option [value]="s.value">{{ s.label }}</option>
-    }
-  </select>
-  <div class="relative flex-1 min-w-[12rem]">
-    <input appInput type="search" style="padding-left: 2.25rem" placeholder="Klijent ili telefon..." [formControl]="search" />
-    <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
-  </div>
+
+  <app-accordion [title]="filtersTitle()" [defaultOpen]="wideScreen" class="block mt-2" data-testid="appointment-more-filters">
+    <div class="flex flex-wrap items-center gap-2">
+      <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni" data-testid="staff-filter">
+        <option value="">Svi zaposleni</option>
+        @for (m of staff(); track m.id) {
+          <option [value]="m.id" [selected]="m.id === staffFilter()">{{ m.first_name }} {{ m.last_name }}</option>
+        }
+      </select>
+      <select appInput class="!w-auto" [value]="statusFilter() ?? ''" (change)="statusFilter.set($any($event.target).value || null)" aria-label="Status" data-testid="status-filter">
+        <option value="">Svi statusi</option>
+        @for (s of statusOptions; track s.value) {
+          <option [value]="s.value" [selected]="s.value === statusFilter()">{{ s.label }}</option>
+        }
+      </select>
+      <div class="relative flex-1 min-w-[12rem]">
+        <input appInput type="search" style="padding-left: 2.25rem" placeholder="Klijent ili telefon..." [formControl]="search" data-testid="appointment-search" />
+        <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
+      </div>
+      @if (activeFilters() > 0) {
+        <button type="button" appBtn theme="ghost" size="s" (click)="clearFilters()" data-testid="filters-clear">Poništi</button>
+      }
+    </div>
+  </app-accordion>
 </div>
 
 <app-error-message [message]="error()" />
@@ -88,6 +101,10 @@
       </div>
     }
   </div>
+}
+
+@if (pickerOpen()) {
+  <app-date-picker-dialog [date]="selectedDay()" [staffMemberId]="staffFilter()" (picked)="pickDay($event)" (closed)="pickerOpen.set(false)" />
 }
 
 @if (modalOpen()) {

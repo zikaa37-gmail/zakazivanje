@@ -74,6 +74,8 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
   (`ConfirmService`), `<app-toast-container>` (`ToastService`), globalni loader (`LoaderService` +
   `loaderInterceptor`, `SKIP_LOADER` za tihe pozive). Ostale komponente iz košarkaške (select,
   time-picker, data-list, row-actions, segmented-control...) prenose se kad zatrebaju.
+- Filteri lista i kalendara: `.sticky-toolbar` (ostaje gore dok se sadržaj skroluje) — periodi / prikaz uvek vidljivi, ostali filteri u
+  `<app-accordion>` „Filteri (n)“; izbor datuma `<app-date-picker-dialog>` (mesec sa brojem termina po danu, `staffMemberId`).
 - Globalne klase: `.card`, `.field`/`.field-error`, `.form-error-banner`, `.badge*`, `.data-table`,
   `.avatar*`, `.empty-state`, `.auth-page`/`.auth-card`, `.content-container`.
 - Format prikaza: datum `dd.mm.yyyy` (`SrDatePipe`), datum i vreme `SrDateTimePipe`, vreme `HH:mm`

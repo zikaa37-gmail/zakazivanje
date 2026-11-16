@@ -1,0 +1,11 @@
+<app-modal title="Izaberi datum" footerMode="none" (cancelled)="closed.emit()" testId="date-picker">
+  <div class="flex items-center justify-between gap-2 mb-3">
+    <button type="button" class="btn-icon" aria-label="Prethodni mesec" (click)="step(-1)" data-testid="picker-prev"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+    <span class="font-semibold">{{ title() }}</span>
+    <button type="button" class="btn-icon" aria-label="Sledeći mesec" (click)="step(1)" data-testid="picker-next"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+  </div>
+  <app-month-calendar [month]="month()" [items]="items()" [maxPerDay]="1" [selected]="date()" (dayClicked)="picked.emit($event)" data-testid="picker" />
+  <div class="flex justify-center mt-3">
+    <button type="button" appBtn theme="ghost" size="s" (click)="picked.emit(todayIso)" data-testid="picker-today">Danas</button>
+  </div>
+</app-modal>
