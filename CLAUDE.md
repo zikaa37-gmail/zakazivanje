@@ -301,6 +301,13 @@ Zakazivanje). Frontend: `ChatService`, `<app-chat-thread>` (deljen prikaz i unos
 školjci, „Poruka salonu“ na terminu, `?chat=1`), osoblje `/admin/chat` (Aktivni / Završeni, `?session=` ili `?client=&appointment=&name=` za
 novu poruku iz detalja termina). Uslove nad spojenim tabelama ne pisati kao `whereRaw` sa imenima tabela — lokalna i produkciona baza imaju
 prefiks `zk_`, a testovi (SQLite) nemaju.
+PWA i push na telefon: manifest `GET /api/public/manifest.webmanifest` i ikonica `GET /api/public/app-icon/{180|192|512}.png` (iz logoa salona,
+pozadina = boja ugla logoa; bez logoa početno slovo na primarnoj boji), `frontend/public/sw.js` (push → obaveštenje + `setAppBadge`, klik otvara
+`link`). Web Push sa sopstvenim VAPID ključevima (`WEBPUSH_*` u `.env`, `minishlink/web-push`), `push_subscriptions` po uređaju;
+`WebPushService::toUser()` šalju samo `Inbox::deliver()` i `ChatService` (broj na ikonici = nepročitano u zvoncetu + chat). Frontend
+`PushService` (registracija SW, pretplata, `setAppBadge`, instalacija) i `<app-device-notifications>` u oba profila + poziv u zvoncetu; na iPhone-u
+samo posle „Dodaj na početni ekran“. Odjava šalje `push_endpoint` i briše pretplatu tog uređaja. Lokalno na Windows-u OpenSSL traži
+`OPENSSL_CONF` — `ServeCommand` ga postavlja iz `extras/ssl/openssl.cnf` pri `php artisan serve`.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
 radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.

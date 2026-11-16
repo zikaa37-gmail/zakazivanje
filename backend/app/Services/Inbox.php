@@ -10,7 +10,7 @@ class Inbox
 {
     public const EVENT = 'inbox';
 
-    public function __construct(private Realtime $realtime) {}
+    public function __construct(private Realtime $realtime, private WebPushService $webPush) {}
 
     public function deliver(iterable $users, object $notification): void
     {
@@ -28,6 +28,7 @@ class Inbox
                 'body' => $item->body,
                 'link' => $item->link,
             ]);
+            $this->webPush->toUser($user->id, $item->title, $item->body, $item->link, 'inbox-'.$item->id);
         }
     }
 

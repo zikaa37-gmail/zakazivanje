@@ -17,7 +17,7 @@ class ChatService
 {
     public const EVENT = 'chat';
 
-    public function __construct(private Realtime $realtime) {}
+    public function __construct(private Realtime $realtime, private WebPushService $webPush) {}
 
     public function ensureEnabled(): void
     {
@@ -173,8 +173,23 @@ class ChatService
         $this->markRead($session, $author);
 
         $this->broadcast($session, ['session_id' => $session->id, 'message' => $this->present($message)], $author->id);
+        $this->pushMessage($session, $message, $author);
 
         return $message;
+    }
+
+    private function pushMessage(ChatSession $session, ChatMessage $message, User $author): void
+    {
+        $body = mb_strimwidth($message->body, 0, 160, '…');
+        if ($author->id === $session->client_id) {
+            foreach ($this->staffRecipients($session) as $staff) {
+                $this->webPush->toUser($staff->id, 'Poruka: '.$author->fullName(), $body, '/admin/chat?session='.$session->id, 'chat-'.$session->id);
+            }
+
+            return;
+        }
+
+        $this->webPush->toUser($session->client_id, BusinessSetting::current()->name, $body, '/?chat=1', 'chat-'.$session->id);
     }
 
     private function broadcast(ChatSession $session, array $data, ?int $exceptUserId = null): void

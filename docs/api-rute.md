@@ -7,6 +7,8 @@ Osnova: `/api`. Zaštićene rute traže `Authorization: Bearer <access_token>`.
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/health` | provera da backend radi |
+| GET | `/public/manifest.webmanifest` | PWA manifest (naziv i boja salona) |
+| GET | `/public/app-icon/{180\|192\|512}.png` | ikonica aplikacije iz logoa (`?maskable=1` sa većom marginom) |
 | GET | `/public/business` | podaci o biznisu (naziv, delatnost, kontakt, logo, boje teme, režim potvrde) + `opening_hours` (radno vreme salona) i `shifts` (smene) |
 | GET | `/public/business/cover` | naslovna fotografija salona (fajl, keš 7 dana; `cover_url` u `/public/business`) |
 | GET | `/public/services` | usluge koje se nude online (aktivne, u aktivnoj kategoriji), poređane po redosledu kategorija, sa `category` (naziv) i zaposlenima koji ih rade |
@@ -39,6 +41,9 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/auth/me` | trenutni korisnik |
+| POST | `/push/subscribe` | `{endpoint, keys: {p256dh, auth}}` — push na ovom uređaju (404 bez VAPID ključeva) → `{badge}` |
+| POST | `/push/unsubscribe` | `{endpoint}` |
+| POST | `/push/badge` | `{badge}` — nepročitano (zvonce + chat) |
 | POST | `/chat/unread-count` | `{count}` — nepročitane poruke (klijent: od salona; osoblje: od klijenata u vidljivim razgovorima) |
 | POST | `/chat/my` | klijent: poslednjih 10 razgovora sa porukama + `unread_count` |
 | POST | `/chat/my/messages` | klijent: `{body, appointment_id?}` — otvara razgovor ako nema aktivnog (403 kad je `chat_enabled` isključen) |

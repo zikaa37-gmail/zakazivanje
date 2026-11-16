@@ -21,6 +21,22 @@ class ServeCommand extends BaseServeCommand
         }
     }
 
+    #[\Override]
+    public function handle()
+    {
+        self::useBundledOpenSslConfig();
+
+        return parent::handle();
+    }
+
+    public static function useBundledOpenSslConfig(): void
+    {
+        $config = dirname(PHP_BINARY).DIRECTORY_SEPARATOR.'extras'.DIRECTORY_SEPARATOR.'ssl'.DIRECTORY_SEPARATOR.'openssl.cnf';
+        if (PHP_OS_FAMILY === 'Windows' && getenv('OPENSSL_CONF') === false && is_file($config)) {
+            putenv('OPENSSL_CONF='.$config);
+        }
+    }
+
     private static function portInUse(int $port): bool
     {
         $connection = @fsockopen('127.0.0.1', $port, $errorCode, $errorMessage, 0.3);

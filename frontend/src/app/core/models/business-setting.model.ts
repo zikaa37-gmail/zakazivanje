@@ -38,6 +38,7 @@ export interface BusinessSetting {
   ai_enabled?: boolean;
   ai_available?: boolean;
   realtime?: { key: string; cluster: string } | null;
+  push_public_key?: string | null;
   description: string | null;
   address: string | null;
   city: string | null;

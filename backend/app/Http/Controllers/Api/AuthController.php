@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ClientDisciplineService;
 use App\Services\JwtService;
 use App\Services\MarketingService;
+use App\Services\WebPushService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -141,11 +142,15 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $data = $request->validate(['refresh_token' => ['sometimes', 'string']]);
+        $data = $request->validate(['refresh_token' => ['sometimes', 'string'], 'push_endpoint' => ['nullable', 'string', 'max:2000']]);
 
         if (! empty($data['refresh_token'])) {
             RefreshToken::where('token_hash', hash('sha256', $data['refresh_token']))
                 ->update(['revoked_at' => now()]);
+        }
+
+        if (! empty($data['push_endpoint'])) {
+            app(WebPushService::class)->unsubscribe($data['push_endpoint']);
         }
 
         return response()->json(['message' => 'Odjavljeni ste.']);
