@@ -52,5 +52,11 @@
         }
       }
     </div>
+
+    @if (push.state() === 'off' || push.state() === 'needs-install') {
+      <button type="button" class="inbox-push" [disabled]="push.busy()" (click)="enablePush()" data-testid="inbox-push">
+        <span appIcon="bell" [iconSize]="16" aria-hidden="true"></span> Uključi obaveštenja na telefonu
+      </button>
+    }
   </section>
 }

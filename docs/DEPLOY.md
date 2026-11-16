@@ -105,6 +105,14 @@ na čekanju), a klijent potvrdu, otkazivanje i pomeranje od strane salona u „M
 
 Bez ključeva se ništa ne šalje i aplikacija radi kao ranije (mejl / WhatsApp ostaju nezavisni).
 
+## Push obaveštenja na telefon (PWA)
+
+Aplikacija se instalira na telefon („Dodaj na početni ekran“) i šalje obaveštenja i kad je zatvorena, sa brojem nepročitanih na ikonici.
+U `deploy/.env` (i lokalno u `backend/.env`) moraju biti `WEBPUSH_PUBLIC_KEY`, `WEBPUSH_PRIVATE_KEY` i `WEBPUSH_SUBJECT` (`mailto:` adresa
+salona). Ključevi se prave jednom (`php -r "require 'vendor/autoload.php'; print_r(Minishlink\WebPush\VAPID::createVapidKeys());"` iz
+`backend/`; na Windows-u pre toga `set OPENSSL_CONF=C:\PHP\...\extras\ssl\openssl.cnf`) i ne menjaju se — novi ključevi poništavaju sve
+postojeće pretplate. Bez ključeva dugme „Uključi obaveštenja“ se ne prikazuje. Sajt mora biti na HTTPS-u (`sw.js` u korenu poddomena).
+
 ## Provera
 
 - `https://zakazivanje.fiskultura.rs/` učitava aplikaciju.

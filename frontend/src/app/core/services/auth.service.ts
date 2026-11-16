@@ -8,6 +8,7 @@ import { CommunicationChannel, User } from '../models/user.model';
 import { MarketingService } from './marketing.service';
 
 const ACCESS_TOKEN_KEY = 'zk_access_token';
+export const PUSH_ENDPOINT_KEY = 'zk_push_endpoint';
 const REFRESH_TOKEN_KEY = 'zk_refresh_token';
 const USER_KEY = 'zk_user';
 
@@ -131,7 +132,7 @@ export class AuthService {
   }
 
   logout(redirectTo = '/login'): void {
-    this.http.post(`${this.api}/logout`, { refresh_token: this.getRefreshToken() }, quiet()).subscribe({
+    this.http.post(`${this.api}/logout`, { refresh_token: this.getRefreshToken(), push_endpoint: localStorage.getItem(PUSH_ENDPOINT_KEY) }, quiet()).subscribe({
       complete: () => this.clearSession(redirectTo),
       error: () => this.clearSession(redirectTo),
     });

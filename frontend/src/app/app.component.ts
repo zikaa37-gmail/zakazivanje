@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { MarketingService } from './core/services/marketing.service';
+import { PushService } from './core/services/push.service';
 import { RealtimeService } from './core/services/realtime.service';
 import { ThemeService } from './core/services/theme.service';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
@@ -22,5 +23,6 @@ export class AppComponent {
     inject(ThemeService).init();
     inject(MarketingService).capture();
     inject(RealtimeService);
+    inject(PushService);
   }
 }

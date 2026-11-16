@@ -33,6 +33,8 @@
         <env name="PUSHER_APP_KEY" value=""/>
         <env name="PUSHER_APP_SECRET" value=""/>
         <env name="PUSHER_APP_ID" value=""/>
+        <env name="WEBPUSH_PUBLIC_KEY" value=""/>
+        <env name="WEBPUSH_PRIVATE_KEY" value=""/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

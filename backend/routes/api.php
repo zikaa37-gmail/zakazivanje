@@ -14,7 +14,9 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\InstagramPostController;
 use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
+use App\Http\Controllers\Api\AppManifestController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\PushController;
 use App\Http\Controllers\Api\InboxController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
@@ -32,6 +34,8 @@ use App\Http\Controllers\Api\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
+Route::get('/public/manifest.webmanifest', [AppManifestController::class, 'manifest'])->middleware('throttle:public');
+Route::get('/public/app-icon/{size}.png', [AppManifestController::class, 'icon'])->whereNumber('size')->middleware('throttle:public');
 Route::get('/public/business', [BusinessSettingController::class, 'show'])->middleware(['jwt.optional', 'throttle:public']);
 Route::get('/public/business/cover', [BusinessSettingController::class, 'cover']);
 Route::get('/public/services', [ServiceController::class, 'publicIndex'])->middleware('throttle:public');
@@ -69,6 +73,9 @@ Route::middleware('jwt')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/realtime/auth', [RealtimeController::class, 'auth']);
+    Route::post('/push/subscribe', [PushController::class, 'subscribe']);
+    Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe']);
+    Route::post('/push/badge', [PushController::class, 'badge']);
     Route::post('/chat/unread-count', [ChatController::class, 'unreadCount']);
     Route::post('/chat/my', [ChatController::class, 'mine']);
     Route::post('/chat/my/messages', [ChatController::class, 'sendMine'])->middleware('throttle:chat');

@@ -8,6 +8,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { ChangePasswordComponent } from '../../shared/components/change-password/change-password.component';
+import { DeviceNotificationsComponent } from '../../shared/components/device-notifications/device-notifications.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
@@ -16,7 +17,7 @@ import { InputDirective } from '../../shared/directives/input.directive';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ChangePasswordComponent, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ChangePasswordComponent, DeviceNotificationsComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent {

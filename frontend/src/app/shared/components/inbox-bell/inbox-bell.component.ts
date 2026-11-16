@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 import { InboxFilter, InboxItem, InboxService } from '../../../core/services/inbox.service';
+import { PushService } from '../../../core/services/push.service';
 import { IconDirective } from '../../directives/icon.directive';
 import { SrDateTimePipe } from '../../pipes/sr-date-time.pipe';
 
@@ -17,6 +19,8 @@ import { SrDateTimePipe } from '../../pipes/sr-date-time.pipe';
 export class InboxBellComponent {
   protected inbox = inject(InboxService);
   private router = inject(Router);
+  private auth = inject(AuthService);
+  protected push = inject(PushService);
 
   readonly placement = input<'header' | 'sidebar'>('header');
   readonly open = signal(false);
@@ -42,6 +46,12 @@ export class InboxBellComponent {
 
   select(filter: InboxFilter): void {
     if (filter !== this.inbox.filter()) this.inbox.load(filter);
+  }
+
+  async enablePush(): Promise<void> {
+    if (this.push.state() === 'off' && (await this.push.enable())) return;
+    this.close();
+    void this.router.navigateByUrl(this.auth.isStaff() ? '/admin/profile' : '/profile');
   }
 
   openItem(item: InboxItem): void {

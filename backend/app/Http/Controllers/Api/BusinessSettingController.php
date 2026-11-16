@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\ReportNotification;
 use App\Services\InstagramService;
 use App\Services\Realtime;
+use App\Services\WebPushService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -42,6 +43,7 @@ class BusinessSettingController extends Controller
             ])->all(),
             'instagram_oauth_available' => app(InstagramService::class)->oauthAvailable(),
             'realtime' => app(Realtime::class)->publicConfig(),
+            'push_public_key' => app(WebPushService::class)->publicKey(),
             'shifts' => Shift::query()->orderBy('sort_order')->orderBy('starts_at')->get(['id', 'name', 'starts_at', 'ends_at', 'sort_order']),
         ];
     }
