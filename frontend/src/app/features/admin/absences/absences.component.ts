@@ -18,11 +18,12 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { AppointmentActionsService } from '../appointments/appointment-actions.service';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
 @Component({
   selector: 'app-absences',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
   template: `
     <div class="page-header">
       <div>
@@ -122,7 +123,7 @@ import { AppointmentActionsService } from '../appointments/appointment-actions.s
                       <div class="flex flex-wrap items-baseline justify-between gap-2">
                         <div>
                           <div class="font-semibold">{{ when(t) }}</div>
-                          <div class="text-sm">{{ t.client?.first_name }} {{ t.client?.last_name }} · <span class="muted">{{ services(t) }}</span></div>
+                          <div class="text-sm">{{ t.client | clientName }} · <span class="muted">{{ services(t) }}</span></div>
                         </div>
                         @if (t.free_change_reason === 'salon_request') {
                           <span class="badge badge-info">Poslato klijentu</span>

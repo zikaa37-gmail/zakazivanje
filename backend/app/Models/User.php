@@ -15,10 +15,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password', 'cancellation_discount_type', 'cancellation_discount_value'])]
-#[Hidden(['password', 'remember_token', 'email_verification_token', ...self::DISCIPLINE_FIELDS, ...self::CANCELLATION_FIELDS])]
+#[Fillable(['first_name', 'last_name', 'nickname', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password', 'cancellation_discount_type', 'cancellation_discount_value'])]
+#[Hidden(['password', 'remember_token', 'email_verification_token', 'nickname',...self::DISCIPLINE_FIELDS, ...self::CANCELLATION_FIELDS])]
 #[Appends(['suspended'])]
 class User extends Authenticatable
 {
@@ -154,6 +155,21 @@ class User extends Authenticatable
     public function fullName(): string
     {
         return trim($this->first_name.' '.$this->last_name);
+    }
+
+    public function salonName(): string
+    {
+        return filled($this->nickname) ? $this->nickname : $this->fullName();
+    }
+
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+        if (Auth::user()?->isStaff() && array_key_exists('nickname', $this->getAttributes())) {
+            $array['nickname'] = $this->nickname;
+        }
+
+        return $array;
     }
 
     public const VERIFICATION_DAYS = 3;

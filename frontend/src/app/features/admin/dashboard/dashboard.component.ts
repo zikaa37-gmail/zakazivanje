@@ -22,6 +22,7 @@ import { IconDirective } from '../../../shared/directives/icon.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { AppointmentDetailsComponent } from '../appointments/appointment-details.component';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
 type Period = '7' | '30' | '90' | 'month';
 
@@ -62,7 +63,7 @@ function readChartsPreference(): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
+  imports: [ClientNamePipe, RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
@@ -289,7 +290,7 @@ export class DashboardComponent {
     this.loadToday();
   }
 
-  private loadToday(quiet = false): void {
+  loadToday(quiet = false): void {
     this.dashboard.today(this.canFilterStaff() ? this.staffFilter() : null, quiet).subscribe({
       next: (data) => this.todayData.set(data),
       error: (err) => this.error.set(apiErrorMessage(err, 'Učitavanje pregleda nije uspelo.')),

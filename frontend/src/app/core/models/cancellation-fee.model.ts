@@ -37,7 +37,7 @@ export interface CancellationFee {
   payment_method: PaymentMethod | null;
   created_at: string;
   appointment?: { id: number; starts_at: string; items?: { name: string }[] };
-  client?: { id: number; first_name: string; last_name: string; phone: string | null };
+  client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null };
   decider?: { id: number; first_name: string; last_name: string } | null;
 }
 

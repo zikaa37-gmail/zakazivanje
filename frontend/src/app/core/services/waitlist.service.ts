@@ -22,7 +22,7 @@ export interface WaitlistEntry {
   staff_member: { id: number; first_name: string; last_name: string } | null;
   notified_at: string | null;
   created_at: string;
-  client?: { id: number; first_name: string; last_name: string; phone: string | null; email: string | null };
+  client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null };
 }
 
 @Injectable({ providedIn: 'root' })

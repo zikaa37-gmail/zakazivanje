@@ -45,7 +45,7 @@ class ReviewController extends Controller
             ->when($data['rating'] ?? null, fn ($q, $rating) => $q->where('rating', $rating))
             ->when($data['staff_member_id'] ?? null, fn ($q, $id) => $q->where('staff_member_id', $id))
             ->when(isset($data['visible']), fn ($q) => $q->where('visible', $data['visible']))
-            ->with(['client:id,first_name,last_name,email,phone', 'staffMember:id,first_name,last_name,color', 'appointment:id,starts_at', 'appointment.items'])
+            ->with(['client:id,first_name,last_name,nickname,email,phone', 'staffMember:id,first_name,last_name,color', 'appointment:id,starts_at', 'appointment.items'])
             ->latest()
             ->limit(200)
             ->get();
@@ -81,7 +81,7 @@ class ReviewController extends Controller
         }
         $review->update($data);
 
-        return $review->load(['client:id,first_name,last_name,email,phone', 'staffMember:id,first_name,last_name,color', 'appointment:id,starts_at', 'appointment.items']);
+        return $review->load(['client:id,first_name,last_name,nickname,email,phone', 'staffMember:id,first_name,last_name,color', 'appointment:id,starts_at', 'appointment.items']);
     }
 
     public function store(Request $request, Appointment $appointment)

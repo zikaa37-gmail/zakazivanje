@@ -20,7 +20,7 @@ class DashboardService
         $appointments = Appointment::query()
             ->whereDate('starts_at', $date->toDateString())
             ->where('status', '!=', Appointment::STATUS_CANCELLED)
-            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone'])
+            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone'])
             ->orderBy('starts_at')
             ->get();
         $mine = $staffId ? $appointments->where('staff_member_id', $staffId)->values() : $appointments;
@@ -31,7 +31,7 @@ class DashboardService
             ->where('status', Appointment::STATUS_PENDING)
             ->where('starts_at', '>=', now())
             ->when($staffId, fn ($q) => $q->where('staff_member_id', $staffId))
-            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,phone'])
+            ->with(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone'])
             ->orderBy('starts_at')
             ->limit(10)
             ->get();

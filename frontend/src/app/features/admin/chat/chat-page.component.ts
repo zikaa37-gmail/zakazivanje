@@ -11,6 +11,7 @@ import { ErrorMessageComponent } from '../../../shared/components/error-message/
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
+import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
 interface Draft {
   clientId: number;
@@ -21,7 +22,7 @@ interface Draft {
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SrDatePipe],
+  imports: [ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SrDatePipe],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })

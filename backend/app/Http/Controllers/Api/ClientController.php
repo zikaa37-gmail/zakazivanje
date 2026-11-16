@@ -33,6 +33,7 @@ class ClientController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('nickname', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%");
                 });
@@ -55,6 +56,17 @@ class ClientController extends Controller
         abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $client->update($this->validated($request, $client));
+
+        return $this->present($client);
+    }
+
+    public function nickname(Request $request, User $client)
+    {
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
+
+        $data = $request->validate(['nickname' => ['nullable', 'string', 'max:60']], ['nickname.max' => 'Nadimak može imati najviše 60 znakova.']);
+        $client->nickname = filled($data['nickname'] ?? null) ? trim($data['nickname']) : null;
+        $client->save();
 
         return $this->present($client);
     }
@@ -115,6 +127,7 @@ class ClientController extends Controller
         return $request->validate([
             'first_name' => ['required', 'string', 'min:2', 'max:100'],
             'last_name' => ['required', 'string', 'min:1', 'max:100'],
+            'nickname' => ['nullable', 'string', 'max:60'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($client?->id)],
             'phone' => ['required', 'string', 'max:30', self::PHONE_PATTERN],
             'whatsapp_number' => ['nullable', 'string', 'max:30', self::PHONE_PATTERN],

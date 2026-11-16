@@ -44,7 +44,7 @@ class ClientDisciplineNotification extends Notification implements ShouldQueue
 
     public function toInbox(object $notifiable): array
     {
-        $name = $this->client->fullName();
+        $name = $this->client->salonName();
 
         return [
             'kind' => 'discipline',
@@ -57,7 +57,7 @@ class ClientDisciplineNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $business = BusinessSetting::current()->name;
-        $name = $this->client->fullName();
+        $name = $this->client->salonName();
         $zone = self::ZONE_LABELS[$this->client->discipline_zone] ?? $this->client->discipline_zone;
         $url = rtrim(config('app.frontend_url'), '/').'/admin/clients?history='.$this->client->id;
 

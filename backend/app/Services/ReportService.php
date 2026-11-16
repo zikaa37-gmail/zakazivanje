@@ -78,7 +78,7 @@ class ReportService
         $appointments = Appointment::query()
             ->whereBetween('starts_at', [$from->startOfDay(), $to->endOfDay()])
             ->when($staff, fn ($q) => $q->where('staff_member_id', $staff->id))
-            ->with(['items', 'client:id,first_name,last_name', 'staffMember:id,first_name,last_name'])
+            ->with(['items', 'client:id,first_name,last_name,nickname', 'staffMember:id,first_name,last_name'])
             ->orderBy('starts_at')
             ->get();
 
@@ -130,7 +130,7 @@ class ReportService
                 'id' => $a->id,
                 'date' => $a->starts_at->format('Y-m-d'),
                 'time' => $a->starts_at->format('H:i').'–'.$a->ends_at->format('H:i'),
-                'client' => $a->client ? trim($a->client->first_name.' '.$a->client->last_name) : '—',
+                'client' => $a->client?->salonName() ?? '—',
                 'staff' => $a->staffMember ? trim($a->staffMember->first_name.' '.$a->staffMember->last_name) : '—',
                 'services' => $a->items->pluck('name')->join(', '),
                 'status' => $a->status,

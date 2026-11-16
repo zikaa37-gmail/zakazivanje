@@ -42,7 +42,7 @@ export interface ChatSession {
 }
 
 export interface ChatSessionDetail extends ChatSession {
-  client: { id: number; first_name: string; last_name: string; phone: string | null; email: string | null } | null;
+  client: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null } | null;
   earlier: ChatSession[];
   unread_count: number;
 }

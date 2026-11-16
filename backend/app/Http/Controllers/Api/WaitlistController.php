@@ -74,7 +74,7 @@ class WaitlistController extends Controller
     {
         return WaitlistEntry::query()
             ->active()
-            ->with(['client:id,first_name,last_name,phone,email', 'staffMember:id,first_name,last_name'])
+            ->with(['client:id,first_name,last_name,nickname,phone,email', 'staffMember:id,first_name,last_name'])
             ->orderBy('date')
             ->orderBy('created_at')
             ->limit(200)

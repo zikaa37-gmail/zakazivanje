@@ -69,7 +69,7 @@ class Realtime
         $appointment->loadMissing(['items', 'staffMember', 'client']);
         $start = CarbonImmutable::parse($appointment->starts_at);
         $parts = [
-            $withClient && $appointment->client ? trim($appointment->client->first_name.' '.$appointment->client->last_name) : null,
+            $withClient && $appointment->client ? $appointment->client->salonName() : null,
             $start->format('d.m.').' u '.$start->format('H:i'),
             $appointment->items->pluck('name')->join(' + '),
             $appointment->staffMember?->first_name,

@@ -70,7 +70,7 @@
             <span class="w-1 self-stretch rounded" [style.background]="a.staff_member?.color || 'var(--color-primary)'"></span>
             <div class="min-w-0 flex-1" [class.cancelled-content]="a.status === 'cancelled'">
               <div class="font-semibold truncate">
-                {{ a.client?.first_name }} {{ a.client?.last_name }}
+                {{ a.client | clientName }}
                 @if (a.recurrence_id) {
                   <span appIcon="rotate-ccw" [iconSize]="13" class="muted" title="Ponavlja se"></span>
                 }

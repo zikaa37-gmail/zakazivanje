@@ -183,7 +183,7 @@ class ChatService
         $body = mb_strimwidth($message->body, 0, 160, '…');
         if ($author->id === $session->client_id) {
             foreach ($this->staffRecipients($session) as $staff) {
-                $this->webPush->toUser($staff->id, 'Poruka: '.$author->fullName(), $body, '/admin/chat?session='.$session->id, 'chat-'.$session->id);
+                $this->webPush->toUser($staff->id, 'Poruka: '.$author->salonName(), $body, '/admin/chat?session='.$session->id, 'chat-'.$session->id);
             }
 
             return;
