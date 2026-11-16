@@ -83,6 +83,20 @@ export class ThemeService {
     if (!isHexColor(this.brand.primary)) {
       ['--color-chart', '--color-chart-active', '--color-chart-track'].forEach((name) => style.removeProperty(name));
     }
+
+    this.applyBrowserBarColor();
+  }
+
+  private applyBrowserBarColor(): void {
+    const color = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
+    if (!color) return;
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+    meta.content = color;
   }
 
   private readStoredBrand(): BrandColors {
