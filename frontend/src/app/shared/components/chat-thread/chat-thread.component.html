@@ -1,0 +1,43 @@
+<div class="chat-scroll" #scroller data-testid="chat-messages">
+  <ng-content />
+  @if (blocks().length === 0 && emptyText()) {
+    <p class="chat-empty muted">{{ emptyText() }}</p>
+  }
+  @for (block of blocks(); track block.session.id) {
+    <div class="chat-divider">
+      <span>{{ block.session.created_at | srDate }}{{ block.session.active ? '' : ' · završen' }}</span>
+    </div>
+    @if (block.session.appointment; as ap) {
+      <div class="chat-context">Termin {{ ap.starts_at | srDate }} u {{ ap.starts_at.slice(11, 16) }} · {{ ap.services }}</div>
+    }
+    @for (m of block.messages; track m.id) {
+      <div class="chat-row" [class.own]="own(m)" [attr.data-testid]="'chat-message-' + m.id">
+        <div class="chat-bubble">
+          @if (!own(m) || (perspective() === 'staff' && !m.from_client)) {
+            <span class="chat-author">{{ m.author_name ?? 'Salon' }}</span>
+          }
+          <span class="chat-body">{{ m.body }}</span>
+          <span class="chat-time">{{ time(m) }}</span>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<form class="chat-composer" (submit)="$event.preventDefault(); submit()">
+  <textarea
+    #input
+    rows="1"
+    class="chat-input"
+    [placeholder]="placeholder()"
+    [value]="draft()"
+    (input)="draft.set($any($event.target).value)"
+    (keydown)="onKey($event)"
+    maxlength="2000"
+    aria-label="Poruka"
+    data-testid="chat-input"
+  ></textarea>
+  <button type="submit" class="chat-send" [disabled]="!draft().trim() || sending()" aria-label="Pošalji" data-testid="chat-send">
+    <span appIcon="send" [iconSize]="18" aria-hidden="true"></span>
+  </button>
+</form>

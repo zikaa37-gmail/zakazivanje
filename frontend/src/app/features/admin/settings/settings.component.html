@@ -492,6 +492,12 @@
           <app-toggle [checked]="form.controls.linked_booking_enabled.value" label="Klijenti mogu da zakažu povezane usluge" (checkedChange)="form.controls.linked_booking_enabled.setValue($event)" data-testid="settings-linked-booking" />
         </div>
 
+        <div class="card max-w-2xl mb-4">
+          <h2 class="text-base font-semibold">Poruke sa klijentima</h2>
+          <p class="text-sm muted mb-2">Klijent u aplikaciji ima dugme za poruke (dole desno) i „Poruka salonu“ na svom terminu, a osoblje odgovara u meniju Poruke. Razgovor traje do kraja dana ili dok ga ne završite. Poruku koju klijent ne pročita za 15 minuta dobija i mejlom / WhatsApp-om.</p>
+          <app-toggle [checked]="form.controls.chat_enabled.value" label="Klijenti mogu da pišu salonu" (checkedChange)="form.controls.chat_enabled.setValue($event)" data-testid="settings-chat" />
+        </div>
+
         <div class="card max-w-2xl">
           <h2 class="text-base font-semibold">Potvrda termina</h2>
           <p class="text-sm muted">Podrazumevano za ceo biznis. Svaki zaposleni može da ima svoj režim (Zaposleni → Izmeni).</p>

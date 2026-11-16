@@ -30,6 +30,10 @@
   </footer>
 </main>
 
+@if (showChat()) {
+  <app-chat-widget />
+}
+
 <nav class="public-bottom-nav" aria-label="Meni">
   @for (item of nav(); track item.path) {
     <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }" [attr.data-testid]="'bottom-nav-' + item.label">

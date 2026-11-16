@@ -1,0 +1,42 @@
+@if (!chat.widgetOpen()) {
+  <button type="button" class="chat-fab" (click)="toggle()" aria-label="Poruke salonu" data-testid="chat-fab">
+    <span appIcon="message-square" [iconSize]="24" aria-hidden="true"></span>
+    @if (chat.unreadCount() > 0) {
+      <span class="chat-fab-count" data-testid="chat-fab-count">{{ countLabel() }}</span>
+    }
+  </button>
+} @else {
+  <section class="chat-panel" role="dialog" aria-label="Poruke salonu" data-testid="chat-panel">
+    <header class="chat-head">
+      @if (business.logo()) {
+        <img class="chat-logo" [src]="business.logo()" alt="" />
+      }
+      <div class="min-w-0 flex-1">
+        <div class="chat-title">{{ business.name() }}</div>
+        <div class="chat-subtitle">Odgovaramo u radno vreme salona</div>
+      </div>
+      <button type="button" class="chat-close" aria-label="Zatvori" (click)="close()" data-testid="chat-close">
+        <span appIcon="close" [iconSize]="20" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    @if (chat.widgetAppointment(); as ap) {
+      <div class="chat-about" data-testid="chat-about">
+        <span class="min-w-0 truncate">U vezi sa terminom {{ ap.starts_at | srDate }} u {{ ap.starts_at.slice(11, 16) }} · {{ ap.services }}</span>
+        <button type="button" class="chat-close" aria-label="Ukloni termin" (click)="chat.widgetAppointment.set(null)"><span appIcon="close" [iconSize]="14" aria-hidden="true"></span></button>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="chat-error" role="alert">{{ error() }}</div>
+    }
+
+    <app-chat-thread
+      [sessions]="ordered()"
+      perspective="client"
+      [sending]="sending()"
+      [emptyText]="loading() ? '' : 'Pišite nam — pitanje o terminu, usluzi ili bilo šta drugo.'"
+      (send)="send($event)"
+    />
+  </section>
+}

@@ -1,4 +1,6 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { ChatService } from '../../../core/services/chat.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
@@ -32,6 +34,8 @@ import { AppointmentActionsService } from './appointment-actions.service';
 })
 export class AppointmentDetailsComponent implements OnInit {
   readonly appointment = input.required<Appointment>();
+  private router = inject(Router);
+  protected chat = inject(ChatService);
   readonly staff = input<StaffMember[]>([]);
   readonly changed = output<void>();
   readonly closed = output<void>();
@@ -113,6 +117,12 @@ export class AppointmentDetailsComponent implements OnInit {
 
   async transfer(colleague: ColleagueRef): Promise<void> {
     if (await this.actionsService.transfer(this.appointment(), colleague)) this.changed.emit();
+  }
+
+  messageClient(): void {
+    const a = this.appointment();
+    if (!a.client) return;
+    void this.router.navigate(['/admin/chat'], { queryParams: { client: a.client.id, appointment: a.id, name: `${a.client.first_name} ${a.client.last_name}` } });
   }
 
   async askClient(): Promise<void> {

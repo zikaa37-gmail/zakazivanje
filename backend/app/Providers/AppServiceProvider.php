@@ -45,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(NotificationSent::class, fn (NotificationSent $event) => $log($event, NotificationLog::STATUS_SENT));
         Event::listen(NotificationFailed::class, fn (NotificationFailed $event) => $log($event, NotificationLog::STATUS_FAILED));
 
-        RateLimiter::for('public', fn (Request $request) => Limit::perMinute(240)->by('public|'.$request->ip()));
+        RateLimiter::for('chat', fn (Request $request) => Limit::perMinute(30)->by('chat|'.($request->user()?->id ?? $request->ip())));
+        RateLimiter::for('public',fn (Request $request) => Limit::perMinute(240)->by('public|'.$request->ip()));
     }
 }
