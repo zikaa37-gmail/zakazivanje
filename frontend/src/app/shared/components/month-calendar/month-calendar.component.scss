@@ -7,6 +7,13 @@
   background: var(--color-surface);
 }
 
+.month-caption {
+  padding: 0.6rem 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
 .month-head,
 .month-week {
   display: grid;

@@ -9,6 +9,8 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { addDays, longDate, timeOf, today } from '../../../core/utils/dates';
+import { AccordionComponent } from '../../../shared/components/accordion/accordion.component';
+import { DatePickerDialogComponent } from '../../../shared/components/date-picker-dialog/date-picker-dialog.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { RowAction, RowActionsComponent } from '../../../shared/components/row-actions/row-actions.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
@@ -32,7 +34,7 @@ const PERIODS: { value: Period; label: string }[] = [
 @Component({
   selector: 'app-appointment-list',
   standalone: true,
-  imports: [ReactiveFormsModule, AppointmentFormComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
+  imports: [ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
   templateUrl: './appointment-list.component.html',
 })
 export class AppointmentListComponent {
@@ -94,6 +96,13 @@ export class AppointmentListComponent {
   readonly modalOpen = signal(false);
   readonly prefill = signal<AppointmentPrefill>({});
 
+  readonly wideScreen = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
+  readonly activeFilters = computed(() => [this.staffFilter() !== this.ownStaffId, this.statusFilter() !== null, this.searchTerm() !== ''].filter(Boolean).length);
+  readonly filtersTitle = computed(() => (this.activeFilters() ? `Filteri (${this.activeFilters()})` : 'Filteri'));
+
+  readonly pickerOpen = signal(false);
+  readonly selectedDay = computed(() => (this.range().from === this.range().to ? this.range().from : null));
+
   constructor() {
     effect(() => {
       if (this.realtime.version()) untracked(() => this.reload(true));
@@ -116,7 +125,10 @@ export class AppointmentListComponent {
 
   private applyDateParam(date: string | null): void {
     if (!date) return;
-    const value = date === 'today' ? today() : date;
+    this.selectDate(date === 'today' ? today() : date);
+  }
+
+  private selectDate(value: string): void {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
     if (value === today()) {
       this.period.set('today');
@@ -128,6 +140,22 @@ export class AppointmentListComponent {
     }
     this.day.set(value);
     this.period.set('day');
+  }
+
+  clearFilters(): void {
+    this.staffFilter.set(this.ownStaffId);
+    this.statusFilter.set(null);
+    this.search.setValue('');
+    this.searchTerm.set('');
+  }
+
+  openPicker(): void {
+    this.pickerOpen.set(true);
+  }
+
+  pickDay(date: string): void {
+    this.selectDate(date);
+    this.pickerOpen.set(false);
   }
 
   reload(quiet = false): void {

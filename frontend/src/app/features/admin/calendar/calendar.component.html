@@ -10,36 +10,54 @@
   </div>
 </div>
 
-<div class="flex flex-wrap items-center gap-2 mb-3">
-  <button type="button" class="btn-icon" aria-label="Prethodno" (click)="step(-1)" data-testid="calendar-prev"><span appIcon="arrow-left" aria-hidden="true"></span></button>
-  <button type="button" class="btn-icon" aria-label="Sledeće" (click)="step(1)" data-testid="calendar-next"><span appIcon="arrow-right" aria-hidden="true"></span></button>
-  <button type="button" appBtn theme="secondary" size="s" (click)="goToday()">Danas</button>
-  <h2 class="text-base md:text-lg font-semibold mr-auto" data-testid="calendar-title">{{ title() }}</h2>
-
-  <div class="chip-group">
-    <button type="button" class="chip" [class.selected]="view() === 'day'" (click)="setView('day')" data-testid="view-day">Dan</button>
-    <button type="button" class="chip" [class.selected]="view() === 'week'" (click)="setView('week')" data-testid="view-week">Nedelja</button>
-    <button type="button" class="chip" [class.selected]="view() === 'month'" (click)="setView('month')" data-testid="view-month">Mesec</button>
+<div class="sticky-toolbar mb-3" data-testid="calendar-toolbar">
+  <div class="flex items-center gap-1 sm:gap-2">
+    <button type="button" class="btn-icon" aria-label="Prethodno" (click)="step(-1)" data-testid="calendar-prev"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+    <button type="button" class="btn-icon" aria-label="Sledeće" (click)="step(1)" data-testid="calendar-next"><span appIcon="arrow-right" aria-hidden="true"></span></button>
+    <button type="button" appBtn theme="secondary" size="s" (click)="goToday()" data-testid="calendar-today">Danas</button>
+    <button type="button" appBtn theme="secondary" size="s" (click)="pickerOpen.set(true)" [attr.aria-label]="'Izaberi datum (' + title() + ')'" [title]="title()" data-testid="calendar-pick">
+      <span appIcon="calendar" aria-hidden="true"></span>
+    </button>
+    <div class="chip-group ml-auto !flex-nowrap">
+      <button type="button" class="chip" [class.selected]="view() === 'day'" (click)="setView('day')" data-testid="view-day">Dan</button>
+      <button type="button" class="chip" [class.selected]="view() === 'week'" (click)="setView('week')" data-testid="view-week">Nedelja</button>
+      <button type="button" class="chip" [class.selected]="view() === 'month'" (click)="setView('month')" data-testid="view-month">Mesec</button>
+    </div>
   </div>
-  <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni" data-testid="calendar-staff">
-    <option value="">Svi zaposleni</option>
-    @for (m of staff(); track m.id) {
-      <option [value]="m.id" [selected]="m.id === staffFilter()">{{ m.first_name }} {{ m.last_name }}</option>
-    }
-  </select>
-  <app-toggle [checked]="showCancelled()" label="Otkazani" (checkedChange)="showCancelled.set($event)" />
+
+  <app-accordion [title]="filtersTitle()" class="block mt-2" data-testid="calendar-filters">
+    <div class="flex flex-wrap items-center gap-3">
+      <select appInput class="!w-auto" [value]="staffFilter() ?? ''" (change)="staffFilter.set($any($event.target).value ? +$any($event.target).value : null)" aria-label="Zaposleni" data-testid="calendar-staff">
+        <option value="">Svi zaposleni</option>
+        @for (m of staff(); track m.id) {
+          <option [value]="m.id" [selected]="m.id === staffFilter()">{{ m.first_name }} {{ m.last_name }}</option>
+        }
+      </select>
+      <app-toggle [checked]="showCancelled()" label="Otkazani" (checkedChange)="showCancelled.set($event)" />
+    </div>
+  </app-accordion>
 </div>
+
+@if (pickerOpen()) {
+  <app-date-picker-dialog [date]="date()" [staffMemberId]="staffFilter()" (picked)="pickDate($event)" (closed)="pickerOpen.set(false)" />
+}
 
 <app-error-message [message]="error()" />
 
 @if (view() === 'month') {
-  <app-month-calendar [month]="date()" [items]="monthItems()" [selected]="null" (dayClicked)="openDay($event)" data-testid="month" />
+  <app-month-calendar [month]="date()" [caption]="title()" [items]="monthItems()" [selected]="null" (dayClicked)="openDay($event)" data-testid="month" />
 } @else {
   <div class="cal" data-testid="calendar-grid">
     <div class="cal-scroll">
       <div class="cal-inner" [style.--cols]="columns().length">
         <div class="cal-head">
-          <div class="cal-gutter"></div>
+          <button type="button" class="cal-gutter cal-corner" [class.is-today]="view() === 'day' && date() === todayIso" (click)="pickerOpen.set(true)" [attr.aria-label]="'Izaberi datum (' + title() + ')'" [title]="title()" data-testid="calendar-title">
+            @if (corner().top) {
+              <span class="cal-corner-small">{{ corner().top }}</span>
+            }
+            <span class="cal-corner-main">{{ corner().main }}</span>
+            <span class="cal-corner-small">{{ corner().bottom }}</span>
+          </button>
           @for (col of columns(); track col.key) {
             <div class="cal-head-cell" [class.is-today]="view() === 'week' && col.date === todayIso">
               @if (col.staff && view() === 'day') {

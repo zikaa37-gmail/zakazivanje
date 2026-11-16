@@ -60,6 +60,22 @@
     @apply flex items-center gap-2;
   }
 
+  .sticky-toolbar {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 20;
+    margin-inline: -1rem;
+    padding: 0.5rem 1rem;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+
+    @media (min-width: 768px) {
+      top: 0;
+      margin-inline: -2rem;
+      padding-inline: 2rem;
+    }
+  }
+
   .checkbox-field {
     @apply flex items-center gap-2 text-sm font-medium;
     color: var(--color-text);

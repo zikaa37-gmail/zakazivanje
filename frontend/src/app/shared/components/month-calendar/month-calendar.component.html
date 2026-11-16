@@ -1,4 +1,7 @@
 <div class="month" [attr.data-testid]="testId() || null">
+  @if (caption()) {
+    <div class="month-caption">{{ caption() }}</div>
+  }
   <div class="month-head">
     @for (w of weekdays; track w) {
       <div>{{ w }}</div>

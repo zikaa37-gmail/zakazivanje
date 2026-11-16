@@ -10,7 +10,9 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
-import { addDays, isoDate, longDate, monthLabel, parseDate, timeOf, today, weekdayShort } from '../../../core/utils/dates';
+import { addDays, isoDate, longDate, monthLabel, monthShort, parseDate, timeOf, today, weekdayShort } from '../../../core/utils/dates';
+import { AccordionComponent } from '../../../shared/components/accordion/accordion.component';
+import { DatePickerDialogComponent } from '../../../shared/components/date-picker-dialog/date-picker-dialog.component';
 import { hoursOn } from '../../../core/utils/schedule';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
@@ -73,7 +75,7 @@ function mondayOf(date: string): string {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [ReactiveFormsModule, CdkDrag, NgStyle, AppointmentDetailsComponent, AppointmentFormComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, MonthCalendarComponent, TimePickerComponent, ToggleComponent],
+  imports: [ReactiveFormsModule, CdkDrag, NgStyle, AppointmentDetailsComponent, AppointmentFormComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, MonthCalendarComponent, AccordionComponent, DatePickerDialogComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.scss',
 })
@@ -137,6 +139,21 @@ export class CalendarComponent {
     return a.getMonth() === b.getMonth()
       ? `${a.getDate()}. – ${b.getDate()}. ${monthLabel(to).toLowerCase()}`
       : `${a.getDate()}. ${monthLabel(from).split(' ')[0].toLowerCase()} – ${b.getDate()}. ${monthLabel(to).toLowerCase()}`;
+  });
+
+  readonly pickerOpen = signal(false);
+  readonly filtersTitle = computed(() => {
+    const active = [this.staffFilter() !== this.ownStaffId, this.showCancelled()].filter(Boolean).length;
+    return active ? `Filteri (${active})` : 'Filteri';
+  });
+
+  readonly corner = computed(() => {
+    if (this.view() === 'day') {
+      const d = this.date();
+      return { top: weekdayShort(d), main: String(parseDate(d).getDate()), bottom: monthShort(d) };
+    }
+    const from = this.range().from;
+    return { top: '', main: monthShort(addDays(from, 3)), bottom: String(parseDate(addDays(from, 3)).getFullYear()) };
   });
 
   readonly visibleStaff = computed(() =>
@@ -242,6 +259,11 @@ export class CalendarComponent {
 
   goToday(): void {
     this.date.set(today());
+  }
+
+  pickDate(date: string): void {
+    this.date.set(date);
+    this.pickerOpen.set(false);
   }
 
   openDay(date: string): void {
