@@ -1,13 +1,24 @@
 <div [class]="auth.isStaff() ? '' : 'content-container py-6 max-w-2xl'" data-testid="notifications-page">
-  <div class="page-header">
-    <div>
+  <div class="page-header notif-header">
+    <div class="flex items-center gap-2">
       <h1 class="page-title">Obaveštenja</h1>
-      <p class="page-subtitle">Sve što je stiglo u zvonce — i ranija, već pročitana obaveštenja.</p>
+      <button type="button" class="notif-info" [class.active]="showDevice()" [attr.aria-expanded]="showDevice()" (click)="showDevice.set(!showDevice())" aria-label="Obaveštenja na ovom uređaju" title="Obaveštenja na ovom uređaju" data-testid="notifications-device-toggle">
+        <span appIcon="info" [iconSize]="18" aria-hidden="true"></span>
+        @if (push.state() === 'off' || push.state() === 'needs-install') {
+          <span class="notif-info-dot" aria-hidden="true"></span>
+        }
+      </button>
     </div>
     @if (inbox.unreadCount() > 0) {
       <button type="button" class="notif-link" (click)="markAllRead()" data-testid="notifications-read-all">Označi sve kao pročitano</button>
     }
   </div>
+
+  @if (showDevice()) {
+    <div class="mb-4">
+      <app-device-notifications />
+    </div>
+  }
 
   <div class="notif-tabs" role="tablist">
     @for (tab of tabs; track tab.value) {
@@ -32,18 +43,15 @@
       <div class="card notif-list">
         @for (item of group.items; track item.id) {
           <div class="notif-item" [class.unread]="!item.read_at" [attr.data-testid]="'notification-' + item.id">
-            <button type="button" class="notif-main" (click)="openItem(item)">
+            <button type="button" class="notif-main" (click)="openItem(item, line)">
               <span class="notif-dot" aria-hidden="true"></span>
-              <span class="notif-text">
+              <span #line class="notif-line">
                 <span class="notif-title">{{ item.title }}</span>
                 @if (item.body) {
-                  <span class="notif-body">{{ item.body }}</span>
+                  <span class="notif-body"> · {{ item.body }}</span>
                 }
-                <span class="notif-time">{{ time(item) }}</span>
               </span>
-              @if (item.link) {
-                <span appIcon="arrow-right" [iconSize]="16" class="notif-chevron" aria-hidden="true"></span>
-              }
+              <span class="notif-time">{{ time(item) }}</span>
             </button>
             @if (!item.read_at) {
               <button type="button" class="notif-check" (click)="markRead(item)" aria-label="Označi kao pročitano" title="Označi kao pročitano" [attr.data-testid]="'notification-read-' + item.id">
@@ -60,8 +68,13 @@
       </div>
     }
   }
-
-  <div class="mt-6">
-    <app-device-notifications />
-  </div>
 </div>
+
+@if (opened(); as item) {
+  <app-modal [title]="item.title" size="s" [footerMode]="item.link ? 'default' : 'none'" confirmLabel="Otvori" confirmIcon="arrow-right" cancelLabel="Zatvori" (confirmed)="go(item)" (cancelled)="opened.set(null)" testId="notification-details">
+    @if (item.body) {
+      <p class="notif-full-body">{{ item.body }}</p>
+    }
+    <p class="text-xs muted mt-3">{{ item.created_at | srDateTime }}</p>
+  </app-modal>
+}

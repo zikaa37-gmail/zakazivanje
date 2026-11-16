@@ -2,7 +2,10 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { InboxFilter, InboxItem, InboxService } from '../../core/services/inbox.service';
+import { PushService } from '../../core/services/push.service';
 import { DeviceNotificationsComponent } from '../../shared/components/device-notifications/device-notifications.component';
+import { ModalComponent } from '../../shared/components/modal/modal.component';
+import { SrDateTimePipe } from '../../shared/pipes/sr-date-time.pipe';
 import { ButtonDirective } from '../../shared/directives/button.directive';
 import { IconDirective } from '../../shared/directives/icon.directive';
 
@@ -17,7 +20,7 @@ const dayKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)
 @Component({
   selector: 'app-notifications-page',
   standalone: true,
-  imports: [ButtonDirective, IconDirective, DeviceNotificationsComponent],
+  imports: [ButtonDirective, IconDirective, DeviceNotificationsComponent, ModalComponent, SrDateTimePipe],
   templateUrl: './notifications-page.component.html',
   styleUrl: './notifications-page.component.scss',
 })
@@ -30,6 +33,9 @@ export class NotificationsPageComponent {
   readonly items = signal<InboxItem[]>([]);
   readonly hasMore = signal(false);
   readonly loading = signal(false);
+  readonly showDevice = signal(false);
+  readonly opened = signal<InboxItem | null>(null);
+  protected push = inject(PushService);
 
   readonly tabs: { value: InboxFilter; label: string }[] = [
     { value: 'all', label: 'Sve' },
@@ -87,8 +93,17 @@ export class NotificationsPageComponent {
     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
-  openItem(item: InboxItem): void {
+  openItem(item: InboxItem, line: HTMLElement): void {
     this.markRead(item);
+    if (line.scrollWidth > line.clientWidth + 1 || !item.link) {
+      this.opened.set(item);
+      return;
+    }
+    this.go(item);
+  }
+
+  go(item: InboxItem): void {
+    this.opened.set(null);
     if (item.link) void this.router.navigateByUrl(item.link);
   }
 
