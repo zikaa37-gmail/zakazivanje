@@ -47,18 +47,44 @@ class AdminAppointmentNotification extends Notification implements ShouldQueue
         return $this->appointment->id;
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toInbox(object $notifiable): array
     {
         $a = $this->appointment->loadMissing(['items', 'staffMember', 'client']);
-        $client = $a->client;
+
+        return [
+            'kind' => 'appointment',
+            'title' => $this->title(),
+            'body' => implode(' · ', array_filter([
+                $a->client?->fullName(),
+                $a->starts_at->format('d.m.').' u '.$a->starts_at->format('H:i'),
+                $a->items->pluck('name')->join(' + '),
+                $a->staffMember?->first_name,
+                $this->previousStart ? 'ranije '.Carbon::parse($this->previousStart)->format('d.m. H:i') : null,
+            ])),
+            'link' => '/admin/appointments?date='.$a->starts_at->toDateString(),
+            'appointment_id' => $a->id,
+        ];
+    }
+
+    private function title(): string
+    {
+        $a = $this->appointment;
         $pending = $a->status === Appointment::STATUS_PENDING;
 
-        $title = match ($this->type) {
+        return match ($this->type) {
             self::NEW_BOOKING => $pending ? 'Novi termin čeka potvrdu' : 'Novi termin',
             self::CLIENT_RESCHEDULED => $pending ? 'Klijent je pomerio termin — čeka potvrdu' : 'Klijent je pomerio termin',
             self::TRANSFERRED => 'Termin je prebačen: '.$a->staffMember?->first_name,
             default => 'Klijent je otkazao termin',
         };
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $a = $this->appointment->loadMissing(['items', 'staffMember', 'client']);
+        $client = $a->client;
+        $pending = $a->status === Appointment::STATUS_PENDING;
+        $title = $this->title();
 
         return (new MailMessage)
             ->subject($title.': '.$client->first_name.' '.$client->last_name.', '.$a->starts_at->format('d.m. H:i'))

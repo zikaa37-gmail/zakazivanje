@@ -8,6 +8,7 @@ import { User } from '../models/user.model';
 import { AppointmentService } from './appointment.service';
 import { AuthService } from './auth.service';
 import { BusinessSettingService } from './business-setting.service';
+import { InboxItem, InboxService } from './inbox.service';
 import { ToastService } from './toast.service';
 
 export interface RealtimeEvent {
@@ -22,6 +23,8 @@ export interface RealtimeEvent {
 
 const STAFF_CHANNEL = 'private-salon';
 const EVENT = 'appointment';
+const INBOX_EVENT = 'inbox';
+const APPOINTMENT_KIND = 'appointment';
 
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
@@ -30,6 +33,7 @@ export class RealtimeService {
   private business = inject(BusinessSettingService);
   private toast = inject(ToastService);
   private appointments = inject(AppointmentService);
+  private inbox = inject(InboxService);
 
   readonly events = new Subject<RealtimeEvent>();
   readonly version = signal(0);
@@ -47,13 +51,14 @@ export class RealtimeService {
   }
 
   private async connect(user: User | null, config: { key: string; cluster: string } | null): Promise<void> {
-    const channel = user && config ? (this.auth.isStaff() ? STAFF_CHANNEL : `private-user-${user.id}`) : '';
-    const connection = channel ? `${config!.key}|${config!.cluster}|${channel}` : '';
+    const userChannel = user ? `private-user-${user.id}` : '';
+    const appointmentChannel = this.auth.isStaff() ? STAFF_CHANNEL : userChannel;
+    const connection = user && config ? `${config.key}|${config.cluster}|${userChannel}|${appointmentChannel}` : '';
     if (connection === this.connection) return;
 
     this.disconnect();
     this.connection = connection;
-    if (!channel || !config) return;
+    if (!connection || !config) return;
 
     const { default: PusherClient } = await import('pusher-js');
     if (this.connection !== connection) return;
@@ -71,7 +76,17 @@ export class RealtimeService {
       },
     });
     this.client.connection.bind('state_change', ({ current }: { current: string }) => this.connected.set(current === 'connected'));
-    this.client.subscribe(channel).bind(EVENT, (event: RealtimeEvent) => this.handle(event));
+    const personal = this.client.subscribe(userChannel);
+    personal.bind(INBOX_EVENT, (item: Omit<InboxItem, 'read_at' | 'created_at'>) => this.handleInbox(item));
+    const appointments = appointmentChannel === userChannel ? personal : this.client.subscribe(appointmentChannel);
+    appointments.bind(EVENT, (event: RealtimeEvent) => this.handle(event));
+  }
+
+  private handleInbox(item: Omit<InboxItem, 'read_at' | 'created_at'>): void {
+    this.inbox.received(item);
+    if (item.kind !== APPOINTMENT_KIND) {
+      this.toast.show(item.body ? `${item.title}: ${item.body}` : item.title, { type: 'info', position: 'top-right', duration: 8000 });
+    }
   }
 
   private disconnect(): void {

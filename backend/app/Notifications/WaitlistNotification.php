@@ -35,6 +35,16 @@ class WaitlistNotification extends Notification implements ShouldQueue
         return self::TYPE;
     }
 
+    public function toInbox(User $notifiable): array
+    {
+        return [
+            'kind' => 'waitlist',
+            'title' => 'Oslobodio se termin: '.$this->day(),
+            'body' => 'Slobodno: '.$this->timesLabel().' ('.$this->services().')',
+            'link' => $this->path(),
+        ];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         $business = BusinessSetting::current();
@@ -76,7 +86,7 @@ class WaitlistNotification extends Notification implements ShouldQueue
         return Service::whereIn('id', $this->entry->service_ids)->pluck('name')->join(' + ');
     }
 
-    private function link(): string
+    private function path(): string
     {
         $query = http_build_query(array_filter([
             'services' => implode(',', $this->entry->service_ids),
@@ -84,6 +94,11 @@ class WaitlistNotification extends Notification implements ShouldQueue
             'date' => CarbonImmutable::parse($this->entry->date)->toDateString(),
         ]));
 
-        return rtrim(config('app.frontend_url'), '/').'/book?'.$query;
+        return '/book?'.$query;
+    }
+
+    private function link(): string
+    {
+        return rtrim(config('app.frontend_url'), '/').$this->path();
     }
 }

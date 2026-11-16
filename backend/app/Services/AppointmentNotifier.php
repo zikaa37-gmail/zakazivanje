@@ -9,11 +9,12 @@ use App\Models\User;
 use App\Notifications\AdminAppointmentNotification;
 use App\Notifications\AppointmentNotification;
 use App\Notifications\ReviewRequestNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
 
 class AppointmentNotifier
 {
-    public function __construct(private Realtime $realtime) {}
+    public function __construct(private Realtime $realtime, private Inbox $inbox) {}
 
     public function booked(Appointment $appointment, ?string $recurrenceLabel = null): void
     {
@@ -30,13 +31,15 @@ class AppointmentNotifier
             $this->realtime->toClient($appointment, 'booked', 'Salon ti je zakazao termin: '.$this->realtime->describe($appointment, false));
         }
 
-        if ($confirmed ? $settings->notify_booking_confirmed : $settings->notify_booking_received) {
-            $this->toClient($appointment, $confirmed ? AppointmentNotification::CONFIRMED : AppointmentNotification::RECEIVED, $recurrenceLabel);
-        }
+        $this->toClient(
+            $appointment,
+            new AppointmentNotification($appointment, $confirmed ? AppointmentNotification::CONFIRMED : AppointmentNotification::RECEIVED, $recurrenceLabel),
+            $confirmed ? $settings->notify_booking_confirmed : $settings->notify_booking_received,
+        );
 
-        if ($appointment->source === Appointment::SOURCE_ONLINE && $settings->notify_admin_new_booking) {
+        if ($online) {
             foreach ($linked->prepend($appointment) as $part) {
-                Notification::send($this->salonRecipients($part), new AdminAppointmentNotification($part, AdminAppointmentNotification::NEW_BOOKING));
+                $this->toSalon($part, new AdminAppointmentNotification($part, AdminAppointmentNotification::NEW_BOOKING), $settings->notify_admin_new_booking);
             }
         }
     }
@@ -48,8 +51,8 @@ class AppointmentNotifier
         $this->realtime->toStaff($appointment, 'status');
         $this->realtime->toClient($appointment, 'status', $confirmedNow ? 'Termin je potvrđen: '.$this->realtime->describe($appointment, false) : null);
 
-        if ($appointment->status === Appointment::STATUS_CONFIRMED && $previousStatus === Appointment::STATUS_PENDING && $settings->notify_booking_confirmed) {
-            $this->toClient($appointment, AppointmentNotification::CONFIRMED);
+        if ($confirmedNow) {
+            $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::CONFIRMED), $settings->notify_booking_confirmed);
         }
 
         if ($appointment->status === Appointment::STATUS_COMPLETED && $previousStatus !== Appointment::STATUS_COMPLETED) {
@@ -63,8 +66,8 @@ class AppointmentNotifier
             return;
         }
         $client = User::find($appointment->client_id);
-        if ($client && $client->password !== null && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
-            $client->notify(new ReviewRequestNotification($appointment));
+        if ($client && $client->password !== null) {
+            $this->toClient($appointment, new ReviewRequestNotification($appointment));
         }
     }
 
@@ -74,25 +77,23 @@ class AppointmentNotifier
         if ($appointment->starts_at->isFuture()) {
             $this->realtime->toClient($appointment, 'cancelled', 'Salon je otkazao termin: '.$this->realtime->describe($appointment, false));
         }
-        if (BusinessSetting::current()->notify_booking_cancelled && $appointment->starts_at->isFuture()) {
-            $this->toClient($appointment, AppointmentNotification::CANCELLED);
+        if ($appointment->starts_at->isFuture()) {
+            $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::CANCELLED), BusinessSetting::current()->notify_booking_cancelled);
         }
     }
 
     public function cancelledByClient(Appointment $appointment): void
     {
         $this->realtime->toStaff($appointment, 'cancelled', 'Klijent je otkazao termin: '.$this->realtime->describe($appointment));
-        if (BusinessSetting::current()->notify_admin_new_booking) {
-            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_CANCELLED));
-        }
+        $this->toSalon($appointment, new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_CANCELLED), BusinessSetting::current()->notify_admin_new_booking);
     }
 
     public function rescheduled(Appointment $appointment): void
     {
         $this->realtime->toStaff($appointment, 'moved');
         $this->realtime->toClient($appointment, 'moved', 'Salon je pomerio termin: '.$this->realtime->describe($appointment, false));
-        if (BusinessSetting::current()->notify_booking_confirmed && $appointment->starts_at->isFuture()) {
-            $this->toClient($appointment, AppointmentNotification::RESCHEDULED);
+        if ($appointment->starts_at->isFuture()) {
+            $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::RESCHEDULED), BusinessSetting::current()->notify_booking_confirmed);
         }
     }
 
@@ -103,12 +104,10 @@ class AppointmentNotifier
         $this->realtime->toStaff($appointment, 'moved', 'Klijent je pomerio termin: '.$this->realtime->describe($appointment));
 
         if ($notifyClient && ($pending ? $settings->notify_booking_received : $settings->notify_booking_confirmed)) {
-            $this->toClient($appointment, $pending ? AppointmentNotification::RECEIVED : AppointmentNotification::RESCHEDULED);
+            $this->toClient($appointment, new AppointmentNotification($appointment, $pending ? AppointmentNotification::RECEIVED : AppointmentNotification::RESCHEDULED));
         }
 
-        if ($settings->notify_admin_new_booking) {
-            Notification::send($this->salonRecipients($appointment), new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart));
-        }
+        $this->toSalon($appointment, new AdminAppointmentNotification($appointment, AdminAppointmentNotification::CLIENT_RESCHEDULED, $previousStart), $settings->notify_admin_new_booking);
     }
 
     public function transferred(Appointment $appointment, ?int $previousStaffId, ?User $by = null, bool $timeChanged = false): void
@@ -118,20 +117,15 @@ class AppointmentNotifier
         $this->realtime->toClient($appointment, 'transferred', 'Termin je prebačen kod: '.$this->realtime->describe($appointment, false));
 
         if ($appointment->starts_at->isFuture()) {
-            $client = User::find($appointment->client_id);
-            if ($client && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
-                $client->notify(new AppointmentNotification($appointment, AppointmentNotification::TRANSFERRED, null, $previous?->first_name, $timeChanged));
-            }
+            $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::TRANSFERRED, null, $previous?->first_name, $timeChanged));
         }
 
-        $recipients = User::where('active', true)
-            ->whereNotNull('email')
-            ->where(fn ($q) => $q->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])
-                ->orWhereIn('staff_member_id', array_filter([$appointment->staff_member_id, $previousStaffId])))
-            ->when($by, fn ($q) => $q->whereKeyNot($by->id))
-            ->get();
+        $recipients = $this->staffInbox($appointment, [$previousStaffId])
+            ->reject(fn (User $user) => $by && $user->id === $by->id);
+        $notification = new AdminAppointmentNotification($appointment, AdminAppointmentNotification::TRANSFERRED, null, $previous ? trim($previous->first_name.' '.$previous->last_name) : null);
 
-        Notification::send($recipients, new AdminAppointmentNotification($appointment, AdminAppointmentNotification::TRANSFERRED, null, $previous ? trim($previous->first_name.' '.$previous->last_name) : null));
+        $this->inbox->deliver($recipients, $notification);
+        Notification::send($recipients->filter(fn (User $user) => filled($user->email)), $notification);
     }
 
     public function changedSilently(Appointment $appointment, array $staffIds = []): void
@@ -143,21 +137,45 @@ class AppointmentNotifier
     public function rescheduleRequested(Appointment $appointment): void
     {
         $this->realtime->toClient($appointment, 'ask_reschedule', 'Salon te moli da izabereš novi termin: '.$this->realtime->describe($appointment, false));
-        $this->toClient($appointment, AppointmentNotification::RESCHEDULE_REQUEST);
+        $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::RESCHEDULE_REQUEST));
     }
 
     public function reminder(Appointment $appointment): void
     {
-        $this->toClient($appointment, AppointmentNotification::REMINDER);
+        $this->toClient($appointment, new AppointmentNotification($appointment, AppointmentNotification::REMINDER));
     }
 
-    private function toClient(Appointment $appointment, string $type, ?string $recurrenceLabel = null): void
+    private function toClient(Appointment $appointment, object $notification, bool $send = true): void
     {
         $client = User::find($appointment->client_id);
-
-        if ($client && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
-            $client->notify(new AppointmentNotification($appointment, $type, $recurrenceLabel));
+        if (! $client) {
+            return;
         }
+
+        $this->inbox->deliver([$client], $notification);
+
+        if ($send && $client->notificationChannels(['mail' => 'mail', 'whatsapp' => 'whatsapp']) !== []) {
+            $client->notify($notification);
+        }
+    }
+
+    private function toSalon(Appointment $appointment, AdminAppointmentNotification $notification, bool $send): void
+    {
+        $this->inbox->deliver($this->staffInbox($appointment), $notification);
+
+        if ($send) {
+            Notification::send($this->salonRecipients($appointment), $notification);
+        }
+    }
+
+    private function staffInbox(Appointment $appointment, array $staffIds = []): Collection
+    {
+        $ids = array_values(array_filter([$appointment->staff_member_id, ...$staffIds]));
+
+        return User::where('active', true)
+            ->where(fn ($q) => $q->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])
+                ->orWhere(fn ($q) => $q->where('role', User::ROLE_WORKER)->whereIn('staff_member_id', $ids)))
+            ->get();
     }
 
     private function salonRecipients(Appointment $appointment)

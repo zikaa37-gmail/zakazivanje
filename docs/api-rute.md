@@ -39,6 +39,10 @@ Ograničenja (imenovani limiteri, `AppServiceProvider`): `auth` 10/min, `booking
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | GET | `/auth/me` | trenutni korisnik |
+| POST | `/inbox/list` | `{filter: unread\|all, before_id?}` → `{items, has_more, unread_count}` — moja obaveštenja (30 po strani) |
+| POST | `/inbox/unread-count` | `{count}` |
+| POST | `/inbox/{id}/read` | označi pročitano → `{count}` |
+| POST | `/inbox/read-all` | označi sve kao pročitano |
 | POST | `/realtime/auth` | `{socket_id, channel_name}` — Pusher potpis za privatni kanal (`private-salon` za osoblje, `private-user-{id}` za sebe); 404 bez ključeva |
 | PUT | `/auth/profile` | ime, prezime, telefon, WhatsApp, kanal obaveštenja; klijent i `gender`, `favorite_staff_member_id` (osoblju se ignorišu); radniku vezanom za zaposlenog ime i telefon dolaze sa stranice Zaposleni i ne menjaju se ovde |
 | POST | `/auth/change-password` | `{current_password, password, password_confirmation}` |

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('appointments:extend-recurring')->dailyAt('02:00');
 Schedule::command('reports:send-scheduled')->dailyAt('21:00');
 Schedule::command('clients:refresh-discipline')->dailyAt('03:00');
+Schedule::command('model:prune', ['--model' => [App\Models\InboxNotification::class]])->dailyAt('03:30');
 Schedule::command('instagram:refresh-token')->weeklyOn(1, '04:00');
 Schedule::command('instagram:publish-scheduled')->everyFiveMinutes()->withoutOverlapping(15);
 Schedule::command('appointments:send-reminders')->everyFifteenMinutes()->withoutOverlapping();

@@ -1,0 +1,56 @@
+<button type="button" class="bell" (click)="toggle()" [attr.aria-expanded]="open()" aria-label="Obaveštenja" data-testid="inbox-bell">
+  <span appIcon="bell" [iconSize]="20" aria-hidden="true"></span>
+  @if (inbox.unreadCount() > 0) {
+    <span class="bell-count" data-testid="inbox-count">{{ countLabel() }}</span>
+  }
+</button>
+
+@if (open()) {
+  <button type="button" class="inbox-backdrop" aria-label="Zatvori obaveštenja" (click)="close()"></button>
+  <section class="inbox-panel" [class.inbox-panel-sidebar]="placement() === 'sidebar'" role="dialog" aria-label="Obaveštenja" data-testid="inbox-panel">
+    <header class="inbox-head">
+      <h2 class="inbox-title">Obaveštenja</h2>
+      @if (inbox.unreadCount() > 0) {
+        <button type="button" class="inbox-link" (click)="inbox.markAllRead()" data-testid="inbox-read-all">Označi sve kao pročitano</button>
+      }
+      <button type="button" class="inbox-close" aria-label="Zatvori" (click)="close()">
+        <span appIcon="close" [iconSize]="18" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <div class="inbox-tabs" role="tablist">
+      @for (tab of tabs; track tab.value) {
+        <button type="button" role="tab" class="inbox-tab" [class.active]="inbox.filter() === tab.value" [attr.aria-selected]="inbox.filter() === tab.value" (click)="select(tab.value)" [attr.data-testid]="'inbox-tab-' + tab.value">
+          {{ tab.label }}
+          @if (tab.value === 'unread' && inbox.unreadCount() > 0) {
+            <span class="inbox-tab-count">{{ countLabel() }}</span>
+          }
+        </button>
+      }
+    </div>
+
+    <div class="inbox-list">
+      @if (inbox.loading() && inbox.items().length === 0) {
+        <p class="inbox-empty muted">Učitavanje…</p>
+      } @else if (inbox.items().length === 0) {
+        <p class="inbox-empty muted" data-testid="inbox-empty">{{ inbox.filter() === 'unread' ? 'Sve je pročitano.' : 'Još nema obaveštenja.' }}</p>
+      } @else {
+        @for (item of inbox.items(); track item.id) {
+          <button type="button" class="inbox-item" [class.unread]="!item.read_at" (click)="openItem(item)" [attr.data-testid]="'inbox-item-' + item.id">
+            <span class="inbox-dot" aria-hidden="true"></span>
+            <span class="inbox-item-text">
+              <span class="inbox-item-title">{{ item.title }}</span>
+              @if (item.body) {
+                <span class="inbox-item-body">{{ item.body }}</span>
+              }
+              <span class="inbox-item-time">{{ item.created_at | srDateTime }}</span>
+            </span>
+          </button>
+        }
+        @if (inbox.hasMore()) {
+          <button type="button" class="inbox-more" [disabled]="inbox.loading()" (click)="inbox.load(inbox.filter(), true)" data-testid="inbox-more">Prikaži starija</button>
+        }
+      }
+    </div>
+  </section>
+}

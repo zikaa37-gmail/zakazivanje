@@ -36,7 +36,7 @@ class StaffAbsenceService
             return $this->approve($absence, $by);
         }
 
-        Notification::send($this->managers(), new StaffAbsenceNotification($absence, StaffAbsenceNotification::REQUESTED));
+        $this->send($this->managers(), new StaffAbsenceNotification($absence, StaffAbsenceNotification::REQUESTED));
 
         return $absence;
     }
@@ -128,7 +128,13 @@ class StaffAbsenceService
             ->whereKeyNot($by->id)
             ->get();
 
-        Notification::send($recipients, new StaffAbsenceNotification($absence, $type));
+        $this->send($recipients, new StaffAbsenceNotification($absence, $type));
+    }
+
+    private function send(Collection $recipients, StaffAbsenceNotification $notification): void
+    {
+        app(Inbox::class)->deliver($recipients, $notification);
+        Notification::send($recipients, $notification);
     }
 
     private function managers(): Collection

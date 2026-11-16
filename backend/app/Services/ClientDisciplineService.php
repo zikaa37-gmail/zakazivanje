@@ -78,7 +78,7 @@ class ClientDisciplineService
         if ($zone !== $previous) {
             ClientActivity::dispatch($client, ClientActivity::ZONE_CHANGED, ['from' => $previous, 'to' => $zone, 'points' => $points, 'manual' => false]);
             if ($this->rank($zone) > $this->rank($previous)) {
-                Notification::send($this->owners(), new ClientDisciplineNotification($client, ClientDisciplineNotification::ZONE_RAISED, $previous));
+                $this->notifyOwners(new ClientDisciplineNotification($client, ClientDisciplineNotification::ZONE_RAISED, $previous));
             }
         }
 
@@ -208,7 +208,7 @@ class ClientDisciplineService
     private function notifyBlockedAttempt(User $client): void
     {
         if (Cache::add("discipline:blocked-attempt:{$client->id}", true, now()->endOfDay())) {
-            Notification::send($this->owners(), new ClientDisciplineNotification($client, ClientDisciplineNotification::BLOCKED_ATTEMPT));
+            $this->notifyOwners(new ClientDisciplineNotification($client, ClientDisciplineNotification::BLOCKED_ATTEMPT));
         }
     }
 
@@ -217,8 +217,10 @@ class ClientDisciplineService
         return array_search($zone, User::ZONES, true) ?: 0;
     }
 
-    private function owners()
+    private function notifyOwners(ClientDisciplineNotification $notification): void
     {
-        return User::where('role', User::ROLE_OWNER)->where('active', true)->whereNotNull('email')->get();
+        $owners = User::where('role', User::ROLE_OWNER)->where('active', true)->get();
+        app(Inbox::class)->deliver($owners, $notification);
+        Notification::send($owners->filter(fn (User $owner) => filled($owner->email)), $notification);
     }
 }

@@ -38,9 +38,9 @@ class RealtimeTest extends TestCase
         {
             public function __construct(private array &$sent) {}
 
-            protected function send(string $channel, array $data): void
+            protected function send(string $channel, string $event, array $data): void
             {
-                $this->sent[] = ['channel' => $channel, ...$data];
+                $this->sent[] = ['channel' => $channel, 'event' => $event, ...$data];
             }
         });
 
@@ -72,9 +72,9 @@ class RealtimeTest extends TestCase
         return Appointment::findOrFail($id);
     }
 
-    private function sentTo(string $channel): array
+    private function sentTo(string $channel, string $event = Realtime::EVENT): array
     {
-        return array_values(array_filter($this->sent, fn ($e) => $e['channel'] === $channel));
+        return array_values(array_filter($this->sent, fn ($e) => $e['channel'] === $channel && $e['event'] === $event));
     }
 
     public function test_online_booking_is_pushed_to_staff_with_a_message(): void
@@ -103,6 +103,9 @@ class RealtimeTest extends TestCase
         $this->assertSame($this->owner->id, $events[0]['actor_id']);
         $this->assertStringStartsWith('Termin je potvrđen: 20.10. u 10:00', $events[0]['message']);
         $this->assertCount(1, $this->sentTo(Realtime::STAFF_CHANNEL));
+        $inbox = $this->sentTo(Realtime::userChannel($this->client->id), 'inbox');
+        $this->assertCount(1, $inbox);
+        $this->assertSame('Termin je potvrđen', $inbox[0]['title']);
     }
 
     public function test_client_cancellation_and_transfer_reach_staff(): void

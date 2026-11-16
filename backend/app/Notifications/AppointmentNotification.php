@@ -56,6 +56,19 @@ class AppointmentNotification extends Notification implements ShouldQueue
         return $this->appointment->id;
     }
 
+    public function toInbox(User $notifiable): array
+    {
+        $this->appointment->loadMissing(['items', 'staffMember']);
+
+        return [
+            'kind' => 'appointment',
+            'title' => mb_strtoupper(mb_substr($this->title(), 0, 1)).mb_substr($this->title(), 1),
+            'body' => implode(' · ', array_filter([$this->when(), $this->services(), $this->staff()])),
+            'link' => $this->path(),
+            'appointment_id' => $this->appointment->id,
+        ];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         $business = BusinessSetting::current();
@@ -139,9 +152,12 @@ class AppointmentNotification extends Notification implements ShouldQueue
 
     private function link(): string
     {
-        $base = rtrim(config('app.frontend_url'), '/').'/my-appointments';
+        return rtrim(config('app.frontend_url'), '/').$this->path();
+    }
 
-        return $this->type === self::RESCHEDULE_REQUEST ? $base.'?reschedule='.$this->appointment->id : $base;
+    private function path(): string
+    {
+        return $this->type === self::RESCHEDULE_REQUEST ? '/my-appointments?reschedule='.$this->appointment->id : '/my-appointments';
     }
 
     private function freeChangeLine(BusinessSetting $business): string

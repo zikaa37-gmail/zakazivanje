@@ -34,6 +34,16 @@ class StaffNoteNotification extends Notification implements ShouldQueue
         return self::TYPE;
     }
 
+    public function toInbox(User $notifiable): array
+    {
+        return [
+            'kind' => 'note',
+            'title' => 'Beleška: '.$this->author(),
+            'body' => Str::limit($this->note->body, 160),
+            'link' => '/admin/notes',
+        ];
+    }
+
     public function toMail(User $notifiable): MailMessage
     {
         $business = BusinessSetting::current();
