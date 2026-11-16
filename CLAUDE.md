@@ -291,7 +291,8 @@ Centar obaveštenja (zvonce): `inbox_notifications` (po korisniku, `read_at`, br
 WhatsApp-a i prekidača obaveštenja, bez onoga ko je radnju uradio i bez klijenta bez naloga; termini: vlasnik i administrativni radnici
 uvek, radnik samo za svog zaposlenog. Nova obaveštenja za korisnika idu kroz `toInbox()` + `Inbox`. Pusher događaj `inbox` na
 `private-user-{id}` (osoblje sluša i taj kanal); frontend `InboxService` + `<app-inbox-bell>` (zaglavlje, a na desktopu admina u bočnom
-meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“.
+meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“, „Sva obaveštenja“ → stranica
+`/admin/notifications` (osoblje) / `/notifications` (klijent), `NotificationsPageComponent`: po danima, „Prikaži starija“, sopstveno stanje (`InboxService.page()`).
 Poruke sa klijentima (chat): `chat_sessions` (klijent, opciono termin, `expires_at` = kraj dana, `closed_at`, `assigned_to` = ko je prvi
 odgovorio), `chat_messages`, `chat_reads` (`last_read_message_id` po korisniku); pravila samo u `ChatService` (klijentova poruka otvara novi
 razgovor ako nema aktivnog, odgovor osoblja ponovo otvara završen; vlasnik i administrativni radnik vide sve, radnik samo razgovore o svojim

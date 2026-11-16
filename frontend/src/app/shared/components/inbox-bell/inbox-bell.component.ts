@@ -54,6 +54,11 @@ export class InboxBellComponent {
     void this.router.navigateByUrl(this.auth.isStaff() ? '/admin/profile' : '/profile');
   }
 
+  openPage(): void {
+    this.close();
+    void this.router.navigateByUrl(this.auth.isStaff() ? '/admin/notifications' : '/notifications');
+  }
+
   openItem(item: InboxItem): void {
     this.inbox.markRead(item);
     if (!item.link) return;

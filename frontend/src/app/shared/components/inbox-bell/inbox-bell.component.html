@@ -47,11 +47,12 @@
             </span>
           </button>
         }
-        @if (inbox.hasMore()) {
-          <button type="button" class="inbox-more" [disabled]="inbox.loading()" (click)="inbox.load(inbox.filter(), true)" data-testid="inbox-more">Prikaži starija</button>
-        }
       }
     </div>
+
+    <button type="button" class="inbox-all" (click)="openPage()" data-testid="inbox-all">
+      Sva obaveštenja <span appIcon="arrow-right" [iconSize]="15" aria-hidden="true"></span>
+    </button>
 
     @if (push.state() === 'off' || push.state() === 'needs-install') {
       <button type="button" class="inbox-push" [disabled]="push.busy()" (click)="enablePush()" data-testid="inbox-push">
