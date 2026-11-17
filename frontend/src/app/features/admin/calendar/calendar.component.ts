@@ -1,4 +1,4 @@
-import { CdkDrag, CdkDragEnd } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragEnd, CdkDragMove } from '@angular/cdk/drag-drop';
 import { NgStyle } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -29,6 +29,7 @@ import { AppointmentFormComponent, AppointmentPrefill } from '../appointments/ap
 import { AuthService } from '../../../core/services/auth.service';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { clientName, clientShortName } from '../../../core/utils/client-name';
+import { minutesLabel, waitWindow } from '../../../core/utils/processing';
 
 type View = 'day' | 'week' | 'month';
 
@@ -49,6 +50,8 @@ interface PositionedEvent {
   height: number;
   left: number;
   width: number;
+  nested: boolean;
+  wait: { top: number; height: number; from: number; to: number; filled: boolean } | null;
 }
 
 interface PositionedBlock {
@@ -118,6 +121,8 @@ export class CalendarComponent {
   readonly blockAllDay = signal(false);
 
   private dragging = false;
+  readonly dragged = signal<Appointment | null>(null);
+  readonly dragBlocked = signal(false);
 
   readonly range = computed(() => {
     const d = this.date();
@@ -282,8 +287,8 @@ export class CalendarComponent {
     this.load(from, to);
   }
 
-  eventClass(a: Appointment): string {
-    return `event event-${a.status}`;
+  eventClass(e: PositionedEvent): string {
+    return `event event-${e.appointment.status}${e.nested ? ' event-nested' : ''}`;
   }
 
   eventStyle(e: PositionedEvent): Record<string, string> {
@@ -317,6 +322,20 @@ export class CalendarComponent {
     this.formPrefill.set({ date: column.date, time: hhmm(minutes), staffMemberId: column.staff?.id ?? this.staffFilter() });
   }
 
+  waitText(e: PositionedEvent): string {
+    return e.wait ? `${minutesLabel(e.wait.from)} – ${minutesLabel(e.wait.to)}` : '';
+  }
+
+  onWaitClick(e: PositionedEvent, column: Column, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.dragging || !e.wait) return;
+    const target = event.currentTarget as HTMLElement;
+    const y = event.clientY - target.getBoundingClientRect().top;
+    const offset = Math.floor((y / HOUR_PX) * 60 / SNAP) * SNAP;
+    const minutes = Math.max(e.wait.from, Math.min(e.wait.from + offset, e.wait.to - SNAP));
+    this.formPrefill.set({ date: column.date, time: hhmm(minutes), staffMemberId: e.appointment.staff_member_id });
+  }
+
   openNew(): void {
     this.formPrefill.set({ date: this.date(), staffMemberId: this.staffFilter() });
   }
@@ -327,8 +346,33 @@ export class CalendarComponent {
     this.selected.set(a);
   }
 
-  onDragStarted(): void {
+  canTake(staff: StaffMember | null, a: Appointment): boolean {
+    if (!staff || staff.id === a.staff_member_id) return true;
+    const ids = new Set(staff.services.map((s) => s.id));
+    return a.items.every((i) => i.service_id === null || ids.has(i.service_id));
+  }
+
+  missingServices(staff: StaffMember, a: Appointment): string {
+    const ids = new Set(staff.services.map((s) => s.id));
+    return a.items.filter((i) => i.service_id !== null && !ids.has(i.service_id)).map((i) => i.name).join(', ');
+  }
+
+  onDragStarted(e: PositionedEvent): void {
     this.dragging = true;
+    this.dragged.set(e.appointment);
+    this.dragBlocked.set(false);
+  }
+
+  onDragMoved(e: PositionedEvent, column: Column, event: CdkDragMove): void {
+    const width = (event.source.element.nativeElement.parentElement as HTMLElement).getBoundingClientRect().width;
+    const target = this.dropColumn(column, event.distance.x, width);
+    this.dragBlocked.set(!this.canTake(target.staff, e.appointment));
+  }
+
+  private dropColumn(column: Column, x: number, width: number): Column {
+    const columns = this.columns();
+    const index = Math.min(columns.length - 1, Math.max(0, columns.indexOf(column) + Math.round(x / width)));
+    return columns[index];
   }
 
   async onDragEnded(e: PositionedEvent, column: Column, event: CdkDragEnd): Promise<void> {
@@ -336,13 +380,16 @@ export class CalendarComponent {
     const width = (event.source.element.nativeElement.parentElement as HTMLElement).getBoundingClientRect().width;
     event.source.reset();
     setTimeout(() => (this.dragging = false));
+    this.dragged.set(null);
+    this.dragBlocked.set(false);
 
     const minutesDelta = Math.round((y / HOUR_PX) * 60 / SNAP) * SNAP;
-    const columnDelta = Math.round(x / width);
-    const columns = this.columns();
-    const targetIndex = Math.min(columns.length - 1, Math.max(0, columns.indexOf(column) + columnDelta));
-    const target = columns[targetIndex];
+    const target = this.dropColumn(column, x, width);
     if (!minutesDelta && target === column) return;
+    if (target.staff && !this.canTake(target.staff, e.appointment)) {
+      this.toast.error(`${target.staff.first_name} ne radi: ${this.missingServices(target.staff, e.appointment)}.`);
+      return;
+    }
 
     const start = minutesOf(e.appointment.starts_at) + minutesDelta;
     if (start < 0 || start >= 24 * 60) return;
@@ -448,10 +495,20 @@ export class CalendarComponent {
       .filter((a) => a.starts_at.slice(0, 10) === date && (!staff || a.staff_member_id === staff.id))
       .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
+    const hosts = events.map((a) => ({ a, wait: waitWindow(a) })).filter((h) => h.wait !== null);
+    const hostOf = (a: Appointment) => {
+      const start = minutesOf(a.starts_at);
+      const end = minutesOf(a.ends_at);
+      return hosts.find((h) => h.a.id !== a.id && h.a.staff_member_id === a.staff_member_id && a.status !== 'cancelled' && start >= h.wait!.from && end <= h.wait!.to)?.a ?? null;
+    };
+
     const lanes: number[] = [];
+    const laneOf = new Map<number, number>();
     const placed = events.map((a) => {
       const start = minutesOf(a.starts_at);
       const end = minutesOf(a.ends_at);
+      const host = hostOf(a);
+      if (host) return { a, start, end, lane: -1, host };
       let lane = lanes.findIndex((laneEnd) => laneEnd <= start);
       if (lane === -1) {
         lane = lanes.length;
@@ -459,9 +516,11 @@ export class CalendarComponent {
       } else {
         lanes[lane] = end;
       }
-      return { a, start, end, lane };
+      laneOf.set(a.id, lane);
+      return { a, start, end, lane, host: null };
     });
     const laneCount = Math.max(1, lanes.length);
+    const filled = new Set(placed.map((p) => p.host?.id).filter((id) => id !== undefined));
 
     const blocks = this.blocks()
       .filter((b) => b.starts_at.slice(0, 10) <= date && b.ends_at.slice(0, 10) >= date)
@@ -481,13 +540,19 @@ export class CalendarComponent {
       staff,
       off,
       blocks,
-      events: placed.map(({ a, start, end, lane }) => ({
-        appointment: a,
-        top: px(start),
-        height: px(end) - px(start),
-        left: lane / laneCount,
-        width: 1 / laneCount,
-      })),
+      events: placed.map(({ a, start, end, lane, host }) => {
+        const hostLane = host ? (laneOf.get(host.id) ?? 0) : lane;
+        const wait = waitWindow(a);
+        return {
+          appointment: a,
+          top: px(start),
+          height: px(end) - px(start),
+          left: host ? (hostLane + 0.28) / laneCount : lane / laneCount,
+          width: host ? 0.72 / laneCount : 1 / laneCount,
+          nested: !!host,
+          wait: wait ? { top: px(wait.from) - px(start), height: px(wait.to) - px(wait.from), from: wait.from, to: wait.to, filled: filled.has(a.id) } : null,
+        };
+      }),
     };
   }
 

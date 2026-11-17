@@ -1,3 +1,4 @@
+import { waitLabel } from '../../../core/utils/processing';
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ChatService } from '../../../core/services/chat.service';
@@ -79,6 +80,7 @@ export class AppointmentDetailsComponent implements OnInit {
   });
 
   readonly active = computed(() => ['pending', 'confirmed'].includes(this.appointment().status));
+  readonly waiting = computed(() => waitLabel(this.appointment()));
   readonly when = computed(() => `${longDate(this.appointment().starts_at)} · ${timeOf(this.appointment().starts_at)} – ${timeOf(this.appointment().ends_at)}`);
   readonly eligibleStaff = computed(() => {
     const ids = this.appointment().items.map((i) => i.service_id).filter((id): id is number => id !== null);

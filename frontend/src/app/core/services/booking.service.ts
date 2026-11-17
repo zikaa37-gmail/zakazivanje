@@ -28,10 +28,10 @@ export class BookingService {
     );
   }
 
-  slots(serviceIds: number[], staffMemberId: number | null, date: string, ignoreAppointmentId: number | null = null, linkedServiceIds: number[] = []): Observable<Slot[]> {
+  slots(serviceIds: number[], staffMemberId: number | null, date: string, ignoreAppointmentId: number | null = null, linkedServiceIds: number[] = [], salon = false): Observable<Slot[]> {
     return this.http.post<Slot[]>(
       `${this.api}/availability/slots`,
-      { service_ids: serviceIds, staff_member_id: staffMemberId, date, ignore_appointment_id: ignoreAppointmentId, linked_service_ids: linkedServiceIds },
+      { service_ids: serviceIds, staff_member_id: staffMemberId, date, ignore_appointment_id: ignoreAppointmentId, linked_service_ids: linkedServiceIds, salon },
       quiet(),
     );
   }

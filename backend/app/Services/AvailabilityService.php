@@ -31,7 +31,34 @@ class AvailabilityService
         return (int) $services->sum('duration_minutes');
     }
 
-    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, int|array|null $ignoreAppointmentId = null, array $linkedSegments = []): array
+    public function processing(Collection $services): ?array
+    {
+        $offset = 0;
+        foreach ($services as $service) {
+            if ($service->hasProcessing()) {
+                return ['offset' => $offset + $service->processing_after_minutes, 'minutes' => $service->processing_minutes];
+            }
+            $offset += $service->duration_minutes;
+        }
+
+        return null;
+    }
+
+    public function workIntervals(CarbonImmutable $start, CarbonImmutable $end, ?array $processing): array
+    {
+        if (! $processing || ! $processing['offset'] || ! $processing['minutes']) {
+            return [[$start, $end]];
+        }
+        $waitStart = $start->addMinutes($processing['offset']);
+        $waitEnd = $waitStart->addMinutes($processing['minutes']);
+        if ($waitEnd->gte($end)) {
+            return [[$start, $end]];
+        }
+
+        return [[$start, $waitStart], [$waitEnd, $end]];
+    }
+
+    public function slots(Collection $services, ?int $staffMemberId, CarbonImmutable $date, int|array|null $ignoreAppointmentId = null, array $linkedSegments = [], bool $salon = false): array
     {
         if ($services->isEmpty()) {
             return [];
@@ -47,10 +74,11 @@ class AvailabilityService
         $earliest = $settings->earliestOnlineStart();
         $duration = $this->duration($services);
         $openingHours = OpeningHour::week();
+        $processing = $salon ? $this->processing($services) : null;
         $slots = [];
 
         foreach ($this->eligibleStaff($services, $staffMemberId) as $staff) {
-            $busy = $this->busyIntervals($staff->id, $date, $date->endOfDay(), $ignoreAppointmentId);
+            $busy = $this->busyIntervals($staff->id, $date, $date->endOfDay(), $ignoreAppointmentId, $salon);
 
             foreach ($staff->hoursOn($date, $openingHours) as $hours) {
                 $start = $date->setTimeFromTimeString($hours['starts_at']);
@@ -58,7 +86,7 @@ class AvailabilityService
 
                 for ($t = $start; $t->addMinutes($duration)->lte($end); $t = $t->addMinutes($settings->slot_interval_minutes)) {
                     $slotEnd = $t->addMinutes($duration);
-                    if ($t->lt($earliest) || $this->overlapsAny($busy, $t, $slotEnd)) {
+                    if ($t->lt($earliest) || collect($this->workIntervals($t, $slotEnd, $processing))->contains(fn ($part) => $this->overlapsAny($busy, $part[0], $part[1]))) {
                         continue;
                     }
                     $slots[$t->format('H:i')][] = $staff->id;
@@ -114,6 +142,13 @@ class AvailabilityService
         return ! $this->overlapsAny($this->busyIntervals($staffMemberId, $start, $end, $ignoreAppointmentId), $start, $end);
     }
 
+    public function isFreeForSalon(int $staffMemberId, CarbonImmutable $start, CarbonImmutable $end, int|array|null $ignoreAppointmentId = null, ?array $processing = null): bool
+    {
+        $busy = $this->busyIntervals($staffMemberId, $start, $end, $ignoreAppointmentId, true);
+
+        return collect($this->workIntervals($start, $end, $processing))->every(fn ($part) => ! $this->overlapsAny($busy, $part[0], $part[1]));
+    }
+
     public function linkedSegments(Collection $linked): array
     {
         if ($linked->isEmpty()) {
@@ -163,23 +198,26 @@ class AvailabilityService
         };
     }
 
-    private function busyIntervals(int $staffMemberId, CarbonImmutable $from, CarbonImmutable $to, int|array|null $ignoreAppointmentId = null): Collection
+    private function busyIntervals(int $staffMemberId, CarbonImmutable $from, CarbonImmutable $to, int|array|null $ignoreAppointmentId = null, bool $salon = false): Collection
     {
         $appointments = Appointment::query()
             ->blocking()
             ->where('staff_member_id', $staffMemberId)
             ->overlapping($from, $to)
             ->when($ignoreAppointmentId, fn ($q) => $q->whereKeyNot($ignoreAppointmentId))
-            ->get(['starts_at', 'ends_at']);
+            ->get(['starts_at', 'ends_at', 'processing_offset', 'processing_minutes'])
+            ->flatMap(fn (Appointment $a) => $this->workIntervals(
+                CarbonImmutable::parse($a->starts_at),
+                CarbonImmutable::parse($a->ends_at),
+                $salon ? $a->processing() : null,
+            ));
 
         $blocks = BlockedTime::query()->affecting($staffMemberId)
             ->where('starts_at', '<', $to)->where('ends_at', '>', $from)
-            ->get(['starts_at', 'ends_at']);
+            ->get(['starts_at', 'ends_at'])
+            ->map(fn ($row) => [CarbonImmutable::parse($row->starts_at), CarbonImmutable::parse($row->ends_at)]);
 
-        return $appointments->concat($blocks)->map(fn ($row) => [
-            CarbonImmutable::parse($row->starts_at),
-            CarbonImmutable::parse($row->ends_at),
-        ]);
+        return $appointments->concat($blocks)->values();
     }
 
     private function overlapsAny(Collection $busy, CarbonImmutable $start, CarbonImmutable $end): bool

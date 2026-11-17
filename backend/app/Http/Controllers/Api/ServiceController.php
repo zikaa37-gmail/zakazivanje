@@ -29,7 +29,7 @@ class ServiceController extends Controller
         return $this->ordered(Service::query()
             ->offeredOnline()
             ->with(['staffMembers' => fn ($q) => $q->where('active', true)->select('staff_members.id', 'first_name', 'last_name', 'title')])
-            ->get(['id', 'name', 'description', 'service_category_id', 'audience', 'duration_minutes', 'price', 'paused_until']))
+            ->get(['id', 'name', 'description', 'service_category_id', 'audience', 'duration_minutes', 'processing_after_minutes', 'processing_minutes', 'price', 'paused_until']))
             ->each->setHidden(['serviceCategory', 'service_category_id']);
     }
 
@@ -90,13 +90,15 @@ class ServiceController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
             'service_category_id' => ['nullable', 'integer', 'exists:service_categories,id'],
             'audience' => ['sometimes', Rule::in(Service::AUDIENCES)],
             'booking_confirmation' => ['nullable', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
             'duration_minutes' => ['required', 'integer', 'min:5', 'max:720'],
+            'processing_after_minutes' => ['nullable', 'integer', 'min:5', 'max:720', 'required_with:processing_minutes'],
+            'processing_minutes' => ['nullable', 'integer', 'min:5', 'max:720', 'required_with:processing_after_minutes'],
             'price' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'active' => ['boolean'],
             'paused_until' => ['nullable', 'date_format:Y-m-d'],
@@ -107,6 +109,12 @@ class ServiceController extends Controller
             'staff_member_ids' => ['array'],
             'staff_member_ids.*' => ['integer', 'exists:staff_members,id'],
         ]);
+
+        if (! empty($data['processing_minutes']) && $data['processing_after_minutes'] + $data['processing_minutes'] + 5 > $data['duration_minutes']) {
+            throw ValidationException::withMessages(['processing_minutes' => ['Posle čekanja mora ostati bar 5 minuta rada — produži trajanje usluge ili skrati čekanje.']]);
+        }
+
+        return $data;
     }
 
     private function persist(Service $service, array $data): Service

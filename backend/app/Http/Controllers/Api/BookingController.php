@@ -36,6 +36,7 @@ class BookingController extends Controller
             'ignore_appointment_id' => ['nullable', 'integer'],
             'linked_service_ids' => ['nullable', 'array'],
             'linked_service_ids.*' => ['integer', 'distinct'],
+            'salon' => ['sometimes', 'boolean'],
         ]);
 
         $date = CarbonImmutable::parse($data['date']);
@@ -51,6 +52,7 @@ class BookingController extends Controller
             $date,
             $ignore,
             $segments,
+            ($data['salon'] ?? false) && (bool) $request->user()?->isStaff(),
         );
 
         return $this->offPeakOnly($request->user(), $date, $slots);

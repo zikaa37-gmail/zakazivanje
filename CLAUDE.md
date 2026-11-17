@@ -280,6 +280,11 @@ Iznos: `fixed` / `percent` / `service_plus_fixed` za salon, a usluga ga nadjača
 manji `cancellation_free_late` usluge u terminu važi); klijentu umanjenje `users.cancellation_discount_*` (`fixed` / `percent` / `exempt`). Klijent vidi
 odbrojavanje i objašnjenje (`cancellation_fee_note`) u `<app-late-cancel-dialog>` i dug u Moji termini; salon „Klijent otkazao“ upisuje naknadu, a
 `<app-client-fees>` (detalji termina, istorijat klijenta) beleži naplatu, a menadžer oprašta ili menja iznos uz razlog. `free_change_reason` je izuzet.
+Vreme čekanja (farbanje): usluga može imati rad → čekanje → rad (`services.processing_after_minutes` + `processing_minutes`, ostatak trajanja je rad
+na kraju, bar 5 min); termin pamti `appointments.processing_offset` / `processing_minutes` (od početka termina, pa pomeranje ne menja ništa).
+Čekanje popunjava samo salon: `AvailabilityService::isFreeForSalon()` / `slots(..., salon: true)` računaju samo delove rada (`workIntervals()`),
+online i `isFree()` ceo termin. Kalendar crta čekanje prugasto („Čeka · slobodno“, klik = novi termin u tom vremenu), termin u čekanju se crta
+preko njega (`event-nested`); `core/utils/processing.ts`. Pri prevlačenju kolone zaposlenih koji ne rade te usluge su označene i spuštanje se odbija.
 Povezane usluge (dve prostorije): u `/book` „Odmah posle i druga usluga“ → lista ostalih usluga (`linked_service_ids`); `BookingService` pravi
 povezan termin odmah posle prvog kod slobodnog zaposlenog (`AvailabilityService::linkedSegments()` — jedan zaposleni za sve ili po usluga,
 `chainPlanner()` je jedino mesto za proveru niza, koristi ga i dostupnost), isti `appointments.link_group`, cena iz zajedničkog `quote`.

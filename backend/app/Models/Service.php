@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'description', 'service_category_id', 'audience', 'booking_confirmation', 'duration_minutes', 'price', 'active', 'paused_until', 'sort_order', 'cancellation_fee_type', 'cancellation_fee_value', 'cancellation_free_late'])]
+#[Fillable(['name', 'description', 'service_category_id', 'audience', 'booking_confirmation', 'duration_minutes', 'processing_after_minutes', 'processing_minutes', 'price', 'active', 'paused_until', 'sort_order', 'cancellation_fee_type', 'cancellation_fee_value', 'cancellation_free_late'])]
 #[Appends(['category'])]
 #[Hidden(['serviceCategory'])]
 class Service extends Model
@@ -34,6 +34,8 @@ class Service extends Model
         return [
             'price' => 'float',
             'duration_minutes' => 'integer',
+            'processing_after_minutes' => 'integer',
+            'processing_minutes' => 'integer',
             'active' => 'boolean',
             'service_category_id' => 'integer',
             'paused_until' => 'date:Y-m-d',
@@ -73,6 +75,11 @@ class Service extends Model
     public function promotions(): BelongsToMany
     {
         return $this->belongsToMany(Promotion::class)->withPivot('quantity');
+    }
+
+    public function hasProcessing(): bool
+    {
+        return $this->processing_after_minutes > 0 && $this->processing_minutes > 0;
     }
 
     public function isPausedOn(CarbonInterface $date): bool

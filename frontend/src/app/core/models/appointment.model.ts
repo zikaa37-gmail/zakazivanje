@@ -19,6 +19,8 @@ export interface Appointment {
   recurrence_id: number | null;
   starts_at: string;
   ends_at: string;
+  processing_offset?: number | null;
+  processing_minutes?: number | null;
   status: AppointmentStatus;
   source: 'online' | 'admin' | 'recurring';
   price: number;

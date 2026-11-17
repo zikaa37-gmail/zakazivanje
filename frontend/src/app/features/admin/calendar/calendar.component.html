@@ -59,11 +59,14 @@
             <span class="cal-corner-small">{{ corner().bottom }}</span>
           </button>
           @for (col of columns(); track col.key) {
-            <div class="cal-head-cell" [class.is-today]="view() === 'week' && col.date === todayIso">
+            <div class="cal-head-cell" [class.is-today]="view() === 'week' && col.date === todayIso" [class.cal-cant-take]="dragged() && !canTake(col.staff, dragged()!)">
               @if (col.staff && view() === 'day') {
                 <span class="color-dot" [style.background]="col.staff.color || 'var(--color-primary)'"></span>
               }
               <span class="font-semibold truncate">{{ col.label }}</span>
+              @if (dragged() && !canTake(col.staff, dragged()!)) {
+                <span class="cal-cant-take-label" [attr.data-testid]="'cant-take-' + col.key"><span appIcon="lock" [iconSize]="11" aria-hidden="true"></span> ne radi ovo</span>
+              }
               @if (col.sublabel) {
                 <span class="text-xs muted truncate hidden md:inline">{{ col.sublabel }}</span>
               }
@@ -79,7 +82,7 @@
           </div>
 
           @for (col of columns(); track col.key; let ci = $index) {
-            <div class="cal-col" (click)="onGridClick(col, $event)" [attr.data-testid]="'col-' + col.key">
+            <div class="cal-col" [class.cal-cant-take]="dragged() && !canTake(col.staff, dragged()!)" (click)="onGridClick(col, $event)" [attr.data-testid]="'col-' + col.key">
               @for (h of hours().list; track h) {
                 <div class="cal-hour-line" [style.height.px]="hourPx"></div>
               }
@@ -93,12 +96,14 @@
               }
               @for (e of col.events; track e.appointment.id) {
                 <div
-                  [class]="eventClass(e.appointment)"
+                  [class]="eventClass(e)"
                   [ngStyle]="eventStyle(e)"
                   cdkDrag
                   [cdkDragDisabled]="!canDrag(e.appointment)"
                   cdkDragBoundary=".cal-body"
-                  (cdkDragStarted)="onDragStarted()"
+                  [class.drag-blocked]="dragBlocked() && dragged()?.id === e.appointment.id"
+                  (cdkDragStarted)="onDragStarted(e)"
+                  (cdkDragMoved)="onDragMoved(e, col, $event)"
                   (cdkDragEnded)="onDragEnded(e, col, $event)"
                   (click)="openEvent(e.appointment, $event)"
                   [attr.data-testid]="'event-' + e.appointment.id"
@@ -107,8 +112,16 @@
                   (keydown.enter)="openEvent(e.appointment, $event)"
                 >
                   <div class="event-title">{{ eventTitle(e.appointment) }}</div>
-                  @if (e.height > 34) {
+                  @if (e.height > 34 && (!e.wait || e.wait.top > 30)) {
                     <div class="event-sub">{{ eventServices(e.appointment) }}{{ view() === 'week' && !col.staff ? ' · ' + e.appointment.staff_member?.first_name : '' }}</div>
+                  }
+                  @if (e.wait; as wait) {
+                    <button type="button" class="event-wait" [style.top.px]="wait.top" [style.height.px]="wait.height" (click)="onWaitClick(e, col, $event)" [title]="'Klijent čeka ' + waitText(e) + ' — klikni da zakažeš drugog klijenta u to vreme'" [attr.data-testid]="'event-wait-' + e.appointment.id">
+                      <span class="event-wait-label"><span appIcon="clock" [iconSize]="11" aria-hidden="true"></span> {{ wait.filled ? 'Čeka' : 'Čeka · slobodno' }}</span>
+                      @if (wait.height > 34 && !wait.filled) {
+                        <span class="event-wait-label event-wait-add"><span appIcon="plus" [iconSize]="11" aria-hidden="true"></span> Ubaci klijenta</span>
+                      }
+                    </button>
                   }
                 </div>
               }
@@ -129,8 +142,9 @@
       <span class="flex items-center gap-1"><span [class]="'legend-swatch event event-' + s.key"></span>{{ s.label }}</span>
     }
     <span class="flex items-center gap-1"><span class="legend-swatch cal-block-swatch"></span>Blokirano</span>
+    <span class="flex items-center gap-1"><span class="wait-swatch"></span>Klijent čeka (boja deluje) — slobodno za drugog</span>
     @if (view() === 'day') {
-      <span>· Prevuci termin da ga pomeriš, klikni na prazno polje za novi termin.</span>
+      <span>· Prevuci termin da ga pomeriš, klikni na prazno polje za novi termin, a na prugasto da ubaciš klijenta dok drugi čeka.</span>
     }
   </div>
 }

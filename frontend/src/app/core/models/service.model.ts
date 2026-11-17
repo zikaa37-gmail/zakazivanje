@@ -42,6 +42,8 @@ export interface SalonService {
   audience: ServiceAudience;
   booking_confirmation: ConfirmationMode | null;
   duration_minutes: number;
+  processing_after_minutes?: number | null;
+  processing_minutes?: number | null;
   price: number;
   active: boolean;
   paused_until: string | null;
@@ -59,6 +61,8 @@ export interface SalonServicePayload {
   audience: ServiceAudience;
   booking_confirmation: ConfirmationMode | null;
   duration_minutes: number;
+  processing_after_minutes: number | null;
+  processing_minutes: number | null;
   price: number;
   active: boolean;
   paused_until: string | null;

@@ -57,9 +57,11 @@ class BookingService
                 $this->ensureNotPaused($services, $start);
             }
 
+            $processing = $this->availability->processing($services);
             $staff = $candidates
-                ->filter(fn (StaffMember $s) => (! $online || $this->availability->withinWorkingHours($s, $start, $end))
-                    && $this->availability->isFree($s->id, $start, $end))
+                ->filter(fn (StaffMember $s) => $online
+                    ? $this->availability->withinWorkingHours($s, $start, $end) && $this->availability->isFree($s->id, $start, $end)
+                    : $this->availability->isFreeForSalon($s->id, $start, $end, null, $processing))
                 ->sortBy(fn (StaffMember $s) => Appointment::blocking()->where('staff_member_id', $s->id)->whereDate('starts_at', $start->toDateString())->count())
                 ->first();
 
@@ -83,6 +85,8 @@ class BookingService
                 'recurrence_id' => $recurrenceId,
                 'starts_at' => $start,
                 'ends_at' => $end,
+                'processing_offset' => $processing['offset'] ?? null,
+                'processing_minutes' => $processing['minutes'] ?? null,
                 'status' => $automatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
                 'confirmed_at' => $automatic ? now() : null,
                 'source' => $source,
@@ -96,11 +100,14 @@ class BookingService
 
             foreach ($chain as $part) {
                 $linkedAutomatic = $source !== Appointment::SOURCE_ONLINE || $this->confirmsAutomatically($part['staff'], $part['services'], $client);
+                $linkedProcessing = $this->availability->processing($part['services']);
                 $linkedAppointment = Appointment::create([
                     'client_id' => $client->id,
                     'staff_member_id' => $part['staff']->id,
                     'starts_at' => $part['starts_at'],
                     'ends_at' => $part['ends_at'],
+                    'processing_offset' => $linkedProcessing['offset'] ?? null,
+                    'processing_minutes' => $linkedProcessing['minutes'] ?? null,
                     'status' => $linkedAutomatic ? Appointment::STATUS_CONFIRMED : Appointment::STATUS_PENDING,
                     'confirmed_at' => $linkedAutomatic ? now() : null,
                     'source' => $source,
