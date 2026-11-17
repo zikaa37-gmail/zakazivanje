@@ -24,7 +24,8 @@ CREATE TABLE `zk_notification_logs` (
   KEY `zk_notification_logs_created_at_index` (`created_at`),
   CONSTRAINT `zk_notification_logs_appointment_id_foreign` FOREIGN KEY (`appointment_id`) REFERENCES `zk_appointments` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_notification_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_notification_logs` VALUES (1,4,NULL,'test','whatsapp','+381646370620','skipped','Twilio nije podešen','2026-11-17 14:00:02'),(2,4,NULL,'test','mail','devtestzikaa+danijela@gmail.com','sent',NULL,'2026-11-17 14:00:07'),(3,4,NULL,'test','mail','devtestzikaa+danijela@gmail.com','sent',NULL,'2026-11-17 14:01:11');
 
 SET FOREIGN_KEY_CHECKS=1;
