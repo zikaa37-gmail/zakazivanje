@@ -58,6 +58,6 @@ obaveštenja.
 
 - PIB i matični broj (APR), mejl salona i podaci za uplatu (račun, primalac).
 - Cene i tačna trajanja usluga, pa ih uključiti; spisak usluga potvrditi sa salonom (elektroterapije, epilacija).
-- Nalozi: Danijela Đokić (vlasnik i zaposlena), Lika i Vuk Matović (administrativni radnici), Tijana XXX (radnica) imaju privremene test mejlove `devtestzikaa+…@gmail.com` i lozinku iz šablona — zameniti pravim mejlovima, telefonima i prezimenom pre pravih klijenata (i ukloniti `password` iz `salon.json`).
+- Nalozi: Danijela Đokić (vlasnik i zaposlena), Luka i Vuk Matović (administrativni radnici; Luka koristi postojeći `luka@fiskultura.rs`), Tijana XXX (radnica) imaju privremene test mejlove i lozinku iz šablona — zameniti pravim mejlovima, telefonima i prezimenom pre pravih klijenata (i ukloniti `password` iz `salon.json`).
 - Naslovna fotografija, galerija i povezivanje Instagrama.
 - Frizerski deo: kad krene, uključiti kategorije „Frizer — …", pa usluge sa cenama.

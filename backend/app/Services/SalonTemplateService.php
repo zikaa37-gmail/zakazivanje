@@ -188,7 +188,7 @@ class SalonTemplateService
                 $member = isset($a['staff']) ? $staff->get($a['staff']) : null;
                 $existing = filled($a['email'] ?? null) ? User::where('email', $a['email'])->first() : null;
                 if ($existing) {
-                    $existing->forceFill(['staff_member_id' => $member?->id])->save();
+                    $existing->forceFill([...Arr::only($a, ['first_name', 'last_name']), 'staff_member_id' => $member?->id])->save();
 
                     continue;
                 }
