@@ -325,4 +325,4 @@ samo posle „Dodaj na početni ekran“. Odjava šalje `push_endpoint` i briše
 `OPENSSL_CONF` — `ServeCommand` ga postavlja iz `extras/ssl/openssl.cnf` pri `php artisan serve`.
 Lokalno: `node dev.mjs` (frontend 4200 / 5110, backend 8000 / 8110).
 Specifikacija: `docs/specifikacija.md`; API rute: `docs/api-rute.md` (ažurirati pri izmeni ruta);
-radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`.
+radni tok: `docs/git-workflow.md`; deploy: `docs/DEPLOY.md`; predaja salonu (nalozi, troškovi, novi domen): `docs/predaja/`.
