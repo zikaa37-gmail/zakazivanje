@@ -15,7 +15,7 @@ import { ReviewService } from '../../core/services/review.service';
 import { ModalComponent } from '../../shared/components/modal/modal.component';
 import { ReviewCardComponent } from '../../shared/components/review-card/review-card.component';
 import { ReviewSummaryComponent } from '../../shared/components/review-summary/review-summary.component';
-import { SocialLinksComponent } from '../../shared/components/social-links/social-links.component';
+import { businessPhones, mapDirectionsUrl, mapEmbedUrl, mapOpenUrl, mapQuery } from '../../core/utils/business-contact';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { DurationPipe } from '../../shared/pipes/duration.pipe';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
@@ -24,7 +24,7 @@ import { BookingDraftService } from './booking-draft.service';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, DurationPipe, IconDirective, ModalComponent, ReviewCardComponent, ReviewSummaryComponent, RsdPipe, SocialLinksComponent],
+  imports: [RouterLink, DurationPipe, IconDirective, ModalComponent, ReviewCardComponent, ReviewSummaryComponent, RsdPipe],
   templateUrl: './home.component.html',
 })
 export class HomeComponent {
@@ -90,31 +90,25 @@ export class HomeComponent {
   );
   readonly todayHours = computed(() => this.hours().find((h) => h.today) ?? null);
 
-  readonly phoneHref = computed(() => {
-    const phone = this.business.settings()?.phone;
-    return phone ? `tel:${phone.replace(/\s/g, '')}` : null;
-  });
+  readonly phones = computed(() => businessPhones(this.business.settings()));
+  readonly phoneHref = computed(() => this.phones()[0]?.tel ?? null);
+  readonly messagingPhone = computed(() => this.phones().find((p) => p.whatsapp) ?? null);
   readonly fullAddress = computed(() => {
     const s = this.business.settings();
     return [s?.address, s?.city].filter(Boolean).join(', ');
   });
-  readonly mapQuery = computed(() => {
-    const s = this.business.settings();
-    if (!s) return null;
-    if (s.map_query?.trim()) return s.map_query.trim();
-    return this.fullAddress() || null;
-  });
+  readonly mapQuery = computed(() => mapQuery(this.business.settings()));
   readonly mapEmbed = computed(() => {
     const query = this.mapQuery();
-    return query ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&output=embed`) : null;
+    return query ? this.sanitizer.bypassSecurityTrustResourceUrl(mapEmbedUrl(query)) : null;
   });
   readonly mapHref = computed(() => {
     const query = this.mapQuery();
-    return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null;
+    return query ? mapOpenUrl(query) : null;
   });
   readonly directionsHref = computed(() => {
     const query = this.mapQuery();
-    return query ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}` : null;
+    return query ? mapDirectionsUrl(query) : null;
   });
   readonly instagramHandle = computed(() => this.business.settings()?.instagram_username ?? null);
 

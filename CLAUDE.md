@@ -164,7 +164,7 @@ jedna po jedna, opis, usluga, skrivanje, prevlačenje za redosled), javno `/gall
 `<app-gallery-viewer>` preko celog ekrana, „Podeli" = Web Share sa fajlom — Instagram / WhatsApp na
 telefonu) i poslednjih 6 na početnoj; slika je data URL u `gallery_images.data`, servira se kao fajl.
 Deljenje (kao u košarkaškoj): mreže `instagram` / `facebook` / `tiktok` / `youtube` u Podešavanjima (ime ili ceo
-link, `socialLinks()` u `core/utils/social.ts` pravi URL), ikonice `<app-social-links>` u dnu javnih stranica;
+link, `socialLinks()` u `core/utils/social.ts` pravi URL), ikonice `<app-social-links>` (krugovi u bojama mreža, tokeni `--color-brand-*`) samo u dnu javnih stranica;
 admin `/admin/share` — slika za Instagram na canvasu (`share-image.ts`: zakaži online sa QR, akcija, cenovnik,
 slika iz galerije; 4:5, kvadrat, story) i QR kod za štampu (`POST /share/qr`, `chillerlan/php-qrcode`).
 Plaćanje (kao u košarkaškoj): Podešavanja → Plaćanje (`bank_account`, primalac, šifra 289,
@@ -211,7 +211,7 @@ delatnosti (`core/utils/service-presets.ts`) ili AI predlog → pregled i izmena
 AI pomoćnik: Podešavanja → AI pomoćnik (`ai_enabled`, ključ šifrovan u `business_settings.ai_api_key`, rezerva `ANTHROPIC_API_KEY`),
 `AiService` (Claude, `claude-opus-5-5`, strukturisan JSON, serverski fallback) — svaka nova AI funkcija ide kroz `AiService::json()` i
 prikazuje se samo kad je `ai_available`. Naziv zaposlenog: `staff_term` / `staff_term_genitive` (Podešavanja → Biznis, lista po delatnosti
-`STAFF_TERMS` ili AI), u frontendu `BusinessSettingService.staffTerm()` / `staffTermGenitive()` — ne pisati „frizer“ u kodu.
+`STAFF_TERMS` u `core/utils/staff-terms.ts` — samo izbor, oba oblika dolaze iz liste — ili AI), u frontendu `BusinessSettingService.staffTerm()` / `staffTermGenitive()` — ne pisati „frizer“ u kodu.
 Razdvojeni delovi: javni deo (`PublicShellComponent` — početna, `/book`, galerija, `/my-appointments`, `/profile`) je samo za klijente i
 goste (`clientAreaGuard` preusmerava osoblje na `/admin`), admin je samo za osoblje (`staffGuard`). Profil osoblja je `/admin/profile`
 (`StaffProfileComponent`: kanal obaveštenja, lozinka; ime i telefon samo ako nije vezan za zaposlenog — inače dolaze sa stranice Zaposleni),
@@ -234,7 +234,7 @@ može da zakaže blokiranom uz upozorenje. Podešavanja discipline i izveštaja 
 samo osoblju). Klijenta u formi termina bira deljena `<app-select-search>` (prima `FormControl`, `remote` pretraga).
 Landing i Instagram (#65): početna je landing za sve (naslovna ili prva fotografija salona, ocena / danas radimo / grad / poziv, „Naš salon" slajder
 (`gallery_images.kind = salon`), „Naši radovi" (`featured`, inače poslednji radovi), usluge, objave sa Instagrama, „Kako do nas" (Google mapa
-iz adrese i grada (`map_query` samo ako je već upisan, polje više nije u Podešavanjima), bez API ključa, dugme „Otvori u Google mapama“), utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
+iz adrese i grada ili koordinata (`map_query`, Podešavanja → Biznis → Adresa i mapa, sa pregledom mape), bez API ključa, dugme „Otvori u Google mapama“; na desktopu pored radnog vremena), telefoni `mobile_phone` pa `phone` (fiksni), WhatsApp / Viber na broju `messaging_phone` (`mobile` / `landline`) — sve u `core/utils/business-contact.ts`, utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
 Praćenje izvora: `?izvor=&kampanja=` (i `utm_*`, referrer instagram/facebook/tiktok/google) pamti `MarketingService.capture()` 30 dana;
 poseta → `marketing_visits`, registracija → `users.signup_source`, termin → `appointments.referral_source`; Pregled → „Odakle dolaze klijenti",
 Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Instagram i Meta (#67): Podešavanja → Instagram i Meta — „Poveži sa Instagramom" (OAuth, `config/instagram.php`, `INSTAGRAM_APP_*`

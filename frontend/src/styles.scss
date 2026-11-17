@@ -951,6 +951,75 @@ button.badge:focus-visible {
   box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
 }
 
+.landing-location {
+  display: grid;
+}
+
+.landing-location-map .landing-map {
+  height: 16rem;
+}
+
+@include bp.md-up {
+  .landing-location {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  }
+
+  .landing-location-map .landing-map {
+    height: 100%;
+    min-height: 20rem;
+  }
+}
+
+.landing-phone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.brand-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  color: var(--color-on-brand);
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.is-whatsapp {
+    background: var(--color-brand-whatsapp);
+  }
+
+  &.is-viber {
+    background: var(--color-brand-viber);
+  }
+}
+
+.settings-divider {
+  margin: 1.25rem 0 1rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-section-title {
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.settings-map {
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+
+  .landing-map {
+    height: 14rem;
+  }
+}
+
 .choice-card {
   display: flex;
   align-items: center;

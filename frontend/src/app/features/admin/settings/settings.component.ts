@@ -2,7 +2,11 @@ import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
-import { AiStatus, BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode, STAFF_TERMS, StaffTerm } from '../../../core/models/business-setting.model';
+import { AiStatus, BUSINESS_CATEGORIES, BusinessCategory, BusinessSetting, CONFIRMATION_OPTIONS, ConfirmationMode, MessagingPhone } from '../../../core/models/business-setting.model';
+import { STAFF_TERMS, StaffTerm } from '../../../core/utils/staff-terms';
+import { mapEmbedUrl, mapOpenUrl, mapQuery } from '../../../core/utils/business-contact';
+import { DomSanitizer } from '@angular/platform-browser';
+import { debounceTime, merge } from 'rxjs';
 import { AiService } from '../../../core/services/ai.service';
 import { CANCELLATION_FEE_TYPES, CancellationFeeType } from '../../../core/models/cancellation-fee.model';
 import { FreeSlotsPreview, InstagramState } from '../../../core/models/marketing.model';
@@ -22,6 +26,7 @@ import { WEEKDAYS } from '../../../core/models/staff.model';
 import { ImageCropperComponent } from '../../../shared/components/image-cropper/image-cropper.component';
 import { TimePickerComponent } from '../../../shared/components/time-picker/time-picker.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
@@ -55,7 +60,7 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InputDirective, ModalComponent, SrDatePipe, TimePickerComponent, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InfoTipComponent, InputDirective, ModalComponent, SrDatePipe, TimePickerComponent, ToggleComponent],
   templateUrl: './settings.component.html',
 })
 export class SettingsComponent {
@@ -71,6 +76,7 @@ export class SettingsComponent {
   readonly bioLink = this.marketing.link(`${window.location.origin}/`, 'instagram', 'bio');
   private confirm = inject(ConfirmService);
   private ai = inject(AiService);
+  private sanitizer = inject(DomSanitizer);
   readonly aiStatus = signal<AiStatus | null>(null);
   readonly aiKey = new FormControl('', { nonNullable: true });
   readonly aiBusy = signal(false);
@@ -79,9 +85,20 @@ export class SettingsComponent {
   readonly aiTerms = signal<StaffTerm[]>([]);
   readonly termsLoading = signal(false);
   readonly categoryLabel = computed(() => BUSINESS_CATEGORIES.find((c) => c.value === this.categoryValue())?.label ?? '');
+  readonly savedTerm = signal<StaffTerm | null>(null);
   readonly staffTermOptions = computed(() => {
-    const options = [...this.aiTerms(), ...STAFF_TERMS[this.categoryValue()]];
+    const saved = this.savedTerm();
+    const options = [...this.aiTerms(), ...STAFF_TERMS[this.categoryValue()], ...(saved ? [saved] : [])];
     return options.filter((o, i) => options.findIndex((x) => x.term === o.term) === i);
+  });
+  readonly mapPreviewQuery = signal<string | null>(null);
+  readonly mapPreviewUrl = computed(() => {
+    const query = this.mapPreviewQuery();
+    return query ? this.sanitizer.bypassSecurityTrustResourceUrl(mapEmbedUrl(query)) : null;
+  });
+  readonly mapPreviewHref = computed(() => {
+    const query = this.mapPreviewQuery();
+    return query ? mapOpenUrl(query) : null;
   });
   readonly instagram = signal<InstagramState | null>(null);
   readonly instagramToken = new FormControl('', { nonNullable: true });
@@ -134,9 +151,9 @@ export class SettingsComponent {
     instagram_free_slots_days: this.fb.nonNullable.control<number[]>([]),
     instagram_free_slots_time: this.fb.control<string | null>('09:00'),
     phone: this.fb.control<string | null>(null),
-    whatsapp_number: this.fb.control<string | null>(null),
+    mobile_phone: this.fb.control<string | null>(null),
+    messaging_phone: this.fb.nonNullable.control<MessagingPhone>('mobile'),
     email: this.fb.control<string | null>(null, Validators.email),
-    website: this.fb.control<string | null>(null),
     instagram: this.fb.control<string | null>(null),
     facebook: this.fb.control<string | null>(null),
     tiktok: this.fb.control<string | null>(null),
@@ -274,6 +291,9 @@ export class SettingsComponent {
     });
 
     this.loadAiStatus();
+    merge(this.form.controls.address.valueChanges, this.form.controls.city.valueChanges, this.form.controls.map_query.valueChanges)
+      .pipe(debounceTime(800))
+      .subscribe(() => this.mapPreviewQuery.set(mapQuery({ address: this.form.controls.address.value, city: this.form.controls.city.value, map_query: this.form.controls.map_query.value })));
     this.form.controls.category.valueChanges.subscribe((category) => {
       this.categoryValue.set(category);
       this.aiTerms.set([]);
@@ -291,6 +311,11 @@ export class SettingsComponent {
 
   private shiftRow(name: string, starts: string, ends: string): ShiftRow {
     return { name: new FormControl(name, { nonNullable: true }), starts: new FormControl(starts), ends: new FormControl(ends) };
+  }
+
+  setMessagingPhone(value: MessagingPhone): void {
+    this.form.controls.messaging_phone.setValue(value);
+    this.form.markAsDirty();
   }
 
   pickStaffTerm(option: StaffTerm): void {
@@ -610,9 +635,9 @@ export class SettingsComponent {
       instagram_insights_enabled: value.instagram_insights_enabled,
       instagram_free_slots_time: value.instagram_free_slots_time || '09:00',
       phone: clean(value.phone),
-      whatsapp_number: clean(value.whatsapp_number),
+      mobile_phone: clean(value.mobile_phone),
+      messaging_phone: value.messaging_phone,
       email: clean(value.email),
-      website: clean(value.website),
       instagram: clean(value.instagram),
       facebook: clean(value.facebook),
       tiktok: clean(value.tiktok),
@@ -664,6 +689,8 @@ export class SettingsComponent {
     this.shiftRows.set((settings.shifts ?? []).map((s) => this.shiftRow(s.name, s.starts_at, s.ends_at)));
     this.saved = settings;
     this.syncInstagram(settings);
+    this.savedTerm.set(settings.staff_term && settings.staff_term_genitive ? { term: settings.staff_term, genitive: settings.staff_term_genitive } : null);
+    this.mapPreviewQuery.set(mapQuery(settings));
     this.logo.set(settings.logo);
     this.form.reset({
       name: settings.name,
@@ -682,9 +709,9 @@ export class SettingsComponent {
       instagram_free_slots_days: settings.instagram_free_slots_days ?? [],
       instagram_free_slots_time: settings.instagram_free_slots_time ?? '09:00',
       phone: settings.phone,
-      whatsapp_number: settings.whatsapp_number,
+      mobile_phone: settings.mobile_phone,
+      messaging_phone: settings.messaging_phone ?? 'mobile',
       email: settings.email,
-      website: settings.website,
       instagram: settings.instagram,
       facebook: settings.facebook,
       tiktok: settings.tiktok,

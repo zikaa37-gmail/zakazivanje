@@ -71,6 +71,13 @@
   --color-viewer-control-hover: rgba(250, 250, 249, 0.26);
   --shadow-color: rgba(30, 41, 59, 0.25);
   --color-focus-ring: var(--color-primary);
+  --color-brand-facebook: #1877f2;
+  --color-brand-instagram: linear-gradient(45deg, #f9ce34 0%, #ee2a7b 45%, #6228d7 100%);
+  --color-brand-tiktok: #111111;
+  --color-brand-youtube: #ff0000;
+  --color-brand-whatsapp: #25d366;
+  --color-brand-viber: #7360f2;
+  --color-on-brand: #ffffff;
 }
 
 :root[data-theme='dark'] {

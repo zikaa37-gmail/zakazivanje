@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AiStatus, StaffTerm } from '../models/business-setting.model';
+import { AiStatus } from '../models/business-setting.model';
+import { StaffTerm } from '../utils/staff-terms';
 import { CategoryProposal } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })

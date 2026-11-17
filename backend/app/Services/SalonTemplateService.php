@@ -138,7 +138,7 @@ class SalonTemplateService
         return DB::transaction(function () use ($data, $dir, $password, $kept) {
             $business = BusinessSetting::current();
             $business->forceFill([
-                ...Arr::except($data['business'] ?? [], self::BUSINESS_EXCLUDED),
+                ...Arr::only(Arr::except($data['business'] ?? [], self::BUSINESS_EXCLUDED), $business->getFillable()),
                 'logo' => $this->readImage($dir, 'logo'),
                 'cover_image' => $this->readImage($dir, 'cover'),
             ])->save();
