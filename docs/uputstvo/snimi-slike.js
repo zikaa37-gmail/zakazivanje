@@ -34,11 +34,21 @@ function upcoming() {
   return found;
 }
 
+function startedAppointment() {
+  tinker(
+    '$staff = DB::table("users")->where("role", "worker")->whereNotNull("staff_member_id")->orderBy("id")->value("staff_member_id"); ' +
+      '$source = App\\Models\\Appointment::where("staff_member_id", $staff)->whereNotNull("client_id")->where("status", "!=", "cancelled")->latest("id")->first(); ' +
+      'if ($source) { $start = now()->subMinutes(10)->startOfMinute(); $copy = $source->replicate(); ' +
+      '$copy->fill(["starts_at" => $start, "ends_at" => $start->copy()->addMinutes(30), "status" => "confirmed", "paid_at" => null, "change_notice" => null, "change_notice_at" => null]); $copy->save(); ' +
+      'foreach (DB::table("appointment_items")->where("appointment_id", $source->id)->get() as $item) { $row = (array) $item; unset($row["id"]); $row["appointment_id"] = $copy->id; DB::table("appointment_items")->insert($row); } }',
+  );
+}
+
 function snapshot() {
   return JSON.parse(
     tinker(
       '$ai = (bool) DB::table("business_settings")->value("ai_enabled"); DB::table("business_settings")->update(["ai_enabled" => 1]); ' +
-      'echo json_encode(["ai" => $ai, "appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "absences" => (int) DB::table("staff_absences")->max("id"), "blocks" => (int) DB::table("blocked_times")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
+      'echo json_encode(["ai" => $ai, "appointments" => (int) DB::table("appointments")->max("id"), "notifications" => (int) DB::table("notification_logs")->max("id"), "inbox" => (int) DB::table("inbox_notifications")->max("id"), "activity" => (int) DB::table("client_activity_logs")->max("id"), "promotions" => (int) DB::table("promotions")->max("id"), "absences" => (int) DB::table("staff_absences")->max("id"), "blocks" => (int) DB::table("blocked_times")->max("id"), "paused" => DB::table("services")->pluck("paused_until", "id"), "pauseName" => DB::table("services")->where("active", 1)->where("audience", "all")->whereNull("paused_until")->orderBy("id")->value("name")]);',
     ),
   );
 }
@@ -50,6 +60,7 @@ function cleanup(s) {
   const out = tinker(
     `$ids = DB::table("appointments")->where("id", ">", ${s.appointments})->pluck("id"); ` +
       `DB::table("notification_logs")->where("id", ">", ${s.notifications})->delete(); ` +
+      `DB::table("inbox_notifications")->where("id", ">", ${s.inbox ?? 0})->delete(); ` +
       `DB::table("reviews")->whereIn("appointment_id", $ids)->delete(); ` +
       `DB::table("appointment_items")->whereIn("appointment_id", $ids)->delete(); ` +
       `DB::table("appointments")->whereIn("id", $ids)->delete(); ` +
@@ -446,6 +457,7 @@ async function run(b, before) {
   await go(m, '/admin/reports', 2000, '[data-testid=report-send-mail]');
   await shot(m, 'rad-10-izvestaj-slanje', [{ sel: '[data-testid=report-send-mail]' }, { sel: '[data-testid=report-send-whatsapp]' }, { sel: '[data-testid=report-scope-mine]' }], { scroll: false });
 
+  startedAppointment();
   const w = await ctxFor();
   await quickLogin(w, LOGIN.worker, /admin/);
   await openMenu(w);
@@ -455,6 +467,8 @@ async function run(b, before) {
   await shot(w, 'radnik-02-pregled', [{ sel: '[data-testid=dashboard-today]' }, { sel: '[data-testid^=complete-]' }], { scroll: false });
   await shot(w, 'radnik-03-moj-pazar', [{ sel: '[data-testid=dashboard-my-cash]' }]);
   await go(w, '/admin/calendar', 2500, '[data-testid=calendar-grid]');
+  await w.click('[data-testid=calendar-filters] .accordion-header');
+  await w.waitForTimeout(500);
   await shot(w, 'radnik-04-kalendar', [{ sel: '[data-testid=calendar-staff]' }, { sel: '[data-testid=calendar-new]' }], { scroll: false });
   await go(w, '/admin/absences', 1500, '[data-testid=absence-form]');
   await shot(w, 'radnik-05-odsustvo', [{ sel: '[data-testid=absence-type-sick]' }, { sel: '[data-testid=absence-from]' }, { sel: '[data-testid=absence-save]' }], { scroll: false });
