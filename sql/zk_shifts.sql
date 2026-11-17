@@ -19,6 +19,6 @@ CREATE TABLE `zk_shifts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_shifts` VALUES (1,'Pre podne','09:00:00','14:00:00',0,'2026-11-17 12:40:36','2026-11-17 12:40:36'),(2,'Popodne','14:00:00','20:00:00',1,'2026-11-17 12:40:36','2026-11-17 12:40:36'),(3,'Ceo dan','09:00:00','20:00:00',2,'2026-11-17 12:40:36','2026-11-17 12:40:36');
+INSERT INTO `zk_shifts` VALUES (1,'Pre podne','09:00:00','14:00:00',0,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(2,'Popodne','14:00:00','20:00:00',1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(3,'Ceo dan','09:00:00','20:00:00',2,'2026-11-17 13:07:44','2026-11-17 13:07:44');
 
 SET FOREIGN_KEY_CHECKS=1;

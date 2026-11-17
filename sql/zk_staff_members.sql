@@ -25,8 +25,8 @@ CREATE TABLE `zk_staff_members` (
   `rotation_weeks` tinyint unsigned NOT NULL DEFAULT '1',
   `rotation_starts_on` date DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Danijela','Đokić','Vlasnica',NULL,NULL,'#c2185b',NULL,NULL,1,0,'2026-11-17 12:40:36','2026-11-17 12:40:36',1,NULL);
+INSERT INTO `zk_staff_members` VALUES (1,'Danijela','Đokić','Vlasnica',NULL,'devtestzikaa+danijela@gmail.com','#c2185b',NULL,NULL,1,0,'2026-11-17 13:07:44','2026-11-17 13:07:44',1,NULL),(2,'Tijana','XXX','Kozmetičarka',NULL,'devtestzikaa+tijana@gmail.com','#7c3aed',NULL,NULL,1,1,'2026-11-17 13:07:44','2026-11-17 13:07:44',1,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
