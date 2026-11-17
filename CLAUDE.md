@@ -256,7 +256,7 @@ Stranice: `index.html` (uvod i kartice), `vlasnik.html` (vlasnik i administrativ
 salona iz `GET /api/public/business`, uz neutralne podrazumevane boje). Svaki korak je `<details class="step">` sa `<span class="num">`, zatvoren osim prvog;
 broj u tekstu (`<span class="badge">`) odgovara crvenoj oznaci na slici. Slike sa telefona (390×844) su u `slike/`. Ponovo se snimaju sa
 `node docs/uputstvo/snimi-slike.js frontend/public/uputstvo/slike [ime1,ime2]` dok radi `node dev.mjs` (`APP_URL`, podrazumevano http://localhost:4200): skripta se prijavljuje
-dugmićima za brzu prijavu, pravi privremenu akciju INSTA10, pauzu usluge i jedan termin klijenta, pa ih na kraju briše (`php artisan tinker`), a slike upisuje
+dugmićima za brzu prijavu, pravi privremenu akciju INSTA10, pauzu usluge, jedan termin klijenta i termin radnika koji je u toku (za dugme „Završen“), pa ih na kraju briše (i obaveštenja u zvoncetu) (`php artisan tinker`), a slike upisuje
 tek na kraju (upis u `public/` usred snimanja bi osvežio aplikaciju). Posle izmena ekrana ažurirati uputstvo i slike; slika koju nijedna stranica ne koristi se briše.
 PDF se pravi kad se potvrdi da je sve obuhvaćeno.
 Potvrda termina po usluzi: `services.booking_confirmation` (bar jedna „ručno“ → čeka, sve „automatski“ → potvrđen, inače zaposleni pa salon;
