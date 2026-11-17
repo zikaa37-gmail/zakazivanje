@@ -10,6 +10,126 @@
 @use 'tailwindcss';
 
 @layer components {
+  :root {
+    --wait-stripes: repeating-linear-gradient(135deg, color-mix(in srgb, var(--wait-color, var(--color-primary)) 22%, var(--color-surface)) 0 6px, var(--color-surface) 6px 12px);
+  }
+
+  .wait-swatch {
+    background: var(--wait-stripes);
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 1px dashed var(--color-border-dark);
+    border-radius: 3px;
+    flex: none;
+  }
+
+  .event-wait {
+    position: absolute;
+    left: -4px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0 0.4rem 0 0.55rem;
+    border: 0;
+    border-top: 1px dashed color-mix(in srgb, var(--event-color) 60%, var(--color-border));
+    border-bottom: 1px dashed color-mix(in srgb, var(--event-color) 60%, var(--color-border));
+    border-left: 4px dashed var(--event-color);
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--event-color) 20%, var(--color-surface)) 0 6px, var(--color-surface) 6px 12px);
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.7rem;
+    text-align: left;
+    cursor: copy;
+
+    &:hover {
+      background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--event-color) 32%, var(--color-surface)) 0 6px, var(--color-surface) 6px 12px);
+    }
+  }
+
+  .event-wait-label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: 600;
+  }
+
+  .event-wait-add {
+    color: var(--color-primary-text);
+  }
+
+  .event-nested {
+    z-index: 3;
+    box-shadow: 0 2px 6px var(--shadow-color), 0 0 0 1px var(--color-surface);
+  }
+
+  .cal-col.cal-cant-take {
+    background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--color-danger) 10%, var(--color-surface)) 0 8px, var(--color-surface) 8px 16px);
+    cursor: not-allowed;
+  }
+
+  .cal-head-cell.cal-cant-take {
+    color: var(--color-text-muted);
+    background: color-mix(in srgb, var(--color-danger) 10%, var(--color-surface));
+  }
+
+  .cal-cant-take-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-danger);
+  }
+
+  .event.drag-blocked,
+  .event.drag-blocked * {
+    cursor: not-allowed !important;
+  }
+
+  .event.drag-blocked {
+    outline: 2px solid var(--color-danger);
+    outline-offset: -1px;
+    opacity: 0.7;
+  }
+
+  .processing-bar {
+    display: flex;
+    height: 1.75rem;
+    overflow: hidden;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    > span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-basis: 0;
+      min-width: 1.75rem;
+      white-space: nowrap;
+    }
+  }
+
+  .processing-work {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .processing-wait {
+    background: var(--wait-stripes);
+    color: var(--color-text);
+  }
+
   .cancelled-content {
     opacity: 0.55;
     text-decoration: line-through;

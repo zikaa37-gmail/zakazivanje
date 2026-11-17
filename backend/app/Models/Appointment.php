@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'paid_at', 'payment_method', 'tip', 'link_group'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'processing_offset', 'processing_minutes', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'paid_at', 'payment_method', 'tip', 'link_group'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -44,6 +44,8 @@ class Appointment extends Model
         return [
             'starts_at' => 'datetime:Y-m-d H:i',
             'ends_at' => 'datetime:Y-m-d H:i',
+            'processing_offset' => 'integer',
+            'processing_minutes' => 'integer',
             'confirmed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'paid_at' => 'datetime',
@@ -77,6 +79,13 @@ class Appointment extends Model
     public function items(): HasMany
     {
         return $this->hasMany(AppointmentItem::class);
+    }
+
+    public function processing(): ?array
+    {
+        return $this->processing_offset && $this->processing_minutes
+            ? ['offset' => $this->processing_offset, 'minutes' => $this->processing_minutes]
+            : null;
     }
 
     public function linkedSiblings(): Collection

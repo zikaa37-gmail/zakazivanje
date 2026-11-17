@@ -117,7 +117,7 @@ class StaffAbsenceService
 
         return $this->availability->eligibleStaff($this->availability->servicesInOrder($serviceIds))
             ->reject(fn (StaffMember $s) => $s->id === $appointment->staff_member_id)
-            ->filter(fn (StaffMember $s) => $this->availability->withinWorkingHours($s, $start, $end) && $this->availability->isFree($s->id, $start, $end));
+            ->filter(fn (StaffMember $s) => $this->availability->withinWorkingHours($s, $start, $end) && $this->availability->isFreeForSalon($s->id, $start, $end, null, $appointment->processing()));
     }
 
     private function notifyStaff(StaffAbsence $absence, User $by, string $type): void

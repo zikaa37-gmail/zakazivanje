@@ -14,6 +14,7 @@ import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { addDays, today } from '../../../core/utils/dates';
+import { PROCESSING_STEPS, processingParts } from '../../../core/utils/processing';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { DataListComponent } from '../../../shared/components/data-list/data-list.component';
 import { DataRowComponent } from '../../../shared/components/data-row/data-row.component';
@@ -57,6 +58,8 @@ export class ServiceListComponent {
 
   readonly columns = 'minmax(0, 2.2fr) 6rem 7rem minmax(0, 1.6fr) 6.5rem 2.5rem';
   readonly durations = DURATION_OPTIONS;
+  readonly processingSteps = PROCESSING_STEPS;
+  readonly processingOn = signal(false);
   readonly audiences = AUDIENCE_OPTIONS;
   readonly audienceLabel = audienceLabel;
   readonly confirmationOptions: { value: ConfirmationMode | null; label: string }[] = [{ value: null, label: 'Kao zaposleni' }, ...CONFIRMATION_OPTIONS];
@@ -97,6 +100,8 @@ export class ServiceListComponent {
     booking_confirmation: this.fb.control<ConfirmationMode | null>(null),
     description: this.fb.control<string | null>(null),
     duration_minutes: this.fb.nonNullable.control(30, [Validators.required, Validators.min(5)]),
+    processing_after_minutes: this.fb.control<number | null>(null),
+    processing_minutes: this.fb.control<number | null>(null),
     price: this.fb.control<number | null>(null, [Validators.required, Validators.min(0)]),
     active: this.fb.nonNullable.control(true),
     paused_until: this.fb.control<string | null>(null),
@@ -197,6 +202,8 @@ export class ServiceListComponent {
       audience: service.audience,
       booking_confirmation: service.booking_confirmation,
       duration_minutes: service.duration_minutes,
+      processing_after_minutes: service.processing_after_minutes ?? null,
+      processing_minutes: service.processing_minutes ?? null,
       price: service.price,
       active: service.active,
       paused_until: service.paused_until,
@@ -225,6 +232,8 @@ export class ServiceListComponent {
       booking_confirmation: service?.booking_confirmation ?? null,
       description: service?.description ?? null,
       duration_minutes: service?.duration_minutes ?? 30,
+      processing_after_minutes: service?.processing_after_minutes ?? null,
+      processing_minutes: service?.processing_minutes ?? null,
       price: service?.price ?? null,
       active: service?.active ?? true,
       paused_until: service?.paused_until ?? null,
@@ -232,9 +241,23 @@ export class ServiceListComponent {
       cancellation_fee_value: service?.cancellation_fee_value ?? null,
       cancellation_free_late: service?.cancellation_free_late ?? null,
     });
+    this.processingOn.set(!!service?.processing_minutes);
     this.newCategoryName.reset();
     this.selectedStaff.set(new Set(service?.staff_members.map((s) => s.id) ?? this.staff().map((s) => s.id)));
     this.modalOpen.set(true);
+  }
+
+  setProcessing(on: boolean): void {
+    this.processingOn.set(on);
+    if (on && !this.form.controls.processing_minutes.value) {
+      const duration = Number(this.form.controls.duration_minutes.value);
+      this.form.patchValue({ processing_after_minutes: duration >= 60 ? 30 : 10, processing_minutes: duration >= 90 ? 45 : Math.max(5, Math.floor((duration - 20) / 5) * 5) });
+    }
+  }
+
+  processingParts() {
+    const value = this.form.getRawValue();
+    return processingParts(Number(value.duration_minutes), Number(value.processing_after_minutes), Number(value.processing_minutes));
   }
 
   toggleStaff(id: number): void {
@@ -254,6 +277,11 @@ export class ServiceListComponent {
     }
 
     const value = this.form.getRawValue();
+    const parts = this.processingOn() ? this.processingParts() : null;
+    if (this.processingOn() && (!parts || parts.last < 5)) {
+      this.formError.set('Posle čekanja mora ostati bar 5 minuta rada — produži trajanje usluge ili skrati čekanje.');
+      return;
+    }
     const creatingCategory = value.service_category_id === NEW_CATEGORY;
     if (creatingCategory && this.newCategoryName.value.trim().length < 2) {
       this.formError.set('Upiši naziv nove kategorije.');
@@ -264,6 +292,8 @@ export class ServiceListComponent {
       ...value,
       price: Number(value.price),
       duration_minutes: Number(value.duration_minutes),
+      processing_after_minutes: parts ? parts.first : null,
+      processing_minutes: parts ? parts.wait : null,
       description: value.description?.trim() || null,
       paused_until: value.paused_until || null,
       cancellation_fee_value: value.cancellation_fee_type && value.cancellation_fee_type !== 'none' && value.cancellation_fee_value !== null ? Number(value.cancellation_fee_value) : null,

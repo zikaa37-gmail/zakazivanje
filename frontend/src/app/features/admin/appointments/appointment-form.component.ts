@@ -163,7 +163,7 @@ export class AppointmentFormComponent implements OnInit {
       this.suggestions.set([]);
       return;
     }
-    this.booking.slots(this.selectedServices(), staffId, date).subscribe((slots) => this.suggestions.set(slots));
+    this.booking.slots(this.selectedServices(), staffId, date, null, [], true).subscribe((slots) => this.suggestions.set(slots));
   }
 
   async save(): Promise<void> {

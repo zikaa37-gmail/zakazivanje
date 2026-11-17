@@ -57,7 +57,12 @@
                     <div class="text-xs muted truncate">{{ service.description }}</div>
                   }
                 </div>
-                <div>{{ service.duration_minutes | duration }}</div>
+                <div>
+                  {{ service.duration_minutes | duration }}
+                  @if (service.processing_minutes) {
+                    <div class="text-xs muted">čeka {{ service.processing_minutes }} min</div>
+                  }
+                </div>
                 <div class="font-semibold">{{ service.price | rsd }}</div>
                 <div class="truncate muted">{{ staffNames(service) }}</div>
                 @if (!service.active) {
@@ -78,7 +83,7 @@
             <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.opacity-60]="!service.active">
               <div class="min-w-0 flex-1">
                 <div class="font-semibold">{{ service.name }}@if (service.audience !== 'all') {<span class="badge badge-neutral ml-2">{{ audienceLabel(service.audience) }}</span>}@if (service.booking_confirmation) {<span class="badge badge-neutral ml-2">{{ confirmationLabel(service.booking_confirmation) }}</span>}</div>
-                <div class="text-sm muted">{{ service.duration_minutes | duration }} · {{ staffNames(service) }}</div>
+                <div class="text-sm muted">{{ service.duration_minutes | duration }}@if (service.processing_minutes) { (čeka {{ service.processing_minutes }} min)} · {{ staffNames(service) }}</div>
                 @if (!service.active) {
                   <span class="badge badge-neutral mt-1">Onemogućena</span>
                 } @else if (isPaused(service)) {
@@ -116,6 +121,44 @@
           <label for="service-price">Cena (din.) <span class="required-mark">*</span></label>
           <input id="service-price" appInput size="m" type="number" min="0" step="50" inputmode="numeric" formControlName="price" data-testid="service-price" />
         </div>
+      </div>
+      <div class="field">
+        <app-toggle [checked]="processingOn()" label="Ima vreme čekanja (boja deluje, kosa se suši…)" (checkedChange)="setProcessing($event)" data-testid="service-processing" />
+        <p class="text-xs muted mt-1">Dok klijent čeka, može da se uradi drugi klijent. To vreme u kalendaru popunjava samo salon — online se ne nudi.</p>
+        @if (processingOn()) {
+          <div class="form-grid mt-2">
+            <div class="field">
+              <label for="service-work-first">Prvo se radi</label>
+              <select id="service-work-first" appInput size="m" formControlName="processing_after_minutes" data-testid="service-work-first">
+                @for (m of processingSteps; track m) {
+                  <option [ngValue]="m">{{ m }} min</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="service-wait">Pa se čeka</label>
+              <select id="service-wait" appInput size="m" formControlName="processing_minutes" data-testid="service-wait">
+                @for (m of processingSteps; track m) {
+                  <option [ngValue]="m">{{ m }} min</option>
+                }
+              </select>
+            </div>
+          </div>
+          @if (processingParts(); as parts) {
+            <div class="processing-bar mt-2" aria-hidden="true">
+              <span class="processing-work" [style.flex-grow]="parts.first">{{ parts.first }}</span>
+              <span class="processing-wait" [style.flex-grow]="parts.wait">čeka {{ parts.wait }}</span>
+              @if (parts.last > 0) {
+                <span class="processing-work" [style.flex-grow]="parts.last">{{ parts.last }}</span>
+              }
+            </div>
+            @if (parts.last >= 5) {
+              <p class="text-sm mt-1" data-testid="service-processing-summary">Radi se {{ parts.first }} min, čeka se {{ parts.wait }} min, pa se radi još {{ parts.last }} min.</p>
+            } @else {
+              <p class="field-error" data-testid="service-processing-error">Posle čekanja mora ostati bar 5 minuta rada — produži trajanje ili skrati čekanje.</p>
+            }
+          }
+        }
       </div>
       <div class="field">
         <label>Za koga</label>

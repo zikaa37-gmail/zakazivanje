@@ -15,6 +15,11 @@
 
     <div>
       <div class="font-semibold">{{ when() }}</div>
+      @if (waiting()) {
+        <div class="text-sm flex items-center gap-1 mt-1" data-testid="details-waiting">
+          <span class="wait-swatch" aria-hidden="true"></span> Čeka se {{ waiting() }} — tada je slobodan za drugog klijenta
+        </div>
+      }
       <div class="text-sm muted flex items-center gap-2">
         <span class="color-dot" [style.background]="appointment().staff_member?.color || 'var(--color-primary)'"></span>
         {{ appointment().staff_member?.first_name }} {{ appointment().staff_member?.last_name }}

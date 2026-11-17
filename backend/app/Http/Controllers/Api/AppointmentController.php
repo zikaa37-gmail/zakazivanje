@@ -147,7 +147,7 @@ class AppointmentController extends Controller
 
         if (in_array($data['status'], Appointment::BLOCKING_STATUSES, true)
             && ! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)
-            && ! $this->availability->isFree($appointment->staff_member_id, CarbonImmutable::parse($appointment->starts_at), CarbonImmutable::parse($appointment->ends_at), $appointment->id)) {
+            && ! $this->availability->isFreeForSalon($appointment->staff_member_id, CarbonImmutable::parse($appointment->starts_at), CarbonImmutable::parse($appointment->ends_at), $appointment->id, $appointment->processing())) {
             throw ValidationException::withMessages(['status' => ['U tom terminu već postoji drugi termin.']]);
         }
 
@@ -198,7 +198,7 @@ class AppointmentController extends Controller
         $moved = DB::transaction(function () use ($appointment, $staff, $start, $end, $transferred) {
             StaffMember::whereKey($staff->id)->lockForUpdate()->first();
 
-            if (! $this->availability->isFree($staff->id, $start, $end, $appointment->id)) {
+            if (! $this->availability->isFreeForSalon($staff->id, $start, $end, $appointment->id, $appointment->processing())) {
                 throw ValidationException::withMessages(['starts_at' => ['U tom terminu je već zauzeto.']]);
             }
 
