@@ -71,7 +71,7 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Deljene komponente (preuzete iz `kosarkaska-evidencija`): `appBtn` direktiva i `<app-button>`
   (sa `[loading]`), `<app-spinner>`, `appIcon` (SVG ikonice iz `public/icons/`, registar imena u
   `icon.directive.ts`), `appInput`, `<app-modal>`, `<app-error-message>`, `<app-confirm-dialog>`
-  (`ConfirmService`), `<app-toast-container>` (`ToastService`), globalni loader (`LoaderService` +
+  (`ConfirmService`), `<app-info-tip heading="…">` (ikonica „i“ uz polje, objašnjenje se otvara klikom), `<app-toast-container>` (`ToastService`), globalni loader (`LoaderService` +
   `loaderInterceptor`, `SKIP_LOADER` za tihe pozive). Ostale komponente iz košarkaške (select,
   time-picker, data-list, row-actions, segmented-control...) prenose se kad zatrebaju.
 - Filteri lista i kalendara: `.sticky-toolbar` (ostaje gore dok se sadržaj skroluje) — periodi / prikaz uvek vidljivi, ostali filteri u

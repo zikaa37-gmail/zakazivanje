@@ -123,8 +123,21 @@
         </div>
       </div>
       <div class="field">
-        <app-toggle [checked]="processingOn()" label="Ima vreme čekanja (boja deluje, kosa se suši…)" (checkedChange)="setProcessing($event)" data-testid="service-processing" />
-        <p class="text-xs muted mt-1">Dok klijent čeka, može da se uradi drugi klijent. To vreme u kalendaru popunjava samo salon — online se ne nudi.</p>
+        <div class="flex items-center gap-1">
+          <app-toggle [checked]="processingOn()" label="Ima vreme čekanja" (checkedChange)="setProcessing($event)" data-testid="service-processing" />
+          <app-info-tip heading="Vreme čekanja" data-testid="service-processing-info">
+            <p>Deo usluge kad klijent samo čeka, a radnik za to vreme može da radi drugog klijenta. Na primer:</p>
+            <ul>
+              <li>farbanje, preliv, blajhanje — boja ili preparat deluje;</li>
+              <li>keratin, trajna, maska za kosu ili lice — preparat deluje ili se suši;</li>
+              <li>pedikir — stopala se namaču;</li>
+              <li>tretman sa anestetičkom kremom — čeka se da krema deluje.</li>
+            </ul>
+            <p>Upišeš koliko se prvo radi i koliko se čeka; ostatak trajanja je završni rad.</p>
+            <p>U kalendaru je to prugasto polje „Čeka · slobodno“: klikom na njega salon ubacuje drugog klijenta (npr. feniranje ili manikir) kod istog radnika.</p>
+            <p>Klijenti online ne vide to vreme kao slobodno — za njih je termin zauzet u celini.</p>
+          </app-info-tip>
+        </div>
         @if (processingOn()) {
           <div class="form-grid mt-2">
             <div class="field">
@@ -169,13 +182,23 @@
         </div>
       </div>
       <div class="field">
-        <label>Potvrda termina</label>
+        <div class="flex items-center gap-1">
+          <label>Potvrda termina</label>
+          <app-info-tip heading="Potvrda termina" data-testid="service-confirmation-info">
+            <p>Važi za termine koje klijenti zakazuju online:</p>
+            <ul>
+              <li><strong>Po zaposlenom</strong> — usluga ne odlučuje; važi podešavanje {{ staffTermGenitive() }} kod kog je termin (Zaposleni → izmena), a ako ni on nema svoje, podešavanje salona.</li>
+              <li><strong>Ručno</strong> — termin čeka da ga salon potvrdi (npr. duže ili skuplje usluge).</li>
+              <li><strong>Automatski</strong> — termin je odmah potvrđen.</li>
+            </ul>
+            <p>Ako je u terminu više usluga i bar jedna je „ručno“, ceo termin čeka potvrdu; ako su sve „automatski“, potvrđuje se sam.</p>
+          </app-info-tip>
+        </div>
         <div class="chip-group" role="radiogroup" aria-label="Potvrda termina">
           @for (c of confirmationOptions; track c.value) {
             <button type="button" role="radio" class="chip" [class.selected]="form.controls.booking_confirmation.value === c.value" [attr.aria-checked]="form.controls.booking_confirmation.value === c.value" (click)="form.controls.booking_confirmation.setValue(c.value)" [attr.data-testid]="'service-confirmation-' + (c.value ?? 'staff')">{{ c.label }}</button>
           }
         </div>
-        <p class="text-xs muted mt-1">Za online zakazivanje. Ako je u terminu bar jedna usluga „ručno", termin čeka potvrdu; ako su sve „automatski", potvrđuje se sam.</p>
       </div>
       <div class="field">
         <label for="service-category">Kategorija</label>

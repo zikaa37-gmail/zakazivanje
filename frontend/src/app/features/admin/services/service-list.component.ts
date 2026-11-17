@@ -21,6 +21,7 @@ import { DataRowComponent } from '../../../shared/components/data-row/data-row.c
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ModalComponent } from '../../../shared/components/modal/modal.component';
 import { RowAction, RowActionsComponent } from '../../../shared/components/row-actions/row-actions.component';
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
@@ -36,7 +37,7 @@ const NEW_CATEGORY = -1;
 @Component({
   selector: 'app-service-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, CategoryListComponent, ServiceSuggestionsComponent, ButtonDirective, DataListComponent, DataRowComponent, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, CategoryListComponent, ServiceSuggestionsComponent, ButtonDirective, DataListComponent, DataRowComponent, DurationPipe, ErrorMessageComponent, IconDirective, InfoTipComponent, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
   templateUrl: './service-list.component.html',
 })
 export class ServiceListComponent {
@@ -48,6 +49,7 @@ export class ServiceListComponent {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private business = inject(BusinessSettingService);
+  readonly staffTermGenitive = this.business.staffTermGenitive;
 
   readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
   readonly feeTypes: { value: ServiceCancellationFeeType | null; label: string }[] = [
@@ -62,7 +64,7 @@ export class ServiceListComponent {
   readonly processingOn = signal(false);
   readonly audiences = AUDIENCE_OPTIONS;
   readonly audienceLabel = audienceLabel;
-  readonly confirmationOptions: { value: ConfirmationMode | null; label: string }[] = [{ value: null, label: 'Kao zaposleni' }, ...CONFIRMATION_OPTIONS];
+  readonly confirmationOptions: { value: ConfirmationMode | null; label: string }[] = [{ value: null, label: 'Po zaposlenom' }, ...CONFIRMATION_OPTIONS];
   readonly confirmationLabel = (mode: ConfirmationMode | null) => (mode ? `Potvrda: ${CONFIRMATION_OPTIONS.find((o) => o.value === mode)?.label.toLowerCase()}` : '');
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
