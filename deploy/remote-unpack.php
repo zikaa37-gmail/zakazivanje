@@ -50,7 +50,13 @@ function readEnv(string $path): array
 
 try {
     if (is_file("$appDir/_deploy-app.zip")) {
-        $result['app_files'] = count(unzipTo("$appDir/_deploy-app.zip", $appDir));
+        $appNames = array_flip(unzipTo("$appDir/_deploy-app.zip", $appDir));
+        $result['app_files'] = count($appNames);
+        foreach (glob("$appDir/database/data/salons/*/*") ?: [] as $file) {
+            if (is_file($file) && ! isset($appNames[substr($file, strlen($appDir) + 1)])) {
+                unlink($file);
+            }
+        }
         foreach (glob("$appDir/bootstrap/cache/*.php") ?: [] as $file) {
             unlink($file);
         }
