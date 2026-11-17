@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\InboxNotification;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\StaffNoteNotification;
@@ -54,5 +55,44 @@ class StaffNoteTest extends TestCase
         $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Samo Marko uvek', 'recipient_ids' => []])->assertCreated();
         Notification::assertSentTo($marko, StaffNoteNotification::class);
         Notification::assertNotSentTo($owner, StaffNoteNotification::class);
+    }
+
+    public function test_replies_make_a_thread_unread_for_everyone_else_until_seen(): void
+    {
+        Notification::fake();
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $jelena = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'T'])->id]);
+        $sandra = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Sandra', 'last_name' => 'T'])->id]);
+        $marko = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T'])->id]);
+
+        $id = $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Pokvario se fen', 'recipient_ids' => [$sandra->id]])->json('id');
+        $this->actingAsJwt($sandra)->postJson("/api/notes/{$id}/read")->assertOk();
+        $this->actingAsJwt($owner)->postJson("/api/notes/{$id}/read")->assertOk();
+
+        $this->actingAsJwt($owner)->postJson("/api/notes/{$id}/replies", ['body' => ''])->assertUnprocessable()->assertJsonValidationErrors('body');
+        $this->actingAsJwt($owner)->postJson("/api/notes/{$id}/replies", ['body' => 'Kupujem novi sutra'])
+            ->assertCreated()
+            ->assertJsonPath('replies.0.body', 'Kupujem novi sutra')
+            ->assertJsonPath('replies.0.author.id', $owner->id)
+            ->assertJsonPath('unread', false);
+
+        $this->actingAsJwt($jelena)->postJson('/api/notes/unread-count')->assertJsonPath('count', 1);
+        $this->actingAsJwt($sandra)->postJson('/api/notes/unread-count')->assertJsonPath('count', 1);
+        $this->actingAsJwt($owner)->postJson('/api/notes/unread-count')->assertJsonPath('count', 0);
+        $this->assertSame('/admin/notes?note='.$id, InboxNotification::where('user_id', $jelena->id)->latest('id')->value('link'));
+        $this->assertSame(0, InboxNotification::where('user_id', $marko->id)->count());
+
+        $this->actingAsJwt($marko)->postJson("/api/notes/{$id}/replies", ['body' => 'Imam rezervni u magacinu'])->assertCreated();
+        $this->actingAsJwt($owner)->postJson('/api/notes/unread-count')->assertJsonPath('count', 1);
+        $this->actingAsJwt($jelena)->postJson("/api/notes/{$id}/read")->assertOk()->assertJsonPath('unread', false)->assertJsonCount(2, 'replies');
+        $this->actingAsJwt($jelena)->postJson('/api/notes/unread-count')->assertJsonPath('count', 0);
+
+        $this->actingAsJwt($sandra)->postJson("/api/notes/{$id}/resolve")->assertOk()->assertJsonPath('status', 'done');
+        $this->actingAsJwt($owner)->postJson('/api/notes/unread-count')->assertJsonPath('count', 0);
+        $this->travel(1)->minutes();
+        $this->actingAsJwt($jelena)->postJson("/api/notes/{$id}/replies", ['body' => 'Hvala!'])->assertCreated()->assertJsonPath('status', 'done');
+        $this->actingAsJwt($sandra)->postJson('/api/notes/unread-count')->assertJsonPath('count', 1);
+        $this->actingAsJwt($sandra)->postJson('/api/notes/list')->assertJsonPath('0.unread', true);
+        Notification::assertNotSentTo($marko, StaffNoteNotification::class);
     }
 }

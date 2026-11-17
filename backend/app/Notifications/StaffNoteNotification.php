@@ -40,7 +40,7 @@ class StaffNoteNotification extends Notification implements ShouldQueue
             'kind' => 'note',
             'title' => 'Beleška: '.$this->author(),
             'body' => Str::limit($this->note->body, 160),
-            'link' => '/admin/notes',
+            'link' => '/admin/notes?note='.$this->note->id,
         ];
     }
 
@@ -70,6 +70,6 @@ class StaffNoteNotification extends Notification implements ShouldQueue
 
     private function link(): string
     {
-        return rtrim(config('app.frontend_url'), '/').'/admin/notes';
+        return rtrim(config('app.frontend_url'), '/').'/admin/notes?note='.$this->note->id;
     }
 }

@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\StaffMember;
 use App\Models\StaffNote;
+use App\Models\StaffNoteReply;
 use App\Models\User;
 use App\Notifications\StaffNoteNotification;
+use App\Notifications\StaffNoteReplyNotification;
 use App\Services\Inbox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 
 class StaffNoteController extends Controller
 {
-    private const WITH = ['author:id,first_name,last_name', 'taker:id,first_name,last_name', 'resolver:id,first_name,last_name', 'recipients:id,first_name,last_name'];
+    private const WITH = ['author:id,first_name,last_name', 'taker:id,first_name,last_name', 'resolver:id,first_name,last_name', 'recipients:id,first_name,last_name', 'replies.author:id,first_name,last_name'];
 
     public function index(Request $request)
     {
@@ -25,7 +27,7 @@ class StaffNoteController extends Controller
         return StaffNote::query()
             ->with(self::WITH)
             ->orderByRaw('resolved_at is not null')
-            ->latest()
+            ->orderByRaw('coalesce(last_reply_at, created_at) desc')
             ->orderByDesc('id')
             ->limit(200)
             ->get()
@@ -68,7 +70,7 @@ class StaffNoteController extends Controller
     public function unreadCount(Request $request)
     {
         $count = StaffNote::query()
-            ->whereNull('resolved_at')
+            ->where(fn ($q) => $q->whereNull('resolved_at')->orWhereColumn('last_reply_at', '>', 'resolved_at'))
             ->whereHas('recipients', fn ($q) => $q->where('users.id', $request->user()->id)->whereNull('staff_note_recipients.read_at'))
             ->count();
 
@@ -97,6 +99,32 @@ class StaffNoteController extends Controller
         }
 
         return response()->json($this->present($note->load(self::WITH), $user), 201);
+    }
+
+    public function reply(Request $request, StaffNote $note)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:2000'],
+        ], [
+            'body.required' => 'Napiši odgovor.',
+        ]);
+
+        $reply = DB::transaction(function () use ($note, $user, $data) {
+            $reply = $note->replies()->create(['author_id' => $user->id, 'body' => trim($data['body'])]);
+            $note->update(['last_reply_at' => $reply->created_at]);
+            $participants = collect([$note->author_id, $user->id, ...$note->recipients()->pluck('users.id')])->filter()->unique();
+            DB::table('staff_note_recipients')->insertOrIgnore($participants->map(fn ($id) => ['staff_note_id' => $note->id, 'user_id' => $id])->values()->all());
+            DB::table('staff_note_recipients')->where('staff_note_id', $note->id)->where('user_id', '!=', $user->id)->update(['read_at' => null]);
+            DB::table('staff_note_recipients')->where('staff_note_id', $note->id)->where('user_id', $user->id)->update(['read_at' => now()]);
+
+            return $reply;
+        });
+
+        $others = $note->recipients()->whereKeyNot($user->id)->where('active', true)->get();
+        app(Inbox::class)->deliver($others, new StaffNoteReplyNotification($note, $reply->load('author:id,first_name,last_name')));
+
+        return response()->json($this->present($note->fresh(self::WITH), $user), 201);
     }
 
     public function resolve(Request $request, StaffNote $note)
@@ -155,7 +183,13 @@ class StaffNoteController extends Controller
             'resolver' => $note->resolver ? trim($note->resolver->first_name.' '.$note->resolver->last_name) : null,
             'recipients' => $note->recipients->map(fn (User $u) => trim($u->first_name.' '.$u->last_name))->values(),
             'readers' => $note->recipients->filter(fn (User $u) => $u->pivot->read_at !== null)->map(fn (User $u) => trim($u->first_name.' '.$u->last_name))->values(),
-            'unread' => $me !== null && $me->pivot->read_at === null,
+            'unread' => $me !== null && $me->pivot->read_at === null && ($note->resolved_at === null || ($note->last_reply_at !== null && $note->last_reply_at->gt($note->resolved_at))),
+            'replies' => $note->replies->map(fn (StaffNoteReply $reply) => [
+                'id' => $reply->id,
+                'body' => $reply->body,
+                'created_at' => $reply->created_at?->format('Y-m-d H:i'),
+                'author' => $reply->author ? ['id' => $reply->author->id, 'name' => trim($reply->author->first_name.' '.$reply->author->last_name)] : null,
+            ])->values(),
             'can_delete' => $user->isManager() || $note->author_id === $user->id,
         ];
     }

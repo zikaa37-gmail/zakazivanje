@@ -267,7 +267,9 @@ akcija sa kodom važi samo uz `promo_code` pri zakazivanju (`PriceQuoteService::
 tek posle linka iz mejla (`email_verification_sent_at`, važi `User::VERIFICATION_DAYS` = 3, link prijavljuje i vraća na `next`); ponovna registracija
 nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja (`staff_notes`,
 `staff_note_recipients`): status novo / preuzeto (`taken_by`) / urađeno, pročitano po primaocu, obaveštenje izabranima + uvek
-`business_settings.note_always_notify_ids` (podrazumevano vlasnici i administrativni radnici). Zaposleni mora imati email i telefon.
+`business_settings.note_always_notify_ids` (podrazumevano vlasnici i administrativni radnici). Prepiska: `staff_note_replies` (`POST /notes/{id}/replies`), odgovor dodaje autora i onog ko odgovara u
+`staff_note_recipients` i ostalima vraća `read_at` na null; `staff_notes.last_reply_at` — urađena beleška sa novijim odgovorom je opet nepročitana.
+Odgovor ide samo u zvonce + push (`StaffNoteReplyNotification`, link `/admin/notes?note={id}` otvara i označava pročitanom), bez mejla / WhatsApp-a. Zaposleni mora imati email i telefon.
 Odsustva (bolovanje / odmor): `/admin/absences`, `StaffAbsence` + `StaffAbsenceService` — upisuje bilo ko iz osoblja, odobrava menadžer
 (njegov upis je odmah odobren), odobrenje pravi `BlockedTime` za cele dane. Pogođeni termini: telefon klijenta, „Prebaci: kolega“ (slobodni u isto
 vreme, `AvailabilityService`), „Pošalji da sam pomeri“ (`ask-reschedule`), otkazivanje. Prebacivanje (promena zaposlenog u `reschedule`, i iz detalja

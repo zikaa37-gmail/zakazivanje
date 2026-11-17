@@ -429,6 +429,7 @@ async function run(b, before) {
   await shot(o, 'rad-09-recenzije', [], { scroll: false });
   await go(o, '/admin/notes', 2000, '[data-testid=note-body]');
   await o.fill('[data-testid=note-body]', 'Nestalo je farbe 7.1');
+  await o.waitForSelector('[data-testid^=note-recipient-]');
   await guide(o, 'recipients', "return document.querySelector('[data-testid^=note-recipient-]')?.parentElement");
   await shot(o, 'rad-11-beleske', [{ sel: '[data-testid=note-body]' }, { sel: '[data-guide=recipients]' }, { sel: '[data-testid=note-send]' }], { scroll: false });
   await o.fill('[data-testid=note-body]', '');

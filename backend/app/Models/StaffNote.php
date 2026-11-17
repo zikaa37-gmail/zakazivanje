@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['author_id', 'body', 'taken_by', 'taken_at', 'resolved_at', 'resolved_by'])]
+#[Fillable(['author_id', 'body', 'taken_by', 'taken_at', 'resolved_at', 'resolved_by', 'last_reply_at'])]
 class StaffNote extends Model
 {
     protected function casts(): array
@@ -15,6 +16,7 @@ class StaffNote extends Model
         return [
             'taken_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'last_reply_at' => 'datetime',
         ];
     }
 
@@ -36,5 +38,10 @@ class StaffNote extends Model
     public function recipients(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'staff_note_recipients')->withPivot('read_at');
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(StaffNoteReply::class)->orderBy('id');
     }
 }
