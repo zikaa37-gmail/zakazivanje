@@ -111,6 +111,8 @@ npm install
 npm start
 ```
 
+Šabloni salona (`docs/salon-sabloni.md`): `backend/database/data/salons/<naziv>/` (`salon.json` + logo), `php artisan salon:export <naziv>` i
+`php artisan salon:load <naziv> --keep-logins [--demo]` (BRIŠE celu bazu; `SalonTemplateService`); šabloni `pink` (test frizerski salon) i `pink-starss` (lokalno učitan).
 Demo podaci za ručno testiranje: `php artisan db:seed --class=DemoDataSeeder` — 32 klijenta `@demo.zakazivanje.rs`
 (lozinka `test`, neki bez naloga), termini od pre 60 do za 21 dan po radnom vremenu zaposlenih, naplate, recenzije,
 aktivnost, nekoliko klijenata u žutoj / narandžastoj zoni i nalog radnika za prvog zaposlenog (`<ime>@demo.zakazivanje.rs` /

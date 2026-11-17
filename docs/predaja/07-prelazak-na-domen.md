@@ -17,7 +17,8 @@ hosting ili folder, sa svojom bazom i svojim ključevima. Ništa od test podatak
   - podrazumevano radno vreme;
   - bez demo podataka.
 
-  Opcija u `deploy.py`, npr. `--fresh-install`, umesto `--with-db` (koji šalje našu lokalnu bazu).
+  Delimično rešeno: šablon salona + `php artisan salon:load <naziv>` pravi čistu bazu sa podacima salona
+  ([šabloni salona](../salon-sabloni.md)). Za server još treba opcija u `deploy.py` koja to pokreće umesto `--with-db`.
 - [ ] `deploy/.env` po instalaciji, npr. `deploy/.env.salon-primer`, i izbor fajla pri deploy-u, da test i
       salon ne mešaju podešavanja.
 - [ ] Proveriti da se nigde ne pojavljuje `fiskultura` kao naziv ili adresa salona. Naziv, logo i
