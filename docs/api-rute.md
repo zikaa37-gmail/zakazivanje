@@ -134,10 +134,11 @@ Vlasnik i radnik — svakodnevni rad.
 | PUT / DELETE | `/ai/key` | `{api_key}` — proverava ključ kod Anthropic-a i čuva ga šifrovano (`business_settings.ai_api_key`); bez ključa u bazi koristi se `ANTHROPIC_API_KEY` iz `.env` |
 | POST | `/ai/service-suggestions` | `{description?}` → `{categories: [...]}` u formatu za `apply` (samo uz uključen AI) |
 | POST | `/ai/staff-term` | `{category?, description?}` → `{options: [{term, genitive}]}` |
-| POST | `/notes/list` | beleške osoblja: `status` (open / taken / done), `taken_by`, `readers`, `unread`, `can_delete` |
+| POST | `/notes/list` | beleške osoblja: `status` (open / taken / done), `taken_by`, `readers`, `unread`, `can_delete`, `replies` `[{id, body, created_at, author}]` |
 | POST | `/notes/recipients` | zaposleni za obaveštenje `[{user_id, name, role, staff_member_id, always}]` (`user_id: null` = nema nalog) |
 | POST | `/notes` | `{body, recipient_ids}` → obaveštava izabrane + uvek-obaveštene (`note_always_notify_ids`) |
 | POST | `/notes/unread-count`, `/notes/{id}/read`, `/notes/{id}/take`, `/notes/{id}/resolve` | nepročitane; pročitano; preuzimam (ponovo = otkaži); urađeno (ponovo = otvori) |
+| POST | `/notes/{id}/replies` | `{body}` → odgovor; ostalima u belešci (autor, primaoci, ko je odgovarao) postaje nepročitana, zvonce + push |
 | DELETE | `/notes/{id}` | autor, vlasnik ili administrativni radnik |
 | POST | `/promotions/list` | akcije |
 | POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays`, `code?`, `max_uses?`, `once_per_client` (lista vraća i `uses`) |

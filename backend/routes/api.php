@@ -145,6 +145,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/notes/unread-count', [StaffNoteController::class, 'unreadCount']);
     Route::post('/notes', [StaffNoteController::class, 'store']);
     Route::post('/notes/{note}/read', [StaffNoteController::class, 'markRead']);
+    Route::post('/notes/{note}/replies', [StaffNoteController::class, 'reply']);
     Route::post('/notes/{note}/take', [StaffNoteController::class, 'take']);
     Route::post('/notes/{note}/resolve', [StaffNoteController::class, 'resolve']);
     Route::delete('/notes/{note}', [StaffNoteController::class, 'destroy']);

@@ -10,6 +10,7 @@ import { AuthService } from './auth.service';
 import { BusinessSettingService } from './business-setting.service';
 import { ChatEvent, ChatService } from './chat.service';
 import { InboxItem, InboxService } from './inbox.service';
+import { StaffNoteService } from './staff-note.service';
 import { ToastService } from './toast.service';
 
 export interface RealtimeEvent {
@@ -27,6 +28,7 @@ const EVENT = 'appointment';
 const INBOX_EVENT = 'inbox';
 const CHAT_EVENT = 'chat';
 const APPOINTMENT_KIND = 'appointment';
+const NOTE_KIND = 'note';
 
 @Injectable({ providedIn: 'root' })
 export class RealtimeService {
@@ -36,6 +38,7 @@ export class RealtimeService {
   private toast = inject(ToastService);
   private appointments = inject(AppointmentService);
   private inbox = inject(InboxService);
+  private notes = inject(StaffNoteService);
   private chat = inject(ChatService);
 
   readonly events = new Subject<RealtimeEvent>();
@@ -88,6 +91,7 @@ export class RealtimeService {
 
   private handleInbox(item: Omit<InboxItem, 'read_at' | 'created_at'>): void {
     this.inbox.received(item);
+    if (item.kind === NOTE_KIND) this.notes.refreshUnreadCount();
     if (item.kind !== APPOINTMENT_KIND) {
       this.toast.show(item.body ? `${item.title}: ${item.body}` : item.title, { type: 'info', position: 'top-right', duration: 8000 });
     }

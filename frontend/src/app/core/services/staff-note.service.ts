@@ -18,6 +18,14 @@ export interface StaffNote {
   readers: string[];
   unread: boolean;
   can_delete: boolean;
+  replies: StaffNoteReply[];
+}
+
+export interface StaffNoteReply {
+  id: number;
+  body: string;
+  created_at: string;
+  author: { id: number; name: string } | null;
 }
 
 export interface NoteRecipient {
@@ -35,8 +43,12 @@ export class StaffNoteService {
 
   readonly unreadCount = signal(0);
 
-  list(): Observable<StaffNote[]> {
-    return this.http.post<StaffNote[]>(`${this.api}/list`, {});
+  list(quiet = false): Observable<StaffNote[]> {
+    return this.http.post<StaffNote[]>(`${this.api}/list`, {}, { context: new HttpContext().set(SKIP_LOADER, quiet) });
+  }
+
+  reply(id: number, body: string): Observable<StaffNote> {
+    return this.http.post<StaffNote>(`${this.api}/${id}/replies`, { body }, { context: new HttpContext().set(SKIP_LOADER, true) });
   }
 
   recipients(): Observable<NoteRecipient[]> {
