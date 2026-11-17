@@ -1,4 +1,4 @@
--- Tabela `zk_sessions`: šema i podaci iz lokalne baze (16.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_sessions`: šema i podaci iz lokalne baze (17.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
