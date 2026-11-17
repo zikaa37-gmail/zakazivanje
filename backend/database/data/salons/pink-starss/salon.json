@@ -33,7 +33,7 @@
         "notify_booking_cancelled": 1,
         "reminder_hours": 24,
         "notify_admin_new_booking": 1,
-        "bank_account": null,
+        "bank_account": "325-9601700081122-85",
         "payee_name": "DANIJELA ĐOKIĆ PR PINK STARSS",
         "payee_address": "Krajiška 59d, Zemun",
         "payment_code": "289",
