@@ -93,7 +93,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
-| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?}` — pomeranje (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i administrativnim radnicima) |
+| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?, delay_notice?}` — pomeranje (`delay_notice` = prevlačenje u kalendaru: obaveštenje ide 2 min posle poslednjeg pomeranja, `appointments:send-change-notices`) (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i administrativnim radnicima) |
 | GET | `/appointments/{id}/linked` | ostali aktivni termini iste povezane grupe |
 | GET | `/appointments/{id}/alternatives` | kolege koje rade te usluge i slobodne su u isto vreme |
 | POST | `/appointments/{id}/ask-reschedule` | klijentu poruka sa linkom `/my-appointments?reschedule={id}`; `free_change_reason = salon_request` (pomeranje / otkazivanje bez roka i bez poena discipline) |

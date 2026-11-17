@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
+use App\Services\ChangeNoticeService;
 use App\Services\CancellationFeeService;
 use App\Services\ClientDisciplineService;
 use App\Services\RecurrenceService;
@@ -31,6 +32,7 @@ class AppointmentController extends Controller
         private AppointmentNotifier $notifier,
         private WaitlistService $waitlist,
         private ClientDisciplineService $discipline,
+        private ChangeNoticeService $changeNotices,
     ) {}
 
     public function index(Request $request)
@@ -175,6 +177,7 @@ class AppointmentController extends Controller
             'staff_member_id' => ['required', 'integer', 'exists:staff_members,id'],
             'starts_at' => ['required', 'date_format:Y-m-d H:i'],
             'notify' => ['sometimes', 'boolean'],
+            'delay_notice' => ['sometimes', 'boolean'],
         ]);
 
         if (! in_array($appointment->status, Appointment::BLOCKING_STATUSES, true)) {
@@ -214,10 +217,19 @@ class AppointmentController extends Controller
             return $changed;
         });
 
-        if ($transferred && ($data['notify'] ?? true)) {
-            $this->notifier->transferred($appointment, $previousStaff, $request->user(), $previousStart->notEqualTo($start));
-        } elseif ($moved && ($data['notify'] ?? true)) {
-            $this->notifier->rescheduled($appointment);
+        $notify = $data['notify'] ?? true;
+        if ($moved && $notify && ($data['delay_notice'] ?? false)) {
+            $this->changeNotices->defer($appointment, $previousStaff, $previousStart, $request->user());
+            $this->notifier->changedSilently($appointment, [$previousStaff]);
+        } elseif ($moved && $notify) {
+            [$originalStaff, $originalStart] = $this->changeNotices->original($appointment, $previousStaff, $previousStart);
+            if ($originalStaff !== $appointment->staff_member_id) {
+                $this->notifier->transferred($appointment, $originalStaff, $request->user(), $originalStart->notEqualTo($start));
+            } elseif ($originalStart->notEqualTo($start)) {
+                $this->notifier->rescheduled($appointment);
+            } else {
+                $this->notifier->changedSilently($appointment, [$previousStaff]);
+            }
         } elseif ($moved) {
             $this->notifier->changedSilently($appointment, [$previousStaff]);
         }
