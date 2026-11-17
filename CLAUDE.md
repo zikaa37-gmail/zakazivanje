@@ -71,7 +71,7 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Deljene komponente (preuzete iz `kosarkaska-evidencija`): `appBtn` direktiva i `<app-button>`
   (sa `[loading]`), `<app-spinner>`, `appIcon` (SVG ikonice iz `public/icons/`, registar imena u
   `icon.directive.ts`), `appInput`, `<app-modal>`, `<app-error-message>`, `<app-confirm-dialog>`
-  (`ConfirmService`), `<app-toast-container>` (`ToastService`), globalni loader (`LoaderService` +
+  (`ConfirmService`), `<app-info-tip heading="…">` (ikonica „i“ uz polje, objašnjenje se otvara klikom), `<app-toast-container>` (`ToastService`), globalni loader (`LoaderService` +
   `loaderInterceptor`, `SKIP_LOADER` za tihe pozive). Ostale komponente iz košarkaške (select,
   time-picker, data-list, row-actions, segmented-control...) prenose se kad zatrebaju.
 - Filteri lista i kalendara: `.sticky-toolbar` (ostaje gore dok se sadržaj skroluje) — periodi / prikaz uvek vidljivi, ostali filteri u
@@ -234,7 +234,7 @@ može da zakaže blokiranom uz upozorenje. Podešavanja discipline i izveštaja 
 samo osoblju). Klijenta u formi termina bira deljena `<app-select-search>` (prima `FormControl`, `remote` pretraga).
 Landing i Instagram (#65): početna je landing za sve (naslovna ili prva fotografija salona, ocena / danas radimo / grad / poziv, „Naš salon" slajder
 (`gallery_images.kind = salon`), „Naši radovi" (`featured`, inače poslednji radovi), usluge, objave sa Instagrama, „Kako do nas" (Google mapa
-iz `map_query` ili naziva i adrese, bez API ključa), utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
+iz adrese i grada (`map_query` samo ako je već upisan, polje više nije u Podešavanjima), bez API ključa, dugme „Otvori u Google mapama“), utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.
 Praćenje izvora: `?izvor=&kampanja=` (i `utm_*`, referrer instagram/facebook/tiktok/google) pamti `MarketingService.capture()` 30 dana;
 poseta → `marketing_visits`, registracija → `users.signup_source`, termin → `appointments.referral_source`; Pregled → „Odakle dolaze klijenti",
 Podeli → „Linkovi za Instagram" (QR za štampu nosi `izvor=qr`). Instagram i Meta (#67): Podešavanja → Instagram i Meta — „Poveži sa Instagramom" (OAuth, `config/instagram.php`, `INSTAGRAM_APP_*`

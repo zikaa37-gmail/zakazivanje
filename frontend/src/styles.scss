@@ -101,6 +101,65 @@
     opacity: 0.7;
   }
 
+  .field:has(.info-tip) {
+    position: relative;
+  }
+
+  .info-tip {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .info-tip-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9999px;
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  .info-tip-button:hover,
+  .info-tip-button[aria-expanded='true'] {
+    background: var(--color-primary-tint);
+  }
+
+  .info-tip-panel {
+    position: absolute;
+    z-index: 30;
+    top: 2.25rem;
+    left: 0;
+    right: 0;
+    max-width: 26rem;
+    padding: 0.75rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 10px 25px rgb(0 0 0 / 0.12);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    font-weight: 400;
+  }
+
+  .info-tip-panel ul {
+    margin: 0.375rem 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+  }
+
+  .info-tip-panel p + p,
+  .info-tip-panel ul + p {
+    margin-top: 0.375rem;
+  }
+
+  .info-tip-title {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+
   .processing-bar {
     display: flex;
     height: 1.75rem;
@@ -865,11 +924,31 @@ button.badge:focus-visible {
   }
 }
 
+.landing-map-wrap {
+  position: relative;
+}
+
 .landing-map {
   display: block;
   width: 100%;
-  height: 15rem;
+  height: 18rem;
   border: 0;
+}
+
+.landing-map-open {
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  color: var(--color-primary-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
 }
 
 .choice-card {

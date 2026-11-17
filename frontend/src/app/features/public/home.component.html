@@ -153,7 +153,12 @@
     <h2 class="text-lg font-semibold mb-2">Kako do nas</h2>
     <div class="card !p-0 overflow-hidden">
       @if (mapEmbed(); as src) {
-        <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-testid="home-map"></iframe>
+        <div class="landing-map-wrap">
+          <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-testid="home-map"></iframe>
+          @if (mapHref()) {
+            <a [href]="mapHref()" target="_blank" rel="noopener" class="landing-map-open" data-testid="home-map-open"><span appIcon="external-link" [iconSize]="14" aria-hidden="true"></span> Otvori u Google mapama</a>
+          }
+        </div>
       }
       <div class="p-4 flex flex-col gap-3">
         @if (fullAddress()) {

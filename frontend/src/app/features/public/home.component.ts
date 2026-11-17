@@ -102,11 +102,15 @@ export class HomeComponent {
     const s = this.business.settings();
     if (!s) return null;
     if (s.map_query?.trim()) return s.map_query.trim();
-    return this.fullAddress() ? `${s.name}, ${this.fullAddress()}` : null;
+    return this.fullAddress() || null;
   });
   readonly mapEmbed = computed(() => {
     const query = this.mapQuery();
     return query ? this.sanitizer.bypassSecurityTrustResourceUrl(`https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&output=embed`) : null;
+  });
+  readonly mapHref = computed(() => {
+    const query = this.mapQuery();
+    return query ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}` : null;
   });
   readonly directionsHref = computed(() => {
     const query = this.mapQuery();
