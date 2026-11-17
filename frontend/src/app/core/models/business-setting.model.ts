@@ -29,6 +29,8 @@ export interface ShiftTemplate {
   ends_at: string;
 }
 
+export type MessagingPhone = 'mobile' | 'landline';
+
 export interface BusinessSetting {
   id: number;
   name: string;
@@ -43,9 +45,9 @@ export interface BusinessSetting {
   address: string | null;
   city: string | null;
   phone: string | null;
-  whatsapp_number: string | null;
+  mobile_phone: string | null;
+  messaging_phone: MessagingPhone;
   email: string | null;
-  website: string | null;
   instagram: string | null;
   facebook: string | null;
   tiktok: string | null;
@@ -140,65 +142,6 @@ export const BUSINESS_CATEGORIES: { value: BusinessCategory; label: string }[] =
   { value: 'other', label: 'Ostalo' },
 ];
 
-export interface StaffTerm {
-  term: string;
-  genitive: string;
-}
-
-export const STAFF_TERMS: Record<BusinessCategory, StaffTerm[]> = {
-  hair_salon: [
-    { term: 'frizer', genitive: 'frizera' },
-    { term: 'frizerka', genitive: 'frizerke' },
-    { term: 'stilista', genitive: 'stiliste' },
-  ],
-  barber: [
-    { term: 'berberin', genitive: 'berberina' },
-    { term: 'frizer', genitive: 'frizera' },
-  ],
-  beauty_salon: [
-    { term: 'kozmetičar', genitive: 'kozmetičara' },
-    { term: 'kozmetičarka', genitive: 'kozmetičarke' },
-    { term: 'terapeut', genitive: 'terapeuta' },
-  ],
-  spa: [
-    { term: 'terapeut', genitive: 'terapeuta' },
-    { term: 'maser', genitive: 'masera' },
-  ],
-  nail_salon: [
-    { term: 'manikir', genitive: 'manikira' },
-    { term: 'manikirka', genitive: 'manikirke' },
-    { term: 'nail tehničar', genitive: 'nail tehničara' },
-  ],
-  massage: [
-    { term: 'maser', genitive: 'masera' },
-    { term: 'terapeut', genitive: 'terapeuta' },
-  ],
-  tattoo: [
-    { term: 'tatu majstor', genitive: 'tatu majstora' },
-    { term: 'umetnik', genitive: 'umetnika' },
-  ],
-  dental: [
-    { term: 'stomatolog', genitive: 'stomatologa' },
-    { term: 'doktor', genitive: 'doktora' },
-  ],
-  fitness: [
-    { term: 'trener', genitive: 'trenera' },
-    { term: 'instruktor', genitive: 'instruktora' },
-  ],
-  personal_trainer: [
-    { term: 'trener', genitive: 'trenera' },
-    { term: 'instruktor', genitive: 'instruktora' },
-  ],
-  medical: [
-    { term: 'doktor', genitive: 'doktora' },
-    { term: 'lekar', genitive: 'lekara' },
-    { term: 'terapeut', genitive: 'terapeuta' },
-  ],
-  other: [
-    { term: 'radnik', genitive: 'radnika' },
-    { term: 'stručnjak', genitive: 'stručnjaka' },
-  ],
-};
 
 export interface AiStatus {
   enabled: boolean;

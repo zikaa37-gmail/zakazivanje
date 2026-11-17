@@ -224,8 +224,9 @@ async function run(b, before) {
 
   await go(o, '/admin/settings?tab=business', 1500, '#s-name');
   await shot(o, 'admin-03-podaci-firme', [{ sel: '[data-testid=tab-business]' }, { sel: '#s-name' }, { sel: '[data-testid=settings-save]' }], { scroll: false });
-  await shot(o, 'admin-03c-naziv-zaposlenih', [{ sel: '[data-testid=settings-staff-term] .chip-group' }, { sel: '#s-staff-term' }, { sel: '#s-staff-term-genitive' }]);
-  await shot(o, 'admin-03b-kontakt', [{ sel: '#s-address' }, { sel: '#s-phone' }, { sel: '#s-instagram' }]);
+  await shot(o, 'admin-03c-naziv-zaposlenih', [{ sel: '[data-testid=settings-staff-term] .chip-group' }]);
+  await shot(o, 'admin-03b-kontakt', [{ sel: '#s-mobile' }, { sel: '[data-testid=settings-messaging-phone] .chip-group' }, { sel: '#s-address' }]);
+  await shot(o, 'admin-03d-mapa-mreze', [{ sel: '#s-coordinates' }, { sel: '#s-instagram' }]);
   await o.click('[data-testid=tab-look]');
   await shot(o, 'admin-04-logo-boje', [{ sel: '[data-testid=tab-look]' }, { sel: '[data-testid=cover-card]' }], { scroll: false });
   await o.click('[data-testid=tab-hours]');

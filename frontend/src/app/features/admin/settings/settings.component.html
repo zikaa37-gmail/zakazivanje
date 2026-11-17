@@ -51,38 +51,74 @@
                   </button>
                 }
               </div>
-              <div class="form-grid mt-2">
-                <div class="field">
-                  <label for="s-staff-term">„Tvoj ___"</label>
-                  <input id="s-staff-term" appInput size="m" formControlName="staff_term" placeholder="npr. frizer" data-testid="settings-staff-term-input" />
-                </div>
-                <div class="field">
-                  <label for="s-staff-term-genitive">„kod tvog ___"</label>
-                  <input id="s-staff-term-genitive" appInput size="m" formControlName="staff_term_genitive" placeholder="npr. frizera" data-testid="settings-staff-term-genitive" />
-                </div>
-              </div>
               <span class="text-xs muted">Koristi se u zakazivanju i profilu klijenta („Tvoj {{ form.controls.staff_term.value || 'radnik' }}", „Termini kod tvog {{ form.controls.staff_term_genitive.value || 'radnika' }}").</span>
             </div>
+          </div>
+          <div class="field">
+            <label for="s-description">Opis (vidljiv klijentima)</label>
+            <textarea id="s-description" appInput size="m" rows="3" formControlName="description"></textarea>
+          </div>
+
+          <hr class="settings-divider" />
+          <h3 class="settings-section-title">Kontakt</h3>
+          <div class="form-grid">
             <div class="field">
-              <label for="s-address">Adresa</label>
-              <input id="s-address" appInput size="m" formControlName="address" />
+              <label for="s-mobile">Mobilni telefon</label>
+              <input id="s-mobile" appInput size="m" type="tel" formControlName="mobile_phone" placeholder="+381 6…" data-testid="settings-mobile-phone" />
             </div>
             <div class="field">
-              <label for="s-city">Grad</label>
-              <input id="s-city" appInput size="m" formControlName="city" />
+              <label for="s-phone">Fiksni telefon</label>
+              <input id="s-phone" appInput size="m" type="tel" formControlName="phone" placeholder="+381 11 …" data-testid="settings-phone" />
             </div>
-            <div class="field">
-              <label for="s-phone">Telefon</label>
-              <input id="s-phone" appInput size="m" type="tel" formControlName="phone" />
-            </div>
-            <div class="field">
-              <label for="s-whatsapp">WhatsApp</label>
-              <input id="s-whatsapp" appInput size="m" type="tel" formControlName="whatsapp_number" />
-            </div>
+            @if (form.controls.mobile_phone.value && form.controls.phone.value) {
+              <div class="field sm:col-span-2" data-testid="settings-messaging-phone">
+                <span class="text-sm font-semibold">WhatsApp i Viber su na broju</span>
+                <div class="chip-group mt-1">
+                  <button type="button" class="chip" [class.selected]="form.controls.messaging_phone.value === 'mobile'" (click)="setMessagingPhone('mobile')" data-testid="messaging-phone-mobile">Mobilni</button>
+                  <button type="button" class="chip" [class.selected]="form.controls.messaging_phone.value === 'landline'" (click)="setMessagingPhone('landline')" data-testid="messaging-phone-landline">Fiksni</button>
+                </div>
+              </div>
+            }
             <div class="field">
               <label for="s-email">Email</label>
               <input id="s-email" appInput size="m" type="email" formControlName="email" />
             </div>
+          </div>
+
+          <hr class="settings-divider" />
+          <h3 class="settings-section-title">Adresa i mapa</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="s-address">Adresa</label>
+              <input id="s-address" appInput size="m" formControlName="address" data-testid="settings-address" />
+            </div>
+            <div class="field">
+              <label for="s-city">Grad</label>
+              <input id="s-city" appInput size="m" formControlName="city" data-testid="settings-city" />
+            </div>
+            <div class="field sm:col-span-2">
+              <span class="flex items-center gap-1">
+                <label for="s-coordinates">Koordinate (ako oznaka na mapi nije tačna)</label>
+                <app-info-tip heading="Koordinate">
+                  <p>Mapa se pravi iz adrese i grada. Ako crvena oznaka nije tačno na salonu, otvori Google mape, pritisni i drži (na računaru desni klik) tačno na ulaz u salon i kopiraj brojeve koji se pojave, npr. <strong>44.8463, 20.4012</strong>.</p>
+                  <p class="mt-2">Nalepi ih ovde i mapa će pokazivati tu tačku. Prazno polje = koristi se adresa.</p>
+                </app-info-tip>
+              </span>
+              <input id="s-coordinates" appInput size="m" formControlName="map_query" placeholder="44.8463, 20.4012" inputmode="decimal" data-testid="settings-coordinates" />
+            </div>
+          </div>
+          @if (mapPreviewUrl(); as src) {
+            <div class="landing-map-wrap settings-map" data-testid="settings-map">
+              <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              <a [href]="mapPreviewHref()" target="_blank" rel="noopener" class="landing-map-open"><span appIcon="external-link" [iconSize]="14" aria-hidden="true"></span> Otvori u Google mapama</a>
+            </div>
+          } @else {
+            <p class="text-sm muted">Upiši adresu i grad da se prikaže mapa.</p>
+          }
+
+          <hr class="settings-divider" />
+          <h3 class="settings-section-title">Društvene mreže</h3>
+          <div class="form-grid">
             <div class="field">
               <label for="s-instagram">Instagram</label>
               <input id="s-instagram" appInput size="m" formControlName="instagram" placeholder="@salon ili ceo link" data-testid="settings-instagram" />
@@ -99,10 +135,11 @@
               <label for="s-youtube">YouTube</label>
               <input id="s-youtube" appInput size="m" formControlName="youtube" placeholder="@kanal ili ceo link" />
             </div>
-            <div class="field">
-              <label for="s-website">Sajt</label>
-              <input id="s-website" appInput size="m" type="url" formControlName="website" placeholder="https://" />
-            </div>
+          </div>
+
+          <hr class="settings-divider" />
+          <h3 class="settings-section-title">Podaci o firmi</h3>
+          <div class="form-grid">
             <div class="field">
               <label for="s-pib">PIB</label>
               <input id="s-pib" appInput size="m" formControlName="pib" inputmode="numeric" />
@@ -111,10 +148,6 @@
               <label for="s-mb">Matični broj</label>
               <input id="s-mb" appInput size="m" formControlName="registration_number" inputmode="numeric" />
             </div>
-          </div>
-          <div class="field">
-            <label for="s-description">Opis (vidljiv klijentima)</label>
-            <textarea id="s-description" appInput size="m" rows="3" formControlName="description"></textarea>
           </div>
         </div>
       }

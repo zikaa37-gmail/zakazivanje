@@ -151,15 +151,7 @@
 
   <section id="kako-do-nas" data-testid="home-location">
     <h2 class="text-lg font-semibold mb-2">Kako do nas</h2>
-    <div class="card !p-0 overflow-hidden">
-      @if (mapEmbed(); as src) {
-        <div class="landing-map-wrap">
-          <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-testid="home-map"></iframe>
-          @if (mapHref()) {
-            <a [href]="mapHref()" target="_blank" rel="noopener" class="landing-map-open" data-testid="home-map-open"><span appIcon="external-link" [iconSize]="14" aria-hidden="true"></span> Otvori u Google mapama</a>
-          }
-        </div>
-      }
+    <div class="card !p-0 overflow-hidden landing-location">
       <div class="p-4 flex flex-col gap-3">
         @if (fullAddress()) {
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -169,7 +161,31 @@
             }
           </div>
         }
-        <div>
+        @if (phones().length > 0) {
+          <div class="flex flex-col gap-2" data-testid="home-phones">
+            @for (phone of phones(); track phone.kind) {
+              <div class="landing-phone">
+                <span appIcon="phone" class="text-[var(--color-primary-text)]" aria-hidden="true"></span>
+                @if (phone.tel) {
+                  <a [href]="phone.tel" class="font-semibold" [attr.data-testid]="'home-phone-' + phone.kind">{{ phone.number }}</a>
+                } @else {
+                  <span class="font-semibold">{{ phone.number }}</span>
+                }
+                @if (phones().length > 1) {
+                  <span class="muted text-xs">{{ phone.label }}</span>
+                }
+              </div>
+            }
+            @if (messagingPhone(); as phone) {
+              <div class="landing-phone">
+                <span class="muted text-xs">Poruka{{ phones().length > 1 ? ' (' + phone.label.toLowerCase() + ')' : '' }}:</span>
+                <a [href]="phone.whatsapp" target="_blank" rel="noopener" class="brand-pill is-whatsapp" data-testid="home-whatsapp"><span appIcon="send" [iconSize]="12" aria-hidden="true"></span> WhatsApp</a>
+                <a [href]="phone.viber" class="brand-pill is-viber" data-testid="home-viber"><span appIcon="message-square" [iconSize]="12" aria-hidden="true"></span> Viber</a>
+              </div>
+            }
+          </div>
+        }
+        <div class="border-t border-[var(--color-border)] pt-2">
           @for (row of hours(); track row.label) {
             <div class="flex justify-between py-1 text-sm" [class.font-semibold]="row.today">
               <span [class.muted]="!row.today">{{ row.label }}</span>
@@ -177,13 +193,15 @@
             </div>
           }
         </div>
-        <div class="flex flex-col gap-2 text-sm border-t border-[var(--color-border)] pt-3">
-          @if (phoneHref()) {
-            <a [href]="phoneHref()" class="flex items-center gap-2"><span appIcon="phone" aria-hidden="true"></span>{{ business.settings()?.phone }}</a>
-          }
-          <app-social-links [showHandle]="true" />
-        </div>
       </div>
+      @if (mapEmbed(); as src) {
+        <div class="landing-map-wrap landing-location-map">
+          <iframe class="landing-map" [src]="src" title="Mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" data-testid="home-map"></iframe>
+          @if (mapHref()) {
+            <a [href]="mapHref()" target="_blank" rel="noopener" class="landing-map-open" data-testid="home-map-open"><span appIcon="external-link" [iconSize]="14" aria-hidden="true"></span> Otvori u Google mapama</a>
+          }
+        </div>
+      }
     </div>
   </section>
 

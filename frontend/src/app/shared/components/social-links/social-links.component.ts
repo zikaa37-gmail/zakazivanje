@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { socialLinks } from '../../../core/utils/social';
 import { IconDirective } from '../../directives/icon.directive';
@@ -9,13 +9,10 @@ import { IconDirective } from '../../directives/icon.directive';
   imports: [IconDirective],
   template: `
     @if (links().length > 0) {
-      <span class="social-links" [class.with-handle]="showHandle()" data-testid="social-links">
+      <span class="social-links" data-testid="social-links">
         @for (link of links(); track link.network) {
-          <a [href]="link.url" target="_blank" rel="noopener" [attr.aria-label]="link.label" [title]="link.label" [attr.data-testid]="'social-' + link.network">
-            <span [appIcon]="link.network" [iconSize]="20" aria-hidden="true"></span>
-            @if (showHandle()) {
-              <span>{{ link.handle }}</span>
-            }
+          <a [href]="link.url" target="_blank" rel="noopener" [class]="'is-' + link.network" [attr.aria-label]="link.label + ' ' + link.handle" [title]="link.label" [attr.data-testid]="'social-' + link.network">
+            <span [appIcon]="link.network" [iconSize]="link.network === 'facebook' ? 24 : 20" aria-hidden="true"></span>
           </a>
         }
       </span>
@@ -25,41 +22,48 @@ import { IconDirective } from '../../directives/icon.directive';
     .social-links {
       display: inline-flex;
       flex-wrap: wrap;
-      gap: 0.25rem;
+      justify-content: center;
+      gap: 0.75rem;
     }
 
     a {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      min-width: 2.5rem;
-      min-height: 2.5rem;
-      border-radius: var(--radius);
-      color: var(--color-text-muted);
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 9999px;
+      color: var(--color-on-brand);
+      box-shadow: 0 2px 8px var(--shadow-color);
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
 
       &:hover {
-        color: var(--color-primary-text);
-        background: var(--color-primary-tint);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 14px var(--shadow-color);
       }
     }
 
-    .with-handle {
-      flex-direction: column;
-      gap: 0.1rem;
+    .is-facebook {
+      background: var(--color-brand-facebook);
+    }
 
-      a {
-        justify-content: flex-start;
-        min-height: 2rem;
-        color: var(--color-text);
-        font-size: 0.875rem;
-      }
+    .is-instagram {
+      background: var(--color-brand-instagram);
+    }
+
+    .is-tiktok {
+      background: var(--color-brand-tiktok);
+    }
+
+    .is-youtube {
+      background: var(--color-brand-youtube);
     }
   `,
 })
 export class SocialLinksComponent {
   private business = inject(BusinessSettingService);
 
-  readonly showHandle = input(false);
   readonly links = computed(() => socialLinks(this.business.settings()));
 }
