@@ -394,7 +394,7 @@ export class CalendarComponent {
     const start = minutesOf(e.appointment.starts_at) + minutesDelta;
     if (start < 0 || start >= 24 * 60) return;
     const staffId = target.staff?.id ?? e.appointment.staff_member_id;
-    const moved = await this.actionsService.reschedule(e.appointment, staffId, `${target.date} ${hhmm(start)}`);
+    const moved = await this.actionsService.reschedule(e.appointment, staffId, `${target.date} ${hhmm(start)}`, true, true);
     if (moved) this.reload();
   }
 

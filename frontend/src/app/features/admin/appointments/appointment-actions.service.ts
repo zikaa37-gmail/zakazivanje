@@ -121,11 +121,11 @@ export class AppointmentActionsService {
     }
   }
 
-  async reschedule(a: Appointment, staffMemberId: number, startsAt: string, ask = true): Promise<Appointment | null> {
+  async reschedule(a: Appointment, staffMemberId: number, startsAt: string, ask = true, delayNotice = false): Promise<Appointment | null> {
     if (ask) {
       const ok = await this.confirm.confirm({
         title: 'Pomeranje termina',
-        message: `Pomeriti termin ${clientName(a.client)} na ${startsAt.slice(8, 10)}.${startsAt.slice(5, 7)}. u ${startsAt.slice(11, 16)}? Klijent dobija obaveštenje.`,
+        message: `Pomeriti termin ${clientName(a.client)} na ${startsAt.slice(8, 10)}.${startsAt.slice(5, 7)}. u ${startsAt.slice(11, 16)}? ${delayNotice ? 'Klijent dobija obaveštenje 2 minuta posle poslednjeg pomeranja — ako ga još pomeraš, dobiće samo jedno, sa konačnim terminom.' : 'Klijent dobija obaveštenje.'}`,
         confirmLabel: 'Pomeri',
         cancelLabel: 'Ne',
         danger: false,
@@ -134,8 +134,8 @@ export class AppointmentActionsService {
     }
 
     try {
-      const moved = await firstValueFrom(this.appointments.reschedule(a.id, staffMemberId, startsAt));
-      this.toast.success('Termin je pomeren.');
+      const moved = await firstValueFrom(this.appointments.reschedule(a.id, staffMemberId, startsAt, delayNotice));
+      this.toast.success(delayNotice ? 'Termin je pomeren. Klijent dobija obaveštenje za 2 minuta.' : 'Termin je pomeren.');
       return moved;
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'Pomeranje nije uspelo.'));

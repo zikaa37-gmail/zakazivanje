@@ -273,6 +273,9 @@ Odsustva (bolovanje / odmor): `/admin/absences`, `StaffAbsence` + `StaffAbsenceS
 vreme, `AvailabilityService`), „Pošalji da sam pomeri“ (`ask-reschedule`), otkazivanje. Prebacivanje (promena zaposlenog u `reschedule`, i iz detalja
 termina „Prebaci kolegi“) obaveštava klijenta, oba zaposlena i menadžere. `appointments.free_change_reason` (`transferred` / `salon_request`): klijent
 pomera i otkazuje bez roka, a to otkazivanje ne donosi poene discipline.
+Prevlačenje u kalendaru šalje `delay_notice`: `ChangeNoticeService` pamti stanje pre prvog pomeranja (`appointments.change_notice`) i rok
+`change_notice_at` = poslednje pomeranje + 2 min; `appointments:send-change-notices` (svaki minut) šalje jedno obaveštenje prema konačnom stanju
+(prebačen / pomeren / ništa ako je vraćen ili otkazan). Odmah ide samo uživo osvežavanje; „Prebaci kolegi“ šalje odmah i preuzima stanje na čekanju.
 Naplata kasnog otkazivanja: `cancellation_fee_enabled` (Podešavanja → Zakazivanje) — posle roka `cancellation_days_before` klijent može samo da otkaže
 (ne i da pomeri) uz `accept_late`; `CancellationFeeService` je jedino mesto za pravila. Svako kasno otkazivanje je red u `cancellation_fees`
 (`free` dok traje odbrojavanje `cancellation_free_late` u `cancellation_fee_window_days`, pa `open` → `paid` / `waived`; oprošteno se ne broji).

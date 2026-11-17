@@ -47,8 +47,8 @@ export class AppointmentService {
       .pipe(tap(() => this.refreshPendingCount()));
   }
 
-  reschedule(id: number, staffMemberId: number, startsAt: string): Observable<Appointment> {
-    return this.http.post<Appointment>(`${this.api}/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt });
+  reschedule(id: number, staffMemberId: number, startsAt: string, delayNotice = false): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.api}/${id}/reschedule`, { staff_member_id: staffMemberId, starts_at: startsAt, delay_notice: delayNotice });
   }
 
   linked(id: number): Observable<Appointment[]> {

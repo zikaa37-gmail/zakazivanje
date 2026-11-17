@@ -9,5 +9,6 @@ Schedule::command('model:prune', ['--model' => [App\Models\InboxNotification::cl
 Schedule::command('instagram:refresh-token')->weeklyOn(1, '04:00');
 Schedule::command('instagram:publish-scheduled')->everyFiveMinutes()->withoutOverlapping(15);
 Schedule::command('chat:notify-unread')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('appointments:send-change-notices')->everyMinute()->withoutOverlapping(5);
 Schedule::command('appointments:send-reminders')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('queue:work --stop-when-empty --max-time=55 --timeout=120')->everyMinute()->withoutOverlapping(10)->runInBackground();
