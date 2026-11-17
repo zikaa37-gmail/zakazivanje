@@ -10,6 +10,7 @@ use App\Models\ServiceCategory;
 use App\Models\Shift;
 use App\Models\StaffMember;
 use App\Models\User;
+use Database\Seeders\DemoDataSeeder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -30,8 +31,6 @@ class SalonTemplateService
     private const STAFF_FIELDS = ['first_name', 'last_name', 'title', 'phone', 'email', 'color', 'booking_confirmation', 'active', 'rotation_weeks', 'rotation_starts_on'];
 
     private const PROMOTION_FIELDS = ['name', 'code', 'max_uses', 'once_per_client', 'type', 'description', 'discount_percent', 'discount_amount', 'package_price', 'buy_quantity', 'free_quantity', 'loyalty_visits', 'starts_on', 'ends_on', 'weekdays', 'active'];
-
-    private const KEPT_USER_FIELDS = ['first_name', 'last_name', 'email', 'phone', 'gender', 'role', 'password', 'email_verified_at', 'active', 'staff_member_id'];
 
     public static function directory(string $slug): string
     {
@@ -101,10 +100,15 @@ class SalonTemplateService
         return json_decode(File::get($path), true, flags: JSON_THROW_ON_ERROR);
     }
 
-    public function keptUsers(array $emails): Collection
+    public function keptUsers(array $emails, bool $clients = false): Collection
     {
-        return User::whereIn('email', $emails)->orderBy('id')->get()
-            ->map(fn (User $u) => Arr::only($u->getAttributes(), self::KEPT_USER_FIELDS));
+        return User::query()
+            ->where(fn ($q) => $q->whereIn('email', $emails)->when($clients, fn ($q) => $q->orWhere(fn ($q) => $q
+                ->where('role', User::ROLE_CLIENT)
+                ->where(fn ($q) => $q->whereNull('email')->orWhere('email', 'not like', '%@'.DemoDataSeeder::DOMAIN)))))
+            ->orderBy('id')
+            ->get()
+            ->map(fn (User $u) => $u->getAttributes());
     }
 
     public function wipe(): void
@@ -174,14 +178,24 @@ class SalonTemplateService
                 Promotion::create(Arr::only($p, self::PROMOTION_FIELDS))->services()->sync($services->only($p['services'] ?? [])->values());
             }
 
-            $accounts = 0;
-            $keptByEmail = ($kept ?? collect())->keyBy('email');
+            $kept ??= collect();
+            foreach ($kept as $attributes) {
+                DB::table('users')->insert([...$attributes, 'staff_member_id' => null, 'favorite_staff_member_id' => null]);
+            }
+
+            $accounts = $kept->count();
             foreach ($data['accounts'] ?? [] as $a) {
                 $member = isset($a['staff']) ? $staff->get($a['staff']) : null;
+                $existing = filled($a['email'] ?? null) ? User::where('email', $a['email'])->first() : null;
+                if ($existing) {
+                    $existing->forceFill(['staff_member_id' => $member?->id])->save();
+
+                    continue;
+                }
                 $user = new User(Arr::only($a, ['first_name', 'last_name', 'email', 'phone']));
                 $user->forceFill([
                     'role' => $a['role'] ?? User::ROLE_WORKER,
-                    'password' => $keptByEmail->get($a['email'] ?? '')['password'] ?? Hash::make($password ?? Str::random(40)),
+                    'password' => Hash::make($password ?? Str::random(40)),
                     'email_verified_at' => now(),
                     'staff_member_id' => $member?->id,
                 ])->save();
@@ -196,22 +210,18 @@ class SalonTemplateService
             }
 
             $free = $staff->filter(fn (StaffMember $m) => ! User::where('staff_member_id', $m->id)->exists())->values();
-            foreach ($kept ?? collect() as $attributes) {
-                if (User::where('email', $attributes['email'])->exists()) {
+            foreach ($kept as $attributes) {
+                $user = User::find($attributes['id']);
+                if ($attributes['staff_member_id'] === null || $user->staff_member_id !== null) {
                     continue;
                 }
-                $user = (new User)->forceFill([...Arr::except($attributes, 'staff_member_id'), 'staff_member_id' => null]);
-                if ($attributes['staff_member_id'] !== null || $user->role === User::ROLE_WORKER) {
-                    $member = $free->shift();
-                    if (! $member && $user->role === User::ROLE_WORKER) {
-                        continue;
-                    }
-                    if ($member) {
-                        $user->forceFill(['staff_member_id' => $member->id, 'first_name' => $member->first_name, 'last_name' => $member->last_name]);
-                    }
+                $member = $free->shift();
+                if ($member) {
+                    $user->forceFill(['staff_member_id' => $member->id, 'first_name' => $member->first_name, 'last_name' => $member->last_name])->save();
+                } elseif ($user->role === User::ROLE_WORKER) {
+                    $user->delete();
+                    $accounts--;
                 }
-                $user->save();
-                $accounts++;
             }
 
             return [...$this->counts($data), 'accounts' => $accounts];

@@ -18,6 +18,5 @@ CREATE TABLE `zk_promotion_service` (
   CONSTRAINT `zk_promotion_service_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `zk_services` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_promotion_service` VALUES (1,1,1),(1,3,1),(2,5,1),(3,2,1);
 
 SET FOREIGN_KEY_CHECKS=1;

@@ -25,8 +25,8 @@ CREATE TABLE `zk_staff_members` (
   `rotation_weeks` tinyint unsigned NOT NULL DEFAULT '1',
   `rotation_starts_on` date DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Jelena','Matović','Frizer (muški i ženski)','0653167338','devtestzikaa@gmail.com','#15803d',NULL,NULL,1,0,'2026-10-21 08:59:46','2026-11-02 11:19:07',1,NULL),(2,'Marko','Matović','Muški frizer','0654761380','marko@fiskultura.rs','#b45309','automatic',NULL,1,1,'2026-10-21 08:59:46','2026-11-02 11:19:39',1,NULL),(3,'Sandra','Afrika','Ženski frizer','+381 64 218 5307','sandra@fiskultura.rs','#7c3aed',NULL,NULL,1,2,'2026-10-21 08:59:46','2026-11-13 23:00:00',1,NULL);
+INSERT INTO `zk_staff_members` VALUES (1,'Danijela','Đokić','Vlasnica',NULL,NULL,'#c2185b',NULL,NULL,1,0,'2026-11-17 12:40:36','2026-11-17 12:40:36',1,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;

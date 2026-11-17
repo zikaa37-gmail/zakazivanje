@@ -51,10 +51,12 @@ class SalonTemplateTest extends TestCase
         File::moveDirectory(database_path('data/salons/x'), $this->dir);
         $this->assertFileExists($this->dir.'/logo.png');
 
-        $quick = User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'brza@test.rs', 'password' => Hash::make('tajna')]);
+        $quick = User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'brza@test.rs', 'password' => Hash::make('tajna'), 'staff_member_id' => StaffMember::create(['first_name' => 'Q', 'last_name' => 'Q'])->id]);
+        $gone = User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'visak@test.rs', 'staff_member_id' => StaffMember::create(['first_name' => 'V', 'last_name' => 'V'])->id]);
+        $demo = User::factory()->create(['email' => 'demo1@demo.zakazivanje.rs']);
         config(['auth_jwt.quick_login_emails' => ['brza@test.rs']]);
         $service = app(\App\Services\SalonTemplateService::class);
-        $kept = $service->keptUsers(['brza@test.rs']);
+        $kept = $service->keptUsers(['brza@test.rs', 'visak@test.rs'], true);
         StaffMember::create(['first_name' => 'Slobodna', 'last_name' => 'B']);
         $service->wipe();
         $this->assertSame(0, User::count());
@@ -79,7 +81,10 @@ class SalonTemplateTest extends TestCase
         $this->assertTrue(Hash::check('tajna', $kept->password));
         $this->assertSame(StaffMember::where('first_name', 'Mila')->value('id'), $kept->staff_member_id);
         $this->assertSame(0, Appointment::count());
-        $this->assertSame(3, User::count());
+        $this->assertSame($client->email, User::find($client->id)?->email);
+        $this->assertNull(User::where('email', 'visak@test.rs')->first());
+        $this->assertNull(User::where('email', 'demo1@demo.zakazivanje.rs')->first());
+        $this->assertSame(4, User::count());
     }
 
     public function test_bundled_templates_load(): void

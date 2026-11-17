@@ -31,9 +31,13 @@ Opcije za `salon:load`:
 - `--keep-logins`: zadržava naloge iz `QUICK_LOGIN_EMAILS` (brza prijava) sa istom lozinkom.
   - Nalog koji je bio vezan za zaposlenog (vlasnik koji radi usluge, radnik) preuzima slobodnog zaposlenog iz šablona, redom, i njegovo ime.
   - Radnik za kog nema slobodnog zaposlenog se ne vraća.
+- `--keep-clients`: zadržava naloge klijenata (bez demo klijenata `@demo.zakazivanje.rs`), sa istim id-jem, ali bez termina i istorije.
 - `--password=...`: lozinka za naloge iz šablona. Bez nje dobijaju nasumičnu (koristi se „Zaboravljena lozinka").
 - `--demo`: posle učitavanja pokreće `DemoDataSeeder`. Treba mu bar jedna aktivna usluga i zaposleni.
 - `--force`: bez pitanja.
+
+Na serveru (bez SSH-a): `python deploy/deploy.py --salon=<naziv>` — posle deploy-a i migracija pokreće
+`salon:load <naziv> --keep-logins --keep-clients --force`.
 
 Pre učitavanja na serveru napraviti rezervnu kopiju baze (cPanel → Backup). Učitavanje briše **sve**: klijente, termine i
 obaveštenja.

@@ -110,6 +110,15 @@ try {
         $console = $laravel->make(Illuminate\Contracts\Console\Kernel::class);
         $console->call('migrate', ['--force' => true]);
         $result['migrate'] = trim($console->output()) ?: 'ok';
+
+        $salon = (string) ($_POST['salon'] ?? '');
+        if ($salon !== '') {
+            if (! preg_match('/^[a-z0-9-]+$/', $salon)) {
+                throw new RuntimeException('Neispravan naziv salona.');
+            }
+            $console->call('salon:load', ['slug' => $salon, '--keep-logins' => true, '--keep-clients' => true, '--force' => true]);
+            $result['salon'] = trim($console->output()) ?: 'ok';
+        }
     }
 } catch (Throwable $exception) {
     http_response_code(500);

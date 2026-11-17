@@ -4,6 +4,7 @@
     python deploy/deploy.py --skip-tests    # build bez backend testova
     python deploy/deploy.py --skip-build    # samo upload postojećih paketa
     python deploy/deploy.py --with-db       # i uvoz deploy/zakazivanje-baza.sql (briše podatke na serveru!)
+    python deploy/deploy.py --salon=pink-starss  # i salon:load na serveru: briše podatke, učitava šablon, zadržava naloge za brzu prijavu i klijente
 
 Podešavanja (FTP_*, DEPLOY_*) i produkcioni .env su u deploy/.env (van gita).
 Zipovi i .env idu preko FTP-a, a jednokratni PHP fajl (deploy/remote-unpack.php, zaštićen
@@ -90,6 +91,10 @@ def get(url: str) -> int:
 def main() -> int:
     sys.stdout.reconfigure(encoding='utf-8')
     args = set(sys.argv[1:])
+    salon = next((arg.split('=', 1)[1] for arg in sys.argv[1:] if arg.startswith('--salon=')), '')
+    if salon and not (ROOT / 'backend' / 'database' / 'data' / 'salons' / salon / 'salon.json').exists():
+        print(f'Nema šablona salona: {salon}')
+        return 1
     env, lines = read_env(DEPLOY / '.env')
     for key in ('FTP_HOST', 'FTP_USER', 'FTP_PASSWORD', 'DEPLOY_APP_DIR', 'DEPLOY_WEB_DIR', 'DEPLOY_SECRET', 'APP_URL'):
         if not env.get(key):
@@ -127,7 +132,7 @@ def main() -> int:
 
     base = env['APP_URL'].rstrip('/')
     print('==> Raspakivanje na serveru')
-    request = urllib.request.Request(f'{base}/{unpacker_name}', data=urllib.parse.urlencode({'key': env['DEPLOY_SECRET']}).encode(), headers=HEADERS, method='POST')
+    request = urllib.request.Request(f'{base}/{unpacker_name}', data=urllib.parse.urlencode({'key': env['DEPLOY_SECRET'], 'salon': salon}).encode(), headers=HEADERS, method='POST')
     try:
         with urllib.request.urlopen(request, timeout=600, context=tls()) as response:
             result = json.loads(response.read().decode('utf-8'))
