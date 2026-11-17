@@ -93,7 +93,7 @@ class SalonTemplateTest extends TestCase
             $this->artisan('salon:load', ['slug' => $slug, '--force' => true, '--password' => 'x'])->assertSuccessful();
             $this->assertNotNull(BusinessSetting::current()->logo);
         }
-        $this->assertSame('Pink Starss', BusinessSetting::current()->name);
+        $this->assertSame('Salon Pink Stars', BusinessSetting::current()->name);
         $this->assertFalse((bool) ServiceCategory::where('name', 'Frizer — boja')->value('active'));
         $this->assertSame(7, OpeningHour::count());
     }

@@ -16,7 +16,7 @@ Galerija, klijenti, termini i ostala istorija nisu deo šablona.
 | Šablon | Šta je |
 |--------|--------|
 | `pink` | test salon „Frizerski salon Pink" sa kojim smo razvijali aplikaciju (frizerske usluge, 3 zaposlena, akcije) |
-| `pink-starss` | Pink Starss, Krajiška 59d, Zemun — kozmetika aktivna kao kategorije; frizerske kategorije pripremljene, ali isključene |
+| `pink-starss` | Salon Pink Stars (u APR-u „Pink Starss“), Krajiška 59d, Zemun — kozmetika aktivna kao kategorije; frizerske kategorije pripremljene, ali isključene |
 
 ## Komande (iz `backend/`)
 
@@ -58,6 +58,6 @@ obaveštenja.
 
 - PIB i matični broj (APR), mejl salona i podaci za uplatu (račun, primalac).
 - Cene i tačna trajanja usluga, pa ih uključiti; spisak usluga potvrditi sa salonom (elektroterapije, epilacija).
-- Zaposleni: imena, mejlovi i telefoni, i koje usluge rade. Za sada je upisana samo Danijela Đokić, bez mejla.
+- Nalozi: Danijela Đokić (vlasnik i zaposlena), Lika i Vuk Matović (administrativni radnici), Tijana XXX (radnica) imaju privremene test mejlove `devtestzikaa+…@gmail.com` i lozinku iz šablona — zameniti pravim mejlovima, telefonima i prezimenom pre pravih klijenata (i ukloniti `password` iz `salon.json`).
 - Naslovna fotografija, galerija i povezivanje Instagrama.
 - Frizerski deo: kad krene, uključiti kategorije „Frizer — …", pa usluge sa cenama.

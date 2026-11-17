@@ -1,6 +1,6 @@
 {
     "business": {
-        "name": "Pink Starss",
+        "name": "Salon Pink Stars",
         "category": "beauty_salon",
         "staff_term": "kozmetičarka",
         "staff_term_genitive": "kozmetičarke",
@@ -667,8 +667,81 @@
             "last_name": "Đokić",
             "title": "Vlasnica",
             "phone": null,
-            "email": null,
+            "email": "devtestzikaa+danijela@gmail.com",
             "color": "#c2185b",
+            "booking_confirmation": null,
+            "active": 1,
+            "rotation_weeks": 1,
+            "rotation_starts_on": null,
+            "working_hours": [
+                {
+                    "weekday": 1,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "20:00"
+                },
+                {
+                    "weekday": 2,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "20:00"
+                },
+                {
+                    "weekday": 3,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "20:00"
+                },
+                {
+                    "weekday": 4,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "20:00"
+                },
+                {
+                    "weekday": 5,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "20:00"
+                },
+                {
+                    "weekday": 6,
+                    "week": 1,
+                    "starts_at": "09:00",
+                    "ends_at": "16:00"
+                }
+            ],
+            "services": [
+                "Relaks masaža celog tela",
+                "Masaža leđa",
+                "Anticelulit masaža",
+                "Limfna drenaža",
+                "Depilacija celih nogu",
+                "Depilacija pola nogu",
+                "Depilacija bikini zone",
+                "Depilacija pazuha",
+                "Depilacija ruku",
+                "Depilacija nausnica",
+                "Epilacija (po zoni)",
+                "Manikir",
+                "Trajni lak",
+                "Nadogradnja noktiju",
+                "Korekcija nadogradnje",
+                "Pedikir",
+                "Pedikir sa trajnim lakom",
+                "Higijenski tretman lica",
+                "Profesionalno šminkanje",
+                "Presoterapija",
+                "Elektrostimulacija"
+            ]
+        },
+        {
+            "first_name": "Tijana",
+            "last_name": "XXX",
+            "title": "Kozmetičarka",
+            "phone": null,
+            "email": "devtestzikaa+tijana@gmail.com",
+            "color": "#7c3aed",
             "booking_confirmation": null,
             "active": 1,
             "rotation_weeks": 1,
@@ -737,5 +810,42 @@
         }
     ],
     "promotions": [],
-    "accounts": []
+    "accounts": [
+        {
+            "first_name": "Danijela",
+            "last_name": "Đokić",
+            "email": "devtestzikaa+danijela@gmail.com",
+            "phone": null,
+            "role": "owner",
+            "staff": 0,
+            "password": "zakazivanje2026"
+        },
+        {
+            "first_name": "Lika",
+            "last_name": "Matović",
+            "email": "devtestzikaa+lika@gmail.com",
+            "phone": null,
+            "role": "manager",
+            "staff": null,
+            "password": "zakazivanje2026"
+        },
+        {
+            "first_name": "Vuk",
+            "last_name": "Matović",
+            "email": "devtestzikaa+vuk@gmail.com",
+            "phone": null,
+            "role": "manager",
+            "staff": null,
+            "password": "zakazivanje2026"
+        },
+        {
+            "first_name": "Tijana",
+            "last_name": "XXX",
+            "email": "devtestzikaa+tijana@gmail.com",
+            "phone": null,
+            "role": "worker",
+            "staff": 1,
+            "password": "zakazivanje2026"
+        }
+    ]
 }

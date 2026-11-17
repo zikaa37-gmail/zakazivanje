@@ -195,7 +195,7 @@ class SalonTemplateService
                 $user = new User(Arr::only($a, ['first_name', 'last_name', 'email', 'phone']));
                 $user->forceFill([
                     'role' => $a['role'] ?? User::ROLE_WORKER,
-                    'password' => Hash::make($password ?? Str::random(40)),
+                    'password' => Hash::make($a['password'] ?? $password ?? Str::random(40)),
                     'email_verified_at' => now(),
                     'staff_member_id' => $member?->id,
                 ])->save();
