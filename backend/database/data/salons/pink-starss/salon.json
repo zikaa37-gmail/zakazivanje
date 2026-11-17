@@ -2,8 +2,8 @@
     "business": {
         "name": "Salon Pink Stars",
         "category": "beauty_salon",
-        "staff_term": "kozmetičarka",
-        "staff_term_genitive": "kozmetičarke",
+        "staff_term": "kozmetičar",
+        "staff_term_genitive": "kozmetičara",
         "ai_enabled": 0,
         "description": "Beauty salon u Zemunu (Mali Beograd): masaže, depilacija i epilacija, manikir, pedikir i nadogradnja noktiju, tretmani lica i presoterapija.",
         "address": "Krajiška 59d, Zemun",
