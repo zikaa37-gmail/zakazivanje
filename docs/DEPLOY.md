@@ -65,6 +65,7 @@ specifične za ovu aplikaciju.
 python deploy/deploy.py               # build (sa testovima) + upload + raspakivanje + migrate
 python deploy/deploy.py --skip-tests  # bez backend testova
 python deploy/deploy.py --skip-build  # samo upload postojećih paketa
+python deploy/deploy.py --salon=pink-starss  # BRIŠE podatke na serveru i učitava šablon salona (docs/salon-sabloni.md); naloge za brzu prijavu i klijente zadržava
 ```
 
 Kad server ima prave podatke (klijenti, termini), **ne koristiti `--with-db`** — prepisuje sve `zk_`

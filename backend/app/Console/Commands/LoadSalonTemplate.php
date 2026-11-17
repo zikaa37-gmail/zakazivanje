@@ -12,6 +12,7 @@ class LoadSalonTemplate extends Command
         {slug : naziv foldera u database/data/salons}
         {--password= : lozinka za naloge iz šablona (bez nje dobijaju nasumičnu i koriste „Zaboravljena lozinka")}
         {--keep-logins : zadrži naloge za brzu prijavu (QUICK_LOGIN_EMAILS); radnici se vezuju za zaposlene iz šablona}
+        {--keep-clients : zadrži naloge klijenata (bez demo klijenata), bez njihovih termina}
         {--demo : posle učitavanja napravi demo klijente i termine}
         {--force : bez pitanja}';
 
@@ -26,7 +27,7 @@ class LoadSalonTemplate extends Command
             return self::FAILURE;
         }
 
-        $kept = $this->option('keep-logins') ? $templates->keptUsers(config('auth_jwt.quick_login_emails')) : collect();
+        $kept = $templates->keptUsers($this->option('keep-logins') ? config('auth_jwt.quick_login_emails') : [], (bool) $this->option('keep-clients'));
         $templates->wipe();
         $counts = $templates->load($dir, $this->option('password') ?: null, $kept);
         $this->info("Učitano iz {$dir}");

@@ -22,8 +22,7 @@ CREATE TABLE `zk_push_subscriptions` (
   UNIQUE KEY `zk_push_subscriptions_endpoint_hash_unique` (`endpoint_hash`),
   KEY `zk_push_subscriptions_user_id_foreign` (`user_id`),
   CONSTRAINT `zk_push_subscriptions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_push_subscriptions` VALUES (2,5,'faa86ab3661a1b26cb02fd7813828a2866018bf0e0668ea1c6ac24a5bb77c3b7','https://fcm.googleapis.com/fcm/send/dKh3B-9wt5w:APA91bHzgPQdM1smOyb91SbB9Xk1bErwBebf153b0xatkzLEhI-73fyp1NruTqW1j_dp2BVOpSKGwnq7eN2c33lJXMkT231RUUf4OjJvS7vFRaNywXvydnYL8Tczcpl8bNVs22pEw5QV','BPca6KQFNQ5Pf5mrnYslqoBiiDlEeC1CvS-UXZH7MzMywbBEHxD0V8rRyk6W-n-zaao7ntfEAbyMe64HmG4CKA4','2PH7dEEOdS1D_Iw2ABFiBQ','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','2026-11-16 14:45:11','2026-11-16 14:45:11');
 
 SET FOREIGN_KEY_CHECKS=1;
