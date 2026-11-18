@@ -238,7 +238,7 @@ rokom; `clients:refresh-discipline` u 03:00. Aktivnost klijenta (prijava, pregle
 događaj `ClientActivity` → `client_activity_logs`; vlasnik dobija mejl kad klijent pređe u višu zonu i kad blokiran
 pokušava (jednom dnevno). Vlasnik i radnik vide zonu i istorijat (Klijenti → Istorijat i zona, `?history={id}`); salon
 može da zakaže blokiranom uz upozorenje. Podešavanja discipline i izveštaja se ne vraćaju javno (`/public/business`
-samo osoblju). Klijenta u formi termina bira deljena `<app-select-search>` (prima `FormControl`, `remote` pretraga).
+samo osoblju). Klijenta u formi termina i u „Nova poruka“ bira deljena `<app-select-search>` (prima `FormControl`, `[loading]` dok stižu podaci — nikad „Nema rezultata“ pre odgovora) nad `ClientDirectoryService` (svi klijenti jednom, `POST /clients/directory`, signal, osvežava se posle 5 min ili izmene klijenta); filtriranje je na frontendu, bez kvačica (`core/utils/search.ts`).
 Landing i Instagram (#65): početna je landing za sve (naslovna ili prva fotografija salona, ocena / danas radimo / grad / poziv, „Naš salon" slajder
 (`gallery_images.kind = salon`), „Naši radovi" (`featured`, inače poslednji radovi), usluge, objave sa Instagrama, „Kako do nas" (Google mapa
 iz adrese i grada ili koordinata (`map_query`, Podešavanja → Biznis → Adresa i mapa, sa pregledom mape), bez API ključa, dugme „Otvori u Google mapama“; na desktopu pored radnog vremena), telefoni `mobile_phone` pa `phone` (fiksni), WhatsApp / Viber na broju `messaging_phone` (`mobile` / `landline`) — sve u `core/utils/business-contact.ts`, utisci na dnu); neulogovanom „Zakaži termin" nudi prijavu / registraciju / pregled termina.

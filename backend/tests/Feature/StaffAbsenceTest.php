@@ -146,6 +146,12 @@ class StaffAbsenceTest extends TestCase
         Notification::assertSentTo($this->client, AppointmentNotification::class);
     }
 
+    public function test_client_directory_lists_all_clients_for_staff(): void
+    {
+        $this->actingAsJwt($this->anaAccount)->postJson('/api/clients/directory')->assertOk()
+            ->assertJsonCount(1)->assertJsonPath('0.id', $this->client->id)->assertJsonMissingPath('0.avatar');
+    }
+
     public function test_client_with_history_cannot_be_deleted(): void
     {
         $id = $this->book('2026-10-20 10:00');

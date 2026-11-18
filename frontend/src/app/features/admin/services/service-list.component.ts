@@ -72,6 +72,7 @@ export class ServiceListComponent {
   readonly staff = signal<StaffMember[]>([]);
 
   readonly categories = signal<ServiceCategory[]>([]);
+  readonly categoriesLoaded = signal(false);
   readonly view = signal<'services' | 'categories'>('services');
   readonly suggestionsOpen = signal(false);
   readonly aiAvailable = signal(false);
@@ -142,7 +143,10 @@ export class ServiceListComponent {
   }
 
   loadCategories(): void {
-    this.categoryService.list().subscribe((categories) => this.categories.set(categories));
+    this.categoryService.list().subscribe((categories) => {
+      this.categories.set(categories);
+      this.categoriesLoaded.set(true);
+    });
   }
 
   reloadAll(): void {

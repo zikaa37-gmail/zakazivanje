@@ -1,3 +1,4 @@
+import { ClientDirectoryService } from '../../../core/services/client-directory.service';
 import { Component, DestroyRef, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -56,12 +57,13 @@ export class AppointmentFormComponent implements OnInit {
   readonly services = signal<SalonService[]>([]);
   readonly saving = signal(false);
   readonly formError = signal<string | null>(null);
-  readonly clientResults = signal<Client[]>([]);
+  protected directory = inject(ClientDirectoryService);
   readonly selectedClient = signal<Client | null>(null);
   readonly newClient = signal(false);
   readonly selectedServices = signal<number[]>([]);
   readonly availableServices = computed(() => this.services().filter((s) => suitsAudience(s.audience, this.selectedClient()?.gender ?? null)));
   readonly suggestions = signal<Slot[]>([]);
+  readonly suggestionsLoading = signal(false);
   readonly repeat = signal(false);
   readonly repeatEnd = signal<'count' | 'date' | 'never'>('count');
   readonly weekdayLabel = signal('');
@@ -69,13 +71,13 @@ export class AppointmentFormComponent implements OnInit {
   readonly zoneInfo = ZONE_BY_VALUE;
   readonly clientControl = new FormControl<number | null>(null);
   readonly clientOptions = computed<SelectSearchOption<number>[]>(() =>
-    this.clientResults().map((c) => ({
+    this.directory.clients().map((c) => ({
       value: c.id,
       label: clientName(c),
       hint: [c.phone, c.email, c.discipline_zone !== 'green' ? `zona: ${ZONE_BY_VALUE[c.discipline_zone].label.toLowerCase()}` : null].filter(Boolean).join(' · '),
+      search: `${c.first_name} ${c.last_name} ${c.nickname ?? ''}`,
     })),
   );
-  private readonly clientQuery = new Subject<string>();
   readonly time = new FormControl<string | null>(null);
   readonly form = this.fb.group({
     staff_member_id: this.fb.control<number | null>(null, Validators.required),
@@ -111,16 +113,9 @@ export class AppointmentFormComponent implements OnInit {
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
     this.catalog.list().subscribe((services) => this.services.set(services.filter((s) => s.active)));
 
-    this.clientQuery
-      .pipe(
-        debounceTime(250),
-        distinctUntilChanged(),
-        switchMap((query) => this.clientService.list(query, 1, null, { context: new HttpContext().set(SKIP_LOADER, true) })),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe((res) => this.clientResults.set(res.data.slice(0, 10)));
+    this.directory.ensure();
     this.clientControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((id) => {
-      const client = this.clientResults().find((c) => c.id === id);
+      const client = this.directory.find(id);
       if (client) this.pickClient(client);
     });
 
@@ -134,10 +129,6 @@ export class AppointmentFormComponent implements OnInit {
     this.selectedClient.set(client);
     const services = this.services();
     this.selectedServices.update((ids) => ids.filter((id) => suitsAudience(services.find((x) => x.id === id)?.audience ?? 'all', client.gender ?? null)));
-  }
-
-  searchClients(query: string): void {
-    this.clientQuery.next(query);
   }
 
   toggleNewClient(): void {
@@ -163,7 +154,14 @@ export class AppointmentFormComponent implements OnInit {
       this.suggestions.set([]);
       return;
     }
-    this.booking.slots(this.selectedServices(), staffId, date, null, [], true).subscribe((slots) => this.suggestions.set(slots));
+    this.suggestionsLoading.set(true);
+    this.booking.slots(this.selectedServices(), staffId, date, null, [], true).subscribe({
+      next: (slots) => {
+        this.suggestions.set(slots);
+        this.suggestionsLoading.set(false);
+      },
+      error: () => this.suggestionsLoading.set(false),
+    });
   }
 
   async save(): Promise<void> {

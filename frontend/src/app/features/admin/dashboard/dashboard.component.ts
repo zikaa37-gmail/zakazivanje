@@ -104,6 +104,7 @@ export class DashboardComponent {
   private router = inject(Router);
   readonly showCharts = signal(readChartsPreference());
   readonly sourcesReport = signal<SourcesReport | null>(null);
+  readonly sourcesLoading = signal(true);
   readonly sources = computed(() => this.sourcesReport()?.rows ?? []);
   readonly instagramInsights = computed(() => this.sourcesReport()?.instagram ?? null);
   readonly instagramFunnel = computed<FunnelStep[]>(() => {
@@ -325,7 +326,17 @@ export class DashboardComponent {
 
   private loadStats(from: string, to: string): void {
     if (!this.isOwner()) return;
-    this.marketing.sources(from, to).subscribe({ next: (report) => this.sourcesReport.set(report), error: () => this.sourcesReport.set(null) });
+    this.sourcesLoading.set(true);
+    this.marketing.sources(from, to).subscribe({
+      next: (report) => {
+        this.sourcesReport.set(report);
+        this.sourcesLoading.set(false);
+      },
+      error: () => {
+        this.sourcesReport.set(null);
+        this.sourcesLoading.set(false);
+      },
+    });
     this.statsLoading.set(true);
     this.dashboard.stats(from, to).subscribe({
       next: (stats) => {
