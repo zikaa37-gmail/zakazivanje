@@ -56,6 +56,7 @@ class TeamController extends Controller
             ...($linked ? [] : $this->profileRules($user)),
             'role' => ['required', Rule::in($linked ? User::STAFF_ROLES : [User::ROLE_OWNER, User::ROLE_MANAGER])],
             'active' => ['boolean'],
+            'ui_mode' => ['sometimes', Rule::in(User::UI_MODES)],
         ]);
 
         if ($user->is($request->user()) && ($data['role'] !== $user->role || ! ($data['active'] ?? true))) {

@@ -9,6 +9,13 @@ export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Muškarce' },
 ];
 
+export type UiMode = 'standard' | 'spacious';
+
+export const UI_MODES: { value: UiMode; label: string; hint: string }[] = [
+  { value: 'standard', label: 'Standardni', hint: 'Uobičajen raspored.' },
+  { value: 'spacious', label: 'Prostraniji', hint: 'Veća dugmad i veći razmak između opcija; brisanje i otkazivanje su odvojeni od ostalog i potvrđuju se posle kratke pauze.' },
+];
+
 export interface User {
   id: number;
   first_name: string;
@@ -22,6 +29,7 @@ export interface User {
   role: UserRole;
   suspended: boolean;
   preferred_communication: CommunicationChannel;
+  ui_mode?: UiMode;
   active: boolean;
   email_verified_at: string | null;
   last_login_at: string | null;

@@ -1,4 +1,4 @@
-import { UserRole } from './user.model';
+import { UiMode, UserRole } from './user.model';
 
 export type StaffRole = Exclude<UserRole, 'client'>;
 
@@ -10,6 +10,7 @@ export interface TeamMember {
   phone: string | null;
   role: StaffRole;
   active: boolean;
+  ui_mode?: UiMode;
   staff_member_id: number | null;
   staff_member: { id: number; first_name: string; last_name: string; title: string | null; color: string | null; active: boolean } | null;
   has_password: boolean;
@@ -23,6 +24,7 @@ export interface TeamMemberPayload {
   phone: string | null;
   role: StaffRole;
   active?: boolean;
+  ui_mode?: UiMode;
   send_invite?: boolean;
 }
 

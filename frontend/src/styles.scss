@@ -951,6 +951,11 @@ button.badge:focus-visible {
   box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
 }
 
+.is-dimmed > :not(app-row-actions):not(:has(app-row-actions)),
+.is-dimmed > :has(app-row-actions) > :not(app-row-actions):not(:has(app-row-actions)) {
+  opacity: 0.6;
+}
+
 .date-range {
   display: block;
   max-width: 22rem;
@@ -1312,5 +1317,56 @@ button.badge:focus-visible {
 
   strong {
     font-size: 1.35rem;
+  }
+}
+
+:root.ui-spacious {
+  .row-actions-trigger {
+    width: 44px;
+    height: 44px;
+  }
+
+  .row-actions-menu {
+    min-width: 240px;
+    padding: 0.5rem;
+    gap: 0.35rem;
+  }
+
+  .row-actions-item {
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .row-actions-item-separated {
+    margin-top: 1.25rem;
+    padding-top: 0.9rem;
+    border-top-width: 2px;
+  }
+
+  .btn {
+    min-height: 2.75rem;
+  }
+
+  .gap-2 {
+    gap: 1rem;
+  }
+
+  .gap-3 {
+    gap: 1.25rem;
+  }
+
+  .chip-group {
+    gap: 0.75rem;
+  }
+
+  .chip {
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+  }
+
+  .confirm-actions {
+    justify-content: space-between;
+    gap: 2rem;
   }
 }

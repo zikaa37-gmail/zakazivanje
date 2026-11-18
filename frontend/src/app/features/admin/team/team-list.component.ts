@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { STAFF_ROLE_OPTIONS, StaffRole, TeamMember, TeamMemberPayload } from '../../../core/models/team.model';
-import { userRoleLabel } from '../../../core/models/user.model';
+import { UI_MODES, UiMode, userRoleLabel } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { TeamService } from '../../../core/services/team.service';
@@ -33,6 +33,7 @@ export class TeamListComponent {
   private auth = inject(AuthService);
 
   readonly roleLabel = userRoleLabel;
+  readonly uiModes = UI_MODES;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly members = signal<TeamMember[]>([]);
@@ -52,6 +53,7 @@ export class TeamListComponent {
     phone: this.fb.control<string | null>(null),
     role: this.fb.nonNullable.control<StaffRole>('manager'),
     active: this.fb.nonNullable.control(true),
+    ui_mode: this.fb.nonNullable.control<UiMode>('standard'),
     send_invite: this.fb.nonNullable.control(true),
   });
 
@@ -107,6 +109,7 @@ export class TeamListComponent {
       phone: member?.phone ?? null,
       role: member?.role ?? 'manager',
       active: member?.active ?? true,
+      ui_mode: member?.ui_mode ?? 'standard',
       send_invite: true,
     });
     if (member?.staff_member_id != null) {
@@ -119,6 +122,10 @@ export class TeamListComponent {
       this.form.controls.role.disable();
     }
     this.modalOpen.set(true);
+  }
+
+  uiModeHint(): string {
+    return UI_MODES.find((m) => m.value === this.form.controls.ui_mode.value)?.hint ?? '';
   }
 
   save(): void {
@@ -136,7 +143,7 @@ export class TeamListComponent {
       email: value.email.trim(),
       phone: value.phone?.trim() || null,
       role: value.role,
-      ...(member ? { active: value.active } : { send_invite: value.send_invite }),
+      ...(member ? { active: value.active, ui_mode: value.ui_mode } : { send_invite: value.send_invite }),
     };
 
     this.saving.set(true);
@@ -146,6 +153,7 @@ export class TeamListComponent {
         this.saving.set(false);
         this.modalOpen.set(false);
         this.toast.success(!member && value.send_invite ? 'Nalog je napravljen i pozivnica je poslata.' : 'Nalog je sačuvan.');
+        if (member && this.isSelf()) this.auth.loadMe().subscribe();
         this.load();
       },
       error: (err) => {

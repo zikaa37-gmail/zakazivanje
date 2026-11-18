@@ -100,12 +100,18 @@ class StaffAbsenceService
 
     public function affectedAppointments(StaffAbsence $absence): Collection
     {
-        $from = CarbonImmutable::parse($absence->starts_on)->startOfDay();
-        $to = CarbonImmutable::parse($absence->ends_on)->endOfDay();
+        return $this->appointmentsBetween(
+            $absence->staff_member_id,
+            CarbonImmutable::parse($absence->starts_on)->startOfDay(),
+            CarbonImmutable::parse($absence->ends_on)->endOfDay(),
+        );
+    }
 
+    public function appointmentsBetween(int $staffMemberId, CarbonImmutable $from, CarbonImmutable $to): Collection
+    {
         return Appointment::query()
             ->blocking()
-            ->where('staff_member_id', $absence->staff_member_id)
+            ->where('staff_member_id', $staffMemberId)
             ->whereBetween('starts_at', [$from, $to])
             ->with(['items', 'client:id,first_name,last_name,nickname,phone,email'])
             ->orderBy('starts_at')

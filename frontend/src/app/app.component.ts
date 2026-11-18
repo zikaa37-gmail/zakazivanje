@@ -1,5 +1,6 @@
 import { Component, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
 import { BusinessSettingService } from './core/services/business-setting.service';
 import { MarketingService } from './core/services/marketing.service';
 import { PushService } from './core/services/push.service';
@@ -27,6 +28,8 @@ export class AppComponent {
     inject(RealtimeService);
     inject(PushService);
     const business = inject(BusinessSettingService);
+    const auth = inject(AuthService);
+    effect(() => document.documentElement.classList.toggle('ui-spacious', auth.currentUser()?.ui_mode === 'spacious'));
     effect(() => {
       const settings = business.settings();
       if (settings) applyAppIcons(settings.logo, settings.name);

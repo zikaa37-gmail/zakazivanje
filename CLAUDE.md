@@ -48,7 +48,12 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Use `data-testid` for frontend test hooks. Keep `id` only where it is needed for label/form
   relationships.
 - Destructive UI actions use the shared confirm dialog (`ConfirmService`); do not introduce
-  `window.confirm()`.
+  `window.confirm()`. Isto važi za sve što može da napravi problem (statusi termina, onemogućavanje, odobravanje).
+  Brisanje ne sme da ostavi siročiće: zaposleni sa budućim terminima se ne deaktivira dok se termini ne reše
+  (`StaffDeactivationService`, `GET /staff/{id}/future-appointments`, `cancel_future`), klijent sa istorijom se ne briše
+  (`POST /clients/{id}/delete-check`). U meniju „⋮“ (`app-row-actions`) opasne radnje idu na dno, iza linije.
+- Prikaz po nalogu: `users.ui_mode` (`standard` / `spacious`, Nalozi za prijavu i Profil, `PUT /auth/ui-mode`) — klasa
+  `ui-spacious` na `<html>` (veća dugmad i razmaci, potvrda se uključuje posle 1,2 s). Redovi koji su „ugašeni“ koriste `.is-dimmed`, ne `opacity`.
 - Do not add secrets to the repository. Local backend credentials belong in `backend/.env`,
   production values in `deploy/.env` (both outside git).
 - Angular: signal-based API — `input()`/`input.required()`, `output()`, `viewChild()`, `model()`

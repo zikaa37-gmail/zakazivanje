@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\StaffMember;
+use App\Services\StaffAbsenceService;
 use App\Services\StaffAccountService;
+use App\Services\StaffDeactivationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,12 @@ use Illuminate\Validation\ValidationException;
 
 class StaffMemberController extends Controller
 {
-    public function __construct(private StaffAccountService $accounts) {}
+    public function __construct(private StaffAccountService $accounts, private StaffDeactivationService $deactivation) {}
+
+    public function futureAppointments(StaffMember $staffMember, StaffAbsenceService $absences)
+    {
+        return $absences->appointmentsBetween($staffMember->id, CarbonImmutable::now(), CarbonImmutable::now()->addYears(2));
+    }
 
     public function index(Request $request)
     {
@@ -43,12 +49,30 @@ class StaffMemberController extends Controller
     {
         $data = $this->validated($request);
 
+        if ($staffMember->active && array_key_exists('active', $data) && ! $data['active']) {
+            $future = $this->deactivation->futureAppointments($staffMember)->count();
+            if ($future > 0) {
+                throw ValidationException::withMessages(['active' => ["{$staffMember->first_name} ima budućih termina: {$future}. Deaktiviraj iz liste zaposlenih (meni ⋮ → Deaktiviraj), gde možeš da ih prebaciš ili otkažeš."]]);
+            }
+            $this->deactivation->stopRecurrences($staffMember);
+        }
+
         return DB::transaction(fn () => $this->persist($staffMember, $data));
     }
 
     public function setActive(Request $request, StaffMember $staffMember)
     {
-        $data = $request->validate(['active' => ['required', 'boolean']]);
+        $data = $request->validate(['active' => ['required', 'boolean'], 'cancel_future' => ['sometimes', 'boolean']]);
+
+        $cancelled = 0;
+        if (! $data['active']) {
+            $future = $this->deactivation->futureAppointments($staffMember)->count();
+            if ($future > 0 && ! ($data['cancel_future'] ?? false)) {
+                throw ValidationException::withMessages(['active' => ["{$staffMember->first_name} ima budućih termina: {$future}. Prebaci ih kolegi ili ih otkaži pre deaktivacije."]]);
+            }
+            $cancelled = $future > 0 ? $this->deactivation->cancelFuture($staffMember) : 0;
+            $this->deactivation->stopRecurrences($staffMember);
+        }
 
         DB::transaction(function () use ($staffMember, $data) {
             $staffMember->update(['active' => $data['active']]);
@@ -57,7 +81,7 @@ class StaffMemberController extends Controller
 
         return [
             ...$staffMember->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active'])->toArray(),
-            'future_appointments' => Appointment::where('staff_member_id', $staffMember->id)->blocking()->where('starts_at', '>', now())->count(),
+            'cancelled_appointments' => $cancelled,
         ];
     }
 

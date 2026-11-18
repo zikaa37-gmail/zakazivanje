@@ -87,6 +87,7 @@ Route::middleware('jwt')->group(function () {
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
     Route::put('/auth/favorite-staff', [AuthController::class, 'favoriteStaff']);
+    Route::put('/auth/ui-mode', [AuthController::class, 'uiMode']);
 
     Route::post('/my-waitlist/list', [WaitlistController::class, 'mine']);
     Route::post('/my-waitlist', [WaitlistController::class, 'store'])->middleware('throttle:booking');
@@ -187,6 +188,7 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/staff', [StaffMemberController::class, 'store']);
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
     Route::post('/staff/{staffMember}/active', [StaffMemberController::class, 'setActive']);
+    Route::get('/staff/{staffMember}/future-appointments', [StaffMemberController::class, 'futureAppointments']);
 
     Route::post('/staff-absences/pending-count', [StaffAbsenceController::class, 'pendingCount']);
     Route::post('/staff-absences/{absence}/approve', [StaffAbsenceController::class, 'approve']);
@@ -237,6 +239,7 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::put('/clients/{client}', [ClientController::class, 'update']);
     Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
+    Route::post('/clients/{client}/delete-check', [ClientController::class, 'deleteCheck']);
     Route::put('/clients/{client}/zone', [ClientController::class, 'zone']);
 
     Route::post('/notification-logs/list', [NotificationController::class, 'logs']);

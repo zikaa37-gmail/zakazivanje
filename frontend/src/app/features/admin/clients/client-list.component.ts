@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CANCELLATION_DISCOUNT_TYPES, CancellationDiscountType } from '../../../core/models/cancellation-fee.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged, firstValueFrom } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Client, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
@@ -202,10 +202,30 @@ export class ClientListComponent {
   }
 
   private async remove(client: Client): Promise<void> {
+    let impact: { history: number; future: number };
+    try {
+      impact = await firstValueFrom(this.clientService.deleteCheck(client.id));
+    } catch (err) {
+      this.toast.error(apiErrorMessage(err, 'Provera nije uspela.'));
+      return;
+    }
+    if (impact.history > 0) {
+      await this.confirm.confirm({
+        title: 'Klijent ne može da se obriše',
+        message: `${clientName(client)} ima termina u istoriji: ${impact.history}. Brisanjem bi nestali i prihodi u izveštajima, zato klijent ostaje u bazi.`,
+        confirmLabel: 'U redu',
+        cancelLabel: 'Zatvori',
+        danger: false,
+      });
+      return;
+    }
     const ok = await this.confirm.confirm({
       title: 'Brisanje klijenta',
-      message: `Obrisati klijenta ${clientName(client)}?`,
-      confirmLabel: 'Obriši',
+      message:
+        impact.future > 0
+          ? `Obrisati klijenta ${clientName(client)}? Briše se i ${impact.future} zakazanih termina, a ta vremena postaju slobodna. Ovo ne može da se vrati.`
+          : `Obrisati klijenta ${clientName(client)}? Ovo ne može da se vrati.`,
+      confirmLabel: 'Obriši zauvek',
     });
     if (!ok) return;
 

@@ -1,3 +1,5 @@
+import { AffectedAppointmentsComponent } from '../appointments/affected-appointments.component';
+import { AffectedAppointment } from '../../../core/models/staff-absence.model';
 import { Component, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,10 +39,11 @@ const PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#1d4ed8', '#15803d
 @Component({
   selector: 'app-staff-list',
   standalone: true,
-  imports: [TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
+  imports: [AffectedAppointmentsComponent, TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './staff-list.component.html',
 })
 export class StaffListComponent {
+  readonly leaving = signal<{ member: StaffMember; appointments: AffectedAppointment[] } | null>(null);
   private fb = inject(FormBuilder);
   private staffService = inject(StaffService);
   private catalog = inject(ServiceCatalogService);
@@ -314,7 +317,44 @@ export class StaffListComponent {
     });
   }
 
-  private async deactivate(member: StaffMember): Promise<void> {
+  private deactivate(member: StaffMember): void {
+    this.staffService.futureAppointments(member.id).subscribe({
+      next: (list) => {
+        if (list.length > 0) {
+          this.leaving.set({ member, appointments: list });
+          return;
+        }
+        void this.confirmDeactivate(member);
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Provera termina nije uspela.')),
+    });
+  }
+
+  refreshLeaving(): void {
+    const leaving = this.leaving();
+    if (!leaving) return;
+    this.staffService.futureAppointments(leaving.member.id).subscribe((list) => this.leaving.set({ ...leaving, appointments: list }));
+  }
+
+  async deactivateLeaving(): Promise<void> {
+    const leaving = this.leaving();
+    if (!leaving) return;
+    if (leaving.appointments.length === 0) {
+      this.leaving.set(null);
+      this.setActive(leaving.member, false);
+      return;
+    }
+    const ok = await this.confirm.confirm({
+      title: 'Otkazivanje svih termina',
+      message: `Otkazati sve preostale termine (${leaving.appointments.length}) za ${leaving.member.first_name} i deaktivirati? Svaki klijent dobija obaveštenje da je salon otkazao termin, a ponavljanja se gase.`,
+      confirmLabel: 'Otkaži sve i deaktiviraj',
+    });
+    if (!ok) return;
+    this.leaving.set(null);
+    this.setActive(leaving.member, false, true);
+  }
+
+  private async confirmDeactivate(member: StaffMember): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Deaktivacija zaposlenog',
       message: `${member.first_name} ${member.last_name} se više neće nuditi za zakazivanje niti prikazivati u kalendaru, a nalog radnika se gasi. Termini i lična statistika ostaju sačuvani, a zaposlenog možeš ponovo da aktiviraš.`,
@@ -333,13 +373,12 @@ export class StaffListComponent {
     if (ok) this.setActive(member, true);
   }
 
-  private setActive(member: StaffMember, active: boolean): void {
-    this.staffService.setActive(member.id, active).subscribe({
+  private setActive(member: StaffMember, active: boolean, cancelFuture = false): void {
+    this.staffService.setActive(member.id, active, cancelFuture).subscribe({
       next: (res) => {
-        this.toast.success(active ? 'Zaposleni je ponovo aktivan.' : 'Zaposleni je deaktiviran.');
-        if (!active && res.future_appointments > 0) {
-          this.toast.warning(`Ima ${res.future_appointments} zakazanih termina u budućnosti — prebaci ih na drugog zaposlenog ili otkaži.`, { duration: 10000 });
-        }
+        this.toast.success(
+          active ? 'Zaposleni je ponovo aktivan.' : res.cancelled_appointments > 0 ? `Zaposleni je deaktiviran, otkazano termina: ${res.cancelled_appointments}.` : 'Zaposleni je deaktiviran.',
+        );
         this.load();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Promena nije uspela.')),

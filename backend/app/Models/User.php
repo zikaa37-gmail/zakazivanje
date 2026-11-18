@@ -18,7 +18,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-#[Fillable(['first_name', 'last_name', 'nickname', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'active', 'password', 'cancellation_discount_type', 'cancellation_discount_value'])]
+#[Fillable(['first_name', 'last_name', 'nickname', 'gender', 'favorite_staff_member_id', 'staff_member_id', 'email', 'phone', 'whatsapp_number', 'avatar', 'role', 'preferred_communication', 'ui_mode', 'active', 'password', 'cancellation_discount_type', 'cancellation_discount_value'])]
 #[Hidden(['password', 'remember_token', 'email_verification_token', 'nickname',...self::DISCIPLINE_FIELDS, ...self::CANCELLATION_FIELDS])]
 #[Appends(['suspended'])]
 class User extends Authenticatable
@@ -45,6 +45,8 @@ class User extends Authenticatable
     public const STAFF_ROLES = [self::ROLE_OWNER, self::ROLE_MANAGER, self::ROLE_WORKER];
 
     public const COMMUNICATION_CHANNELS = ['email', 'whatsapp', 'both'];
+
+    public const UI_MODES = ['standard', 'spacious'];
 
     public const ZONE_GREEN = 'green';
 

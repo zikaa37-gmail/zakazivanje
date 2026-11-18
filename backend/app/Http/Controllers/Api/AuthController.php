@@ -197,6 +197,15 @@ class AuthController extends Controller
         return $request->user();
     }
 
+    public function uiMode(Request $request)
+    {
+        $data = $request->validate(['ui_mode' => ['required', Rule::in(User::UI_MODES)]]);
+
+        $request->user()->update($data);
+
+        return $request->user();
+    }
+
     public function verifyEmail(Request $request)
     {
         $data = $request->validate(['token' => ['required', 'string']]);

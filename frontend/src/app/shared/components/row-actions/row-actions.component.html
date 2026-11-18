@@ -17,7 +17,7 @@
     [style.bottom.px]="menuBottom()"
     [style.right.px]="menuRight()"
     role="menu" [attr.data-testid]="testId() ? testId() + '-menu' : null">
-    @for (action of actions(); track action.id) {
+    @for (action of ordered(); track action.id) {
       <button
         type="button"
         class="row-actions-item"

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use App\Models\CancellationFee;
 use App\Models\ClientActivityLog;
 use App\Models\User;
 use App\Services\ClientDisciplineService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
@@ -117,9 +119,31 @@ class ClientController extends Controller
     {
         abort_unless($client->role === User::ROLE_CLIENT, 404);
 
+        $impact = $this->deleteImpact($client);
+        if ($impact['history'] > 0) {
+            throw ValidationException::withMessages(['client' => ['Klijent ima istoriju termina — deaktiviraj ga umesto brisanja, da istorija i izveštaji ostanu tačni.']]);
+        }
+
         $client->delete();
 
         return response()->json(['message' => 'Klijent je obrisan.']);
+    }
+
+    public function deleteCheck(User $client)
+    {
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
+
+        return $this->deleteImpact($client);
+    }
+
+    private function deleteImpact(User $client): array
+    {
+        $appointments = Appointment::where('client_id', $client->id);
+
+        return [
+            'history' => (clone $appointments)->where('starts_at', '<=', now())->where('status', '!=', Appointment::STATUS_CANCELLED)->count(),
+            'future' => (clone $appointments)->blocking()->where('starts_at', '>', now())->count(),
+        ];
     }
 
     private function validated(Request $request, ?User $client = null): array

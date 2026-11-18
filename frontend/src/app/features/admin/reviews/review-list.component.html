@@ -53,7 +53,7 @@
 } @else {
   <div class="flex flex-col gap-3">
     @for (review of items(); track review.id) {
-      <div class="card" [class.opacity-60]="!review.visible" [attr.data-testid]="'admin-review-' + review.id">
+      <div class="card" [class.is-dimmed]="!review.visible" [attr.data-testid]="'admin-review-' + review.id">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="flex items-center gap-2">
             <app-stars [value]="review.rating" />
