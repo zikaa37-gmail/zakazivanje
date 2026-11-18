@@ -278,7 +278,7 @@ nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje
 `staff_note_recipients` i ostalima vraća `read_at` na null; `staff_notes.last_reply_at` — urađena beleška sa novijim odgovorom je opet nepročitana.
 Odgovor ide samo u zvonce + push (`StaffNoteReplyNotification`, link `/admin/notes?note={id}` otvara i označava pročitanom), bez mejla / WhatsApp-a. Zaposleni mora imati email i telefon.
 Odsustva (bolovanje / odmor): `/admin/absences`, `StaffAbsence` + `StaffAbsenceService` — upisuje bilo ko iz osoblja, odobrava menadžer
-(njegov upis je odmah odobren), odobrenje pravi `BlockedTime` za cele dane; „Izmeni“ (`PUT /staff-absences/{id}`) je odvojeno od novog upisa, period bira deljena `<app-date-range>` (`from` / `to` `FormControl<string>`, `min`). Pogođeni termini: telefon klijenta, „Prebaci: kolega“ (slobodni u isto
+(njegov upis je odmah odobren), odobrenje pravi `BlockedTime` za cele dane; „Izmeni“ (`PUT /staff-absences/{id}`) je odvojeno od novog upisa, period bira deljena `<app-date-range>` (`from` / `to` `FormControl<string>`, `min`). Pogođeni termini: telefon klijenta, „Prebaci“ (izbor kolege slobodnog u isto
 vreme, `AvailabilityService`), „Pošalji da sam pomeri“ (`ask-reschedule`), otkazivanje. Prebacivanje (promena zaposlenog u `reschedule`, i iz detalja
 termina „Prebaci kolegi“) obaveštava klijenta, oba zaposlena i menadžere. `appointments.free_change_reason` (`transferred` / `salon_request`): klijent
 pomera i otkazuje bez roka, a to otkazivanje ne donosi poene discipline.

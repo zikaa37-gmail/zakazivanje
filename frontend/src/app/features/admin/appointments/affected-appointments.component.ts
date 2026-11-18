@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { AffectedAppointment, ColleagueRef } from '../../../core/models/staff-absence.model';
 import { contactHref } from '../../../core/utils/contact';
 import { longDate, timeOf } from '../../../core/utils/dates';
@@ -40,16 +40,26 @@ import { AppointmentActionsService } from './appointment-actions.service';
             </div>
           }
           <div class="flex flex-wrap items-center gap-2">
-            @for (c of t.alternatives; track c.id) {
-              <button type="button" appBtn theme="secondary" size="s" (click)="transfer(t, c)" [attr.data-testid]="'affected-transfer-' + t.id + '-' + c.id">
-                <span class="color-dot" [style.background]="c.color || 'var(--color-primary)'"></span> Prebaci: {{ c.first_name }}
+            @if (t.alternatives.length > 0) {
+              <button type="button" appBtn theme="secondary" size="s" [attr.aria-expanded]="picking() === t.id" (click)="startTransfer(t)" [attr.data-testid]="'affected-transfer-' + t.id">
+                <span appIcon="users" aria-hidden="true"></span> Prebaci
               </button>
-            } @empty {
+            } @else {
               <span class="text-xs muted">Niko od kolega nije slobodan u to vreme.</span>
             }
             <button type="button" appBtn theme="secondary" size="s" (click)="ask(t)" [attr.data-testid]="'affected-ask-' + t.id"><span appIcon="send" aria-hidden="true"></span> Pošalji da sam pomeri</button>
             <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="cancel(t)" [attr.data-testid]="'affected-cancel-' + t.id">Otkaži</button>
           </div>
+          @if (picking() === t.id) {
+            <div class="flex flex-wrap items-center gap-2" [attr.data-testid]="'affected-colleagues-' + t.id">
+              <span class="text-xs muted">Kome?</span>
+              @for (c of t.alternatives; track c.id) {
+                <button type="button" class="chip" (click)="transfer(t, c)" [attr.data-testid]="'affected-transfer-' + t.id + '-' + c.id">
+                  <span class="color-dot" [style.background]="c.color || 'var(--color-primary)'"></span> {{ c.first_name }}
+                </button>
+              }
+            </div>
+          }
         </div>
       }
     </div>
@@ -60,8 +70,18 @@ export class AffectedAppointmentsComponent {
 
   readonly appointments = input.required<AffectedAppointment[]>();
   readonly changed = output<void>();
+  readonly picking = signal<number | null>(null);
+
+  startTransfer(t: AffectedAppointment): void {
+    if (t.alternatives.length === 1) {
+      void this.transfer(t, t.alternatives[0]);
+      return;
+    }
+    this.picking.set(this.picking() === t.id ? null : t.id);
+  }
 
   async transfer(t: AffectedAppointment, colleague: ColleagueRef): Promise<void> {
+    this.picking.set(null);
     if (await this.actions.transfer(t, colleague)) this.changed.emit();
   }
 
