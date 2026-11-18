@@ -55,6 +55,30 @@ class StaffAbsenceController extends Controller
         return response()->json($this->withRelations($absence), 201);
     }
 
+    public function update(Request $request, StaffAbsence $absence)
+    {
+        $user = $request->user();
+        abort_unless(
+            $absence->status !== StaffAbsence::STATUS_REJECTED
+                && ($user->isManager() || ($absence->requested_by === $user->id && $absence->status === StaffAbsence::STATUS_PENDING)),
+            403,
+            'Odsustvo menja vlasnik ili menadžer, a upisani dok čeka odobrenje.',
+        );
+
+        $startsChanged = $request->input('starts_on') !== $absence->starts_on->toDateString();
+        $data = $request->validate([
+            'starts_on' => ['required', 'date_format:Y-m-d', ...($startsChanged ? ['after_or_equal:today'] : [])],
+            'ends_on' => ['required', 'date_format:Y-m-d', 'after_or_equal:starts_on', 'after_or_equal:today'],
+            'type' => ['required', Rule::in(StaffAbsence::TYPES)],
+            'note' => ['nullable', 'string', 'max:500'],
+        ], [
+            'starts_on.after_or_equal' => 'Odsustvo ne može da počne u prošlosti.',
+            'ends_on.after_or_equal' => 'Kraj mora biti isti ili posle početka, i ne u prošlosti.',
+        ]);
+
+        return $this->withRelations($this->absences->update($absence, $data));
+    }
+
     public function appointments(StaffAbsence $absence)
     {
         return $this->absences->affectedAppointments($absence);
@@ -77,7 +101,7 @@ class StaffAbsenceController extends Controller
     public function destroy(Request $request, StaffAbsence $absence)
     {
         $user = $request->user();
-        abort_unless($user->isManager() || ($absence->requested_by === $user->id && $absence->status === StaffAbsence::STATUS_PENDING), 403, 'Odsustvo može da ukloni vlasnik ili administrativni radnik.');
+        abort_unless($user->isManager() || ($absence->requested_by === $user->id && $absence->status === StaffAbsence::STATUS_PENDING), 403, 'Odsustvo može da ukloni vlasnik ili menadžer.');
 
         $this->absences->remove($absence);
 

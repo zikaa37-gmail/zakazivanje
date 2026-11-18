@@ -28,7 +28,7 @@ class QuickLoginTest extends TestCase
         config(['auth_jwt.quick_login_emails' => [$manager->email, $owner->email, $inactive->email]]);
 
         $this->getJson('/api/auth/quick-logins')->assertOk()->assertExactJson([
-            ['email' => $manager->email, 'label' => 'Administrativni radnik (Luka)'],
+            ['email' => $manager->email, 'label' => 'Menadžer (Luka)'],
             ['email' => $owner->email, 'label' => 'Vlasnik (Jelena)'],
         ]);
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Uputstvo · Vlasnik i administrativni radnik</title>
+<title>Uputstvo · Vlasnik i menadžer</title>
 <link rel="stylesheet" href="uputstvo.css" />
 <script src="uputstvo.js" defer></script>
 </head>
@@ -11,7 +11,7 @@
 <header class="top">
   <div class="top-inner">
     <a class="brand" href="index.html"><img data-salon-logo alt="" hidden /><span class="brand-text"><span class="brand-name" data-salon-name>Vaš salon</span><span class="brand-sub">Uputstvo za online zakazivanje</span></span></a>
-    <h1>Vlasnik i administrativni radnik</h1>
+    <h1>Vlasnik i menadžer</h1>
     <p>Prvo podešavanje salona i deo menija „Upravljanje". Na slikama je <strong>crvenim okvirom i brojem</strong> označeno gde treba kliknuti ili pogledati; isti broj stoji u tekstu.</p>
   </div>
 </header>
@@ -26,22 +26,22 @@
 <main>
   <div class="toolbar"><button type="button" data-open-all>Otvori sve</button><button type="button" data-close-all>Zatvori sve</button></div>
 <details class="step" id="v-uloge" open>
-  <summary><span class="num">i</span><span class="step-title">Vlasnik i administrativni radnik — razlike</span></summary>
+  <summary><span class="num">i</span><span class="step-title">Vlasnik i menadžer — razlike</span></summary>
   <div class="step-body text">
     <div>
-<p><strong>Vlasnik</strong> vidi sve. <strong>Administrativni radnik</strong> je osoba od poverenja koja vodi salon umesto vas. On može:</p>
+<p><strong>Vlasnik</strong> vidi sve. <strong>Menadžer</strong> je osoba od poverenja koja vodi salon umesto vas. On može:</p>
 <ul>
   <li>da uređuje zaposlene, usluge, cene i akcije, recenzije, galeriju i „Podeli";</li>
   <li>da pravi i menja naloge za prijavu (osim naloga vlasnika) i da menja podešavanja salona;</li>
   <li>da briše klijente i ručno im menja zonu.</li>
 </ul>
-<p>Administrativni radnik <strong>ne može</strong>:</p>
+<p>Menadžer <strong>ne može</strong>:</p>
 <ul>
   <li>da vidi finansijsku statistiku na Pregledu (zarada, popunjenost, odakle dolaze klijenti);</li>
   <li>da pravi, menja ili briše naloge vlasnika;</li>
   <li>da otvori izveštaje — on ih samo <strong>šalje vlasniku</strong> (mejlom ili WhatsApp-om) i ne dobija automatske izveštaje.</li>
 </ul>
-<p class="tip">Ako radniku treba više od Pregleda, Kalendara, Termina i Beleški, dajte mu ulogu „Administrativni radnik".</p>
+<p class="tip">Ako radniku treba više od Pregleda, Kalendara, Termina i Beleški, dajte mu ulogu „Menadžer".</p>
     </div>
   </div>
 </details>
@@ -56,7 +56,7 @@
   <li><span class="badge">3</span> Kliknite <strong>„Prijavi se"</strong>.</li>
   <li><span class="badge">4</span> Ako ne znate lozinku, kliknite <strong>„Zaboravljena lozinka?"</strong> — stiže vam link za novu.</li>
 </ol>
-<p>Novi vlasnik ili administrativni radnik dobija mejl sa pozivnicom i sam postavlja lozinku (vidi <a href="prijava-i-nalozi.html">Prijava i nalozi</a>).</p>
+<p>Novi vlasnik ili menadžer dobija mejl sa pozivnicom i sam postavlja lozinku (vidi <a href="prijava-i-nalozi.html">Prijava i nalozi</a>).</p>
 <a class="open" href="/login" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure><img src="slike/admin-01-prijava.jpg" alt="Prijava" loading="lazy" /></figure>
@@ -248,8 +248,8 @@
 <ul>
   <li><strong>Napravi kopiju</strong> — ista usluga, pa samo promenite ono što je drugačije.</li>
   <li><strong>Privremeno pauziraj…</strong> — npr. aparat je na servisu. Na drugoj slici izaberite datum <span class="badge">1</span> i kliknite <strong>„Pauziraj"</strong> <span class="badge">2</span>. Usluga ostaje vidljiva, ali se online ne može zakazati do tog dana (uključujući i njega); klijent vidi „Privremeno nedostupna do …". Posle toga je opet dostupna sama od sebe, a „Ukini pauzu" je vraća odmah.</li>
-  <li><strong>Onemogući (trajno)</strong> — usluga se više ne nudi; <strong>„Omogući"</strong> je vraća.</li>
-  <li><strong>Obriši</strong> — moguće samo ako usluga nikad nije bila zakazana. Inače je onemogućite.</li>
+  <li><strong>Onemogući (skloni iz ponude)</strong> — usluga se više ne nudi, ali ostaje na listi kao „Onemogućena"; <strong>„Omogući"</strong> je vraća.</li>
+  <li><strong>Obriši zauvek</strong> — odvojeno na dnu menija i samo za uslugu koja nikad nije bila zakazana. Briše se trajno, posle crvene potvrde.</li>
 </ul>
 <p>Već zakazani termini ostaju u svim slučajevima.</p>
     </div>
@@ -311,11 +311,11 @@
     <div>
 <p>Zaposleni → <span class="badge">1</span> <strong>„Nalozi za prijavu"</strong> — ko sme da se prijavi u aplikaciju.</p>
 <ol>
-  <li><span class="badge">2</span> <strong>„+ Novi nalog"</strong> pravi samo naloge <strong>Vlasnik</strong> ili <strong>Administrativni radnik</strong>. Upišite ime, email i ulogu.</li>
+  <li><span class="badge">2</span> <strong>„+ Novi nalog"</strong> pravi samo naloge <strong>Vlasnik</strong> ili <strong>Menadžer</strong>. Upišite ime, email i ulogu.</li>
   <li>Nalog <strong>Radnik</strong> se ne pravi ovde: dobija ga svaki zaposleni kome upišete email (korak 10).</li>
   <li>Druga slika: <span class="badge">1</span> „⋮" → <strong>„Pošalji pozivnicu"</strong> — osoba dobija mejl i sama postavlja lozinku. Ako je lozinku već postavila, stoji „Pošalji link za lozinku".</li>
 </ol>
-<p class="note">Vlasnika može biti više, ali bar jedan mora ostati aktivan. Administrativni radnik ne može da pravi, menja ni briše naloge vlasnika.</p>
+<p class="note">Vlasnika može biti više, ali bar jedan mora ostati aktivan. Menadžer ne može da pravi, menja ni briše naloge vlasnika.</p>
 <a class="open" href="/admin/team" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure class="pair"><img src="slike/admin-12-nalozi.jpg" alt="Nalozi za prijavu" loading="lazy" /><img src="slike/admin-12b-pozivnica.jpg" alt="Pošalji pozivnicu" loading="lazy" /></figure>
@@ -326,11 +326,11 @@
   <summary><span class="num">14</span><span class="step-title">Ako i vi radite usluge</span></summary>
   <div class="step-body text">
     <div>
-<p>Vlasnik ili administrativni radnik koji i sam šiša, masira… dodaje sebe u <strong>Zaposleni → „+ Novi zaposleni"</strong> sa <strong>istim emailom</strong> kojim se prijavljuje.</p>
+<p>Vlasnik ili menadžer koji i sam šiša, masira… dodaje sebe u <strong>Zaposleni → „+ Novi zaposleni"</strong> sa <strong>istim emailom</strong> kojim se prijavljuje.</p>
 <ul>
   <li>Zadržavate svoju ulogu, a dobijate i svoj raspored, svoje termine i karticu <strong>„Moj pazar"</strong> na Pregledu.</li>
   <li>U meniju ispod naziva salona piše npr. <strong>„Vlasnik · radi usluge"</strong>, a u filteru na Pregledu ste <strong>„Ja"</strong>.</li>
-  <li>Administrativni radnik koji radi usluge u Izveštajima ima i opciju <strong>„Moj pazar"</strong> (svoj izveštaj); ostale izveštaje i dalje samo šalje vlasniku.</li>
+  <li>Menadžer koji radi usluge u Izveštajima ima i opciju <strong>„Moj pazar"</strong> (svoj izveštaj); ostale izveštaje i dalje samo šalje vlasniku.</li>
 </ul>
     </div>
   </div>

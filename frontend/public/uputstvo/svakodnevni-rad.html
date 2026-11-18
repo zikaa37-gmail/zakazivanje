@@ -25,7 +25,7 @@
 </div></nav>
 <main>
   <div class="toolbar"><button type="button" data-open-all>Otvori sve</button><button type="button" data-close-all>Zatvori sve</button></div>
-<p class="lead">Ovo rade vlasnik i administrativni radnik. Radnik vidi samo deo — vidi <a href="radnik.html">Radnik</a>.</p>
+<p class="lead">Ovo rade vlasnik i menadžer. Radnik vidi samo deo — vidi <a href="radnik.html">Radnik</a>.</p>
 
 <details class="step" id="s-pregled" open>
   <summary><span class="num">1</span><span class="step-title">Pregled — dan na jednom mestu</span></summary>
@@ -141,7 +141,7 @@
   <li>Klijent koji otkaže posle roka vidi koliko mu je ostalo otkazivanja bez naplate, a posle toga iznos naknade. Kad otkaže, naknada se upiše sama.</li>
   <li>Kad klijent javi telefonom, u detaljima termina kliknite <strong>„Klijent otkazao"</strong> — naknada se upiše po istim pravilima.</li>
   <li>U detaljima termina i u Klijenti → „Istorijat i zona" vidi se blok <strong>„kasno otkazivanje"</strong> sa iznosom. Kad klijent plati, kliknite <strong>„Naplaćeno: Gotovina / Kartica / Uplata na račun"</strong>.</li>
-  <li>Vlasnik i administrativni radnik mogu da <strong>„Promeni iznos"</strong> ili <strong>„Oprosti"</strong> naknadu, uz razlog (npr. bolest). Oproštena se ne broji.</li>
+  <li>Vlasnik i menadžer mogu da <strong>„Promeni iznos"</strong> ili <strong>„Oprosti"</strong> naknadu, uz razlog (npr. bolest). Oproštena se ne broji.</li>
 </ol>
 <p>Termin prebačen kolegi ili pomeren na molbu salona nikad se ne računa kao kasno otkazivanje.</p>
     </div>
@@ -156,9 +156,10 @@
 <ol>
   <li><span class="badge">1</span> Ko odsustvuje.</li>
   <li><span class="badge">2</span> Razlog: <strong>Bolovanje</strong>, <strong>Odmor</strong> ili <strong>Drugo</strong>.</li>
-  <li><span class="badge">3</span> Od – do (uključujući poslednji dan) i, po želji, napomena.</li>
-  <li><span class="badge">4</span> <strong>„Upiši odsustvo"</strong> — kad upiše vlasnik ili administrativni radnik, odmah je odobreno i ti dani se zatvaraju za zakazivanje. Kad upiše radnik, stoji „Na čekanju" dok ga vi ne <strong>„Odobri"</strong> ili <strong>„Odbij"</strong> (broj u meniju pokazuje koliko čeka).</li>
+  <li><span class="badge">3</span> Period u kalendaru: kliknite prvi, pa poslednji dan (za jedan dan kliknite isti dan dva puta). Ispod piše izabrani period i broj dana. Po želji napomena.</li>
+  <li><span class="badge">4</span> <strong>„Upiši odsustvo"</strong> — kad upiše vlasnik ili menadžer, odmah je odobreno i ti dani se zatvaraju za zakazivanje. Kad upiše radnik, stoji „Na čekanju" dok ga vi ne <strong>„Odobri"</strong> ili <strong>„Odbij"</strong> (broj u meniju pokazuje koliko čeka).</li>
 </ol>
+<p><strong>Pogrešan datum?</strong> Na upisanom odsustvu kliknite <strong>„Izmeni"</strong> — forma gore prelazi u „Izmena odsustva", ispravite period ili razlog i <strong>„Sačuvaj izmene"</strong>. Ne upisujte novo odsustvo preko postojećeg (aplikacija to ne dozvoljava). Vlasnik i menadžer menjaju svako odsustvo, a radnik svoje dok čeka odobrenje.</p>
 <p>Druga slika — <strong>„Termini tog perioda"</strong> pokazuje termine koji su već zakazani u tim danima. Za svaki:</p>
 <ol>
   <li><span class="badge">1</span> telefon klijenta (na telefonu odmah poziv) i WhatsApp;</li>
@@ -187,18 +188,34 @@
   <li>Ko se time bavi, klikne <strong>„Preuzimam"</strong> — svi vide „Preuzeo/la Ime", pa niko drugi ne kupuje istu farbu. „Ne preuzimam" vraća.</li>
   <li>Kad je gotovo, <strong>„Urađeno"</strong>; „Vrati kao otvoreno" je vraća.</li>
 </ol>
-<p>Svi vide sve beleške. Broj pored „Beleške" u meniju je broj beleški (ili novih odgovora) koje još niste pročitali. Klik na obaveštenje u zvoncetu otvara tu belešku i označava je kao pročitanu. Belešku briše autor, vlasnik ili administrativni radnik.</p>
+<p>Svi vide sve beleške. Broj pored „Beleške" u meniju je broj beleški (ili novih odgovora) koje još niste pročitali. Klik na obaveštenje u zvoncetu otvara tu belešku i označava je kao pročitanu. Belešku briše autor, vlasnik ili menadžer.</p>
 <a class="open" href="/admin/notes" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure><img src="slike/rad-11-beleske.jpg" alt="Beleške" loading="lazy" /></figure>
   </div>
 </details>
 
-<details class="step" id="s-klijenti">
-  <summary><span class="num">10</span><span class="step-title">Klijenti</span></summary>
+<details class="step" id="s-poruke">
+  <summary><span class="num">10</span><span class="step-title">Poruke sa klijentima</span></summary>
   <div class="step-body">
     <div>
-<p>Stranicu Klijenti vide vlasnik i administrativni radnik.</p>
+<p>Meni → <strong>Poruke</strong>. Klijent piše salonu iz aplikacije (dugme dole desno ili „Poruka salonu" na terminu), a vi odgovarate ovde. Broj pored „Poruke" u meniju su nepročitane poruke.</p>
+<ol>
+  <li>Kliknite razgovor i napišite odgovor. Razgovor traje do kraja dana ili dok ne kliknete <strong>„Završi"</strong>; odgovor na završen razgovor ga ponovo otvara.</li>
+  <li><strong>Nova poruka</strong> (vlasnik i menadžer): dugme gore, pa izaberite klijenta. Isto radi i <strong>„Pošalji poruku"</strong> u meniju „⋮" kod klijenta (Klijenti) i <strong>„Poruka klijentu"</strong> u detaljima termina.</li>
+  <li>Ako klijent ne pročita poruku za 15 minuta, stiže mu i mejl / WhatsApp.</li>
+</ol>
+<p class="note">Poruku mogu da dobiju samo klijenti sa nalogom u aplikaciji — ostalima se javite telefonom. Radnik vidi i piše samo o svojim terminima.</p>
+<a class="open" href="/admin/chat" target="_blank" rel="noopener">Otvori u aplikaciji</a>
+    </div>
+  </div>
+</details>
+
+<details class="step" id="s-klijenti">
+  <summary><span class="num">11</span><span class="step-title">Klijenti</span></summary>
+  <div class="step-body">
+    <div>
+<p>Stranicu Klijenti vide vlasnik i menadžer.</p>
 <ol>
   <li><span class="badge">1</span> Pretraga po imenu, telefonu ili emailu.</li>
   <li><span class="badge">2</span> <strong>„+ Novi klijent"</strong> — za klijente koji zovu telefonom. Kad se kasnije registruje istim emailom, vidi sve svoje termine.</li>
@@ -218,7 +235,7 @@
 </details>
 
 <details class="step" id="s-recenzije">
-  <summary><span class="num">11</span><span class="step-title">Recenzije</span></summary>
+  <summary><span class="num">12</span><span class="step-title">Recenzije</span></summary>
   <div class="step-body">
     <div>
 <p>Ovde stižu ocene klijenata posle završenih termina. Možete da <strong>odgovorite</strong> (odgovor se vidi javno) ili da <strong>sakrijete</strong> neprikladnu ocenu. Vidi se i prosečna ocena po zaposlenom.</p>
@@ -229,7 +246,7 @@
 </details>
 
 <details class="step" id="s-izvestaji">
-  <summary><span class="num">12</span><span class="step-title">Izveštaji</span></summary>
+  <summary><span class="num">13</span><span class="step-title">Izveštaji</span></summary>
   <div class="step-body wide">
     <div>
 <p><strong>Vlasnik</strong> (prva slika):</p>
@@ -237,8 +254,8 @@
   <li><span class="badge">1</span> Zbirni ili „Po zaposlenom", za dan, nedelju ili mesec.</li>
   <li><span class="badge">2</span> <strong>„Otvori PDF"</strong>, „Pošalji na mejl" ili „Pošalji na WhatsApp".</li>
 </ol>
-<p><strong>Administrativni radnik</strong> (druga slika) izveštaje ne vidi — izabere izveštaj i <span class="badge">1</span> <strong>„Pošalji vlasniku na mejl"</strong> ili <span class="badge">2</span> <strong>„na WhatsApp"</strong>. Ako i sam radi usluge, ima i opciju <strong>„Moj pazar"</strong> sa svojim brojkama.</p>
-<p class="tip">Automatsko slanje izveštaja vlasniku uključuje se u Podešavanja salona → Obaveštenja. Administrativni radnik automatske izveštaje ne dobija.</p>
+<p><strong>Menadžer</strong> (druga slika) izveštaje ne vidi — izabere izveštaj i <span class="badge">1</span> <strong>„Pošalji vlasniku na mejl"</strong> ili <span class="badge">2</span> <strong>„na WhatsApp"</strong>. Ako i sam radi usluge, ima i opciju <strong>„Moj pazar"</strong> sa svojim brojkama.</p>
+<p class="tip">Automatsko slanje izveštaja vlasniku uključuje se u Podešavanja salona → Obaveštenja. Menadžer automatske izveštaje ne dobija.</p>
 <a class="open" href="/admin/reports" target="_blank" rel="noopener">Otvori u aplikaciji</a>
     </div>
     <figure class="pair"><img src="slike/rad-08-izvestaji.jpg" alt="Izveštaji vlasnika" loading="lazy" /><img src="slike/rad-10-izvestaj-slanje.jpg" alt="Slanje izveštaja vlasniku" loading="lazy" /></figure>
@@ -268,7 +285,7 @@
   <summary><span class="num">?</span><span class="step-title">Ne vidim neki deo menija</span></summary>
   <div class="step-body text">
     <div>
-<p>Radnik vidi samo Pregled, Kalendar, Termine, Odsustva i Beleške. Administrativni radnik ne vidi finansijsku statistiku. Ako nekome treba više, vlasnik mu menja ulogu u Zaposleni → Nalozi za prijavu.</p>
+<p>Radnik vidi samo Pregled, Kalendar, Termine, Odsustva i Beleške. Menadžer ne vidi finansijsku statistiku. Ako nekome treba više, vlasnik mu menja ulogu u Zaposleni → Nalozi za prijavu.</p>
     </div>
   </div>
 </details>

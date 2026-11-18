@@ -36,6 +36,7 @@ export function audienceLabel(audience: ServiceAudience): string {
 export interface SalonService {
   id: number;
   name: string;
+  booked?: boolean;
   description: string | null;
   service_category_id: number | null;
   category: string | null;

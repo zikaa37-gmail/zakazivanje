@@ -95,7 +95,7 @@ class AuthController extends Controller
 
     public function quickLogins()
     {
-        $labels = [User::ROLE_OWNER => 'Vlasnik', User::ROLE_MANAGER => 'Administrativni radnik', User::ROLE_WORKER => 'Radnik', User::ROLE_CLIENT => 'Klijent'];
+        $labels = [User::ROLE_OWNER => 'Vlasnik', User::ROLE_MANAGER => 'Menadžer', User::ROLE_WORKER => 'Radnik', User::ROLE_CLIENT => 'Klijent'];
         $emails = config('auth_jwt.quick_login_emails');
 
         $users = User::whereIn('email', $emails)->where('active', true)->get()

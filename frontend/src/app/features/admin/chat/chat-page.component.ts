@@ -1,7 +1,15 @@
 import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, Subject, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
+import { FormControl } from '@angular/forms';
+import { SKIP_LOADER } from '../../../core/interceptors/loader.interceptor';
+import { Client } from '../../../core/models/client.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { ClientService } from '../../../core/services/client.service';
+import { clientName } from '../../../core/utils/client-name';
+import { SelectSearchComponent, SelectSearchOption } from '../../../shared/components/select-search/select-search.component';
 import { ChatService, ChatSession, ChatSessionDetail, ChatStatus } from '../../../core/services/chat.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -22,7 +30,7 @@ interface Draft {
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SrDatePipe],
+  imports: [ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })
@@ -41,6 +49,15 @@ export class ChatPageComponent {
   readonly detail = signal<ChatSessionDetail | null>(null);
   readonly draft = signal<Draft | null>(null);
   readonly sending = signal(false);
+  protected auth = inject(AuthService);
+  private clientService = inject(ClientService);
+  readonly picking = signal(false);
+  readonly clientControl = new FormControl<number | null>(null);
+  readonly clientQuery = new Subject<string>();
+  private readonly clientResults = signal<Client[]>([]);
+  readonly clientOptions = computed<SelectSearchOption<number>[]>(() =>
+    this.clientResults().map((c) => ({ value: c.id, label: clientName(c), hint: [c.phone, c.email].filter(Boolean).join(' · ') })),
+  );
   private thread = viewChild(ChatThreadComponent);
 
   readonly threadSessions = computed(() => {
@@ -52,6 +69,22 @@ export class ChatPageComponent {
   constructor() {
     const destroyRef = inject(DestroyRef);
     destroyRef.onDestroy(() => this.chat.viewingSessionId.set(null));
+
+    this.clientQuery
+      .pipe(
+        debounceTime(250),
+        distinctUntilChanged(),
+        switchMap((query) => this.clientService.list(query, 1, null, { context: new HttpContext().set(SKIP_LOADER, true) })),
+        takeUntilDestroyed(),
+      )
+      .subscribe((res) => this.clientResults.set(res.data.filter((c) => c.has_account).slice(0, 10)));
+    this.clientControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => {
+      const client = this.clientResults().find((c) => c.id === id);
+      if (!client) return;
+      this.picking.set(false);
+      this.clientControl.setValue(null, { emitEvent: false });
+      void this.router.navigate([], { queryParams: { client: client.id, name: clientName(client) } });
+    });
 
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const session = Number(params.get('session')) || null;

@@ -9,7 +9,7 @@ Radi se zajedno sa vlasnikom, uz uputstvo `/uputstvo/vlasnik.html` (odeljak „P
 | Nalog | Kako nastaje |
 |-------|--------------|
 | **Vlasnik** | komanda `app:owner` pri instalaciji. Vlasnik postavi svoju lozinku preko linka iz mejla |
-| **Administrativni radnik** (recepcija, radi umesto vlasnika) | vlasnik: Zaposleni → Nalozi za prijavu → „+ Novi nalog", uloga administrativni radnik, stiže pozivnica mejlom |
+| **Menadžer** (recepcija, radi umesto vlasnika) | vlasnik: Zaposleni → Nalozi za prijavu → „+ Novi nalog", uloga menadžer, stiže pozivnica mejlom |
 | **Radnici** (rade usluge) | vlasnik upiše zaposlenog sa mejlom i telefonom (Zaposleni), nalog radnika nastaje sam i stiže pozivnica |
 | Drugi vlasnik / suvlasnik | Nalozi za prijavu → uloga vlasnik (pravi samo vlasnik) |
 | Klijenti | registruju se sami, ili ih salon upiše (Klijenti → bez naloga, preuzimaju zapis kad se registruju istim mejlom) |

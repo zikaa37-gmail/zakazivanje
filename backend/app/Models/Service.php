@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['name', 'description', 'service_category_id', 'audience', 'booking_confirmation', 'duration_minutes', 'processing_after_minutes', 'processing_minutes', 'price', 'active', 'paused_until', 'sort_order', 'cancellation_fee_type', 'cancellation_fee_value', 'cancellation_free_late'])]
 #[Appends(['category'])]
@@ -65,6 +66,11 @@ class Service extends Model
     {
         $query->where('active', true)
             ->where(fn ($q) => $q->whereNull('service_category_id')->orWhereHas('serviceCategory', fn ($c) => $c->where('active', true)));
+    }
+
+    public function appointmentItems(): HasMany
+    {
+        return $this->hasMany(AppointmentItem::class);
     }
 
     public function staffMembers(): BelongsToMany

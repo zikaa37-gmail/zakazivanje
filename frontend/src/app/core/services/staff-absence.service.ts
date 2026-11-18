@@ -26,6 +26,10 @@ export class StaffAbsenceService {
     return this.http.post<StaffAbsence>(this.api, payload);
   }
 
+  update(id: number, payload: Omit<StaffAbsencePayload, 'staff_member_id'>): Observable<StaffAbsence> {
+    return this.http.put<StaffAbsence>(`${this.api}/${id}`, payload);
+  }
+
   approve(id: number): Observable<StaffAbsence> {
     return this.http.post<StaffAbsence>(`${this.api}/${id}/approve`, {}).pipe(tap(() => this.refreshPendingCount()));
   }

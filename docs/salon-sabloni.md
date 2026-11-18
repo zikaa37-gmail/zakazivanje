@@ -58,6 +58,6 @@ obaveštenja.
 
 - Mejl salona. Tekući račun 325-9601700081122-85 (IPS QR i uplatnica), PIB 112319400 i MB 66023605 su upisani (APR: „Danijela Đokić PR Delatnost frizerskih i kozmetičkih salona Pink Starss Beograd (Zemun)“, osnovan 26.1.2021, šifra 9602).
 - Cene i tačna trajanja usluga, pa ih uključiti; spisak usluga potvrditi sa salonom (elektroterapije, epilacija).
-- Nalozi: Danijela Đokić (vlasnik i zaposlena), Luka i Vuk Matović (administrativni radnici; Luka koristi postojeći `luka@fiskultura.rs`), Tijana XXX (radnica) imaju privremene test mejlove i lozinku iz šablona — zameniti pravim mejlovima, telefonima i prezimenom pre pravih klijenata (i ukloniti `password` iz `salon.json`).
+- Nalozi: Danijela Đokić (vlasnik i zaposlena), Luka i Vuk Matović (menadžeri; Luka koristi postojeći `luka@fiskultura.rs`), Tijana XXX (radnica) imaju privremene test mejlove i lozinku iz šablona — zameniti pravim mejlovima, telefonima i prezimenom pre pravih klijenata (i ukloniti `password` iz `salon.json`).
 - Naslovna fotografija, galerija i povezivanje Instagrama.
 - Frizerski deo: kad krene, uključiti kategorije „Frizer — …", pa usluge sa cenama.

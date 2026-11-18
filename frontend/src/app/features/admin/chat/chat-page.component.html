@@ -3,7 +3,26 @@
     <h1 class="page-title">Poruke</h1>
     <p class="page-subtitle">Razgovori sa klijentima — svaki traje do kraja dana ili dok ga ne završite</p>
   </div>
+  @if (auth.isManager()) {
+    <button type="button" appBtn (click)="picking.set(!picking())" data-testid="chat-new"><span appIcon="plus" aria-hidden="true"></span> Nova poruka</button>
+  }
 </div>
+
+@if (picking()) {
+  <div class="card mb-4 flex flex-col gap-2" data-testid="chat-new-picker">
+    <label for="chat-new-client" class="text-sm font-semibold">Kome pišeš?</label>
+    <app-select-search
+      [control]="clientControl"
+      [options]="clientOptions()"
+      [remote]="true"
+      inputId="chat-new-client"
+      placeholder="Ime, telefon ili email..."
+      (searched)="clientQuery.next($event)"
+      data-testid="chat-new-client"
+    />
+    <span class="text-xs muted">Samo klijenti sa nalogom u aplikaciji. Ostalima se javite telefonom.</span>
+  </div>
+}
 
 <app-error-message [message]="error()" />
 

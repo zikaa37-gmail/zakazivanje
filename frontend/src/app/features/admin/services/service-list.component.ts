@@ -128,9 +128,9 @@ export class ServiceListComponent {
         ? [{ id: 'enable', label: 'Omogući', icon: 'unlock' as const }]
         : [
             this.isPaused(service) ? { id: 'unpause', label: 'Ukini pauzu', icon: 'rotate-ccw' as const } : { id: 'pause', label: 'Privremeno pauziraj…', icon: 'clock' as const },
-            { id: 'disable', label: 'Onemogući (trajno)', icon: 'lock' as const },
+            { id: 'disable', label: 'Onemogući (skloni iz ponude)', icon: 'lock' as const },
           ]),
-      { id: 'delete', label: 'Obriši', icon: 'trash', danger: true },
+      ...(service.booked ? [] : [{ id: 'delete', label: 'Obriši zauvek', icon: 'trash' as const, danger: true, separated: true }]),
     ];
   }
 
@@ -332,8 +332,9 @@ export class ServiceListComponent {
   private async remove(service: SalonService): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Brisanje usluge',
-      message: `Obrisati uslugu „${service.name}"? Brisanje je moguće samo ako usluga nikad nije zakazana — inače je onemogući ili pauziraj.`,
-      confirmLabel: 'Obriši',
+      message: `Trajno obrisati uslugu „${service.name}"? Ovo ne može da se vrati. Ako je samo skidaš iz ponude, izaberi „Onemogući" — usluga ostaje na listi i možeš ponovo da je uključiš.`,
+      confirmLabel: 'Obriši zauvek',
+      danger: true,
     });
     if (!ok) return;
 
