@@ -161,7 +161,7 @@ class StaffNoteController extends Controller
     public function destroy(Request $request, StaffNote $note)
     {
         $user = $request->user();
-        abort_unless($user->isManager() || $note->author_id === $user->id, 403, 'Belešku briše autor ili vlasnik / administrativni radnik.');
+        abort_unless($user->isManager() || $note->author_id === $user->id, 403, 'Belešku briše autor ili vlasnik / menadžer.');
         $note->delete();
 
         return response()->json(['message' => 'Beleška je obrisana.']);

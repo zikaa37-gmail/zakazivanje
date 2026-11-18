@@ -37,7 +37,7 @@ export const COMMUNICATION_OPTIONS: { value: CommunicationChannel; label: string
 export const ROLE_LABELS: Record<UserRole, string> = {
   client: 'Klijent',
   owner: 'Vlasnik',
-  manager: 'Administrativni radnik',
+  manager: 'Menadžer',
   worker: 'Radnik',
 };
 

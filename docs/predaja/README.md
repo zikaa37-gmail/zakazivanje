@@ -62,7 +62,7 @@ Bez WhatsApp-a podsetnici idu mejlom i preko push obaveštenja, besplatno.
 - [ ] Mejlovi napravljeni i stižu (i u Gmail, ne u spam).
 - [ ] Domen radi na `https://` (SSL).
 - [ ] Čista baza: nema demo klijenata, termina, test naloga ni brze prijave (`QUICK_LOGIN_EMAILS` prazno).
-- [ ] Vlasnik i administrativni radnik imaju svoje naloge i lozinke koje su sami postavili.
+- [ ] Vlasnik i menadžer imaju svoje naloge i lozinke koje su sami postavili.
 - [ ] Cron radi: podsetnici i mejlovi stižu.
 - [ ] Podaci o salonu, logo, radno vreme, zaposleni, usluge i cene upisani.
 - [ ] Ako se koristi: račun salona (IPS QR), AI ključ, WhatsApp, Pusher, Instagram.

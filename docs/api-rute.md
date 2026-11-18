@@ -93,24 +93,24 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
-| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?, delay_notice?}` — pomeranje (`delay_notice` = prevlačenje u kalendaru: obaveštenje ide 2 min posle poslednjeg pomeranja, `appointments:send-change-notices`) (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i administrativnim radnicima) |
+| POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?, delay_notice?}` — pomeranje (`delay_notice` = prevlačenje u kalendaru: obaveštenje ide 2 min posle poslednjeg pomeranja, `appointments:send-change-notices`) (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i menadžerima) |
 | GET | `/appointments/{id}/linked` | ostali aktivni termini iste povezane grupe |
 | GET | `/appointments/{id}/alternatives` | kolege koje rade te usluge i slobodne su u isto vreme |
 | POST | `/appointments/{id}/ask-reschedule` | klijentu poruka sa linkom `/my-appointments?reschedule={id}`; `free_change_reason = salon_request` (pomeranje / otkazivanje bez roka i bez poena discipline) |
-| POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik dobija samo svoj; administrativni radnik vidi samo svoj (ako radi usluge), ostale samo šalje |
+| POST | `/reports` | `{period: day \| week \| month, date, staff_member_id?}` → izveštaj (zbirni ili po zaposlenom): `totals`, `staff`, `days`, `services`, `appointments` (dan, i nedelja po zaposlenom); radnik dobija samo svoj; menadžer vidi samo svoj (ako radi usluge), ostale samo šalje |
 | POST | `/reports/pdf` | isti upit → PDF |
-| POST | `/reports/send` | isti upit + `{channel: mail \| whatsapp}` → PDF prijavljenom korisniku; administrativni radnik šalje vlasnicima |
+| POST | `/reports/send` | isti upit + `{channel: mail \| whatsapp}` → PDF prijavljenom korisniku; menadžer šalje vlasnicima |
 | POST / DELETE | `/blocked-times/list`, `/blocked-times`, `/blocked-times/{id}` | blokade vremena (zaposleni ili ceo salon) |
 | POST | `/staff-absences/list` | `{status?, include_past?}` — odsustva (radnik koji radi usluge vidi svoja i ona koja je upisao) |
-| POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / administrativni radnik → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
+| POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / menadžer → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
 | POST | `/cancellation-fees/list` | `{client_id?, status?: free\|open\|paid\|waived}` — naknade za kasno otkazivanje |
 | GET | `/clients/{id}/cancellation-status` | odbrojavanje i dug klijenta (kao `/my-cancellation-status`) |
 | GET | `/appointments/{id}/cancel-preview` | šta bi „Klijent otkazao“ sada upisao (`/appointments/{id}/cancel` sa `by_client` upisuje naknadu) |
 | POST | `/cancellation-fees/{id}/paid` | `{payment_method: cash\|card\|bank}` — naknada naplaćena |
-| POST | `/cancellation-fees/{id}/waive`, `/cancellation-fees/{id}/adjust` | `{reason}` / `{amount, reason}` — samo vlasnik / administrativni radnik |
-| POST | `/staff-absences/pending-count`, `/staff-absences/{id}/approve`, `/staff-absences/{id}/reject` | samo vlasnik / administrativni radnik; zaposleni dobija obaveštenje |
+| POST | `/cancellation-fees/{id}/waive`, `/cancellation-fees/{id}/adjust` | `{reason}` / `{amount, reason}` — samo vlasnik / menadžer |
+| POST | `/staff-absences/pending-count`, `/staff-absences/{id}/approve`, `/staff-absences/{id}/reject` | samo vlasnik / menadžer; zaposleni dobija obaveštenje |
 | POST | `/appointments/{id}/payment`, `/appointments/{id}/slip` | IPS QR / PDF uplatnica (i bez uključenog plaćanja unapred) |
 | POST | `/appointments/{id}/paid` | `{method: cash \| card \| bank \| null}` — naplaćeno (`paid_at`) ili poništeno |
 | POST / DELETE | `/waitlist/list`, `/waitlist/{id}` | aktivne prijave na listu čekanja |
@@ -139,7 +139,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/notes` | `{body, recipient_ids}` → obaveštava izabrane + uvek-obaveštene (`note_always_notify_ids`) |
 | POST | `/notes/unread-count`, `/notes/{id}/read`, `/notes/{id}/take`, `/notes/{id}/resolve` | nepročitane; pročitano; preuzimam (ponovo = otkaži); urađeno (ponovo = otvori) |
 | POST | `/notes/{id}/replies` | `{body}` → odgovor; ostalima u belešci (autor, primaoci, ko je odgovarao) postaje nepročitana, zvonce + push |
-| DELETE | `/notes/{id}` | autor, vlasnik ili administrativni radnik |
+| DELETE | `/notes/{id}` | autor, vlasnik ili menadžer |
 | POST | `/promotions/list` | akcije |
 | POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays`, `code?`, `max_uses?`, `once_per_client` (lista vraća i `uses`) |
 | DELETE | `/clients/{id}` | brisanje klijenta |
@@ -163,5 +163,5 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
 | POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom korisniku |
 | POST | `/team/list` | nalozi osoblja (vlasnici i radnici) sa `staff_member`, `has_password` |
-| POST / PUT / DELETE | `/team`, `/team/{id}` | `{first_name, last_name, email, phone?, role: owner \| worker, active?, send_invite?}` — administrativni radnik ili vlasnik; nalogu zaposlenog menjaju se samo `role` i `active`; mora ostati bar jedan aktivan vlasnik |
+| POST / PUT / DELETE | `/team`, `/team/{id}` | `{first_name, last_name, email, phone?, role: owner \| worker, active?, send_invite?}` — menadžer ili vlasnik; nalogu zaposlenog menjaju se samo `role` i `active`; mora ostati bar jedan aktivan vlasnik |
 | POST | `/team/{id}/invite` | mejl sa linkom za postavljanje lozinke |

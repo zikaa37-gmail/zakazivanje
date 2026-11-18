@@ -11,7 +11,7 @@ Mejlovi se prave u hostingu domena (cPanel → **Email Accounts**), besplatni su
 | `info@salon-primer.rs` (ili postojeći mejl salona) | kontakt na sajtu (Podešavanja → Biznis), odgovori klijenata | vlasnik / recepcija |
 | `nalozi@salon-primer.rs` | otvaranje spoljnih naloga (Anthropic, Twilio, Pusher, Meta) — da ne zavise od ličnog mejla | vlasnik (i mi dok podešavamo) |
 | lični mejl vlasnika | nalog **vlasnika** u aplikaciji | vlasnik |
-| lični mejl administrativnog radnika | nalog **administrativnog radnika** | recepcija |
+| lični mejl menadžera | nalog **menadžera** | recepcija |
 | mejl svakog zaposlenog | zaposleni sa mejlom automatski dobija nalog radnika (Zaposleni → mejl i telefon su obavezni) | svaki radnik |
 
 Napomene:
@@ -24,5 +24,5 @@ Napomene:
 ## Šta tražimo od salona
 
 - Domen (ili da ga mi zakupimo na njihovo ime).
-- Imena i mejlovi: vlasnik, administrativni radnik (ako postoji), svi zaposleni (ime, prezime, mejl, telefon).
+- Imena i mejlovi: vlasnik, menadžer (ako postoji), svi zaposleni (ime, prezime, mejl, telefon).
 - Mejl / telefon za kontakt koji se prikazuje klijentima.

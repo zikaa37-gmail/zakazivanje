@@ -96,7 +96,7 @@ class RolesTest extends TestCase
         $this->actingAsJwt($worker)->deleteJson('/api/clients/'.User::factory()->create()->id)->assertForbidden();
     }
 
-    public function test_administrative_worker_manages_salon_but_not_finances_or_owners(): void
+    public function test_manager_manages_salon_but_not_finances_or_owners(): void
     {
         $office = User::factory()->create(['role' => User::ROLE_MANAGER]);
 
@@ -152,7 +152,7 @@ class RolesTest extends TestCase
         $this->actingAsJwt($worker)->postJson('/api/appointments/'.$make($marko)->id.'/status', ['status' => 'completed'])->assertForbidden();
     }
 
-    public function test_owner_manages_administrative_worker(): void
+    public function test_owner_manages_manager(): void
     {
         Notification::fake();
 

@@ -9,7 +9,7 @@ const BACKEND = path.resolve(__dirname, '../../backend');
 const CHROME = 'C:/Users/PC/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe';
 const PHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 const only = process.argv[3] ? process.argv[3].split(',') : null;
-const LOGIN = { owner: /^\s*Vlasnik/, manager: /^\s*Administrativni/, worker: /^\s*Radnik/, client: /^\s*Klijent/ };
+const LOGIN = { owner: /^\s*Vlasnik/, manager: /^\s*Menadžer/, worker: /^\s*Radnik/, client: /^\s*Klijent/ };
 const shots = new Map();
 
 function tinker(code) {

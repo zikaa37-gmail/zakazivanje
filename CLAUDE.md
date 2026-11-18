@@ -19,13 +19,13 @@ komponente, deploy na cPanel) ako nešto ovde nije eksplicitno napisano.
 
 Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik) i `worker`. Radnik vezan za zaposlenog
 (`users.staff_member_id`) je onaj koji radi usluge: pregled dana i izveštaji samo za sebe, kalendar, termini, blokade, klijenti
-bez brisanja, lista čekanja. Radnik bez zaposlenog je administrativni radnik (Zaposleni → Nalozi za prijavu, `/admin/team`) i radi umesto
-vlasnika: `User::isManager()` (vlasnik ili administrativni radnik) — zaposleni, usluge, cene, recenzije, galerija, podeli,
+bez brisanja, lista čekanja. Radnik bez zaposlenog je menadžer (Zaposleni → Nalozi za prijavu, `/admin/team`) i radi umesto
+vlasnika: `User::isManager()` (vlasnik ili menadžer) — zaposleni, usluge, cene, recenzije, galerija, podeli,
 nalozi, podešavanja, brisanje klijenata i zone. Samo vlasniku ostaju finansijska statistika (`dashboard/stats`, `dashboard/sources`)
-i nalozi vlasnika (administrativni radnik ne pravi, ne menja i ne briše vlasnika). Rute: `role:owner,worker` za svakodnevni rad,
+i nalozi vlasnika (menadžer ne pravi, ne menja i ne briše vlasnika). Rute: `role:owner,worker` za svakodnevni rad,
 `role:manager` za upravljanje, `role:owner` za finansije; frontend `staffGuard` / `managerGuard`, meni po `managerOnly`;
-vlasnik i administrativni radnik imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
-Administrativni radnik izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
+vlasnik i menadžer imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
+Menadžer izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
 automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
 Svaki zaposleni sa emailom automatski ima nalog radnika (`StaffAccountService::sync()`);
 zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Nove uloge idu u `User::ROLES`.
@@ -99,9 +99,9 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, administrativni radnik `radnik@fiskultura.rs` /
+Seed nalozi: vlasnik `zakazivanje@fiskultura.rs` / `zakazivanje2026`, menadžer `radnik@fiskultura.rs` /
 `radnik2026`, klijent Petar Petrović
-`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Vlasnik / Administrativni radnik / Radnik (Jelena, `jelena@demo.zakazivanje.rs` / `radnik2026`, iz DemoDataSeeder-a) / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
+`devtestzikaa@gmail.com` / `test`. Dugmad za brzu prijavu (Vlasnik / Menadžer / Radnik (Jelena, `jelena@demo.zakazivanje.rs` / `radnik2026`, iz DemoDataSeeder-a) / Klijent) su na `/login` i lokalno i na serveru (`devLogins` u
 `environment.ts` i `environment.development.ts`) — dok su podaci test; ukloniti pre pravih klijenata.
 
 Frontend (from `frontend/`):
@@ -253,7 +253,7 @@ Javni deo (početna, usluge, cene, slobodni termini) radi bez naloga; za zakaziv
 (`allow_guest_booking` podrazumevano isključen — registracija iz koraka 4 odmah prijavljuje i vraća na potvrdu).
 
 Uputstvo za korisnike (#75): statički HTML u `frontend/public/uputstvo/`, u aplikaciji `/uputstvo/index.html` (link „Uputstvo" u meniju osoblja i u profilu).
-Stranice: `index.html` (uvod i kartice), `vlasnik.html` (vlasnik i administrativni radnik: prvo podešavanje i Upravljanje), `svakodnevni-rad.html`,
+Stranice: `index.html` (uvod i kartice), `vlasnik.html` (vlasnik i menadžer: prvo podešavanje i Upravljanje), `svakodnevni-rad.html`,
 `radnik.html`, `klijent.html` (može da se pošalje klijentima) i `prijava-i-nalozi.html`; zajednički `uputstvo.css` i `uputstvo.js` (boje, naziv i logo
 salona iz `GET /api/public/business`, uz neutralne podrazumevane boje). Svaki korak je `<details class="step">` sa `<span class="num">`, zatvoren osim prvog;
 broj u tekstu (`<span class="badge">`) odgovara crvenoj oznaci na slici. Slike sa telefona (390×844) su u `slike/`. Ponovo se snimaju sa
@@ -269,7 +269,7 @@ akcija sa kodom važi samo uz `promo_code` pri zakazivanju (`PriceQuoteService::
 tek posle linka iz mejla (`email_verification_sent_at`, važi `User::VERIFICATION_DAYS` = 3, link prijavljuje i vraća na `next`); ponovna registracija
 nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja (`staff_notes`,
 `staff_note_recipients`): status novo / preuzeto (`taken_by`) / urađeno, pročitano po primaocu, obaveštenje izabranima + uvek
-`business_settings.note_always_notify_ids` (podrazumevano vlasnici i administrativni radnici). Prepiska: `staff_note_replies` (`POST /notes/{id}/replies`), odgovor dodaje autora i onog ko odgovara u
+`business_settings.note_always_notify_ids` (podrazumevano vlasnici i menadžeri). Prepiska: `staff_note_replies` (`POST /notes/{id}/replies`), odgovor dodaje autora i onog ko odgovara u
 `staff_note_recipients` i ostalima vraća `read_at` na null; `staff_notes.last_reply_at` — urađena beleška sa novijim odgovorom je opet nepročitana.
 Odgovor ide samo u zvonce + push (`StaffNoteReplyNotification`, link `/admin/notes?note={id}` otvara i označava pročitanom), bez mejla / WhatsApp-a. Zaposleni mora imati email i telefon.
 Odsustva (bolovanje / odmor): `/admin/absences`, `StaffAbsence` + `StaffAbsenceService` — upisuje bilo ko iz osoblja, odobrava menadžer
@@ -304,14 +304,14 @@ prikazuje poruku (radnik vezan za zaposlenog samo za svoje, bez sopstvenih akcij
 pregled i Moji termini tiho osvežavaju (`quiet` = bez globalnog loadera).
 Centar obaveštenja (zvonce): `inbox_notifications` (po korisniku, `read_at`, briše se posle 180 dana `model:prune`); upisuje ga samo
 `Inbox::deliver($users, $notification)` preko `toInbox()` u klasi obaveštenja (naslov, tekst, relativan `link`), nezavisno od mejla /
-WhatsApp-a i prekidača obaveštenja, bez onoga ko je radnju uradio i bez klijenta bez naloga; termini: vlasnik i administrativni radnici
+WhatsApp-a i prekidača obaveštenja, bez onoga ko je radnju uradio i bez klijenta bez naloga; termini: vlasnik i menadžeri
 uvek, radnik samo za svog zaposlenog. Nova obaveštenja za korisnika idu kroz `toInbox()` + `Inbox`. Pusher događaj `inbox` na
 `private-user-{id}` (osoblje sluša i taj kanal); frontend `InboxService` + `<app-inbox-bell>` (zaglavlje, a na desktopu admina u bočnom
 meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“, „Sva obaveštenja“ → stranica
 `/admin/notifications` (osoblje) / `/notifications` (klijent), `NotificationsPageComponent`: po danima, „Prikaži starija“, sopstveno stanje (`InboxService.page()`).
 Poruke sa klijentima (chat): `chat_sessions` (klijent, opciono termin, `expires_at` = kraj dana, `closed_at`, `assigned_to` = ko je prvi
 odgovorio), `chat_messages`, `chat_reads` (`last_read_message_id` po korisniku); pravila samo u `ChatService` (klijentova poruka otvara novi
-razgovor ako nema aktivnog, odgovor osoblja ponovo otvara završen; vlasnik i administrativni radnik vide sve, radnik samo razgovore o svojim
+razgovor ako nema aktivnog, odgovor osoblja ponovo otvara završen; vlasnik i menadžer vide sve, radnik samo razgovore o svojim
 terminima; nepročitano za osoblje = poruke klijenta). Pusher događaj `chat` na `private-user-{id}`; `chat:notify-unread` (na 5 min) šalje
 klijentu mejl / WhatsApp za poruke salona nepročitane 15 min (`notified_at`). Prekidač `chat_enabled` (podrazumevano uključen, Podešavanja →
 Zakazivanje). Frontend: `ChatService`, `<app-chat-thread>` (deljen prikaz i unos), klijent `<app-chat-widget>` (dugme dole desno u javnoj
