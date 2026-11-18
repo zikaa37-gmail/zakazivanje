@@ -138,10 +138,33 @@
         <div><div class="text-xs muted">Gotovina</div>{{ r.totals.by_method.cash | rsd }}</div>
         <div><div class="text-xs muted">Kartica</div>{{ r.totals.by_method.card | rsd }}</div>
         <div><div class="text-xs muted">Račun</div>{{ r.totals.by_method.bank | rsd }}</div>
+        @if (r.totals.by_method.wallet) {
+          <div><div class="text-xs muted">Sa stanja</div>{{ r.totals.by_method.wallet | rsd }}</div>
+        }
         <div><div class="text-xs muted">Popusti</div>{{ r.totals.discount | rsd }}</div>
         <div><div class="text-xs muted">Bakšiš</div>{{ r.totals.tips | rsd }}</div>
+        @if (r.totals.unpaid) {
+          <div><div class="text-xs muted">Za naplatu (dug)</div>{{ r.totals.unpaid | rsd }}</div>
+        }
+        @if (r.totals.not_done) {
+          <div><div class="text-xs muted">Usluga nije odrađena</div>{{ r.totals.not_done }}</div>
+        }
       </div>
     </div>
+
+    @if (r.prepaid && (r.prepaid.deposits || r.prepaid.gift_cards)) {
+      <div class="card mb-4" data-testid="report-prepaid">
+        <h3 class="font-semibold mb-1">Uplate unapred</h3>
+        <p class="text-xs muted mb-2">Novac primljen u ovom periodu, a usluge se tek koriste — nije prihod dok se ne potroši („Sa stanja“).</p>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
+          <div><div class="text-xs muted">Depoziti</div>{{ r.prepaid.deposits | rsd }}</div>
+          <div><div class="text-xs muted">Poklon kartice ({{ r.prepaid.gift_cards_count }})</div>{{ r.prepaid.gift_cards | rsd }}</div>
+          <div><div class="text-xs muted">Gotovina</div>{{ r.prepaid.by_method.cash | rsd }}</div>
+          <div><div class="text-xs muted">Kartica</div>{{ r.prepaid.by_method.card | rsd }}</div>
+          <div><div class="text-xs muted">Račun</div>{{ r.prepaid.by_method.bank | rsd }}</div>
+        </div>
+      </div>
+    }
 
     @if (r.staff.length > 0) {
       <div class="card mb-4" data-testid="report-staff-rows">

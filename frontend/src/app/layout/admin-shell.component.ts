@@ -53,6 +53,7 @@ export class AdminShellComponent {
     { path: '/admin/chat', label: 'Poruke', icon: 'send', section: 'daily' },
     { path: '/admin/notes', label: 'Beleške', icon: 'message-square', section: 'daily' },
     { path: '/admin/absences', label: 'Odsustva', icon: 'clock', section: 'daily' },
+    { path: '/admin/gift-cards', label: 'Poklon kartice', icon: 'gift', section: 'daily' },
     { path: '/admin/clients', label: 'Klijenti', icon: 'user', section: 'daily', managerOnly: true },
     { path: '/admin/reviews', label: 'Recenzije', icon: 'star', section: 'daily', managerOnly: true },
     { path: '/admin/reports', label: 'Izveštaji', icon: 'file-text', section: 'daily', managerOnly: true },

@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { ChatService } from '../../../core/services/chat.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment, SERVICE_OUTCOMES, STATUS_LABELS } from '../../../core/models/appointment.model';
-import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
+import { PAYMENT_LABELS, PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
 import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
@@ -51,7 +51,7 @@ export class AppointmentDetailsComponent implements OnInit {
   private business = inject(BusinessSettingService);
 
   readonly paymentMethods = PAYMENT_METHODS;
-  readonly paymentLabel = (method: PaymentMethod | null) => PAYMENT_METHODS.find((m) => m.value === method)?.label ?? '';
+  readonly paymentLabel = (method: PaymentMethod | null) => (method ? PAYMENT_LABELS[method] : '');
   readonly showIps = signal(false);
   readonly canTakePayment = computed(() => {
     const a = this.appointment();

@@ -1,3 +1,4 @@
+import { MyWalletComponent } from './my-wallet.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../core/models/user.model';
@@ -17,7 +18,7 @@ import { InputDirective } from '../../shared/directives/input.directive';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ChangePasswordComponent, DeviceNotificationsComponent, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ReactiveFormsModule, MyWalletComponent, ButtonComponent, ButtonDirective, ChangePasswordComponent, DeviceNotificationsComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './profile.component.html',
 })
 export class ProfileComponent {
