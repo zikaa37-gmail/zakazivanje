@@ -112,6 +112,23 @@ class StaffAbsenceTest extends TestCase
         $this->assertSame(0, BlockedTime::count());
     }
 
+    public function test_editing_an_absence_extends_it_and_moves_the_block(): void
+    {
+        Notification::fake();
+        $id = $this->report($this->owner, ['starts_on' => '2026-10-20', 'ends_on' => '2026-10-26', 'type' => 'vacation'])->assertCreated()->json('id');
+
+        $this->actingAsJwt($this->owner)->putJson("/api/staff-absences/{$id}", ['starts_on' => '2026-10-20', 'ends_on' => '2026-10-27', 'type' => 'vacation'])
+            ->assertOk()->assertJsonPath('ends_on', '2026-10-27');
+        $this->assertSame('2026-10-28 00:00', BlockedTime::sole()->ends_at->format('Y-m-d H:i'));
+
+        $this->report($this->owner, ['starts_on' => '2026-10-27', 'ends_on' => '2026-10-28'])->assertUnprocessable()->assertJsonValidationErrors('starts_on');
+        $this->actingAsJwt($this->anaAccount)->putJson("/api/staff-absences/{$id}", ['starts_on' => '2026-10-20', 'ends_on' => '2026-10-29', 'type' => 'vacation'])->assertForbidden();
+
+        $pending = $this->report($this->anaAccount, ['starts_on' => '2026-11-02', 'ends_on' => '2026-11-02'])->json('id');
+        $this->actingAsJwt($this->anaAccount)->putJson("/api/staff-absences/{$pending}", ['starts_on' => '2026-11-02', 'ends_on' => '2026-11-03', 'type' => 'sick'])
+            ->assertOk()->assertJsonPath('status', 'pending')->assertJsonPath('ends_on', '2026-11-03');
+    }
+
     public function test_affected_appointments_list_client_phone_and_free_colleagues(): void
     {
         $this->client->update(['phone' => '+381641112233']);

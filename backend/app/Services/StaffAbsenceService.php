@@ -20,15 +20,7 @@ class StaffAbsenceService
 
     public function create(User $by, array $data): StaffAbsence
     {
-        $overlaps = StaffAbsence::query()
-            ->where('staff_member_id', $data['staff_member_id'])
-            ->where('status', '!=', StaffAbsence::STATUS_REJECTED)
-            ->where('starts_on', '<=', $data['ends_on'])
-            ->where('ends_on', '>=', $data['starts_on'])
-            ->exists();
-        if ($overlaps) {
-            throw ValidationException::withMessages(['starts_on' => ['Za taj period već postoji prijavljeno odsustvo.']]);
-        }
+        $this->ensureNoOverlap($data['staff_member_id'], $data['starts_on'], $data['ends_on']);
 
         $absence = StaffAbsence::create([...$data, 'status' => StaffAbsence::STATUS_PENDING, 'requested_by' => $by->id]);
 
@@ -37,6 +29,22 @@ class StaffAbsenceService
         }
 
         $this->send($this->managers(), new StaffAbsenceNotification($absence, StaffAbsenceNotification::REQUESTED));
+
+        return $absence;
+    }
+
+    public function update(StaffAbsence $absence, array $data): StaffAbsence
+    {
+        $this->ensureNoOverlap($absence->staff_member_id, $data['starts_on'], $data['ends_on'], $absence->id);
+
+        DB::transaction(function () use ($absence, $data) {
+            $absence->update($data);
+            $absence->blockedTime?->update([
+                'starts_at' => CarbonImmutable::parse($absence->starts_on)->startOfDay(),
+                'ends_at' => CarbonImmutable::parse($absence->ends_on)->addDay()->startOfDay(),
+                'reason' => $absence->typeLabel(),
+            ]);
+        });
 
         return $absence;
     }
@@ -118,6 +126,20 @@ class StaffAbsenceService
         return $this->availability->eligibleStaff($this->availability->servicesInOrder($serviceIds))
             ->reject(fn (StaffMember $s) => $s->id === $appointment->staff_member_id)
             ->filter(fn (StaffMember $s) => $this->availability->withinWorkingHours($s, $start, $end) && $this->availability->isFreeForSalon($s->id, $start, $end, null, $appointment->processing()));
+    }
+
+    private function ensureNoOverlap(int $staffMemberId, string $startsOn, string $endsOn, ?int $exceptId = null): void
+    {
+        $overlaps = StaffAbsence::query()
+            ->where('staff_member_id', $staffMemberId)
+            ->where('status', '!=', StaffAbsence::STATUS_REJECTED)
+            ->when($exceptId, fn ($q) => $q->whereKeyNot($exceptId))
+            ->where('starts_on', '<=', $endsOn)
+            ->where('ends_on', '>=', $startsOn)
+            ->exists();
+        if ($overlaps) {
+            throw ValidationException::withMessages(['starts_on' => ['Za taj period već postoji drugo odsustvo. Izmeni postojeće umesto da upisuješ novo.']]);
+        }
     }
 
     private function notifyStaff(StaffAbsence $absence, User $by, string $type): void

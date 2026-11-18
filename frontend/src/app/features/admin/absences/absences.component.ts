@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -14,6 +14,7 @@ import { contactHref } from '../../../core/utils/contact';
 import { longDate, timeOf, today } from '../../../core/utils/dates';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
+import { DateRangeComponent } from '../../../shared/components/date-range/date-range.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
@@ -23,17 +24,26 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 @Component({
   selector: 'app-absences',
   standalone: true,
-  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
   template: `
     <div class="page-header">
       <div>
         <h1 class="page-title">Odsustva</h1>
-        <p class="page-subtitle">Bolovanje, odmor ili „ne radim danas". Upisuje bilo ko, a odobrava vlasnik ili administrativni radnik. Termini tog dana se prebacuju kolegi ili se klijent zamoli da sam pomeri.</p>
+        <p class="page-subtitle">Bolovanje, odmor ili „ne radim danas". Upisuje bilo ko, a odobrava vlasnik ili menadžer. Termini tog dana se prebacuju kolegi ili se klijent zamoli da sam pomeri.</p>
       </div>
     </div>
 
-    <form class="card mb-4 flex flex-col gap-3" (submit)="$event.preventDefault(); save()" novalidate data-testid="absence-form">
+    <form #absenceForm class="card mb-4 flex flex-col gap-3" (submit)="$event.preventDefault(); save()" novalidate data-testid="absence-form">
+      @if (editing(); as e) {
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-base font-semibold">Izmena odsustva · {{ e.staff_member.first_name }} {{ e.staff_member.last_name }}</h2>
+          <button type="button" appBtn theme="ghost" size="s" (click)="cancelEdit()" data-testid="absence-edit-cancel">Odustani</button>
+        </div>
+      } @else {
+        <h2 class="text-base font-semibold">Novo odsustvo</h2>
+      }
       <div class="form-grid">
+        @if (!editing()) {
         <div class="field">
           <label for="absence-staff">Ko</label>
           <select id="absence-staff" appInput [formControl]="staffId" data-testid="absence-staff">
@@ -42,6 +52,7 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
             }
           </select>
         </div>
+        }
         <div class="field">
           <span class="text-sm font-semibold">Razlog</span>
           <div class="chip-group">
@@ -50,14 +61,10 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
             }
           </div>
         </div>
-        <div class="field">
-          <label for="absence-from">Od</label>
-          <input id="absence-from" appInput type="date" [min]="todayDate" [formControl]="from" (change)="syncTo()" data-testid="absence-from" />
-        </div>
-        <div class="field">
-          <label for="absence-to">Do (uključujući)</label>
-          <input id="absence-to" appInput type="date" [min]="from.value" [formControl]="to" data-testid="absence-to" />
-        </div>
+      </div>
+      <div class="field">
+        <span class="text-sm font-semibold">Period (klikni prvi, pa poslednji dan)</span>
+        <app-date-range [from]="from" [to]="to" [min]="rangeMin()" data-testid="absence-range" />
       </div>
       <div class="field">
         <label for="absence-note">Napomena</label>
@@ -65,8 +72,12 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
       </div>
       <app-error-message [message]="formError()" />
       <div class="flex flex-wrap items-center gap-3">
-        <app-button type="submit" size="s" [loading]="saving()" data-testid="absence-save">{{ auth.isManager() ? 'Upiši odsustvo' : 'Pošalji na odobrenje' }}</app-button>
-        <span class="text-xs muted">{{ auth.isManager() ? 'Dan se odmah blokira za zakazivanje.' : 'Vlasnik ili administrativni radnik dobija obaveštenje i odobrava.' }}</span>
+        @if (editing()) {
+          <app-button type="submit" size="s" [loading]="saving()" data-testid="absence-save">Sačuvaj izmene</app-button>
+        } @else {
+          <app-button type="submit" size="s" [loading]="saving()" data-testid="absence-save">{{ auth.isManager() ? 'Upiši odsustvo' : 'Pošalji na odobrenje' }}</app-button>
+          <span class="text-xs muted">{{ auth.isManager() ? 'Dan se odmah blokira za zakazivanje.' : 'Vlasnik ili menadžer dobija obaveštenje i odobrava.' }}</span>
+        }
       </div>
     </form>
 
@@ -103,6 +114,9 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
               @if (a.status === 'pending' && auth.isManager()) {
                 <button type="button" appBtn size="s" (click)="approve(a)" [attr.data-testid]="'absence-approve-' + a.id"><span appIcon="check" aria-hidden="true"></span> Odobri</button>
                 <button type="button" appBtn theme="ghost" size="s" (click)="reject(a)" [attr.data-testid]="'absence-reject-' + a.id">Odbij</button>
+              }
+              @if (canEdit(a)) {
+                <button type="button" appBtn theme="secondary" size="s" (click)="edit(a)" [attr.data-testid]="'absence-edit-' + a.id"><span appIcon="edit" aria-hidden="true"></span> Izmeni</button>
               }
               @if (canRemove(a)) {
                 <button type="button" appBtn theme="ghost" size="s" (click)="remove(a)" [attr.data-testid]="'absence-remove-' + a.id"><span appIcon="trash" aria-hidden="true"></span> Ukloni</button>
@@ -189,6 +203,12 @@ export class AbsencesComponent {
   readonly affected = signal<AffectedAppointment[]>([]);
   readonly affectedLoading = signal(false);
   readonly myId = computed(() => this.auth.currentUser()?.id ?? null);
+  readonly editing = signal<StaffAbsence | null>(null);
+  readonly rangeMin = computed(() => {
+    const start = this.editing()?.starts_on;
+    return start && start < this.todayDate ? start : this.todayDate;
+  });
+  private readonly absenceForm = viewChild<ElementRef<HTMLFormElement>>('absenceForm');
 
   readonly staffId = new FormControl<number | null>(this.auth.currentUser()?.staff_member_id ?? null, Validators.required);
   readonly from = new FormControl(today(), { nonNullable: true, validators: Validators.required });
@@ -221,11 +241,35 @@ export class AbsencesComponent {
     });
   }
 
-  syncTo(): void {
-    if (this.to.value < this.from.value) this.to.setValue(this.from.value);
+  edit(absence: StaffAbsence): void {
+    this.editing.set(absence);
+    this.type.set(absence.type);
+    this.from.setValue(absence.starts_on);
+    this.to.setValue(absence.ends_on);
+    this.note.setValue(absence.note);
+    this.formError.set(null);
+    this.absenceForm()?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  cancelEdit(): void {
+    this.editing.set(null);
+    this.from.setValue(today());
+    this.to.setValue(today());
+    this.note.setValue(null);
+    this.formError.set(null);
+  }
+
+  canEdit(absence: StaffAbsence): boolean {
+    if (absence.status === 'rejected') return false;
+    return this.auth.isManager() || (absence.status === 'pending' && absence.requested_by === this.myId());
   }
 
   save(): void {
+    const editing = this.editing();
+    if (editing) {
+      this.saveEdit(editing);
+      return;
+    }
     const staffId = this.staffId.value;
     if (!staffId || !this.from.value || !this.to.value) {
       this.formError.set('Izaberi zaposlenog i period.');
@@ -247,6 +291,26 @@ export class AbsencesComponent {
         error: (err) => {
           this.saving.set(false);
           this.formError.set(apiErrorMessage(err, 'Upis nije uspeo.'));
+        },
+      });
+  }
+
+  private saveEdit(absence: StaffAbsence): void {
+    this.saving.set(true);
+    this.formError.set(null);
+    this.absenceService
+      .update(absence.id, { starts_on: this.from.value, ends_on: this.to.value, type: this.type(), note: this.note.value?.trim() || null })
+      .subscribe({
+        next: (updated) => {
+          this.saving.set(false);
+          this.toast.success('Odsustvo je izmenjeno.');
+          this.cancelEdit();
+          this.openId.set(null);
+          this.load(updated.id);
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.formError.set(apiErrorMessage(err, 'Izmena nije uspela.'));
         },
       });
   }

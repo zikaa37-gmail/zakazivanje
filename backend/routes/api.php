@@ -157,6 +157,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/staff-absences/list', [StaffAbsenceController::class, 'index']);
     Route::post('/staff-absences', [StaffAbsenceController::class, 'store']);
     Route::get('/staff-absences/{absence}/appointments', [StaffAbsenceController::class, 'appointments']);
+    Route::put('/staff-absences/{absence}', [StaffAbsenceController::class, 'update']);
     Route::delete('/staff-absences/{absence}', [StaffAbsenceController::class, 'destroy']);
     Route::post('/cancellation-fees/list', [CancellationFeeController::class, 'index']);
     Route::get('/clients/{client}/cancellation-status', [CancellationFeeController::class, 'clientStatus']);
