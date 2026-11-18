@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { AffectedAppointmentsComponent } from '../appointments/affected-appointments.component';
 import { AffectedAppointment } from '../../../core/models/staff-absence.model';
 import { Component, computed, inject, signal } from '@angular/core';
@@ -39,7 +40,7 @@ const PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#1d4ed8', '#15803d
 @Component({
   selector: 'app-staff-list',
   standalone: true,
-  imports: [AffectedAppointmentsComponent, TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
+  imports: [InfoTipComponent, AffectedAppointmentsComponent, TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './staff-list.component.html',
 })
 export class StaffListComponent {

@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CANCELLATION_DISCOUNT_TYPES, CancellationDiscountType } from '../../../core/models/cancellation-fee.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -32,7 +33,7 @@ import { clientName } from '../../../core/utils/client-name';
 @Component({
   selector: 'app-client-list',
   standalone: true,
-  imports: [ClientNamePipe, ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
+  imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
   templateUrl: './client-list.component.html',
 })
 export class ClientListComponent {

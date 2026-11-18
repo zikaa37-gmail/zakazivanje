@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -35,7 +36,7 @@ const PERIODS: { value: Period; label: string }[] = [
 @Component({
   selector: 'app-appointment-list',
   standalone: true,
-  imports: [ClientNamePipe, ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
+  imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
   templateUrl: './appointment-list.component.html',
 })
 export class AppointmentListComponent {

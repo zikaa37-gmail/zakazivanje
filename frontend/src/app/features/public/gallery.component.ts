@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../shared/components/info-tip/info-tip.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GalleryImage } from '../../core/models/gallery.model';
@@ -13,7 +14,7 @@ const SALON_FILTER = '__salon';
 @Component({
   selector: 'app-gallery',
   standalone: true,
-  imports: [RouterLink, ErrorMessageComponent, GalleryViewerComponent],
+  imports: [InfoTipComponent, RouterLink, ErrorMessageComponent, GalleryViewerComponent],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',
 })

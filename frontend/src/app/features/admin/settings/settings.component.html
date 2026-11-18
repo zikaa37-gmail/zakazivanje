@@ -1,7 +1,6 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Podešavanja</h1>
-    <p class="page-subtitle">Podaci o biznisu, izgled aplikacije i pravila zakazivanja</p>
+    <div class="page-title-row"><h1 class="page-title">Podešavanja</h1><app-info-tip heading="Podešavanja"><p>Podaci o biznisu, izgled aplikacije, radno vreme, pravila zakazivanja, plaćanje, obaveštenja i AI pomoćnik — svaka grupa je u svom tabu.</p><p class="mt-2">Izmene važe tek posle „Sačuvaj".</p></app-info-tip></div>
   </div>
   <app-button [loading]="saving()" (click)="save()" data-testid="settings-save">
     <span appIcon="check" aria-hidden="true"></span> Sačuvaj

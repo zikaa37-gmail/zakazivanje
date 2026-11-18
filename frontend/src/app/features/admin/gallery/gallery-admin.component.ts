@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { CdkDrag, CdkDragDrop, CdkDropList, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -23,7 +24,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 @Component({
   selector: 'app-gallery-admin',
   standalone: true,
-  imports: [CdkDrag, CdkDropList, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, ToggleComponent],
+  imports: [InfoTipComponent, CdkDrag, CdkDropList, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, ToggleComponent],
   templateUrl: './gallery-admin.component.html',
   styleUrl: './gallery-admin.component.scss',
 })

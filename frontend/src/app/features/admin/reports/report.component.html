@@ -1,7 +1,6 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Izveštaji</h1>
-    <p class="page-subtitle">{{ sendOnly() ? 'Izaberi izveštaj i pošalji ga vlasniku. Brojke pregleda vlasnik.' : canChoose() ? 'Zbirni ili po zaposlenom, za dan, nedelju ili mesec' : 'Tvoj rad za dan, nedelju ili mesec' }}</p>
+    <div class="page-title-row"><h1 class="page-title">Izveštaji</h1><app-info-tip heading="Izveštaji"><p>{{ sendOnly() ? 'Izaberi izveštaj i pošalji ga vlasniku na mejl ili WhatsApp. Brojke pregleda vlasnik.' : canChoose() ? 'Zbirni izveštaj ili po zaposlenom, za dan, nedelju ili mesec.' : 'Tvoj rad za dan, nedelju ili mesec.' }}</p><p class="mt-2">„Otvori PDF" pravi izveštaj za štampu, „Pošalji" ga šalje na mejl ili WhatsApp.</p></app-info-tip></div>
   </div>
 </div>
 

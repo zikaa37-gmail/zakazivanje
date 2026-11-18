@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,7 +23,7 @@ import { TeamTabsComponent } from '../staff/team-tabs.component';
 @Component({
   selector: 'app-team-list',
   standalone: true,
-  imports: [TeamTabsComponent, ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, SrDateTimePipe, ToggleComponent],
+  imports: [InfoTipComponent, TeamTabsComponent, ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, SrDateTimePipe, ToggleComponent],
   templateUrl: './team-list.component.html',
 })
 export class TeamListComponent {

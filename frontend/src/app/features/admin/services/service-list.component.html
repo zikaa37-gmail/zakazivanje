@@ -1,7 +1,6 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Usluge</h1>
-    <p class="page-subtitle">Usluge koje klijenti vide i mogu da zakažu</p>
+    <div class="page-title-row"><h1 class="page-title">Usluge</h1><app-info-tip heading="Usluge"><p>Usluge koje klijenti vide i mogu da zakažu, grupisane po kategorijama (tab „Kategorije").</p><p class="mt-2">Meni „⋮": izmena, kopija, privremena pauza, onemogući (skloni iz ponude). Obriše se samo usluga koja nikad nije zakazana.</p></app-info-tip></div>
   </div>
   <div class="flex flex-wrap gap-2">
     @if (aiAvailable()) {
@@ -10,7 +9,7 @@
       </button>
     }
     <button type="button" appBtn (click)="openForm()" data-testid="service-add">
-      <span appIcon="plus" aria-hidden="true"></span> Nova usluga
+      <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova usluga</span>
     </button>
   </div>
 </div>

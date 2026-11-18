@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,12 +19,11 @@ import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 @Component({
   selector: 'app-notes',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, SrDateTimePipe],
+  imports: [InfoTipComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, SrDateTimePipe],
   template: `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Beleške</h1>
-        <p class="page-subtitle">Šta nedostaje, šta se pokvarilo, šta treba da znaju ostali. „Preuzimam" — da svi vide da se neko već bavi time.</p>
+        <div class="page-title-row"><h1 class="page-title">Beleške</h1><app-info-tip heading="Beleške"><p>Šta nedostaje, šta se pokvarilo, šta treba da znaju ostali.</p><p class="mt-2">Izaberi koga obaveštavaš. „Preuzimam" — da svi vide da se neko već bavi time; „Urađeno" kad je gotovo. Na belešku može da se odgovori, i tada je ostalima ponovo nepročitana.</p></app-info-tip></div>
       </div>
     </div>
 

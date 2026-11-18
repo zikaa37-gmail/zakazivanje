@@ -1,10 +1,9 @@
 <div class="page-header" [class.chat-hide-mobile]="showConversation()">
   <div>
-    <h1 class="page-title">Poruke</h1>
-    <p class="page-subtitle">Razgovori sa klijentima — svaki traje do kraja dana ili dok ga ne završite</p>
+    <div class="page-title-row"><h1 class="page-title">Poruke</h1><app-info-tip heading="Poruke"><p>Razgovori sa klijentima. Svaki razgovor traje do kraja dana ili dok ga ne završite („Završi"); kasnija poruka klijenta otvara nov.</p><p class="mt-2">Ako klijent ne pročita vašu poruku za 15 minuta, stiže mu i mejl / WhatsApp. Pisati se može samo klijentima sa nalogom u aplikaciji.</p></app-info-tip></div>
   </div>
   @if (auth.isManager()) {
-    <button type="button" appBtn (click)="picking.set(!picking())" data-testid="chat-new"><span appIcon="plus" aria-hidden="true"></span> Nova poruka</button>
+    <button type="button" appBtn (click)="picking.set(!picking())" data-testid="chat-new"><span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poruka</span></button>
   }
 </div>
 

@@ -1,10 +1,9 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Klijenti</h1>
-    <p class="page-subtitle">{{ total() }} {{ total() === 1 ? 'klijent' : 'klijenata' }}</p>
+    <div class="page-title-row"><h1 class="page-title">Klijenti</h1>@if (!loading()) {<span class="page-count">{{ total() }}</span>}<app-info-tip heading="Klijenti"><p>Svi klijenti salona, i oni bez naloga (zakazani telefonom). Broj pored naslova je koliko ih je.</p><p class="mt-2">Pretraga radi po imenu, nadimku, telefonu i emailu. Meni „⋮": istorijat i zona, izmena, poruka, poziv / WhatsApp / Viber.</p></app-info-tip></div>
   </div>
   <button type="button" appBtn (click)="openForm()" data-testid="client-add">
-    <span appIcon="plus" aria-hidden="true"></span> Novi klijent
+    <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Novi klijent</span>
   </button>
 </div>
 

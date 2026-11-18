@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../shared/components/info-tip/info-tip.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PublicReviews } from '../../core/models/review.model';
@@ -10,12 +11,11 @@ import { ReviewSummaryComponent } from '../../shared/components/review-summary/r
 @Component({
   selector: 'app-reviews',
   standalone: true,
-  imports: [RouterLink, ErrorMessageComponent, ReviewCardComponent, ReviewSummaryComponent],
+  imports: [InfoTipComponent, RouterLink, ErrorMessageComponent, ReviewCardComponent, ReviewSummaryComponent],
   template: `
     <div class="content-container py-4 md:py-8 flex flex-col gap-4 max-w-3xl">
       <div>
-        <h1 class="page-title">Utisci klijenata</h1>
-        <p class="page-subtitle">Ocene posle završenih termina</p>
+        <div class="page-title-row"><h1 class="page-title">Utisci klijenata</h1><app-info-tip heading="Utisci klijenata"><p>Ocene koje su klijenti dali posle završenih termina.</p></app-info-tip></div>
       </div>
       <app-error-message [message]="error()" />
       @if (loading() && !data()) {

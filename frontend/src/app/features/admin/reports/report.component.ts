@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { STATUS_LABELS } from '../../../core/models/appointment.model';
 import { REPORT_PERIODS, Report, ReportChannel, ReportPeriod, ReportQuery } from '../../../core/models/report.model';
@@ -21,7 +22,7 @@ type Scope = 'summary' | 'staff' | 'mine';
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
+  imports: [InfoTipComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
   templateUrl: './report.component.html',
 })
 export class ReportComponent {

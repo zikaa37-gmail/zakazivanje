@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, DestroyRef, computed, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -30,7 +31,7 @@ interface Draft {
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
+  imports: [InfoTipComponent, ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })
