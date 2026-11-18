@@ -8,7 +8,6 @@ export interface StaffTerm {
 export const STAFF_TERMS: Record<BusinessCategory, StaffTerm[]> = {
   hair_salon: [
     { term: 'frizer', genitive: 'frizera' },
-    { term: 'frizerka', genitive: 'frizerke' },
     { term: 'stilista', genitive: 'stiliste' },
   ],
   barber: [
@@ -17,7 +16,6 @@ export const STAFF_TERMS: Record<BusinessCategory, StaffTerm[]> = {
   ],
   beauty_salon: [
     { term: 'kozmetičar', genitive: 'kozmetičara' },
-    { term: 'kozmetičarka', genitive: 'kozmetičarke' },
     { term: 'terapeut', genitive: 'terapeuta' },
   ],
   spa: [
@@ -26,7 +24,6 @@ export const STAFF_TERMS: Record<BusinessCategory, StaffTerm[]> = {
   ],
   nail_salon: [
     { term: 'manikir', genitive: 'manikira' },
-    { term: 'manikirka', genitive: 'manikirke' },
     { term: 'nail tehničar', genitive: 'nail tehničara' },
   ],
   massage: [

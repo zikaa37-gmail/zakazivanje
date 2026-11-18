@@ -5,7 +5,7 @@
 **Šta radi u aplikaciji:**
 
 - predlaže usluge i kategorije po delatnosti salona („Predloži usluge");
-- predlaže naziv za zaposlene („frizer", „kozmetičarka"...).
+- predlaže naziv za zaposlene („frizer", „kozmetičar"...).
 
 Sve AI funkcije se vide samo kad je AI uključen (Podešavanja → AI pomoćnik). Bez AI-a aplikacija radi
 normalno, a predlozi usluga se uzimaju iz gotovih šablona.

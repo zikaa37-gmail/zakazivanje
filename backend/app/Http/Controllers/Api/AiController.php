@@ -114,7 +114,7 @@ class AiController extends Controller
             .'Business type: '.($data['category'] ?? $settings->category)."\n"
             .'Business description: '.(trim($data['description'] ?? '') ?: ($settings->description ?: '—'))."\n\n"
             .'Give up to 4 options, best first. Each option has the noun in the nominative singular, lowercase (e.g. "frizer"), '
-            .'and the same noun in the genitive singular (e.g. "frizera"), as used in "kod tvog ___". Prefer a gender-neutral or masculine generic form.';
+            .'and the same noun in the genitive singular (e.g. "frizera"), as used in "kod tvog ___". Use only the masculine generic form, which in Serbian names the occupation for both men and women ("kozmetičar", "trener"), never a feminine form like "kozmetičarka".';
 
         $result = $this->ai->json($prompt, [
             'type' => 'object',
