@@ -17,8 +17,8 @@ CREATE TABLE `zk_shifts` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_shifts` VALUES (16,'Pre podne','09:00:00','14:00:00',0,'2026-11-17 17:46:56','2026-11-17 17:46:56'),(17,'Popodne','14:00:00','20:00:00',1,'2026-11-17 17:46:56','2026-11-17 17:46:56'),(18,'Ceo dan','09:00:00','20:00:00',2,'2026-11-17 17:46:56','2026-11-17 17:46:56');
+INSERT INTO `zk_shifts` VALUES (19,'Pre podne','09:00:00','14:00:00',0,'2026-11-18 15:32:31','2026-11-18 15:32:31'),(20,'Popodne','14:00:00','20:00:00',1,'2026-11-18 15:32:31','2026-11-18 15:32:31'),(21,'Ceo dan','09:00:00','20:00:00',2,'2026-11-18 15:32:31','2026-11-18 15:32:31');
 
 SET FOREIGN_KEY_CHECKS=1;

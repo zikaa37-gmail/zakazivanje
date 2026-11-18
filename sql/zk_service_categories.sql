@@ -17,7 +17,7 @@ CREATE TABLE `zk_service_categories` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `zk_service_categories_name_unique` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 INSERT INTO `zk_service_categories` VALUES (1,'Masaže',0,1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(2,'Depilacija i epilacija',1,1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(3,'Nokti',2,1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(4,'Tretmani lica',3,1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(5,'Telo i aparati',4,1,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(6,'Frizer — šišanje',5,0,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(7,'Frizer — boja',6,0,'2026-11-17 13:07:44','2026-11-17 13:07:44'),(8,'Frizer — stilizovanje i nega',7,0,'2026-11-17 13:07:44','2026-11-17 13:07:44');
 

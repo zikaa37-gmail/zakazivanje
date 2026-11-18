@@ -21,8 +21,8 @@ CREATE TABLE `zk_chat_messages` (
   KEY `zk_chat_messages_user_id_foreign` (`user_id`),
   CONSTRAINT `zk_chat_messages_chat_session_id_foreign` FOREIGN KEY (`chat_session_id`) REFERENCES `zk_chat_sessions` (`id`) ON DELETE CASCADE,
   CONSTRAINT `zk_chat_messages_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_chat_messages` VALUES (1,1,4,'cao',NULL,'2026-11-18 11:02:02','2026-11-18 11:02:02'),(3,1,4,'da li si uspeo da pregledas app, kako ti izgleda',NULL,'2026-11-18 11:12:08','2026-11-18 11:12:08');
+INSERT INTO `zk_chat_messages` VALUES (1,1,4,'cao',NULL,'2026-11-18 11:02:02','2026-11-18 11:02:02'),(3,1,4,'da li si uspeo da pregledas app, kako ti izgleda',NULL,'2026-11-18 11:12:08','2026-11-18 11:12:08'),(7,4,1,'cao Petre, hteo sam da te obavestim da nisi platio uslugu i da je preostali dug 2000 dinara',NULL,'2026-11-18 16:19:07','2026-11-18 16:19:07');
 
 SET FOREIGN_KEY_CHECKS=1;

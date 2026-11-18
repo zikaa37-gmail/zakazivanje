@@ -32,8 +32,8 @@ CREATE TABLE `zk_chat_sessions` (
   CONSTRAINT `zk_chat_sessions_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `zk_chat_sessions_closed_by_foreign` FOREIGN KEY (`closed_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_chat_sessions_started_by_foreign` FOREIGN KEY (`started_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_chat_sessions` VALUES (1,3,NULL,NULL,4,4,NULL,NULL,NULL,'2026-11-18 11:12:08','2026-11-18 11:02:02','2026-11-18 11:12:08');
+INSERT INTO `zk_chat_sessions` VALUES (1,3,NULL,NULL,4,4,NULL,'2026-11-18 15:47:39',1,'2026-11-18 11:12:08','2026-11-18 11:02:02','2026-11-18 15:47:39'),(4,3,NULL,'Naplata duga',1,1,NULL,NULL,NULL,'2026-11-18 16:19:07','2026-11-18 16:19:07','2026-11-18 16:19:07');
 
 SET FOREIGN_KEY_CHECKS=1;

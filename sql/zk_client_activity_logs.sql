@@ -22,7 +22,8 @@ CREATE TABLE `zk_client_activity_logs` (
   KEY `zk_client_activity_logs_user_id_created_at_index` (`user_id`,`created_at`),
   CONSTRAINT `zk_client_activity_logs_actor_id_foreign` FOREIGN KEY (`actor_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_client_activity_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_client_activity_logs` VALUES (1,3,'availability_viewed','{\"from\": \"2026-11-18\", \"staff_member_id\": null}',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36','2026-11-18 15:37:39'),(2,3,'booked','{\"status\": \"pending\", \"starts_at\": \"2026-11-19 09:00\", \"appointment_id\": 2}',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36','2026-11-18 15:37:43');
 
 SET FOREIGN_KEY_CHECKS=1;
