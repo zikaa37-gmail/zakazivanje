@@ -22,7 +22,7 @@
 <app-error-message [message]="error()" />
 
 @if (view() === 'categories') {
-  <app-category-list [categories]="categories()" (changed)="reloadAll()" />
+  <app-category-list [categories]="categories()" [loaded]="categoriesLoaded()" (changed)="reloadAll()" />
 } @else if (loading() && services().length === 0) {
 } @else if (services().length === 0) {
   <div class="card empty-state flex flex-col items-center gap-3">

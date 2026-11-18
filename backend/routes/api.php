@@ -120,6 +120,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::delete('/waitlist/{entry}', [WaitlistController::class, 'adminDestroy']);
 
     Route::post('/clients/list', [ClientController::class, 'index']);
+    Route::post('/clients/directory', [ClientController::class, 'directory']);
     Route::post('/clients', [ClientController::class, 'store']);
     Route::put('/clients/{client}/nickname', [ClientController::class, 'nickname']);
 

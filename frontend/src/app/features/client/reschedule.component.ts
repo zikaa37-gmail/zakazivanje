@@ -30,6 +30,7 @@ export class RescheduleComponent implements OnInit {
   readonly staffId = signal<number | null>(null);
   readonly windowStart = signal(today());
   readonly days = signal<DayAvailability[]>([]);
+  readonly loadingDays = signal(true);
   readonly date = signal<string | null>(null);
   readonly slots = signal<Slot[]>([]);
   readonly time = signal<string | null>(null);
@@ -104,7 +105,9 @@ export class RescheduleComponent implements OnInit {
   }
 
   private loadDays(): void {
+    this.loadingDays.set(true);
     this.booking.days(this.serviceIds(), this.staffId(), this.windowStart(), WINDOW, this.appointment().id).subscribe((days) => {
+      this.loadingDays.set(false);
       this.days.set(days);
       const date = this.date();
       if (!date || !days.some((d) => d.date === date && d.available)) {

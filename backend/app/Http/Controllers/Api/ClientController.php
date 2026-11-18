@@ -46,6 +46,16 @@ class ClientController extends Controller
             ->through(fn (User $user) => $this->present($user));
     }
 
+    public function directory()
+    {
+        return User::query()
+            ->where('role', User::ROLE_CLIENT)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get()
+            ->map(fn (User $user) => $this->present($user->makeHidden('avatar')));
+    }
+
     public function store(Request $request)
     {
         $client = User::create([...$this->validated($request), 'role' => User::ROLE_CLIENT]);

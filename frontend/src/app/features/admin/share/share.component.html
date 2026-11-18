@@ -20,7 +20,8 @@
 
     @switch (template()) {
       @case ('promotion') {
-        @if (activePromotions().length === 0) {
+        @if (!promotionsLoaded()) {
+        } @else if (activePromotions().length === 0) {
           <p class="text-sm muted mb-3">Nema aktivnih akcija — dodaj ih u Cene i akcije.</p>
         } @else {
           <div class="field">

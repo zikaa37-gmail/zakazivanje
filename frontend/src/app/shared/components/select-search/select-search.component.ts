@@ -3,17 +3,22 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { switchMap } from 'rxjs';
 import { IconDirective } from '../../directives/icon.directive';
+import { matchesSearch } from '../../../core/utils/search';
+import { SpinnerComponent } from '../spinner/spinner.component';
+
+const MAX_SHOWN = 50;
 
 export interface SelectSearchOption<T> {
   value: T;
   label: string;
   hint?: string;
+  search?: string;
 }
 
 @Component({
   selector: 'app-select-search',
   standalone: true,
-  imports: [IconDirective],
+  imports: [IconDirective, SpinnerComponent],
   templateUrl: './select-search.component.html',
   styleUrl: './select-search.component.scss',
   host: {
@@ -26,6 +31,7 @@ export class SelectSearchComponent<T extends string | number> {
   readonly placeholder = input('Pretraži...');
   readonly inputId = input<string | null>(null);
   readonly remote = input(false);
+  readonly loading = input(false);
   readonly testId = input('', { alias: 'data-testid' });
 
   readonly searched = output<string>();
@@ -38,8 +44,11 @@ export class SelectSearchComponent<T extends string | number> {
 
   readonly filteredOptions = computed(() => {
     const q = this.query().trim().toLowerCase();
-    if (!q || this.remote()) return this.options();
-    return this.options().filter((o) => `${o.label} ${o.hint ?? ''}`.toLowerCase().includes(q));
+    if (this.remote()) return this.options();
+    if (!q) return this.options().slice(0, MAX_SHOWN);
+    return this.options()
+      .filter((o) => matchesSearch(`${o.label} ${o.hint ?? ''} ${o.search ?? ''}`, q))
+      .slice(0, MAX_SHOWN);
   });
 
   readonly selectedLabel = computed(() => {

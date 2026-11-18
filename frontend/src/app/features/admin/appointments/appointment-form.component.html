@@ -18,10 +18,9 @@
       <app-select-search
         [control]="clientControl"
         [options]="clientOptions()"
-        [remote]="true"
+        [loading]="directory.loading()"
         inputId="a-client"
         placeholder="Ime, telefon ili email..."
-        (searched)="searchClients($event)"
         data-testid="appointment-client-search"
       />
       @if (selectedClient(); as client) {
@@ -71,7 +70,7 @@
           <button type="button" class="chip" [class.selected]="time.value === slot.time" (click)="time.setValue(slot.time)" [attr.data-testid]="'suggest-' + slot.time">{{ slot.time }}</button>
         }
       </div>
-      @if (form.controls.staff_member_id.value && selectedServices().length && !suggestions().length) {
+      @if (form.controls.staff_member_id.value && selectedServices().length && !suggestions().length && !suggestionsLoading()) {
         <span class="text-xs muted">Nema slobodnih termina po radnom vremenu tog dana — možeš ručno da upišeš vreme.</span>
       }
     </div>

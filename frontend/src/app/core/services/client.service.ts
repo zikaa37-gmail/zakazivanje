@@ -1,13 +1,15 @@
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ClientDirectoryService } from './client-directory.service';
 import { Client, ClientHistory, ClientPayload, DisciplineZone, Paginated, ZonePayload } from '../models/client.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/clients`;
+  private directory = inject(ClientDirectoryService);
 
   list(search: string, page = 1, zone: DisciplineZone | null = null, options: { context?: HttpContext } = {}): Observable<Paginated<Client>> {
     return this.http.post<Paginated<Client>>(`${this.api}/list`, { search: search || null, page, zone }, options);
@@ -18,19 +20,19 @@ export class ClientService {
   }
 
   setZone(id: number, payload: ZonePayload): Observable<Client> {
-    return this.http.put<Client>(`${this.api}/${id}/zone`, payload);
+    return this.http.put<Client>(`${this.api}/${id}/zone`, payload).pipe(tap(() => this.directory.invalidate()));
   }
 
   create(payload: ClientPayload): Observable<Client> {
-    return this.http.post<Client>(this.api, payload);
+    return this.http.post<Client>(this.api, payload).pipe(tap(() => this.directory.invalidate()));
   }
 
   update(id: number, payload: ClientPayload): Observable<Client> {
-    return this.http.put<Client>(`${this.api}/${id}`, payload);
+    return this.http.put<Client>(`${this.api}/${id}`, payload).pipe(tap(() => this.directory.invalidate()));
   }
 
   setNickname(id: number, nickname: string | null): Observable<Client> {
-    return this.http.put<Client>(`${this.api}/${id}/nickname`, { nickname });
+    return this.http.put<Client>(`${this.api}/${id}/nickname`, { nickname }).pipe(tap(() => this.directory.invalidate()));
   }
 
   deleteCheck(id: number): Observable<{ history: number; future: number }> {
@@ -38,6 +40,6 @@ export class ClientService {
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${id}`);
+    return this.http.delete<void>(`${this.api}/${id}`).pipe(tap(() => this.directory.invalidate()));
   }
 }

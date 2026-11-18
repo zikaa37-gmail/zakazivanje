@@ -25,6 +25,7 @@ export class CategoryListComponent {
   private toast = inject(ToastService);
 
   readonly categories = input.required<ServiceCategory[]>();
+  readonly loaded = input(true);
   readonly changed = output<void>();
 
   readonly newName = new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] });

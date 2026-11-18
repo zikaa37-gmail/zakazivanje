@@ -18,7 +18,11 @@
   @if (open()) {
     <ul class="app-select-search-list" role="listbox">
       @if (filteredOptions().length === 0) {
-        <li class="app-select-search-empty">Nema rezultata.</li>
+        @if (loading()) {
+          <li class="app-select-search-empty flex items-center gap-2" data-testid="select-search-loading"><app-spinner [size]="14" /> Učitavanje…</li>
+        } @else {
+          <li class="app-select-search-empty">Nema rezultata.</li>
+        }
       }
       @for (option of filteredOptions(); track option.value) {
         <li>

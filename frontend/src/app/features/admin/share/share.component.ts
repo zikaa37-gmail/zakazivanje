@@ -72,6 +72,7 @@ export class ShareComponent {
   readonly format = signal<ImageFormat>('portrait');
   readonly template = signal<TemplateKind>('book');
   readonly promotions = signal<Promotion[]>([]);
+  readonly promotionsLoaded = signal(false);
   readonly promotionId = signal<number | null>(null);
   readonly services = signal<SalonService[]>([]);
   readonly category = signal<string>('');
@@ -161,6 +162,7 @@ export class ShareComponent {
     this.loadBookQr();
     this.promotionService.list().subscribe((list) => {
       this.promotions.set(list);
+      this.promotionsLoaded.set(true);
       this.promotionId.set(this.activePromotions()[0]?.id ?? null);
     });
     this.catalog.list().subscribe((list) => this.services.set(list));
