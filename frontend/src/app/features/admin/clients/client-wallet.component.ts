@@ -1,7 +1,9 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { PAYMENT_LABELS, PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
-import { WALLET_KIND_LABELS, Wallet, WalletEntry } from '../../../core/models/wallet.model';
+import { GIFT_CARD_STATUS, WALLET_KIND_LABELS, Wallet, WalletEntry, formatGiftCode } from '../../../core/models/wallet.model';
+import { IconDirective } from '../../../shared/directives/icon.directive';
+import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WalletService } from '../../../core/services/wallet.service';
@@ -16,17 +18,17 @@ type Mode = 'deposit' | 'gift' | 'adjust';
 @Component({
   selector: 'app-client-wallet',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonDirective, InputDirective, RsdPipe, SrDateTimePipe],
+  imports: [ReactiveFormsModule, ButtonDirective, IconDirective, InputDirective, RsdPipe, SrDatePipe, SrDateTimePipe],
   template: `
     <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-3" data-testid="client-wallet">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div class="text-sm font-semibold">Stanje (uplate unapred i poklon kartice)</div>
+          <div class="text-sm font-semibold">Stanje (uplate unapred)</div>
           <div class="text-xl font-bold" data-testid="wallet-balance">{{ wallet()?.balance ?? 0 | rsd }}</div>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" appBtn theme="secondary" size="s" (click)="open('deposit')" data-testid="wallet-deposit">Uplata unapred</button>
-          <button type="button" appBtn theme="secondary" size="s" (click)="open('gift')" data-testid="wallet-gift">Poklon kartica</button>
+          <button type="button" appBtn theme="secondary" size="s" (click)="open('gift')" data-testid="wallet-gift">Dodaj poklon karticu</button>
           @if (isManager()) {
             <button type="button" appBtn theme="ghost" size="s" (click)="open('adjust')" data-testid="wallet-adjust">Ispravka</button>
           }
@@ -37,8 +39,8 @@ type Mode = 'deposit' | 'gift' | 'adjust';
         <div class="flex flex-col gap-2 rounded-lg bg-[var(--color-bg)] p-3" data-testid="wallet-form">
           @if (m === 'gift') {
             <label class="text-sm font-semibold" for="wallet-code">Kod poklon kartice</label>
-            <input id="wallet-code" appInput size="m" [formControl]="code" placeholder="npr. AB3K-9QXZ" autocomplete="off" data-testid="wallet-code" />
-            <span class="text-xs muted">Ceo iznos kartice prelazi na stanje klijenta.</span>
+            <input id="wallet-code" appInput size="m" [formControl]="codeInput" placeholder="npr. AB3K-9QXZ" autocomplete="off" data-testid="wallet-code" />
+            <span class="text-xs muted">Fizička kartica postaje digitalna: vezuje se za nalog klijenta, on vidi njeno stanje i ne mora da je nosi.</span>
           } @else {
             <label class="text-sm font-semibold" for="wallet-amount">{{ m === 'adjust' ? 'Iznos (minus = umanjenje)' : 'Iznos' }}</label>
             <input id="wallet-amount" appInput size="m" type="number" step="100" inputmode="numeric" [formControl]="amount" data-testid="wallet-amount" />
@@ -52,9 +54,21 @@ type Mode = 'deposit' | 'gift' | 'adjust';
             <input appInput size="m" [formControl]="note" [placeholder]="m === 'adjust' ? 'Razlog ispravke (obavezno)' : 'Napomena (nije obavezno)'" data-testid="wallet-note" />
           }
           <div class="flex gap-2">
-            <button type="button" appBtn size="s" [disabled]="saving()" (click)="save(m)" data-testid="wallet-save">{{ m === 'gift' ? 'Iskoristi karticu' : 'Sačuvaj' }}</button>
+            <button type="button" appBtn size="s" [disabled]="saving()" (click)="save(m)" data-testid="wallet-save">{{ m === 'gift' ? 'Dodaj na nalog' : 'Sačuvaj' }}</button>
             <button type="button" appBtn theme="ghost" size="s" (click)="mode.set(null)">Odustani</button>
           </div>
+        </div>
+      }
+
+      @if (cards().length > 0) {
+        <div class="flex flex-col gap-1 text-sm" data-testid="wallet-cards">
+          <div class="text-xs font-semibold muted">Poklon kartice</div>
+          @for (c of cards(); track c.id) {
+            <div class="flex items-center justify-between gap-2" [class.is-dimmed]="c.status !== 'active'">
+              <span><span appIcon="gift" [iconSize]="14" aria-hidden="true"></span> <span class="font-mono">{{ code(c.code) }}</span> · {{ statusInfo[c.status].label.toLowerCase() }}{{ c.expires_on ? ' · do ' + (c.expires_on | srDate) : '' }}</span>
+              <span class="font-semibold">{{ c.balance | rsd }} <span class="muted font-normal">/ {{ c.amount | rsd }}</span></span>
+            </div>
+          }
         </div>
       }
 
@@ -63,7 +77,7 @@ type Mode = 'deposit' | 'gift' | 'adjust';
           @for (e of shown(); track e.id) {
             <div class="flex items-start justify-between gap-3 py-1.5 border-t border-[var(--color-border)]">
               <div class="min-w-0">
-                <div>{{ kindLabel(e) }}{{ e.payment_method ? ' · ' + paymentLabel(e) : '' }}{{ e.gift_card ? ' · ' + e.gift_card.code : '' }}</div>
+                <div>{{ kindLabel(e) }}{{ e.payment_method ? ' · ' + paymentLabel(e) : '' }}</div>
                 <div class="text-xs muted">{{ e.created_at | srDateTime }}{{ e.author ? ' · ' + e.author.first_name : '' }}{{ e.note ? ' · ' + e.note : '' }}</div>
               </div>
               <span class="font-semibold shrink-0" [class.text-[var(--color-success)]]="e.amount > 0">{{ e.amount > 0 ? '+' : '' }}{{ e.amount | rsd }}</span>
@@ -92,13 +106,16 @@ export class ClientWalletComponent implements OnInit {
   readonly showAll = signal(false);
   readonly amount = new FormControl<number | null>(null);
   readonly note = new FormControl('', { nonNullable: true });
-  readonly code = new FormControl('', { nonNullable: true });
+  readonly codeInput = new FormControl('', { nonNullable: true });
   readonly isManager = this.auth.isManager;
+  readonly statusInfo = GIFT_CARD_STATUS;
+  readonly cards = computed(() => this.wallet()?.gift_cards ?? []);
   readonly entries = computed(() => this.wallet()?.entries ?? []);
+  readonly code = formatGiftCode;
   readonly shown = computed(() => (this.showAll() ? this.entries() : this.entries().slice(0, 5)));
 
   ngOnInit(): void {
-    this.walletService.forClient(this.clientId()).subscribe({ next: (w) => this.wallet.set(w), error: () => this.wallet.set({ balance: 0, entries: [] }) });
+    this.walletService.forClient(this.clientId()).subscribe({ next: (w) => this.wallet.set(w), error: () => this.wallet.set({ balance: 0, gift_cards: [], entries: [] }) });
   }
 
   kindLabel(e: WalletEntry): string {
@@ -113,7 +130,7 @@ export class ClientWalletComponent implements OnInit {
     this.mode.set(mode);
     this.amount.reset(null);
     this.note.reset('');
-    this.code.reset('');
+    this.codeInput.reset('');
     this.method.set(null);
   }
 
@@ -127,7 +144,7 @@ export class ClientWalletComponent implements OnInit {
       this.toast.error('Upiši iznos i razlog ispravke.');
       return;
     }
-    if (mode === 'gift' && !this.code.value.trim()) {
+    if (mode === 'gift' && !this.codeInput.value.trim()) {
       this.toast.error('Upiši kod poklon kartice.');
       return;
     }
@@ -137,14 +154,14 @@ export class ClientWalletComponent implements OnInit {
         ? this.walletService.deposit(id, amount, this.method()!, this.note.value.trim() || null)
         : mode === 'adjust'
           ? this.walletService.adjust(id, amount, this.note.value.trim())
-          : this.walletService.redeemForClient(id, this.code.value.trim());
+          : this.walletService.claimForClient(id, this.codeInput.value.trim());
     this.saving.set(true);
     request.subscribe({
       next: (w) => {
         this.saving.set(false);
         this.wallet.set(w);
         this.mode.set(null);
-        this.toast.success(mode === 'gift' ? 'Poklon kartica je iskorišćena — iznos je na stanju.' : 'Stanje je ažurirano.');
+        this.toast.success(mode === 'gift' ? 'Poklon kartica je dodata na nalog klijenta.' : 'Stanje je ažurirano.');
       },
       error: (err) => {
         this.saving.set(false);

@@ -131,6 +131,15 @@ class Appointment extends Model
         return max(0.0, round($this->dueAmount() - $this->paidAmount(), 2));
     }
 
+    public function amountLeft(): float
+    {
+        if ($this->status === self::STATUS_COMPLETED) {
+            return $this->outstanding();
+        }
+
+        return max(0.0, round((float) $this->total - $this->paidAmount(), 2));
+    }
+
     public function scopeOutstanding(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_COMPLETED)

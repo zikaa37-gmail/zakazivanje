@@ -3,14 +3,20 @@
     <div class="page-title-row">
       <h1 class="page-title">Poklon kartice</h1>
       <app-info-tip heading="Poklon kartice">
-        <p>Prodaja poklon kartica: kupac plati iznos, a dobija kod (i karticu za štampu) koji poklanja.</p>
-        <p class="mt-2">Kad dođe, kod se unosi u Klijenti → Istorijat → Stanje → „Poklon kartica“, ili ga klijent sam unese u profilu. Iznos prelazi na njegovo stanje, a usluge se plaćaju „Sa stanja“.</p>
+        <p><strong>Digitalna</strong>: kupac kaže kome poklanja — kartica se pojavi na nalogu tog klijenta, on vidi stanje i plaća njome.</p>
+        <p class="mt-2"><strong>Fizička</strong>: na praznu karticu upišeš kod koji aplikacija napravi (i broj kartice ako je odštampan). Važi na donosioca; klijent je može dodati na svoj nalog upisom koda (Profil), ili ti u Klijenti → Istorijat.</p>
+        <p class="mt-2">Plaća se pri završetku termina („Poklon kartica“) ili sam klijent u „Moji termini“ — u celosti ili delimično, ostatak drugim načinom.</p>
       </app-info-tip>
     </div>
   </div>
-  <button type="button" appBtn size="s" (click)="openForm()" data-testid="gift-card-add">
-    <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poklon kartica</span>
-  </button>
+  <div class="flex gap-2">
+    <button type="button" appBtn theme="secondary" size="s" (click)="openCheck()" data-testid="gift-check-open">
+      <span appIcon="search" aria-hidden="true"></span><span class="max-sm:sr-only">Proveri kod</span>
+    </button>
+    <button type="button" appBtn size="s" (click)="openForm()" data-testid="gift-card-add">
+      <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poklon kartica</span>
+    </button>
+  </div>
 </div>
 
 <div class="sticky-toolbar">
@@ -20,7 +26,7 @@
         <button type="button" class="chip" [class.selected]="status() === f.value" (click)="status.set(f.value)" [attr.data-testid]="'gift-filter-' + (f.value ?? 'all')">{{ f.label }}</button>
       }
     </div>
-    <input appInput size="s" type="search" class="flex-1 min-w-[10rem]" [formControl]="search" placeholder="Kod, kupac ili za koga..." data-testid="gift-search" />
+    <input appInput size="s" type="search" class="flex-1 min-w-[10rem]" [formControl]="search" placeholder="Kod, broj, kupac ili klijent..." data-testid="gift-search" />
   </div>
 </div>
 
@@ -29,7 +35,7 @@
   <div class="card empty-state">Nema poklon kartica za ovaj prikaz.</div>
 } @else {
   @if (status() === 'active') {
-    <p class="text-sm muted mb-2">Aktivnih: {{ cards().length }} · ukupno {{ activeTotal() | rsd }} (obaveza salona prema kupcima).</p>
+    <p class="text-sm muted mb-2">Aktivnih: {{ cards().length }} · preostalo {{ activeTotal() | rsd }} (obaveza salona).</p>
   }
   <div class="card flex flex-col">
     @for (c of cards(); track c.id) {
@@ -39,17 +45,22 @@
           <div class="flex flex-wrap items-center gap-2">
             <span class="font-mono font-semibold tracking-wider">{{ code(c) }}</span>
             <span [class]="'badge ' + statusInfo[c.status].badge">{{ statusInfo[c.status].label }}</span>
+            <span class="badge badge-neutral">{{ c.kind === 'digital' ? 'Digitalna' : 'Fizička' + (c.card_number ? ' br. ' + c.card_number : '') }}</span>
           </div>
           <div class="text-sm muted truncate">
-            {{ c.buyer_name || 'Kupac nije upisan' }}{{ c.recipient_name ? ' → ' + c.recipient_name : '' }} · {{ c.created_at | srDate }} · {{ paymentLabel(c) }}{{ c.seller ? ' · ' + c.seller.first_name : '' }}
+            @if (c.owner) {
+              Na nalogu: {{ c.owner | clientName }} ·
+            }
+            {{ c.buyer_name || 'kupac nije upisan' }} · {{ c.created_at | srDate }} · {{ paymentLabel(c) }}{{ c.seller ? ' · ' + c.seller.first_name : '' }}
           </div>
-          @if (c.status === 'redeemed' && c.redeemer) {
-            <div class="text-xs muted">Iskoristio/la {{ c.redeemer | clientName }} {{ c.redeemed_at! | srDate }}</div>
-          } @else if (c.expires_on) {
+          @if (c.expires_on) {
             <div class="text-xs muted">Važi do {{ c.expires_on | srDate }}</div>
           }
         </div>
-        <span class="font-bold shrink-0">{{ c.amount | rsd }}</span>
+        <div class="text-right shrink-0">
+          <div class="font-bold">{{ c.balance | rsd }}</div>
+          <div class="text-xs muted">od {{ c.amount | rsd }}</div>
+        </div>
         <app-row-actions [actions]="actions(c)" (selected)="onAction(c, $event)" [attr.data-testid]="'gift-actions-' + c.id" />
       </div>
     }
@@ -60,6 +71,23 @@
   <app-modal title="Nova poklon kartica" footerMode="custom" (cancelled)="formOpen.set(false)" testId="gift-card-modal">
     <app-error-message [message]="formError()" />
     <div class="flex flex-col gap-3">
+      <div class="chip-group" role="radiogroup" aria-label="Vrsta kartice">
+        <button type="button" class="chip" [class.selected]="kind() === 'digital'" (click)="kind.set('digital')" data-testid="gift-kind-digital">Digitalna (na nalog klijenta)</button>
+        <button type="button" class="chip" [class.selected]="kind() === 'physical'" (click)="kind.set('physical')" data-testid="gift-kind-physical">Fizička (kod na kartici)</button>
+      </div>
+      @if (kind() === 'digital') {
+        <div class="field !mb-0">
+          <label for="gift-owner">Kome se poklanja <span class="required-mark">*</span></label>
+          <app-select-search [control]="owner" [options]="directory.options()" [loading]="directory.loading()" inputId="gift-owner" placeholder="Ime ili telefon klijenta..." data-testid="gift-owner" />
+          <span class="text-xs muted">Kartica se odmah pojavi na nalogu klijenta, uz obaveštenje.</span>
+        </div>
+      } @else {
+        <div class="field !mb-0">
+          <label for="gift-number">Broj kartice</label>
+          <input id="gift-number" appInput size="m" [formControl]="cardNumber" placeholder="Odštampan broj na praznoj kartici (ako postoji)" data-testid="gift-number" />
+          <span class="text-xs muted">Posle čuvanja dobijaš kod koji upišeš na karticu. Važi na donosioca.</span>
+        </div>
+      }
       <div class="field !mb-0">
         <label for="gift-amount">Iznos <span class="required-mark">*</span></label>
         <input id="gift-amount" appInput size="m" type="number" min="100" step="500" inputmode="numeric" [formControl]="amount" data-testid="gift-amount" />
@@ -79,16 +107,18 @@
       </div>
       <div class="form-grid">
         <div class="field !mb-0">
-          <label for="gift-buyer">Kupac</label>
+          <label for="gift-buyer">Kupac (od koga)</label>
           <input id="gift-buyer" appInput size="m" [formControl]="buyer" placeholder="Ko kupuje" data-testid="gift-buyer" />
         </div>
-        <div class="field !mb-0">
-          <label for="gift-recipient">Za koga</label>
-          <input id="gift-recipient" appInput size="m" [formControl]="recipient" placeholder="Ime na kartici" data-testid="gift-recipient" />
-        </div>
+        @if (kind() === 'physical') {
+          <div class="field !mb-0">
+            <label for="gift-recipient">Za koga</label>
+            <input id="gift-recipient" appInput size="m" [formControl]="recipient" placeholder="Ime na kartici (nije obavezno)" data-testid="gift-recipient" />
+          </div>
+        }
       </div>
       <div class="field !mb-0">
-        <label for="gift-note">Poruka na kartici</label>
+        <label for="gift-note">Poruka</label>
         <input id="gift-note" appInput size="m" [formControl]="note" maxlength="500" placeholder="npr. Srećan rođendan!" />
       </div>
       <div class="field !mb-0">
@@ -102,15 +132,58 @@
 }
 
 @if (sold(); as c) {
-  <app-modal title="Poklon kartica je spremna" footerMode="none" (cancelled)="sold.set(null)" testId="gift-sold">
+  <app-modal title="Poklon kartica je izdata" footerMode="none" (cancelled)="sold.set(null)" testId="gift-sold">
     <div class="flex flex-col items-center gap-3 text-center">
-      <div class="text-sm muted">{{ c.recipient_name ? 'Za: ' + c.recipient_name : 'Poklon kartica' }}</div>
+      <div class="text-sm muted">
+        @if (c.owner) {
+          Na nalogu: {{ c.owner | clientName }}
+        } @else {
+          {{ c.recipient_name ? 'Za: ' + c.recipient_name : 'Fizička kartica' }}{{ c.card_number ? ' · br. ' + c.card_number : '' }}
+        }
+      </div>
       <div class="text-3xl font-bold">{{ c.amount | rsd }}</div>
       <div class="font-mono text-2xl tracking-widest border border-dashed border-[var(--color-border)] rounded-lg px-4 py-2" data-testid="gift-sold-code">{{ code(c) }}</div>
+      @if (c.kind === 'physical') {
+        <p class="text-sm">Upiši ovaj kod na karticu.</p>
+      }
       <div class="flex gap-2">
         <button type="button" appBtn theme="secondary" size="s" (click)="copy(c)"><span appIcon="copy" aria-hidden="true"></span> Kopiraj kod</button>
         <button type="button" appBtn size="s" (click)="print(c)" data-testid="gift-print"><span appIcon="file-text" aria-hidden="true"></span> Štampaj</button>
       </div>
     </div>
+  </app-modal>
+}
+
+@if (checkOpen()) {
+  <app-modal title="Provera poklon kartice" footerMode="none" (cancelled)="checkOpen.set(false); checked.set(null)" testId="gift-check">
+    <form class="flex gap-2 mb-3" (submit)="$event.preventDefault(); check(checkCode.value)">
+      <input appInput size="m" class="flex-1 min-w-0" [formControl]="checkCode" placeholder="Kod sa kartice" autocomplete="off" aria-label="Kod" data-testid="gift-check-code" />
+      <button type="submit" appBtn size="s" data-testid="gift-check-submit">Proveri</button>
+    </form>
+    @if (checked(); as c) {
+      <div class="flex flex-col gap-2 text-sm" data-testid="gift-check-result">
+        <div class="flex items-center justify-between">
+          <span class="font-mono font-semibold">{{ code(c) }} <span [class]="'badge ' + statusInfo[c.status].badge">{{ statusInfo[c.status].label }}</span></span>
+          <span class="text-xl font-bold">{{ c.balance | rsd }}</span>
+        </div>
+        <div class="muted">
+          Od {{ c.amount | rsd }} · prodata {{ c.created_at | srDate }}{{ c.expires_on ? ' · važi do ' + (c.expires_on | srDate) : '' }}
+          @if (c.owner) {
+            · na nalogu {{ c.owner | clientName }}
+          }
+        </div>
+        @if (c.uses.length > 0) {
+          <div class="font-semibold mt-1">Korišćenje</div>
+          @for (u of c.uses; track u.id) {
+            <div class="flex justify-between border-t border-[var(--color-border)] pt-1">
+              <span>{{ u.created_at | srDateTime }}{{ u.appointment ? ' · termin ' + (u.appointment.starts_at | srDate) : '' }}</span>
+              <span>{{ u.amount > 0 ? '−' : '+' }}{{ (u.amount > 0 ? u.amount : -u.amount) | rsd }}</span>
+            </div>
+          }
+        } @else {
+          <div class="muted">Još nije korišćena.</div>
+        }
+      </div>
+    }
   </app-modal>
 }

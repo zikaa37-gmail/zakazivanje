@@ -238,6 +238,7 @@ class BookingService
 
     public function cancel(Appointment $appointment, string $by): Appointment
     {
+        app(PaymentLedger::class)->refundPrepaid($appointment->loadMissing('client'), null);
         $appointment->update([
             'status' => Appointment::STATUS_CANCELLED,
             'cancelled_at' => now(),

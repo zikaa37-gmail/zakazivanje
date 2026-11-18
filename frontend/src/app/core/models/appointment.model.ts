@@ -16,6 +16,7 @@ export interface CompletePayload {
   payment: 'full' | 'partial' | 'none';
   paid_amount: number | null;
   payment_method: PaymentMethod | null;
+  gift_card_code?: string | null;
   tip: number;
   note: string | null;
 }
@@ -53,6 +54,7 @@ export interface Appointment {
   due_amount?: number | null;
   paid_amount?: number | null;
   outstanding?: number;
+  gift_card_left?: number | null;
   items: AppointmentItem[];
   staff_member?: { id: number; first_name: string; last_name: string; title?: string | null; color: string | null };
   client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null };
@@ -67,6 +69,7 @@ export interface Appointment {
   can_reschedule?: boolean;
   late_cancel?: boolean;
   can_pay?: boolean;
+  amount_left?: number;
   can_review?: boolean;
   review?: { id: number; rating: number; comment: string | null; reply: string | null } | null;
 }

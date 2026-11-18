@@ -93,15 +93,16 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
 | POST | `/clients/{id}/wallet` | stanje klijenta i promene (`balance`, `entries`) |
 | POST | `/clients/{id}/wallet/deposit` | uplata unapred: `amount`, `payment_method`, `note` |
-| POST | `/clients/{id}/wallet/redeem` | poklon kartica na stanje klijenta: `code` |
+| POST | `/clients/{id}/wallet/claim` | poklon karticu (kod) dodaje na nalog klijenta |
 | POST | `/clients/{id}/wallet/adjust` | menadžer: ispravka `amount` (±), `note` |
 | POST | `/gift-cards/list` | `status`, `search` |
-| POST | `/gift-cards` | prodaja: `amount`, `payment_method`, `buyer_name`, `recipient_name`, `note`, `expires_on` |
-| POST | `/gift-cards/check` | `code` |
-| POST | `/gift-cards/{id}/cancel` | menadžer, samo neiskorišćena |
+| POST | `/gift-cards` | prodaja: `kind` (`digital` + `owner_id` / `physical` + `card_number`), `amount`, `payment_method`, `buyer_name`, `recipient_name`, `note`, `expires_on` |
+| POST | `/gift-cards/check` | `code` → kartica sa stanjem i `uses` |
+| POST | `/gift-cards/{id}/cancel` | menadžer, samo nekorišćena |
 | POST | `/my-wallet` | klijent: svoje stanje |
-| POST | `/my-wallet/redeem` | klijent: unos koda poklon kartice |
-| POST | `/appointments/{id}/complete` | završetak: `service_outcome` (`done` / `partial` / `not_done`), `due_amount`, `payment` (`full` / `partial` / `none`), `paid_amount`, `payment_method`, `tip`, `note` (obavezna kad nešto nije u redu) |
+| POST | `/my-wallet/claim` | klijent: dodaje poklon karticu (kod) na svoj nalog |
+| POST | `/my-appointments/{id}/pay` | klijent: `source` (`wallet` / `gift_card` + `code`), plaća koliko ima, ostatak u salonu |
+| POST | `/appointments/{id}/complete` | završetak (+ `gift_card_code`: kartica prvo, ostatak `payment_method`): `service_outcome` (`done` / `partial` / `not_done`), `due_amount`, `payment` (`full` / `partial` / `none`), `paid_amount`, `payment_method`, `tip`, `note` (obavezna kad nešto nije u redu) |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?, delay_notice?}` — pomeranje (`delay_notice` = prevlačenje u kalendaru: obaveštenje ide 2 min posle poslednjeg pomeranja, `appointments:send-change-notices`) (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i menadžerima) |

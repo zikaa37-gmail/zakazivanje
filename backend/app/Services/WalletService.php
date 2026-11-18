@@ -6,6 +6,8 @@ use App\Models\Appointment;
 use App\Models\GiftCard;
 use App\Models\User;
 use App\Models\WalletEntry;
+use App\Notifications\GiftCardReceivedNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -22,8 +24,9 @@ class WalletService
     {
         return [
             'balance' => $this->balance($client),
+            'gift_cards' => $this->giftCardsOf($client),
             'entries' => WalletEntry::where('user_id', $client->id)
-                ->with(['author:id,first_name,last_name', 'appointment:id,starts_at', 'giftCard:id,code'])
+                ->with(['author:id,first_name,last_name', 'appointment:id,starts_at'])
                 ->orderByDesc('id')
                 ->limit($limit)
                 ->get(),
@@ -89,12 +92,18 @@ class WalletService
 
     public function sellGiftCard(array $data, ?User $by): GiftCard
     {
-        return GiftCard::create([
+        $card = GiftCard::create([
             ...$data,
             'code' => $this->newCode(),
             'amount' => round((float) $data['amount'], 2),
+            'balance' => round((float) $data['amount'], 2),
             'sold_by' => $by?->id,
         ]);
+        if ($card->owner) {
+            app(Inbox::class)->deliver([$card->owner], new GiftCardReceivedNotification($card));
+        }
+
+        return $card;
     }
 
     public function findGiftCard(string $code): GiftCard
@@ -107,30 +116,26 @@ class WalletService
         return $card;
     }
 
-    public function redeem(GiftCard $card, User $client, ?User $by): WalletEntry
+    public function claim(GiftCard $card, User $client): GiftCard
     {
-        return DB::transaction(function () use ($card, $client, $by) {
-            $card = GiftCard::whereKey($card->id)->lockForUpdate()->first();
-            $message = match ($card->status) {
-                GiftCard::STATUS_REDEEMED => 'Ova poklon kartica je već iskorišćena.',
-                GiftCard::STATUS_EXPIRED => 'Ova poklon kartica je istekla '.$card->expires_on->format('d.m.Y.').'.',
-                GiftCard::STATUS_CANCELLED => 'Ova poklon kartica je poništena.',
-                default => null,
-            };
-            if ($message) {
-                throw ValidationException::withMessages(['code' => [$message]]);
-            }
+        if ($card->owner_id && $card->owner_id !== $client->id) {
+            throw ValidationException::withMessages(['code' => ['Ova poklon kartica je već na drugom nalogu.']]);
+        }
+        if ($card->status === GiftCard::STATUS_CANCELLED) {
+            throw ValidationException::withMessages(['code' => ['Ova poklon kartica je poništena.']]);
+        }
+        $card->update(['owner_id' => $client->id]);
 
-            $card->update(['redeemed_by' => $client->id, 'redeemed_at' => now()]);
+        return $card;
+    }
 
-            return WalletEntry::create([
-                'user_id' => $client->id,
-                'amount' => $card->amount,
-                'kind' => WalletEntry::KIND_GIFT_CARD,
-                'gift_card_id' => $card->id,
-                'created_by' => $by?->id,
-            ]);
-        });
+    public function giftCardsOf(User $client): Collection
+    {
+        return GiftCard::where('owner_id', $client->id)
+            ->whereNull('cancelled_at')
+            ->orderByDesc('balance')
+            ->orderByDesc('id')
+            ->get(['id', 'code', 'kind', 'amount', 'balance', 'buyer_name', 'note', 'expires_on', 'cancelled_at', 'created_at']);
     }
 
     private function newCode(): string

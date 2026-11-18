@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\GiftCard;
+use App\Models\InboxNotification;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -74,34 +75,55 @@ class WalletTest extends TestCase
         $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet")->assertJsonPath('balance', 1500);
     }
 
-    public function test_gift_card_is_sold_redeemed_once_and_spent(): void
+    public function test_physical_card_is_bearer_partial_and_can_be_claimed_once(): void
     {
-        $card = $this->actingAsJwt($this->owner)->postJson('/api/gift-cards', ['amount' => 3000, 'payment_method' => 'card', 'buyer_name' => 'Marko', 'recipient_name' => 'Jelena'])
-            ->assertCreated()->assertJsonPath('status', 'active')->json();
+        $card = $this->actingAsJwt($this->owner)->postJson('/api/gift-cards', ['kind' => 'physical', 'card_number' => '0042', 'amount' => 1500, 'payment_method' => 'card', 'buyer_name' => 'Marko'])
+            ->assertCreated()->assertJsonPath('status', 'active')->assertJsonPath('balance', 1500)->json();
         $this->assertMatchesRegularExpression('/^[A-Z2-9]{8}$/', $card['code']);
-
         $code = substr($card['code'], 0, 4).'-'.strtolower(substr($card['code'], 4));
-        $this->actingAsJwt($this->client)->postJson('/api/my-wallet/redeem', ['code' => $code])->assertOk()->assertJsonPath('balance', 3000);
-        $this->actingAsJwt($this->client)->postJson('/api/my-wallet/redeem', ['code' => $card['code']])->assertUnprocessable()->assertJsonValidationErrors('code');
-        $this->assertSame(GiftCard::STATUS_REDEEMED, GiftCard::find($card['id'])->status);
 
-        $this->complete(['payment' => 'full', 'payment_method' => 'wallet'])->assertOk()->assertJsonPath('outstanding', 0);
-        $this->actingAsJwt($this->client)->postJson('/api/my-wallet')->assertOk()->assertJsonPath('balance', 1000);
+        $this->actingAsJwt($this->client)->postJson('/api/my-wallet/claim', ['code' => $code])->assertOk()->assertJsonPath('gift_cards.0.code', $card['code']);
+        $other = User::factory()->create();
+        $this->actingAsJwt($other)->postJson('/api/my-wallet/claim', ['code' => $card['code']])->assertUnprocessable()->assertJsonValidationErrors('code');
 
+        $this->complete(['payment' => 'full', 'gift_card_code' => $card['code']])->assertUnprocessable()->assertJsonValidationErrors('payment_method');
+        $this->complete(['payment' => 'full', 'gift_card_code' => $card['code'], 'payment_method' => 'cash'])
+            ->assertOk()->assertJsonPath('outstanding', 0)->assertJsonPath('gift_card_left', 0);
+        $this->assertSame(GiftCard::STATUS_USED, GiftCard::find($card['id'])->status);
+        $this->assertSame(1, InboxNotification::where('user_id', $this->client->id)->where('kind', 'gift_card')->count());
+
+        $this->actingAsJwt($this->owner)->postJson('/api/reports', ['period' => 'month', 'date' => '2026-10-20'])
+            ->assertOk()->assertJsonPath('totals.by_method.gift_card', 1500)->assertJsonPath('totals.by_method.cash', 500)->assertJsonPath('prepaid.gift_cards', 1500);
+        $this->actingAsJwt($this->owner)->postJson('/api/gift-cards/check', ['code' => $code])->assertOk()->assertJsonPath('balance', 0)->assertJsonCount(1, 'uses');
         $this->actingAsJwt($this->owner)->postJson("/api/gift-cards/{$card['id']}/cancel")->assertUnprocessable();
-        $this->actingAsJwt($this->client)->postJson('/api/gift-cards', ['amount' => 1000, 'payment_method' => 'cash'])->assertForbidden();
+        $this->actingAsJwt($this->client)->postJson('/api/gift-cards', ['kind' => 'physical', 'amount' => 1000, 'payment_method' => 'cash'])->assertForbidden();
     }
 
-    public function test_expired_or_cancelled_card_cannot_be_redeemed_and_adjust_needs_manager(): void
+    public function test_digital_card_pays_from_client_account_and_cancellation_refunds(): void
     {
-        $expired = GiftCard::create(['code' => 'AAAA2222', 'amount' => 1000, 'payment_method' => 'cash', 'expires_on' => '2026-10-01']);
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/redeem", ['code' => 'AAAA2222'])
-            ->assertUnprocessable()->assertJsonPath('errors.code.0', 'Ova poklon kartica je istekla 01.10.2026..');
+        $this->actingAsJwt($this->owner)->postJson('/api/gift-cards', ['kind' => 'digital', 'amount' => 1000, 'payment_method' => 'cash'])->assertUnprocessable()->assertJsonValidationErrors('owner_id');
+        $card = $this->actingAsJwt($this->owner)->postJson('/api/gift-cards', ['kind' => 'digital', 'owner_id' => $this->client->id, 'amount' => 1000, 'payment_method' => 'cash', 'buyer_name' => 'Mama'])->assertCreated()->json();
+        $this->assertSame(1, InboxNotification::where('user_id', $this->client->id)->where('kind', 'gift_card')->count());
 
-        $active = GiftCard::create(['code' => 'BBBB3333', 'amount' => 1000, 'payment_method' => 'cash']);
+        $this->actingAsJwt($this->client)->postJson("/api/my-appointments/{$this->appointment->id}/pay", ['source' => 'gift_card', 'code' => $card['code']])
+            ->assertOk()->assertJsonPath('wallet.gift_cards.0.balance', 0);
+        $this->assertSame(1000.0, (float) $this->appointment->fresh()->paid_amount);
+        $this->actingAsJwt($this->client)->postJson("/api/my-appointments/{$this->appointment->id}/pay", ['source' => 'wallet'])->assertUnprocessable();
+
+        $this->actingAsJwt($this->owner)->postJson("/api/appointments/{$this->appointment->id}/cancel", ['scope' => 'this'])->assertOk();
+        $this->assertSame(1000.0, (float) GiftCard::find($card['id'])->balance);
+        $this->assertNull($this->appointment->fresh()->paid_at);
+    }
+
+    public function test_expired_or_cancelled_card_cannot_be_used_and_adjust_needs_manager(): void
+    {
+        GiftCard::create(['code' => 'AAAA2222', 'kind' => 'physical', 'amount' => 1000, 'balance' => 1000, 'payment_method' => 'cash', 'expires_on' => '2026-10-01']);
+        $this->complete(['payment' => 'full', 'gift_card_code' => 'AAAA2222', 'payment_method' => 'cash'])
+            ->assertUnprocessable()->assertJsonPath('errors.gift_card_code.0', 'Poklon kartica AAAA-2222 je istekla 01.10.2026..');
+
+        $active = GiftCard::create(['code' => 'BBBB3333', 'kind' => 'physical', 'amount' => 1000, 'balance' => 1000, 'payment_method' => 'cash']);
         $this->actingAsJwt($this->owner)->postJson("/api/gift-cards/{$active->id}/cancel")->assertOk()->assertJsonPath('status', 'cancelled');
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/redeem", ['code' => 'BBBB3333'])->assertUnprocessable();
-        $this->assertSame(GiftCard::STATUS_EXPIRED, $expired->fresh()->status);
+        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/claim", ['code' => 'BBBB3333'])->assertUnprocessable();
 
         $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->appointment->staff_member_id]);
         $this->actingAsJwt($worker)->postJson("/api/clients/{$this->client->id}/wallet/adjust", ['amount' => 500, 'note' => 'x'])->assertForbidden();

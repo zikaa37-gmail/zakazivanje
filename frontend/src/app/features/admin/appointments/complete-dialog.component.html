@@ -5,7 +5,7 @@
       <div class="text-sm">
         <div class="font-semibold">{{ a.client | clientName }} · {{ time() }}</div>
         <div class="muted">{{ services() }}</div>
-        <div class="mt-1">Cena termina: <strong>{{ a.total | rsd }}</strong></div>
+        <div class="mt-1">Cena termina: <strong>{{ a.total | rsd }}</strong>@if (a.paid_at) { · već plaćeno {{ a.paid_amount ?? a.total | rsd }}}</div>
       </div>
 
       <div class="field !mb-0">
@@ -35,23 +35,60 @@
 
         @if (payment() === 'partial') {
           <div class="field !mb-0">
-            <label for="complete-paid">Plaćeno</label>
+            <label for="complete-paid">Ukupno plaćeno</label>
             <input id="complete-paid" appInput size="m" type="number" min="0" step="50" inputmode="numeric" [formControl]="paidAmount" data-testid="complete-paid" />
           </div>
         }
 
         @if (needsMethod()) {
           <div class="field !mb-0">
-            <span class="text-sm font-semibold">Način plaćanja</span>
+            <span class="text-sm font-semibold">Način plaćanja{{ toCollect() > 0 ? ' (' + (toCollect() | rsd) + ')' : '' }}</span>
             <div class="chip-group mt-1">
               @for (m of methods; track m.value) {
-                <button type="button" class="chip" [class.selected]="method() === m.value" [attr.aria-pressed]="method() === m.value" (click)="method.set(m.value)" [attr.data-testid]="'complete-method-' + m.value">{{ m.label }}</button>
+                <button type="button" class="chip" [class.selected]="method() === m.value" [attr.aria-pressed]="method() === m.value" (click)="chooseMethod(m.value)" [attr.data-testid]="'complete-method-' + m.value">{{ m.label }}</button>
               }
+              <button type="button" class="chip" [class.selected]="method() === 'gift_card'" [attr.aria-pressed]="method() === 'gift_card'" (click)="chooseMethod('gift_card')" data-testid="complete-method-gift_card">Poklon kartica</button>
               @if (balance() > 0) {
-                <button type="button" class="chip" [class.selected]="method() === 'wallet'" [attr.aria-pressed]="method() === 'wallet'" (click)="method.set('wallet')" data-testid="complete-method-wallet">Sa stanja ({{ balance() | rsd }})</button>
+                <button type="button" class="chip" [class.selected]="method() === 'wallet'" [attr.aria-pressed]="method() === 'wallet'" (click)="chooseMethod('wallet')" data-testid="complete-method-wallet">Sa stanja ({{ balance() | rsd }})</button>
               }
             </div>
           </div>
+
+          @if (giftMode()) {
+            <div class="flex flex-col gap-2 rounded-lg bg-[var(--color-bg)] p-3" data-testid="complete-gift">
+              @if (activeCards().length > 0) {
+                <div class="chip-group">
+                  @for (c of activeCards(); track c.id) {
+                    <button type="button" class="chip" [class.selected]="card()?.code === c.code" (click)="useCard(c.code)" [attr.data-testid]="'complete-card-' + c.id">{{ code(c.code) }} · {{ c.balance | rsd }}</button>
+                  }
+                </div>
+              }
+              <form class="flex gap-2" (submit)="$event.preventDefault(); checkCard()">
+                <input appInput size="m" class="flex-1 min-w-0" [formControl]="cardCode" placeholder="Kod sa kartice" autocomplete="off" aria-label="Kod poklon kartice" data-testid="complete-card-code" />
+                <button type="submit" appBtn theme="secondary" size="s" [disabled]="checking()" data-testid="complete-card-check">Proveri</button>
+              </form>
+              @if (card(); as c) {
+                <div class="text-sm" data-testid="complete-card-info">
+                  Kartica <span class="font-mono">{{ code(c.code) }}</span>: stanje <strong>{{ c.balance | rsd }}</strong> → sa kartice {{ fromCard() | rsd }}, ostaje na kartici {{ c.balance - fromCard() | rsd }}
+                </div>
+                @if (restAmount() > 0) {
+                  <div class="field !mb-0">
+                    <span class="text-sm font-semibold">Ostatak {{ restAmount() | rsd }}</span>
+                    <div class="chip-group mt-1">
+                      @for (m of methods; track m.value) {
+                        <button type="button" class="chip" [class.selected]="rest() === m.value" (click)="rest.set(m.value)" [attr.data-testid]="'complete-rest-' + m.value">{{ m.label }}</button>
+                      }
+                      @if (balance() > 0) {
+                        <button type="button" class="chip" [class.selected]="rest() === 'wallet'" (click)="rest.set('wallet')">Sa stanja</button>
+                      }
+                      <button type="button" class="chip" [class.selected]="rest() === 'debt'" (click)="rest.set('debt')" data-testid="complete-rest-debt">Ostaje dug</button>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          }
+
           <div class="field !mb-0">
             <label for="complete-tip">Bakšiš</label>
             <input id="complete-tip" appInput size="m" type="number" min="0" step="50" inputmode="numeric" placeholder="0" [formControl]="tip" data-testid="complete-tip" />
@@ -66,6 +103,6 @@
       </div>
     </div>
 
-    <app-button modal-footer size="s" [loading]="saving()" [disabled]="!ready()" (click)="save()" data-testid="complete-save">{{ confirmLabel() }}</app-button>
+    <app-button modal-footer size="s" [loading]="saving()" [disabled]="blocker() !== null" (click)="save()" data-testid="complete-save">{{ blocker() ?? 'Sačuvaj' }}</app-button>
   </app-modal>
 }

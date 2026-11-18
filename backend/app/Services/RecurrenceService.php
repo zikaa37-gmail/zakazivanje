@@ -93,6 +93,8 @@ class RecurrenceService
 
         return DB::transaction(function () use ($recurrence, $from) {
             $recurrence->update(['active' => false]);
+            $recurrence->appointments()->blocking()->where('starts_at', '>=', $from)->whereNotNull('paid_at')->with('client')->get()
+                ->each(fn (Appointment $a) => app(PaymentLedger::class)->refundPrepaid($a, null));
 
             return $recurrence->appointments()
                 ->blocking()

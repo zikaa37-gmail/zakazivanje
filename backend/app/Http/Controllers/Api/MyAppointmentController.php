@@ -34,7 +34,7 @@ class MyAppointmentController extends Controller
             ->orderBy('starts_at', $upcoming ? 'asc' : 'desc')
             ->limit(100)
             ->get()
-            ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a), 'can_reschedule' => $this->canMove($a), 'late_cancel' => $fees->isLate($a), 'can_pay' => $this->canPay($a), 'can_review' => $reviews->canReview($a)]);
+            ->map(fn (Appointment $a) => [...$a->toArray(), 'can_cancel' => $this->canCancel($a), 'can_reschedule' => $this->canMove($a), 'late_cancel' => $fees->isLate($a), 'can_pay' => $this->canPay($a), 'amount_left' => in_array($a->status, [...Appointment::BLOCKING_STATUSES, Appointment::STATUS_COMPLETED], true) ? $a->amountLeft() : 0, 'can_review' => $reviews->canReview($a)]);
     }
 
     public function cancellationStatus(Request $request, CancellationFeeService $fees)

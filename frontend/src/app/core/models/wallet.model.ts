@@ -19,19 +19,33 @@ export interface WalletEntry {
   created_at: string;
   author: { id: number; first_name: string; last_name: string } | null;
   appointment: { id: number; starts_at: string } | null;
-  gift_card: { id: number; code: string } | null;
+}
+
+export interface OwnedGiftCard {
+  id: number;
+  code: string;
+  kind: GiftCardKind;
+  amount: number;
+  balance: number;
+  buyer_name: string | null;
+  note: string | null;
+  expires_on: string | null;
+  status: GiftCardStatus;
 }
 
 export interface Wallet {
   balance: number;
+  gift_cards: OwnedGiftCard[];
   entries: WalletEntry[];
 }
 
-export type GiftCardStatus = 'active' | 'redeemed' | 'expired' | 'cancelled';
+export type GiftCardKind = 'digital' | 'physical';
+
+export type GiftCardStatus = 'active' | 'used' | 'expired' | 'cancelled';
 
 export const GIFT_CARD_STATUS: Record<GiftCardStatus, { label: string; badge: string }> = {
   active: { label: 'Aktivna', badge: 'badge-success' },
-  redeemed: { label: 'Iskorišćena', badge: 'badge-neutral' },
+  used: { label: 'Potrošena', badge: 'badge-neutral' },
   expired: { label: 'Istekla', badge: 'badge-warning' },
   cancelled: { label: 'Poništena', badge: 'badge-danger' },
 };
@@ -39,7 +53,10 @@ export const GIFT_CARD_STATUS: Record<GiftCardStatus, { label: string; badge: st
 export interface GiftCard {
   id: number;
   code: string;
+  kind: GiftCardKind;
+  card_number: string | null;
   amount: number;
+  balance: number;
   buyer_name: string | null;
   recipient_name: string | null;
   note: string | null;
@@ -47,12 +64,18 @@ export interface GiftCard {
   expires_on: string | null;
   status: GiftCardStatus;
   created_at: string;
-  redeemed_at: string | null;
   seller: { id: number; first_name: string; last_name: string } | null;
-  redeemer: { id: number; first_name: string; last_name: string; nickname?: string | null } | null;
+  owner: { id: number; first_name: string; last_name: string; nickname?: string | null } | null;
+}
+
+export interface GiftCardCheck extends GiftCard {
+  uses: { id: number; amount: number; created_at: string; appointment: { id: number; starts_at: string } | null }[];
 }
 
 export interface GiftCardPayload {
+  kind: GiftCardKind;
+  owner_id: number | null;
+  card_number: string | null;
   amount: number;
   payment_method: PaymentMethod;
   buyer_name: string | null;
