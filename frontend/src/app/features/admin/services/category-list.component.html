@@ -1,7 +1,7 @@
 <div class="card">
   <p class="text-sm muted mb-3">Kategorije grupišu usluge na početnoj i u zakazivanju, ovim redosledom. Deaktivirana kategorija sakriva svoje usluge iz online zakazivanja.</p>
 
-  <form class="flex gap-2 mb-1" (ngSubmit)="add()" novalidate>
+  <form class="flex gap-2 mb-1" (submit)="$event.preventDefault(); add()" novalidate>
     <input appInput size="m" class="flex-1 min-w-0" [formControl]="newName" placeholder="Nova kategorija, npr. Tretmani lica" aria-label="Naziv nove kategorije" data-testid="category-new-name" />
     <app-button type="submit" [loading]="adding()" data-testid="category-add">
       <span appIcon="plus" aria-hidden="true"></span> Dodaj
@@ -39,7 +39,7 @@
 @if (renaming(); as category) {
   <app-modal [title]="'Preimenuj: ' + category.name" size="s" footerMode="custom" (cancelled)="renaming.set(null)" testId="category-rename-modal">
     <app-error-message [message]="renameError()" />
-    <form (ngSubmit)="rename()" novalidate>
+    <form (submit)="$event.preventDefault(); rename()" novalidate>
       <div class="field">
         <label for="category-rename">Novi naziv</label>
         <input id="category-rename" appInput size="m" [formControl]="renameControl" data-testid="category-rename-input" />
