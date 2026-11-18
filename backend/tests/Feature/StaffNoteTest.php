@@ -29,7 +29,7 @@ class StaffNoteTest extends TestCase
 
         $id = $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Nestalo je farbe 7.1', 'recipient_ids' => [$owner->id, $sandra->id, $jelena->id]])
             ->assertCreated()->json('id');
-        $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Vlasnik uvek dobija', 'recipient_ids' => []])->assertCreated();
+        $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Vlasnik uvek dobija', 'recipient_ids' => []])->assertCreated()->assertJsonPath('title', 'Vlasnik uvek dobija');
         Notification::assertSentToTimes($owner, StaffNoteNotification::class, 2);
 
         Notification::assertSentTo([$owner, $sandra], StaffNoteNotification::class);
@@ -94,5 +94,13 @@ class StaffNoteTest extends TestCase
         $this->actingAsJwt($sandra)->postJson('/api/notes/unread-count')->assertJsonPath('count', 1);
         $this->actingAsJwt($sandra)->postJson('/api/notes/list')->assertJsonPath('0.unread', true);
         Notification::assertNotSentTo($marko, StaffNoteNotification::class);
+    }
+
+    public function test_note_is_a_titled_topic(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_OWNER]);
+
+        $this->actingAsJwt($user)->postJson('/api/notes', ['title' => 'Farbe', 'body' => 'Treba naručiti 7.1', 'recipient_ids' => []])
+            ->assertCreated()->assertJsonPath('title', 'Farbe')->assertJsonPath('body', 'Treba naručiti 7.1');
     }
 }

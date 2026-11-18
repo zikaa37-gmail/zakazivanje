@@ -4,11 +4,11 @@
   </div>
   <div class="flex flex-wrap gap-2">
     @if (aiAvailable()) {
-      <button type="button" appBtn theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest">
+      <button type="button" appBtn size="s" theme="secondary" (click)="suggestionsOpen.set(true)" data-testid="service-suggest">
         <span appIcon="wand" aria-hidden="true"></span> Predloži usluge
       </button>
     }
-    <button type="button" appBtn (click)="openForm()" data-testid="service-add">
+    <button type="button" appBtn size="s" (click)="openForm()" data-testid="service-add">
       <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova usluga</span>
     </button>
   </div>

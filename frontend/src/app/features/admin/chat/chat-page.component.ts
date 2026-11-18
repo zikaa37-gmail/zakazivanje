@@ -3,7 +3,7 @@ import { Component, DestroyRef, computed, inject, signal, viewChild } from '@ang
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, map } from 'rxjs';
-import { FormControl } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClientDirectoryService } from '../../../core/services/client-directory.service';
 import { clientName } from '../../../core/utils/client-name';
@@ -16,6 +16,7 @@ import { ChatThreadComponent } from '../../../shared/components/chat-thread/chat
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
+import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 
@@ -28,7 +29,7 @@ interface Draft {
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [InfoTipComponent, ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
+  imports: [InfoTipComponent, InputDirective, ReactiveFormsModule, ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',
 })
@@ -64,8 +65,9 @@ export class ChatPageComponent {
 
   readonly threadSessions = computed(() => {
     const detail = this.detail();
-    return detail ? [...[...detail.earlier].reverse(), detail] : [];
+    return detail ? [detail] : [];
   });
+  readonly draftSubject = new FormControl('', { nonNullable: true });
   readonly showConversation = computed(() => this.selectedId() !== null || this.draft() !== null);
 
   constructor() {
@@ -133,8 +135,15 @@ export class ChatPageComponent {
   }
 
   private startDraft(draft: Draft): void {
+    this.draftSubject.reset('');
+    if (draft.appointmentId === null) {
+      this.selectedId.set(null);
+      this.detail.set(null);
+      this.draft.set(draft);
+      return;
+    }
     this.chat.list('active', true).subscribe((res) => {
-      const existing = res.sessions.find((s) => s.client_id === draft.clientId);
+      const existing = res.sessions.find((s) => s.client_id === draft.clientId && s.appointment?.id === draft.appointmentId);
       if (existing) {
         void this.router.navigate([], { queryParams: { session: existing.id }, replaceUrl: true });
         return;
@@ -163,7 +172,7 @@ export class ChatPageComponent {
     const id = this.selectedId();
     this.sending.set(true);
     const request: Observable<number> = draft
-      ? this.chat.start(draft.clientId, draft.appointmentId, body).pipe(map((res) => res.session_id))
+      ? this.chat.start(draft.clientId, draft.appointmentId, body, this.draftSubject.value.trim() || null).pipe(map((res) => res.session_id))
       : this.chat.send(id!, body).pipe(map((message) => message.chat_session_id));
     request.subscribe({
       next: (sessionId) => {
@@ -184,18 +193,22 @@ export class ChatPageComponent {
     });
   }
 
+  goTo(id: number): void {
+    void this.router.navigate([], { queryParams: { session: id } });
+  }
+
   async closeSession(): Promise<void> {
     const detail = this.detail();
     if (!detail) return;
     const ok = await this.confirm.confirm({
-      title: 'Završi razgovor',
-      message: 'Razgovor se zatvara. Ako klijent ponovo piše, otvara se novi razgovor.',
+      title: 'Završi temu',
+      message: `Tema „${detail.subject}" se zatvara. Ako neko ponovo piše u njoj, tema se otvara; klijent za novo pitanje otvara novu temu.`,
       confirmLabel: 'Završi',
     });
     if (!ok) return;
     this.chat.close(detail.id).subscribe({
       next: () => {
-        this.toast.success('Razgovor je završen.');
+        this.toast.success('Tema je završena.');
         this.open(detail.id, true);
         this.loadList(true);
       },

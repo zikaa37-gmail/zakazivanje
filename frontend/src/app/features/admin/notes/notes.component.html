@@ -1,0 +1,132 @@
+<div class="page-header" [class.notes-hide-mobile]="openId() !== null">
+  <div class="page-title-row">
+    <h1 class="page-title">Beleške</h1>
+    <app-info-tip heading="Beleške">
+      <p>Teme za osoblje: šta nedostaje, šta se pokvarilo, šta treba da znaju ostali. Svaka tema ima svoju prepisku, pa se razgovori ne mešaju.</p>
+      <p class="mt-2">„Preuzimam" — da svi vide da se neko već bavi time; „Urađeno" kad je gotovo. Nov odgovor ostalima vraća temu kao nepročitanu.</p>
+    </app-info-tip>
+  </div>
+  <button type="button" appBtn size="s" (click)="startTopic()" data-testid="note-new"><span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova tema</span></button>
+</div>
+
+<div class="notes-layout">
+  <aside class="notes-list" [class.notes-hide-mobile]="openId() !== null" data-testid="notes-list">
+    @if (loading() && notes().length === 0) {
+    } @else if (notes().length === 0) {
+      <p class="empty-state">Još nema tema. Otvori prvu — npr. „Nestalo farbe 7.1".</p>
+    } @else {
+      @for (n of ordered(); track n.id) {
+        <button type="button" class="notes-item" [class.selected]="n.id === openId()" [class.unread]="n.unread" (click)="open(n)" [attr.data-testid]="'note-' + n.id">
+          <span class="notes-item-top">
+            <span class="notes-item-title">{{ n.title }}</span>
+            <span class="notes-item-time">{{ n.last_activity_at | srDateTime }}</span>
+          </span>
+          <span class="notes-item-last">{{ lastLine(n) }}</span>
+          <span class="notes-item-meta">
+            @switch (n.status) {
+              @case ('done') {
+                <span class="badge badge-success">Urađeno</span>
+              }
+              @case ('taken') {
+                <span class="badge badge-info">Preuzeo/la {{ firstName(n.taken_by!.name) }}</span>
+              }
+              @default {
+                <span class="badge badge-warning">Otvoreno</span>
+              }
+            }
+            <span class="muted">{{ firstName(n.author?.name ?? 'Neko') }}@if (n.replies.length) { · odgovora: {{ n.replies.length }}}</span>
+          </span>
+        </button>
+      }
+    }
+  </aside>
+
+  <section class="notes-thread" [class.notes-hide-mobile]="openId() === null" data-testid="note-thread">
+    @if (current(); as n) {
+      <header class="notes-thread-head">
+        <button type="button" class="btn-icon notes-back" aria-label="Nazad na teme" (click)="back()"><span appIcon="arrow-left" aria-hidden="true"></span></button>
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold truncate" data-testid="note-title">{{ n.title }}</div>
+          <div class="text-xs muted truncate">{{ n.readers.length ? 'Pročitali: ' + names(n.readers) : 'Još niko nije pročitao' }}</div>
+        </div>
+      </header>
+
+      <div class="notes-messages" [attr.data-testid]="'note-replies-' + n.id">
+        <div class="notes-msg" [class.mine]="n.author?.id === myId()">
+          <div class="text-xs muted">{{ firstName(n.author?.name ?? 'Neko') }} · {{ n.created_at | srDateTime }}</div>
+          <p class="whitespace-pre-line">{{ n.body }}</p>
+        </div>
+        @for (r of n.replies; track r.id) {
+          <div class="notes-msg" [class.mine]="r.author?.id === myId()" [attr.data-testid]="'note-reply-' + r.id">
+            <div class="text-xs muted">{{ firstName(r.author?.name ?? 'Neko') }} · {{ r.created_at | srDateTime }}</div>
+            <p class="whitespace-pre-line">{{ r.body }}</p>
+          </div>
+        }
+        @if (n.status === 'done') {
+          <div class="notes-event">Uradio/la {{ firstName(n.resolver ?? '') }} · {{ n.resolved_at | srDateTime }}</div>
+        }
+      </div>
+
+      <div class="notes-actions">
+        @if (n.status === 'open') {
+          <button type="button" appBtn theme="secondary" size="s" (click)="take(n)" [attr.data-testid]="'note-take-' + n.id"><span appIcon="user" aria-hidden="true"></span> Preuzimam</button>
+        } @else if (n.status === 'taken' && n.taken_by?.id === myId()) {
+          <button type="button" appBtn theme="ghost" size="s" (click)="take(n)" [attr.data-testid]="'note-untake-' + n.id">Ne preuzimam</button>
+        }
+        <button type="button" appBtn [theme]="n.status === 'done' ? 'ghost' : 'secondary'" size="s" (click)="toggleResolved(n)" [attr.data-testid]="'note-resolve-' + n.id">
+          <span [appIcon]="n.status === 'done' ? 'rotate-ccw' : 'check'" aria-hidden="true"></span> {{ n.status === 'done' ? 'Vrati kao otvoreno' : 'Urađeno' }}
+        </button>
+        @if (n.can_delete) {
+          <button type="button" appBtn theme="ghost" size="s" class="notes-delete" (click)="remove(n)" [attr.data-testid]="'note-delete-' + n.id"><span appIcon="trash" aria-hidden="true"></span> Obriši</button>
+        }
+      </div>
+
+      <form class="notes-composer" (submit)="$event.preventDefault(); sendReply(n)" novalidate [attr.data-testid]="'note-reply-form-' + n.id">
+        <textarea appInput size="s" rows="2" [formControl]="replyBody" placeholder="Odgovor u ovoj temi…" aria-label="Odgovor" (keydown)="onReplyKey($event, n)" [attr.data-testid]="'note-reply-body-' + n.id"></textarea>
+        <app-button type="submit" size="s" [loading]="replying()" [disabled]="!replyBody.value.trim()" [attr.data-testid]="'note-reply-send-' + n.id"><span appIcon="send" aria-hidden="true"></span></app-button>
+      </form>
+    } @else {
+      <div class="notes-placeholder muted">
+        <span appIcon="message-square" [iconSize]="32" aria-hidden="true"></span>
+        <span>Izaberi temu ili otvori novu</span>
+      </div>
+    }
+  </section>
+</div>
+
+@if (composing()) {
+  <app-modal title="Nova tema" footerMode="custom" (cancelled)="composing.set(false)" testId="note-new-modal">
+    <form class="flex flex-col gap-3" (submit)="$event.preventDefault(); send()" novalidate data-testid="note-form">
+      <div class="field">
+        <label for="note-title">Tema</label>
+        <input id="note-title" appInput size="m" [formControl]="title" maxlength="150" placeholder="npr. Nestalo farbe 7.1" data-testid="note-title-input" />
+      </div>
+      <div class="field">
+        <label for="note-body">Poruka</label>
+        <textarea id="note-body" appInput size="m" rows="3" [formControl]="body" placeholder="Šta treba da znaju ostali…" data-testid="note-body"></textarea>
+      </div>
+      <div>
+        <div class="text-sm font-semibold mb-1">Obavesti</div>
+        <div class="chip-group">
+          @for (r of others(); track r.name + r.staff_member_id) {
+            @if (r.user_id === null) {
+              <button type="button" class="chip opacity-50" (click)="noAccount(r.name)" [attr.data-testid]="'note-recipient-none-' + r.staff_member_id">{{ firstName(r.name) }}</button>
+            } @else if (r.always) {
+              <span class="chip selected" title="Uvek dobija obaveštenje (Podešavanja salona → Obaveštenja)" [attr.data-testid]="'note-recipient-' + r.user_id"><span appIcon="lock" [iconSize]="13" aria-hidden="true"></span> {{ firstName(r.name) }}</span>
+            } @else {
+              <button type="button" class="chip" [class.selected]="selected().has(r.user_id)" [attr.aria-pressed]="selected().has(r.user_id)" (click)="toggle(r.user_id)" [attr.data-testid]="'note-recipient-' + r.user_id">
+                @if (selected().has(r.user_id)) {
+                  <span appIcon="check" [iconSize]="13" aria-hidden="true"></span>
+                }
+                {{ firstName(r.name) }}
+              </button>
+            }
+          }
+        </div>
+      </div>
+      <app-error-message [message]="error()" />
+    </form>
+    <button modal-footer type="button" appBtn theme="secondary" size="s" (click)="composing.set(false)">Odustani</button>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="send()" data-testid="note-send"><span appIcon="send" aria-hidden="true"></span> Otvori temu</app-button>
+  </app-modal>
+}

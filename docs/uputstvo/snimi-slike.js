@@ -428,12 +428,14 @@ async function run(b, before) {
   await shot(o, 'rad-08-izvestaji', [{ sel: '[data-testid=report-options]' }, { sel: '[data-testid=report-pdf]' }], { scroll: false });
   await go(o, '/admin/reviews', 2000, '[data-testid^=admin-review-]');
   await shot(o, 'rad-09-recenzije', [], { scroll: false });
-  await go(o, '/admin/notes', 2000, '[data-testid=note-body]');
-  await o.fill('[data-testid=note-body]', 'Nestalo je farbe 7.1');
+  await go(o, '/admin/notes', 2000, '[data-testid=note-new]');
+  await o.click('[data-testid=note-new]');
+  await o.fill('[data-testid=note-title-input]', 'Nestalo farbe 7.1');
+  await o.fill('[data-testid=note-body]', 'Treba naručiti do petka.');
   await o.waitForSelector('[data-testid^=note-recipient-]');
   await guide(o, 'recipients', "return document.querySelector('[data-testid^=note-recipient-]')?.parentElement");
-  await shot(o, 'rad-11-beleske', [{ sel: '[data-testid=note-body]' }, { sel: '[data-guide=recipients]' }, { sel: '[data-testid=note-send]' }], { scroll: false });
-  await o.fill('[data-testid=note-body]', '');
+  await shot(o, 'rad-11-beleske', [{ sel: '[data-testid=note-title-input]' }, { sel: '[data-guide=recipients]' }, { sel: '[data-testid=note-send]' }], { scroll: false });
+  await o.keyboard.press('Escape');
 
   await go(o, '/admin/absences', 1500, '[data-testid=absence-form]');
   await o.click('[data-testid=absence-type-sick]');

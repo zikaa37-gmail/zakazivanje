@@ -70,13 +70,13 @@ class ChatTest extends TestCase
         return $this->actingAsJwt($user)->postJson('/api/chat/unread-count')->assertOk()->json('count');
     }
 
-    public function test_client_message_opens_a_session_for_the_rest_of_the_day_and_reaches_managers(): void
+    public function test_client_message_opens_a_topic_and_reaches_managers(): void
     {
         $this->clientSays('Da li radite u subotu?');
 
         $session = ChatSession::sole();
         $this->assertTrue($session->isActive());
-        $this->assertSame('2026-10-19 23:59:59', $session->expires_at->format('Y-m-d H:i:s'));
+        $this->assertSame('Pitanje', $session->subject);
         $this->assertSame(1, $this->unread($this->owner));
         $this->assertSame(1, $this->unread($this->office));
         $this->assertSame(0, $this->unread($this->anaWorker));
@@ -157,14 +157,27 @@ class ChatTest extends TestCase
         $this->assertSame(2, ChatSession::count());
     }
 
-    public function test_next_day_opens_a_new_session(): void
+    public function test_topics_stay_open_and_keep_their_own_thread(): void
     {
         $this->clientSays('Prvi dan');
-        $this->travelTo('2026-10-20 09:00:00');
+        $this->travelTo('2026-10-21 09:00:00');
         $this->clientSays('Drugi dan');
+        $this->assertSame(1, ChatSession::count());
 
-        $this->assertSame(2, ChatSession::count());
-        $this->actingAsJwt($this->owner)->postJson('/api/chat/sessions/list', ['status' => 'closed'])->assertOk()->assertJsonCount(1, 'sessions');
+        $appointment = $this->appointmentWith($this->ana);
+        $this->clientSays('Kasnim', $appointment->id);
+        $this->actingAsJwt($this->client)->postJson('/api/chat/my/messages', ['body' => 'Imate li poklon vaučere?', 'subject' => 'Poklon vaučer'])->assertCreated();
+        $this->assertSame(3, ChatSession::count());
+        $this->assertSame(1, ChatSession::where('appointment_id', $appointment->id)->count());
+
+        $first = ChatSession::where('subject', 'Pitanje')->sole();
+        $this->actingAsJwt($this->client)->postJson('/api/chat/my/messages', ['body' => 'Još nešto o tome', 'session_id' => $first->id])->assertCreated();
+        $this->assertSame(3, $first->messages()->count());
+
+        $this->actingAsJwt($this->anaWorker)->postJson("/api/chat/sessions/{$first->id}/messages", ['body' => 'x'])->assertNotFound();
+        $this->actingAsJwt($this->owner)->getJson("/api/chat/sessions/{$first->id}")->assertOk()
+            ->assertJsonPath('subject', 'Pitanje')->assertJsonCount(2, 'other_topics');
+        $this->actingAsJwt($this->owner)->postJson('/api/chat/sessions/list', ['status' => 'active'])->assertOk()->assertJsonCount(3, 'sessions');
     }
 
     public function test_salon_can_start_a_chat_only_with_client_who_has_an_account(): void
