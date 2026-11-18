@@ -3,11 +3,12 @@ import { CANCELLATION_DISCOUNT_TYPES, CancellationDiscountType } from '../../../
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Client, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
+import { ChatService } from '../../../core/services/chat.service';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { StaffMember } from '../../../core/models/staff.model';
@@ -83,6 +84,8 @@ export class ClientListComponent {
   readonly historyId = signal<number | null>(null);
 
   readonly phoneDevice = canPlaceCalls();
+  private chat = inject(ChatService);
+  private router = inject(Router);
   private readonly baseActions: RowAction[] = [
     { id: 'history', label: 'Istorijat i zona', icon: 'activity' },
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
@@ -128,7 +131,8 @@ export class ClientListComponent {
 
   rowActions(client: Client): RowAction[] {
     const [history, edit, ...rest] = this.baseActions;
-    return [history, edit, ...contactActions(client.phone), ...rest];
+    const message: RowAction[] = client.has_account && this.chat.enabled() ? [{ id: 'message', label: 'Pošalji poruku', icon: 'message-square' }] : [];
+    return [history, edit, ...message, ...contactActions(client.phone), ...rest];
   }
 
   initials(client: Client): string {
@@ -138,6 +142,7 @@ export class ClientListComponent {
   onAction(client: Client, action: string): void {
     if (action === 'history') this.historyId.set(client.id);
     if (action === 'edit') this.openForm(client);
+    if (action === 'message') void this.router.navigate(['/admin/chat'], { queryParams: { client: client.id, name: clientName(client) } });
     openContact(action, client.phone);
     if (action === 'delete') this.remove(client);
   }

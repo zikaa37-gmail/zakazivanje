@@ -986,7 +986,7 @@ button.badge:focus-visible {
   font-size: 0.875rem;
   cursor: pointer;
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled):not(.is-start):not(.is-end) {
     background: var(--color-primary-tint);
   }
 

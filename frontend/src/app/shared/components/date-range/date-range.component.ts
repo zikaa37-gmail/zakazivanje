@@ -2,7 +2,7 @@ import { Component, computed, DestroyRef, inject, input, OnInit, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { merge } from 'rxjs';
 import { FormControl } from '@angular/forms';
-import { addDays, isoDate, longDate, monthLabel, parseDate, today } from '../../../core/utils/dates';
+import { addDays, isoDate, monthLabel, parseDate, today } from '../../../core/utils/dates';
 import { IconDirective } from '../../directives/icon.directive';
 
 interface RangeDay {
@@ -136,7 +136,9 @@ export class DateRangeComponent implements OnInit {
   }
 
   label(date: string): string {
-    return date ? longDate(date) : '';
+    if (!date) return '';
+    const [year, month, day] = date.split('-');
+    return `${day}.${month}.${year}.`;
   }
 
   private set(start: string, end: string): void {
