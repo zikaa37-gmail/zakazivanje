@@ -24,7 +24,8 @@ CREATE TABLE `zk_inbox_notifications` (
   KEY `zk_inbox_notifications_user_id_read_at_index` (`user_id`,`read_at`),
   CONSTRAINT `zk_inbox_notifications_appointment_id_foreign` FOREIGN KEY (`appointment_id`) REFERENCES `zk_appointments` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_inbox_notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_inbox_notifications` VALUES (1,1,'note','Beleška: Danijela Đokić','Treba naručiti do petka.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:05','2026-11-18 11:10:05'),(2,6,'note','Beleška: Danijela Đokić','Treba naručiti do petka.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:05','2026-11-18 11:10:05'),(3,7,'note','Beleška: Danijela Đokić','Treba naručiti do petka.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:05','2026-11-18 11:10:05'),(4,1,'note','Odgovor na belešku: Danijela Đokić','Naručiću sutra ujutru.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:08','2026-11-18 11:10:08'),(5,6,'note','Odgovor na belešku: Danijela Đokić','Naručiću sutra ujutru.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:08','2026-11-18 11:10:08'),(6,7,'note','Odgovor na belešku: Danijela Đokić','Naručiću sutra ujutru.','/admin/notes?note=1',NULL,NULL,'2026-11-18 11:10:08','2026-11-18 11:10:08');
 
 SET FOREIGN_KEY_CHECKS=1;
