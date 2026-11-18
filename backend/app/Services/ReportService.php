@@ -122,7 +122,7 @@ class ReportService
                     'appointments' => $ofDay->whereIn('status', self::COUNTED)->count(),
                     'completed' => $completed->count(),
                     'cancelled' => $ofDay->where('status', Appointment::STATUS_CANCELLED)->count(),
-                    'revenue' => round($completed->sum('total'), 2),
+                    'revenue' => round($completed->sum(fn (Appointment $a) => $a->dueAmount()), 2),
                 ];
             })->values()->all(),
             'services' => $this->services($appointments),
@@ -136,7 +136,9 @@ class ReportService
                 'status' => $a->status,
                 'status_label' => self::STATUS_LABELS[$a->status] ?? $a->status,
                 'total' => (float) $a->total,
-                'paid' => $a->paid_at !== null,
+                'paid' => $a->paid_at !== null && $a->outstanding() == 0,
+                'outstanding' => $a->outstanding(),
+                'service_outcome' => $a->service_outcome,
             ])->values()->all() : [],
             'generated_at' => now()->format('d.m.Y. H:i'),
         ];
@@ -207,7 +209,7 @@ class ReportService
         $completed = $appointments->where('status', Appointment::STATUS_COMPLETED);
         $paid = $appointments->where('status', '!=', Appointment::STATUS_CANCELLED)->whereNotNull('paid_at');
         $booked = $counted->where('status', '!=', Appointment::STATUS_NO_SHOW)->sum(fn ($a) => $a->starts_at->diffInMinutes($a->ends_at));
-        $revenue = round($completed->sum('total'), 2);
+        $revenue = round($completed->sum(fn (Appointment $a) => $a->dueAmount()), 2);
         $clientIds = $counted->pluck('client_id')->filter()->unique();
         $firstVisits = $clientIds->isEmpty() ? collect() : Appointment::query()
             ->whereIn('client_id', $clientIds)
@@ -225,11 +227,13 @@ class ReportService
             'no_shows' => $appointments->where('status', Appointment::STATUS_NO_SHOW)->count(),
             'revenue' => $revenue,
             'discount' => round($completed->sum('discount'), 2),
-            'paid' => round($paid->sum('total'), 2),
-            'unpaid' => round($completed->whereNull('paid_at')->sum('total'), 2),
-            'by_method' => collect(Appointment::PAYMENT_METHODS)->mapWithKeys(fn ($m) => [$m => round($paid->where('payment_method', $m)->sum('total'), 2)])->all(),
+            'paid' => round($paid->sum(fn (Appointment $a) => $a->paidAmount()), 2),
+            'unpaid' => round($completed->sum(fn (Appointment $a) => $a->outstanding()), 2),
+            'not_done' => $completed->where('service_outcome', Appointment::OUTCOME_NOT_DONE)->count(),
+            'partial_done' => $completed->where('service_outcome', Appointment::OUTCOME_PARTIAL)->count(),
+            'by_method' => collect(Appointment::PAYMENT_METHODS)->mapWithKeys(fn ($m) => [$m => round($paid->where('payment_method', $m)->sum(fn (Appointment $a) => $a->paidAmount()), 2)])->all(),
             'tips' => round($paid->sum('tip'), 2),
-            'average_ticket' => $completed->count() > 0 ? round($completed->avg('total'), 2) : 0,
+            'average_ticket' => $completed->count() > 0 ? round($completed->avg(fn (Appointment $a) => $a->dueAmount()), 2) : 0,
             'booked_minutes' => (int) $booked,
             'available_minutes' => (int) round($available),
             'utilization' => $available > 0 ? round(min(100, $booked / $available * 100), 1) : 0,

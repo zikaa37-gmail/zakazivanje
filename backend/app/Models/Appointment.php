@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Auth;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'processing_offset', 'processing_minutes', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'completion_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'change_notice', 'change_notice_at', 'paid_at', 'payment_method', 'tip', 'link_group'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'processing_offset', 'processing_minutes', 'status', 'service_outcome', 'source', 'price', 'discount', 'total', 'due_amount', 'paid_amount', 'note', 'admin_note', 'completion_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'change_notice', 'change_notice_at', 'paid_at', 'payment_method', 'tip', 'link_group'])]
 #[Hidden(['change_notice', 'admin_note', 'completion_note'])]
 class Appointment extends Model
 {
@@ -36,6 +36,14 @@ class Appointment extends Model
 
     public const PAYMENT_METHODS = ['cash', 'card', 'bank'];
 
+    public const OUTCOME_DONE = 'done';
+
+    public const OUTCOME_PARTIAL = 'partial';
+
+    public const OUTCOME_NOT_DONE = 'not_done';
+
+    public const OUTCOMES = [self::OUTCOME_DONE, self::OUTCOME_PARTIAL, self::OUTCOME_NOT_DONE];
+
     public const SOURCE_ONLINE = 'online';
 
     public const SOURCE_ADMIN = 'admin';
@@ -54,6 +62,8 @@ class Appointment extends Model
             'paid_at' => 'datetime',
             'change_notice' => 'array',
             'change_notice_at' => 'datetime',
+            'due_amount' => 'float',
+            'paid_amount' => 'float',
             'price' => 'float',
             'discount' => 'float',
             'total' => 'float',
@@ -90,9 +100,41 @@ class Appointment extends Model
                     $array[$key] = $this->getAttribute($key);
                 }
             }
+            if (array_key_exists('total', $this->getAttributes()) && array_key_exists('status', $this->getAttributes())) {
+                $array['outstanding'] = $this->outstanding();
+            }
         }
 
         return $array;
+    }
+
+    public function dueAmount(): float
+    {
+        if ($this->status !== self::STATUS_COMPLETED) {
+            return 0.0;
+        }
+
+        return round((float) ($this->due_amount ?? $this->total), 2);
+    }
+
+    public function paidAmount(): float
+    {
+        if ($this->paid_amount !== null) {
+            return round((float) $this->paid_amount, 2);
+        }
+
+        return $this->paid_at ? round((float) $this->total, 2) : 0.0;
+    }
+
+    public function outstanding(): float
+    {
+        return max(0.0, round($this->dueAmount() - $this->paidAmount(), 2));
+    }
+
+    public function scopeOutstanding(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_COMPLETED)
+            ->whereRaw('coalesce(paid_amount, 0) < coalesce(due_amount, total)');
     }
 
     public function items(): HasMany

@@ -44,14 +44,17 @@ class AppointmentController extends Controller
             'staff_member_id' => ['nullable', 'integer'],
             'status' => ['nullable', Rule::in(Appointment::STATUSES)],
             'search' => ['nullable', 'string', 'max:100'],
+            'billing' => ['nullable', Rule::in(['outstanding', 'not_done', 'partial'])],
         ]);
 
         $search = trim($data['search'] ?? '');
 
         return Appointment::query()
-            ->whereBetween('starts_at', [CarbonImmutable::parse($data['from'])->startOfDay(), CarbonImmutable::parse($data['to'])->endOfDay()])
+            ->when(($data['billing'] ?? null) !== 'outstanding', fn ($q) => $q->whereBetween('starts_at', [CarbonImmutable::parse($data['from'])->startOfDay(), CarbonImmutable::parse($data['to'])->endOfDay()]))
             ->when($data['staff_member_id'] ?? null, fn ($q, $id) => $q->where('staff_member_id', $id))
             ->when($data['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
+            ->when(($data['billing'] ?? null) === 'outstanding', fn ($q) => $q->outstanding())
+            ->when(in_array($data['billing'] ?? null, ['not_done', 'partial'], true), fn ($q) => $q->where('status', Appointment::STATUS_COMPLETED)->where('service_outcome', $data['billing']))
             ->when($search !== '', fn ($q) => $q->whereHas('client', fn ($c) => $c
                 ->where('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")
@@ -175,10 +178,30 @@ class AppointmentController extends Controller
     public function complete(Request $request, Appointment $appointment)
     {
         $data = $request->validate([
-            'payment_method' => ['nullable', Rule::in(Appointment::PAYMENT_METHODS)],
+            'service_outcome' => ['required', Rule::in(Appointment::OUTCOMES)],
+            'due_amount' => ['required', 'numeric', 'min:0', 'max:10000000'],
+            'payment' => ['required', Rule::in(['full', 'partial', 'none'])],
+            'paid_amount' => ['nullable', 'required_if:payment,partial', 'numeric', 'min:0', 'max:10000000'],
+            'payment_method' => ['nullable', 'required_unless:payment,none', Rule::in(Appointment::PAYMENT_METHODS)],
             'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
             'note' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'payment_method.required_unless' => 'Izaberi kako je plaćeno.',
+            'paid_amount.required_if' => 'Upiši koliko je plaćeno.',
         ]);
+        $due = round((float) $data['due_amount'], 2);
+        $paid = match ($data['payment']) {
+            'full' => $due,
+            'partial' => round((float) $data['paid_amount'], 2),
+            default => 0.0,
+        };
+        if ($data['payment'] === 'partial' && ($paid <= 0 || $paid >= $due)) {
+            throw ValidationException::withMessages(['paid_amount' => ['Delimična uplata mora biti veća od 0 i manja od iznosa za naplatu.']]);
+        }
+        $problem = $data['service_outcome'] !== Appointment::OUTCOME_DONE || $paid < $due;
+        if ($problem && blank($data['note'] ?? null)) {
+            throw ValidationException::withMessages(['note' => ['Upiši belešku — šta nije urađeno ili zašto nije naplaćeno.']]);
+        }
         $user = $request->user();
         abort_if($user->isServiceWorker() && $appointment->staff_member_id !== $user->staff_member_id, 403, 'Završavaš samo svoje termine.');
         if (! in_array($appointment->status, [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED], true)) {
@@ -186,17 +209,21 @@ class AppointmentController extends Controller
         }
 
         $previous = $appointment->status;
-        $method = $data['payment_method'] ?? null;
         $appointment->update([
             'status' => Appointment::STATUS_COMPLETED,
+            'service_outcome' => $data['service_outcome'],
+            'due_amount' => $due,
+            'paid_amount' => $paid,
             'completion_note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
-            'payment_method' => $method ?? $appointment->payment_method,
-            'paid_at' => $method ? ($appointment->paid_at ?? now()) : $appointment->paid_at,
-            'tip' => $method ? round((float) ($data['tip'] ?? 0), 2) : $appointment->tip,
+            'payment_method' => $paid > 0 ? $data['payment_method'] : null,
+            'paid_at' => $paid > 0 ? ($appointment->paid_at ?? now()) : null,
+            'tip' => $paid > 0 ? round((float) ($data['tip'] ?? 0), 2) : 0,
         ]);
 
-        if ($previous !== Appointment::STATUS_COMPLETED) {
+        if ($previous !== Appointment::STATUS_COMPLETED && $data['service_outcome'] !== Appointment::OUTCOME_NOT_DONE) {
             $this->notifier->statusChanged($appointment, $previous);
+        } else {
+            $this->notifier->changedSilently($appointment);
         }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);

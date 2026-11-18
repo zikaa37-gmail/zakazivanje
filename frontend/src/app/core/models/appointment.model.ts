@@ -1,5 +1,25 @@
 import { PaymentMethod } from './payment.model';
 
+export type ServiceOutcome = 'done' | 'partial' | 'not_done';
+
+export type BillingFilter = 'outstanding' | 'not_done' | 'partial';
+
+export const SERVICE_OUTCOMES: { value: ServiceOutcome; label: string }[] = [
+  { value: 'done', label: 'Odrađeno' },
+  { value: 'partial', label: 'Delimično' },
+  { value: 'not_done', label: 'Nije odrađeno' },
+];
+
+export interface CompletePayload {
+  service_outcome: ServiceOutcome;
+  due_amount: number;
+  payment: 'full' | 'partial' | 'none';
+  paid_amount: number | null;
+  payment_method: PaymentMethod | null;
+  tip: number;
+  note: string | null;
+}
+
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 export interface AppointmentItem {
@@ -29,6 +49,10 @@ export interface Appointment {
   note: string | null;
   admin_note: string | null;
   completion_note?: string | null;
+  service_outcome?: ServiceOutcome | null;
+  due_amount?: number | null;
+  paid_amount?: number | null;
+  outstanding?: number;
   items: AppointmentItem[];
   staff_member?: { id: number; first_name: string; last_name: string; title?: string | null; color: string | null };
   client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null };

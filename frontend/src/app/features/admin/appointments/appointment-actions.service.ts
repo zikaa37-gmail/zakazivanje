@@ -31,6 +31,9 @@ export class AppointmentActionsService {
       list.push({ id: 'cancel-by-client', label: 'Klijent otkazao', icon: 'close', danger: true });
       if (a.recurrence?.active) list.push({ id: 'cancel-series', label: 'Otkaži ovaj i sve sledeće', icon: 'close', danger: true });
     } else {
+      if (a.status === 'completed') {
+        list.push({ id: 'completed', label: (a.outstanding ?? 0) > 0 ? 'Naplati ostatak' : 'Izmeni završetak i naplatu', icon: 'check-square' });
+      }
       list.push({ id: 'confirmed', label: 'Vrati na potvrđen', icon: 'rotate-ccw' });
     }
     return [...list, ...contactActions(a.client?.phone)];

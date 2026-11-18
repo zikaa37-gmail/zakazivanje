@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { SERVICE_OUTCOMES, ServiceOutcome } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { CompletionService } from '../../../core/services/completion.service';
@@ -13,7 +14,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 
-type Choice = PaymentMethod | 'later';
+type Payment = 'full' | 'partial' | 'none';
 
 @Component({
   selector: 'app-complete-dialog',
@@ -26,42 +27,81 @@ export class CompleteDialogComponent {
   private appointments = inject(AppointmentService);
   private toast = inject(ToastService);
 
+  readonly outcomes = SERVICE_OUTCOMES;
   readonly methods = PAYMENT_METHODS;
-  readonly choice = signal<Choice | null>(null);
+  readonly payments: { value: Payment; label: string }[] = [
+    { value: 'full', label: 'Plaćeno u celosti' },
+    { value: 'partial', label: 'Delimično' },
+    { value: 'none', label: 'Nije plaćeno' },
+  ];
+
+  readonly outcome = signal<ServiceOutcome>('done');
+  readonly payment = signal<Payment | null>(null);
+  readonly method = signal<PaymentMethod | null>(null);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
+  readonly due = new FormControl<number | null>(null);
+  readonly paidAmount = new FormControl<number | null>(null);
   readonly tip = new FormControl<number | null>(null);
   readonly note = new FormControl('', { nonNullable: true });
+  private readonly dueValue = signal(0);
+  private readonly noteValue = signal('');
 
   readonly appointment = this.completion.request;
-  readonly alreadyPaid = computed(() => !!this.appointment()?.paid_at);
   readonly time = computed(() => {
     const a = this.appointment();
     return a ? timeOf(a.starts_at) : '';
   });
   readonly services = computed(() => (this.appointment()?.items ?? []).map((i) => i.name).join(', '));
-  readonly paidLabel = computed(() => PAYMENT_METHODS.find((m) => m.value === this.appointment()?.payment_method)?.label ?? '');
+  readonly nothingDue = computed(() => this.dueValue() <= 0);
+  readonly needsMethod = computed(() => !this.nothingDue() && (this.payment() === 'full' || this.payment() === 'partial'));
+  readonly problem = computed(() => this.outcome() !== 'done' || (!this.nothingDue() && this.payment() !== 'full'));
+  readonly ready = computed(() => {
+    if (!this.nothingDue() && this.payment() === null) return false;
+    if (this.needsMethod() && this.method() === null) return false;
+    return !this.problem() || this.noteValue().trim().length > 0;
+  });
   readonly confirmLabel = computed(() => {
-    if (this.alreadyPaid()) return 'Odrađeno';
-    const choice = this.choice();
-    if (choice === null) return 'Izaberi naplatu';
-    return choice === 'later' ? 'Odrađeno, naplata kasnije' : 'Odrađeno i naplaćeno';
+    if (!this.nothingDue() && this.payment() === null) return 'Izaberi naplatu';
+    if (this.needsMethod() && this.method() === null) return 'Izaberi način plaćanja';
+    if (this.problem() && !this.noteValue().trim()) return 'Upiši belešku';
+    return 'Sačuvaj';
   });
 
   constructor() {
+    this.due.valueChanges.subscribe((v) => this.dueValue.set(Math.max(0, Number(v) || 0)));
+    this.note.valueChanges.subscribe((v) => this.noteValue.set(v));
     effect(() => {
       const a = this.appointment();
       untracked(() => {
-        this.choice.set(null);
         this.error.set(null);
-        this.tip.reset(a?.tip ? a.tip : null);
-        this.note.reset(a?.completion_note ?? '');
+        this.outcome.set(a?.service_outcome ?? 'done');
+        const dueBefore = a?.due_amount ?? a?.total ?? 0;
+        const paidBefore = a?.paid_at ? (a.paid_amount ?? a.total) : 0;
+        this.due.setValue(dueBefore);
+        this.payment.set(a?.paid_at ? (paidBefore >= dueBefore ? 'full' : 'partial') : null);
+        this.method.set(a?.payment_method ?? null);
+        this.paidAmount.setValue(a?.paid_at && paidBefore < dueBefore ? paidBefore : null);
+        this.tip.setValue(a?.tip ? a.tip : null);
+        this.note.setValue(a?.completion_note ?? '');
       });
     });
   }
 
-  choose(choice: Choice): void {
-    this.choice.set(choice);
+  chooseOutcome(outcome: ServiceOutcome): void {
+    this.outcome.set(outcome);
+    if (outcome === 'not_done') {
+      this.due.setValue(0);
+      this.payment.set('none');
+      this.method.set(null);
+    } else if (outcome === 'done') {
+      this.due.setValue(this.appointment()?.total ?? 0);
+    }
+  }
+
+  choosePayment(payment: Payment): void {
+    this.payment.set(payment);
+    if (payment === 'none') this.method.set(null);
   }
 
   cancel(): void {
@@ -70,25 +110,31 @@ export class CompleteDialogComponent {
 
   save(): void {
     const a = this.appointment();
-    if (!a) return;
-    const choice = this.choice();
-    if (!this.alreadyPaid() && choice === null) {
-      this.error.set('Izaberi kako je plaćeno ili „Naplata kasnije“.');
-      return;
-    }
-    const method = this.alreadyPaid() || choice === 'later' ? null : choice;
+    if (!a || !this.ready()) return;
+    const payment: Payment = this.nothingDue() ? 'none' : this.payment()!;
     this.saving.set(true);
     this.error.set(null);
-    this.appointments.complete(a.id, method, Math.max(0, Number(this.tip.value) || 0), this.note.value.trim()).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.toast.success(method || this.alreadyPaid() ? 'Termin je odrađen i naplaćen.' : 'Termin je odrađen. Naplata je ostala otvorena.');
-        this.completion.finish(true);
-      },
-      error: (err) => {
-        this.saving.set(false);
-        this.error.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
-      },
-    });
+    this.appointments
+      .complete(a.id, {
+        service_outcome: this.outcome(),
+        due_amount: this.dueValue(),
+        payment,
+        paid_amount: payment === 'partial' ? Math.max(0, Number(this.paidAmount.value) || 0) : null,
+        payment_method: payment === 'none' ? null : this.method(),
+        tip: payment === 'none' ? 0 : Math.max(0, Number(this.tip.value) || 0),
+        note: this.note.value.trim() || null,
+      })
+      .subscribe({
+        next: (saved) => {
+          this.saving.set(false);
+          const owed = saved.outstanding ?? 0;
+          this.toast.success(owed > 0 ? `Sačuvano. Za naplatu ostaje ${owed.toLocaleString('sr-RS')} din.` : 'Termin je završen, naplata je zatvorena.');
+          this.completion.finish(true);
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.error.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
+        },
+      });
   }
 }

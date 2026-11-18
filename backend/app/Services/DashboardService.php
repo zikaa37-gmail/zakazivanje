@@ -65,6 +65,25 @@ class DashboardService
             'pending' => $pending,
             'staff' => $staff,
             'expected_revenue' => round($mine->whereIn('status', [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED])->sum('total'), 2),
+            'billing' => $this->billing($staffId),
+        ];
+    }
+
+    private function billing(?int $staffId): array
+    {
+        $open = Appointment::query()->outstanding()
+            ->when($staffId, fn ($q) => $q->where('staff_member_id', $staffId))
+            ->get(['id', 'status', 'total', 'due_amount', 'paid_amount', 'paid_at']);
+
+        return [
+            'outstanding_count' => $open->count(),
+            'outstanding_amount' => round($open->sum(fn (Appointment $a) => $a->outstanding()), 2),
+            'not_done_count' => Appointment::query()
+                ->where('status', Appointment::STATUS_COMPLETED)
+                ->where('service_outcome', Appointment::OUTCOME_NOT_DONE)
+                ->where('starts_at', '>=', now()->subDays(30))
+                ->when($staffId, fn ($q) => $q->where('staff_member_id', $staffId))
+                ->count(),
         ];
     }
 
@@ -76,7 +95,7 @@ class DashboardService
 
         $appointments = Appointment::query()
             ->whereBetween('starts_at', [$from->startOfDay(), $to->endOfDay()])
-            ->get(['id', 'starts_at', 'status', 'total', 'staff_member_id', 'ends_at']);
+            ->get(['id', 'starts_at', 'status', 'total', 'due_amount', 'staff_member_id', 'ends_at']);
 
         $series = collect(CarbonPeriod::create($from, $to))->map(function ($day) use ($appointments) {
             $date = $day->format('Y-m-d');
@@ -85,7 +104,7 @@ class DashboardService
             return [
                 'date' => $date,
                 'appointments' => $ofDay->whereIn('status', self::COUNTED)->count(),
-                'revenue' => round($ofDay->where('status', Appointment::STATUS_COMPLETED)->sum('total'), 2),
+                'revenue' => round($ofDay->where('status', Appointment::STATUS_COMPLETED)->sum(fn (Appointment $a) => $a->dueAmount()), 2),
             ];
         })->values();
 
@@ -114,7 +133,7 @@ class DashboardService
     {
         $rows = Appointment::query()
             ->whereBetween('starts_at', [$from->startOfDay(), $to->endOfDay()])
-            ->get(['status', 'total']);
+            ->get(['status', 'total', 'due_amount']);
 
         $counted = $rows->whereIn('status', self::COUNTED);
         $completed = $rows->where('status', Appointment::STATUS_COMPLETED);
@@ -127,8 +146,8 @@ class DashboardService
             'cancelled' => $rows->where('status', Appointment::STATUS_CANCELLED)->count(),
             'no_shows' => $noShows,
             'no_show_rate' => $finished > 0 ? round($noShows / $finished * 100, 1) : 0,
-            'revenue' => round($completed->sum('total'), 2),
-            'average_ticket' => $completed->count() > 0 ? round($completed->avg('total'), 2) : 0,
+            'revenue' => round($completed->sum(fn (Appointment $a) => $a->dueAmount()), 2),
+            'average_ticket' => $completed->count() > 0 ? round($completed->avg(fn (Appointment $a) => $a->dueAmount()), 2) : 0,
             'new_clients' => User::where('role', UserRole::Client)->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])->count(),
         ];
     }

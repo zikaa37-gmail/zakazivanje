@@ -21,6 +21,24 @@
 }
 
 @if (todayData(); as t) {
+  @if (t.billing.outstanding_count > 0 || t.billing.not_done_count > 0) {
+    <div class="card flex flex-wrap items-center gap-3 mb-4 border-l-4 border-l-[var(--color-danger)]" data-testid="dashboard-billing">
+      <span appIcon="alert-triangle" class="text-[var(--color-danger)]" aria-hidden="true"></span>
+      <div class="min-w-0 flex-1 text-sm">
+        @if (t.billing.outstanding_count > 0) {
+          <div><strong>Za naplatu: {{ t.billing.outstanding_amount | rsd }}</strong> · termina {{ t.billing.outstanding_count }}</div>
+        }
+        @if (t.billing.not_done_count > 0) {
+          <div class="muted">Neodrađenih usluga u poslednjih 30 dana: {{ t.billing.not_done_count }}</div>
+        }
+      </div>
+      @if (t.billing.outstanding_count > 0) {
+        <a routerLink="/admin/appointments" [queryParams]="{ billing: 'outstanding' }" appBtn size="s" theme="secondary" data-testid="dashboard-billing-open">Pogledaj</a>
+      } @else {
+        <a routerLink="/admin/appointments" [queryParams]="{ billing: 'not_done' }" appBtn size="s" theme="secondary">Pogledaj</a>
+      }
+    </div>
+  }
   <section class="today-grid mb-6" data-testid="dashboard-today">
     <div class="card">
       <div class="flex items-center justify-between mb-2">
