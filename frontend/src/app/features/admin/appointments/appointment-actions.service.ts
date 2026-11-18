@@ -72,6 +72,11 @@ export class AppointmentActionsService {
         return true;
       }
 
+      const question = this.statusQuestion(a, action as AppointmentStatus);
+      if (question) {
+        const ok = await this.confirm.confirm({ ...question, cancelLabel: 'Ne', danger: action === 'no_show' });
+        if (!ok) return false;
+      }
       await firstValueFrom(this.appointments.setStatus(a.id, action as AppointmentStatus));
       this.toast.success(`Status: ${STATUS_LABELS[action as AppointmentStatus].label}.`);
       return true;
@@ -79,6 +84,15 @@ export class AppointmentActionsService {
       this.toast.error(apiErrorMessage(err, 'Akcija nije uspela.'));
       return false;
     }
+  }
+
+  private statusQuestion(a: Appointment, status: AppointmentStatus): { title: string; message: string; confirmLabel: string } | null {
+    const who = `${clientName(a.client)} (${timeOf(a.starts_at)})`;
+    if (status === 'no_show') return { title: 'Klijent nije došao', message: `Označiti da ${who} nije došao? Klijentu se upisuju poeni discipline.`, confirmLabel: 'Nije došao' };
+    if (status === 'completed') return { title: 'Završen termin', message: `Označiti termin ${who} kao završen? Klijent dobija molbu za ocenu.`, confirmLabel: 'Završen' };
+    if (status === 'pending') return { title: 'Vraćanje na čekanje', message: `Vratiti termin ${who} na čekanje potvrde?`, confirmLabel: 'Vrati' };
+    if (status === 'confirmed' && a.status !== 'pending') return { title: 'Vraćanje termina', message: `Vratiti termin ${who} kao potvrđen? Vreme se ponovo zauzima.`, confirmLabel: 'Vrati' };
+    return null;
   }
 
   async transfer(a: Appointment, colleague: ColleagueRef): Promise<Appointment | null> {

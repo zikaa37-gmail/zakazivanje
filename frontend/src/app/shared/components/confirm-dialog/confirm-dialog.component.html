@@ -18,6 +18,7 @@
           type="button"
           appBtn
           [theme]="req.danger === false ? 'primary' : 'danger'"
+          [disabled]="!armed()"
           (click)="respond(true)"
           data-testid="confirm-dialog-confirm"
         >

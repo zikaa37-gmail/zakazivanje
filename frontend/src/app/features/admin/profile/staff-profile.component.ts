@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { COMMUNICATION_OPTIONS, CommunicationChannel, userRoleLabel } from '../../../core/models/user.model';
+import { COMMUNICATION_OPTIONS, CommunicationChannel, UI_MODES, UiMode, userRoleLabel } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
@@ -23,6 +23,17 @@ export class StaffProfileComponent {
   private fb = inject(FormBuilder);
   private toast = inject(ToastService);
   protected auth = inject(AuthService);
+  readonly uiModes = UI_MODES;
+  readonly currentUiMode = computed(() => this.auth.currentUser()?.ui_mode ?? 'standard');
+  readonly uiModeHint = computed(() => UI_MODES.find((m) => m.value === this.currentUiMode())?.hint ?? '');
+
+  setUiMode(mode: UiMode): void {
+    if (mode === this.currentUiMode()) return;
+    this.auth.setUiMode(mode).subscribe({
+      next: () => this.toast.success(mode === 'spacious' ? 'Uključen je prostraniji prikaz.' : 'Uključen je standardni prikaz.'),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Promena nije uspela.')),
+    });
+  }
 
   readonly communication = COMMUNICATION_OPTIONS;
   readonly saving = signal(false);

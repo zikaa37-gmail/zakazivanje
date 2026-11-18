@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
-import { CommunicationChannel, User } from '../models/user.model';
+import { CommunicationChannel, UiMode, User } from '../models/user.model';
 import { MarketingService } from './marketing.service';
 
 const ACCESS_TOKEN_KEY = 'zk_access_token';
@@ -104,6 +104,10 @@ export class AuthService {
 
   setFavoriteStaff(staffMemberId: number | null): Observable<User> {
     return this.http.put<User>(`${this.api}/favorite-staff`, { staff_member_id: staffMemberId }).pipe(tap((user) => this.storeUser(user)));
+  }
+
+  setUiMode(mode: UiMode): Observable<User> {
+    return this.http.put<User>(`${this.api}/ui-mode`, { ui_mode: mode }).pipe(tap((user) => this.storeUser(user)));
   }
 
   loadMe(): Observable<User> {

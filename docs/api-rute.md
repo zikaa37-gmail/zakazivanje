@@ -104,6 +104,9 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/staff-absences/list` | `{status?, include_past?}` — odsustva (radnik koji radi usluge vidi svoja i ona koja je upisao) |
 | POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / menadžer → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
+| GET | `/staff/{id}/future-appointments` | budući termini zaposlenog (kao kod odsustva, sa `alternatives`); `POST /staff/{id}/active` sa `active: false` odbija dok ih ima, osim uz `cancel_future: true` (otkazuje sve uz obaveštenje, gasi ponavljanja) |
+| POST | `/clients/{id}/delete-check` | `{history, future}` — klijent sa istorijom termina se ne briše |
+| PUT | `/auth/ui-mode` | `{ui_mode: standard \| spacious}` — prikaz za prijavljeni nalog (osoblje ga menja i u `PUT /team/{id}`) |
 | PUT | `/staff-absences/{id}` | `{starts_on, ends_on, type, note?}` — izmena (vlasnik / menadžer svako, upisani dok čeka); preklapanje se proverava bez tog odsustva, odobrenom se pomera i blokada |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
 | POST | `/cancellation-fees/list` | `{client_id?, status?: free\|open\|paid\|waived}` — naknade za kasno otkazivanje |

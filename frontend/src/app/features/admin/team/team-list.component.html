@@ -91,6 +91,15 @@
         </div>
       </div>
       @if (editing()) {
+        <div class="field" data-testid="team-ui-mode">
+          <span class="text-sm font-semibold">Prikaz</span>
+          <div class="chip-group mt-1">
+            @for (mode of uiModes; track mode.value) {
+              <button type="button" class="chip" [class.selected]="form.controls.ui_mode.value === mode.value" [attr.aria-pressed]="form.controls.ui_mode.value === mode.value" (click)="form.controls.ui_mode.setValue(mode.value)" [attr.data-testid]="'team-ui-mode-' + mode.value">{{ mode.label }}</button>
+            }
+          </div>
+          <span class="text-xs muted">{{ uiModeHint() }}</span>
+        </div>
         @if (!isSelf()) {
           <app-toggle [checked]="form.controls.active.value" label="Aktivan (može da se prijavi)" (checkedChange)="form.controls.active.setValue($event)" data-testid="team-active" />
         }

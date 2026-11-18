@@ -1,3 +1,4 @@
+import { AffectedAppointment } from '../models/staff-absence.model';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -21,7 +22,11 @@ export class StaffService {
     return this.http.put<StaffMember>(`${this.api}/${id}`, payload);
   }
 
-  setActive(id: number, active: boolean): Observable<StaffMember & { future_appointments: number }> {
-    return this.http.post<StaffMember & { future_appointments: number }>(`${this.api}/${id}/active`, { active });
+  setActive(id: number, active: boolean, cancelFuture = false): Observable<StaffMember & { cancelled_appointments: number }> {
+    return this.http.post<StaffMember & { cancelled_appointments: number }>(`${this.api}/${id}/active`, { active, cancel_future: cancelFuture });
+  }
+
+  futureAppointments(id: number): Observable<AffectedAppointment[]> {
+    return this.http.get<AffectedAppointment[]>(`${this.api}/${id}/future-appointments`);
   }
 }

@@ -33,6 +33,10 @@ export class ClientService {
     return this.http.put<Client>(`${this.api}/${id}/nickname`, { nickname });
   }
 
+  deleteCheck(id: number): Observable<{ history: number; future: number }> {
+    return this.http.post<{ history: number; future: number }>(`${this.api}/${id}/delete-check`, {});
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }

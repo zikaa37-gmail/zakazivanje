@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { IconDirective, IconName } from '../../directives/icon.directive';
 
 export interface RowAction {
@@ -28,6 +28,12 @@ export class RowActionsComponent {
 
   readonly selected = output<string>();
 
+  readonly ordered = computed(() => {
+    const safe = this.actions().filter((a) => !a.danger);
+    const danger = this.actions().filter((a) => a.danger);
+    return [...safe, ...danger.map((a, i) => ({ ...a, separated: a.separated || (i === 0 && safe.length > 0) }))];
+  });
+
   readonly open = signal(false);
   readonly menuTop = signal<number | null>(null);
   readonly menuBottom = signal<number | null>(null);
@@ -47,7 +53,8 @@ export class RowActionsComponent {
     }
 
     const rect = this.trigger().nativeElement.getBoundingClientRect();
-    const estimatedHeight = this.actions().length * 40 + 12;
+    const spacious = document.documentElement.classList.contains('ui-spacious');
+    const estimatedHeight = this.actions().length * (spacious ? 56 : 40) + (spacious ? 40 : 12);
     const opensUp = rect.bottom + estimatedHeight > window.innerHeight && rect.top > estimatedHeight;
     this.menuTop.set(opensUp ? null : rect.bottom + 4);
     this.menuBottom.set(opensUp ? window.innerHeight - rect.top + 4 : null);

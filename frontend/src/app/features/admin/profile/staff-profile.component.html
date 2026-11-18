@@ -55,6 +55,16 @@
     </form>
   </div>
 
+  <div class="card" data-testid="staff-profile-ui-mode">
+    <h2 class="text-base font-semibold mb-1">Prikaz</h2>
+    <div class="chip-group">
+      @for (mode of uiModes; track mode.value) {
+        <button type="button" class="chip" [class.selected]="currentUiMode() === mode.value" [attr.aria-pressed]="currentUiMode() === mode.value" (click)="setUiMode(mode.value)" [attr.data-testid]="'ui-mode-' + mode.value">{{ mode.label }}</button>
+      }
+    </div>
+    <p class="text-xs muted mt-2">{{ uiModeHint() }}</p>
+  </div>
+
   <app-device-notifications />
   <app-change-password />
 </div>

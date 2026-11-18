@@ -16,7 +16,7 @@
 } @else {
   <div class="grid gap-3 md:grid-cols-2">
     @for (p of promotions(); track p.id) {
-      <div class="card flex gap-3" [class.opacity-60]="!p.active" [attr.data-testid]="'promotion-' + p.id">
+      <div class="card flex gap-3" [class.is-dimmed]="!p.active" [attr.data-testid]="'promotion-' + p.id">
         <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg shrink-0 bg-[var(--color-secondary-tint)] text-[var(--color-secondary-text)]">
           <span [appIcon]="icon(p.type)" [iconSize]="20" aria-hidden="true"></span>
         </span>

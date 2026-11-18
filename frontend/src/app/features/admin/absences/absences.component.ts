@@ -2,7 +2,7 @@ import { Component, computed, ElementRef, inject, signal, viewChild } from '@ang
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ABSENCE_STATUS, ABSENCE_TYPES, AbsenceType, AffectedAppointment, ColleagueRef, StaffAbsence } from '../../../core/models/staff-absence.model';
+import { ABSENCE_STATUS, ABSENCE_TYPES, AbsenceType, AffectedAppointment, StaffAbsence } from '../../../core/models/staff-absence.model';
 import { StaffMember } from '../../../core/models/staff.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -10,21 +10,19 @@ import { StaffAbsenceService } from '../../../core/services/staff-absence.servic
 import { StaffService } from '../../../core/services/staff.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
-import { contactHref } from '../../../core/utils/contact';
-import { longDate, timeOf, today } from '../../../core/utils/dates';
+import { longDate, today } from '../../../core/utils/dates';
 import { ButtonComponent } from '../../../shared/components/button/button.component';
 import { ErrorMessageComponent } from '../../../shared/components/error-message/error-message.component';
 import { DateRangeComponent } from '../../../shared/components/date-range/date-range.component';
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
-import { AppointmentActionsService } from '../appointments/appointment-actions.service';
-import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
+import { AffectedAppointmentsComponent } from '../appointments/affected-appointments.component';
 
 @Component({
   selector: 'app-absences',
   standalone: true,
-  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [AffectedAppointmentsComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
   template: `
     <div class="page-header">
       <div>
@@ -128,50 +126,10 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
               } @else if (affected().length === 0) {
                 <div class="text-sm muted" data-testid="absence-no-appointments">Nema zakazanih termina u tom periodu.</div>
               } @else {
-                <div class="flex flex-col gap-2" data-testid="absence-affected">
-                  @if (a.status === 'pending') {
-                    <div class="text-xs muted">Odsustvo još nije odobreno, ali termine već možeš da rešiš.</div>
-                  }
-                  @for (t of affected(); track t.id) {
-                    <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-2" [attr.data-testid]="'affected-' + t.id">
-                      <div class="flex flex-wrap items-baseline justify-between gap-2">
-                        <div>
-                          <div class="font-semibold">{{ when(t) }}</div>
-                          <div class="text-sm">{{ t.client | clientName }} · <span class="muted">{{ services(t) }}</span></div>
-                        </div>
-                        @if (t.free_change_reason === 'salon_request') {
-                          <span class="badge badge-info">Poslato klijentu</span>
-                        }
-                      </div>
-                      @if (t.client?.phone) {
-                        <div class="flex flex-wrap gap-3 text-sm">
-                          @if (href('call', t)) {
-                            <a [href]="href('call', t)" class="flex items-center gap-1 font-semibold" [attr.data-testid]="'affected-call-' + t.id"><span appIcon="phone" aria-hidden="true"></span>{{ t.client?.phone }}</a>
-                          } @else {
-                            <span class="flex items-center gap-1"><span appIcon="phone" aria-hidden="true"></span>{{ t.client?.phone }}</span>
-                          }
-                          @if (href('whatsapp', t)) {
-                            <a [href]="href('whatsapp', t)" target="_blank" rel="noopener" class="flex items-center gap-1"><span appIcon="send" aria-hidden="true"></span>WhatsApp</a>
-                          }
-                          @if (href('viber', t)) {
-                            <a [href]="href('viber', t)" class="flex items-center gap-1"><span appIcon="message-square" aria-hidden="true"></span>Viber</a>
-                          }
-                        </div>
-                      }
-                      <div class="flex flex-wrap items-center gap-2">
-                        @for (c of t.alternatives; track c.id) {
-                          <button type="button" appBtn theme="secondary" size="s" (click)="transfer(t, c)" [attr.data-testid]="'affected-transfer-' + t.id + '-' + c.id">
-                            <span class="color-dot" [style.background]="c.color || 'var(--color-primary)'"></span> Prebaci: {{ c.first_name }}
-                          </button>
-                        } @empty {
-                          <span class="text-xs muted">Niko od kolega nije slobodan u to vreme.</span>
-                        }
-                        <button type="button" appBtn theme="secondary" size="s" (click)="ask(t)" [attr.data-testid]="'affected-ask-' + t.id"><span appIcon="send" aria-hidden="true"></span> Pošalji da sam pomeri</button>
-                        <button type="button" appBtn theme="ghost" size="s" class="text-[var(--color-danger)]" (click)="cancel(t)" [attr.data-testid]="'affected-cancel-' + t.id">Otkaži</button>
-                      </div>
-                    </div>
-                  }
-                </div>
+                @if (a.status === 'pending') {
+                  <div class="text-xs muted">Odsustvo još nije odobreno, ali termine već možeš da rešiš.</div>
+                }
+                <app-affected-appointments [appointments]="affected()" (changed)="refreshAffected()" />
               }
             }
           </div>
@@ -184,7 +142,6 @@ export class AbsencesComponent {
   protected auth = inject(AuthService);
   private absenceService = inject(StaffAbsenceService);
   private staffService = inject(StaffService);
-  private actions = inject(AppointmentActionsService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
@@ -324,7 +281,15 @@ export class AbsencesComponent {
     this.loadAffected(absence.id);
   }
 
-  approve(absence: StaffAbsence): void {
+  async approve(absence: StaffAbsence): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Odobravanje odsustva',
+      message: `Odobriti odsustvo za ${absence.staff_member.first_name} (${this.period(absence)})? Ti dani se zatvaraju za zakazivanje.`,
+      confirmLabel: 'Odobri',
+      cancelLabel: 'Ne',
+      danger: false,
+    });
+    if (!ok) return;
     this.absenceService.approve(absence.id).subscribe({
       next: () => {
         this.toast.success('Odsustvo je odobreno, dan je blokiran za zakazivanje.');
@@ -374,18 +339,6 @@ export class AbsencesComponent {
     return this.auth.isManager() || (absence.status === 'pending' && absence.requested_by === this.myId());
   }
 
-  async transfer(t: AffectedAppointment, colleague: ColleagueRef): Promise<void> {
-    if (await this.actions.transfer(t, colleague)) this.refreshAffected();
-  }
-
-  async ask(t: AffectedAppointment): Promise<void> {
-    if (await this.actions.askClientToReschedule(t)) this.refreshAffected();
-  }
-
-  async cancel(t: AffectedAppointment): Promise<void> {
-    if (await this.actions.run(t, 'cancel')) this.refreshAffected();
-  }
-
   typeLabel(type: AbsenceType): string {
     return ABSENCE_TYPES.find((t) => t.value === type)?.label ?? 'Odsustvo';
   }
@@ -394,19 +347,7 @@ export class AbsencesComponent {
     return a.starts_on === a.ends_on ? longDate(a.starts_on) : `${longDate(a.starts_on)} – ${longDate(a.ends_on)}`;
   }
 
-  when(t: AffectedAppointment): string {
-    return `${longDate(t.starts_at)} · ${timeOf(t.starts_at)}`;
-  }
-
-  services(t: AffectedAppointment): string {
-    return t.items.map((i) => i.name).join(' + ');
-  }
-
-  href(channel: 'call' | 'whatsapp' | 'viber', t: AffectedAppointment): string | null {
-    return contactHref(channel, t.client?.phone);
-  }
-
-  private refreshAffected(): void {
+  refreshAffected(): void {
     const id = this.openId();
     if (id) this.loadAffected(id);
   }

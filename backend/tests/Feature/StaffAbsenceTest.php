@@ -129,6 +129,34 @@ class StaffAbsenceTest extends TestCase
             ->assertOk()->assertJsonPath('status', 'pending')->assertJsonPath('ends_on', '2026-11-03');
     }
 
+    public function test_deactivating_staff_with_future_appointments_requires_handling_them(): void
+    {
+        Notification::fake();
+        $first = $this->book('2026-10-20 10:00');
+        $this->book('2026-10-21 10:00');
+
+        $this->actingAsJwt($this->owner)->getJson("/api/staff/{$this->ana->id}/future-appointments")->assertOk()->assertJsonCount(2);
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$this->ana->id}/active", ['active' => false])->assertUnprocessable()->assertJsonValidationErrors('active');
+        $this->assertTrue($this->ana->fresh()->active);
+
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$this->ana->id}/active", ['active' => false, 'cancel_future' => true])
+            ->assertOk()->assertJsonPath('cancelled_appointments', 2);
+        $this->assertFalse($this->ana->fresh()->active);
+        $this->assertSame('cancelled', Appointment::find($first)->status);
+        Notification::assertSentTo($this->client, AppointmentNotification::class);
+    }
+
+    public function test_client_with_history_cannot_be_deleted(): void
+    {
+        $id = $this->book('2026-10-20 10:00');
+        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/delete-check")->assertOk()->assertJsonPath('future', 1)->assertJsonPath('history', 0);
+
+        $this->travelTo('2026-10-22 08:00:00');
+        $this->actingAsJwt($this->owner)->deleteJson("/api/clients/{$this->client->id}")->assertUnprocessable();
+        $this->assertModelExists($this->client);
+        $this->assertNotNull(Appointment::find($id));
+    }
+
     public function test_affected_appointments_list_client_phone_and_free_colleagues(): void
     {
         $this->client->update(['phone' => '+381641112233']);

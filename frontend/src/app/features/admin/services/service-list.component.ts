@@ -180,12 +180,22 @@ export class ServiceListComponent {
     if (action === 'copy') this.openForm({ ...service, name: `${service.name} (kopija)` }, true);
     if (action === 'delete') this.remove(service);
     if (action === 'enable') this.patch(service, { active: true, paused_until: null }, 'Usluga je ponovo dostupna.');
-    if (action === 'disable') this.patch(service, { active: false, paused_until: null }, 'Usluga je onemogućena — klijenti je više ne vide.');
+    if (action === 'disable') void this.disable(service);
     if (action === 'unpause') this.patch(service, { paused_until: null }, 'Pauza je ukinuta.');
     if (action === 'pause') {
       this.pauseUntil.setValue(addDays(this.today, 7));
       this.pausing.set(service);
     }
+  }
+
+  private async disable(service: SalonService): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Onemogućavanje usluge',
+      message: `Skloniti uslugu „${service.name}" iz ponude? Klijenti je više ne vide, a već zakazani termini ostaju. Možeš je ponovo omogućiti.`,
+      confirmLabel: 'Onemogući',
+      danger: false,
+    });
+    if (ok) this.patch(service, { active: false, paused_until: null }, 'Usluga je onemogućena — klijenti je više ne vide.');
   }
 
   confirmPause(): void {

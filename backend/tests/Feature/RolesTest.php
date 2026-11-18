@@ -34,6 +34,18 @@ class RolesTest extends TestCase
         ];
     }
 
+    public function test_display_mode_is_set_by_manager_or_user_self(): void
+    {
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER, 'email' => 'menadzer@salon.rs']);
+
+        $this->actingAsJwt($this->owner)->putJson("/api/team/{$manager->id}", [
+            'first_name' => $manager->first_name, 'last_name' => $manager->last_name, 'email' => $manager->email, 'role' => User::ROLE_MANAGER, 'ui_mode' => 'spacious',
+        ])->assertOk()->assertJsonPath('ui_mode', 'spacious');
+
+        $this->actingAsJwt($manager)->putJson('/api/auth/ui-mode', ['ui_mode' => 'standard'])->assertOk()->assertJsonPath('ui_mode', 'standard');
+        $this->actingAsJwt($manager)->putJson('/api/auth/ui-mode', ['ui_mode' => 'huge'])->assertUnprocessable();
+    }
+
     public function test_staff_member_with_email_gets_worker_account(): void
     {
         $id = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload())->assertCreated()
@@ -51,7 +63,7 @@ class RolesTest extends TestCase
         $this->assertFalse($worker->active);
 
         $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => true])->assertOk()
-            ->assertJsonPath('active', true)->assertJsonPath('future_appointments', 0);
+            ->assertJsonPath('active', true)->assertJsonPath('cancelled_appointments', 0);
         $this->assertTrue($worker->refresh()->active);
 
         $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();

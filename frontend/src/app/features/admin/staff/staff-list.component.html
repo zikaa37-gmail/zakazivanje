@@ -228,3 +228,16 @@
     <app-button modal-footer theme="primary" size="s" [loading]="saving()" (click)="save()" data-testid="staff-save">Sačuvaj</app-button>
   </app-modal>
 }
+
+@if (leaving(); as l) {
+  <app-modal [title]="'Budući termini — ' + l.member.first_name + ' ' + l.member.last_name" size="l" footerMode="custom" (cancelled)="leaving.set(null)" testId="staff-leaving">
+    @if (l.appointments.length > 0) {
+      <p class="text-sm mb-3">Pre deaktivacije reši zakazane termine: prebaci ih kolegi, zamoli klijenta da sam pomeri ili otkaži. Ostalo: <strong>{{ l.appointments.length }}</strong>.</p>
+      <app-affected-appointments [appointments]="l.appointments" (changed)="refreshLeaving()" />
+    } @else {
+      <p class="text-sm">Svi termini su rešeni. Zaposleni može da se deaktivira.</p>
+    }
+    <button modal-footer type="button" appBtn theme="secondary" size="s" (click)="leaving.set(null)" data-testid="staff-leaving-close">Zatvori</button>
+    <button modal-footer type="button" appBtn theme="danger" size="s" (click)="deactivateLeaving()" data-testid="staff-leaving-deactivate">{{ l.appointments.length > 0 ? 'Otkaži sve i deaktiviraj' : 'Deaktiviraj' }}</button>
+  </app-modal>
+}
