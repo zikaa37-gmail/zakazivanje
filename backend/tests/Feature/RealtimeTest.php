@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\Service;
@@ -49,7 +50,7 @@ class RealtimeTest extends TestCase
         $this->ana = $this->staff('Ana');
         $this->marko = $this->staff('Marko');
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
     }
 
     private function staff(string $name): StaffMember

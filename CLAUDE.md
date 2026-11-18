@@ -28,7 +28,7 @@ vlasnik i menadžer imaju meni u dva taba, Svakodnevno i Upravljanje (`section` 
 Menadžer izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
 automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
 Svaki zaposleni sa emailom automatski ima nalog radnika (`StaffAccountService::sync()`);
-zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Nove uloge idu u `User::ROLES`.
+zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Uloge su enum `UserRole` (`app/Enums/UserRole.php`) (`role` je cast na enum, podrazumevano `client`), na frontendu `Role` / `STAFF_ROLES` u `user.model.ts`; nove uloge idu tu. Uloga zaposlenog se bira i u formi zaposlenog (`role` uz `PUT /staff/{id}`, ista pravila kao Nalozi), umesto nekadašnje „Pozicije“.
 
 ## Working conventions
 

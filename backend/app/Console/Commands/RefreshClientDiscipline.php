@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\User;
@@ -23,7 +24,7 @@ class RefreshClientDiscipline extends Command
             ->pluck('client_id');
 
         $clients = User::query()
-            ->where('role', User::ROLE_CLIENT)
+            ->where('role', UserRole::Client)
             ->where(fn ($q) => $q->where('discipline_zone', '!=', User::ZONE_GREEN)->orWhere('discipline_points', '>', 0)->orWhere('zone_manual', true)->orWhereIn('id', $recent))
             ->get();
 

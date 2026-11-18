@@ -196,7 +196,7 @@ export class CalendarComponent {
     if (view === 'month') return [];
     if (view === 'day') {
       const date = this.date();
-      return this.visibleStaff().map((s) => this.column(`staff-${s.id}`, `${s.first_name} ${s.last_name}`, s.title ?? '', date, s));
+      return this.visibleStaff().map((s) => this.column(`staff-${s.id}`, `${s.first_name} ${s.last_name}`, '', date, s));
     }
     const single = this.staffFilter() !== null ? this.visibleStaff()[0] ?? null : null;
     return Array.from({ length: 7 }, (_, i) => {

@@ -2,8 +2,8 @@ import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.c
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { STAFF_ROLE_OPTIONS, StaffRole, TeamMember, TeamMemberPayload } from '../../../core/models/team.model';
-import { UI_MODES, UiMode, userRoleLabel } from '../../../core/models/user.model';
+import { STAFF_ROLE_OPTIONS, TeamMember, TeamMemberPayload } from '../../../core/models/team.model';
+import { Role, UI_MODES, UiMode, UserRole, userRoleLabel } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { TeamService } from '../../../core/services/team.service';
@@ -35,6 +35,7 @@ export class TeamListComponent {
 
   readonly roleLabel = userRoleLabel;
   readonly uiModes = UI_MODES;
+  readonly role = Role;
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly members = signal<TeamMember[]>([]);
@@ -44,7 +45,7 @@ export class TeamListComponent {
   readonly formError = signal<string | null>(null);
 
   readonly linked = computed(() => this.editing()?.staff_member_id != null);
-  readonly roleOptions = computed(() => STAFF_ROLE_OPTIONS.filter((o) => (o.value !== 'owner' || this.auth.isOwner()) && (o.value !== 'worker' || this.linked())));
+  readonly roleOptions = computed(() => STAFF_ROLE_OPTIONS.filter((o) => (o.value !== Role.Owner || this.auth.isOwner()) && (o.value !== Role.Worker || this.linked())));
   readonly isSelf = computed(() => this.editing()?.id === this.auth.currentUser()?.id);
 
   readonly form = this.fb.group({
@@ -52,7 +53,7 @@ export class TeamListComponent {
     last_name: this.fb.nonNullable.control('', Validators.required),
     email: this.fb.nonNullable.control('', [Validators.required, Validators.email]),
     phone: this.fb.control<string | null>(null),
-    role: this.fb.nonNullable.control<StaffRole>('manager'),
+    role: this.fb.nonNullable.control<UserRole>(Role.Manager),
     active: this.fb.nonNullable.control(true),
     ui_mode: this.fb.nonNullable.control<UiMode>('standard'),
     send_invite: this.fb.nonNullable.control(true),
@@ -81,7 +82,7 @@ export class TeamListComponent {
 
   actionsFor(member: TeamMember): RowAction[] {
     const self = member.id === this.auth.currentUser()?.id;
-    if (member.role === 'owner' && !this.auth.isOwner()) return [];
+    if (member.role === Role.Owner && !this.auth.isOwner()) return [];
     return [
       { id: 'edit', label: 'Izmeni', icon: 'edit' },
       { id: 'invite', label: member.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' },
@@ -108,7 +109,7 @@ export class TeamListComponent {
       last_name: member?.last_name ?? '',
       email: member?.email ?? '',
       phone: member?.phone ?? null,
-      role: member?.role ?? 'manager',
+      role: member?.role ?? Role.Manager,
       active: member?.active ?? true,
       ui_mode: member?.ui_mode ?? 'standard',
       send_invite: true,

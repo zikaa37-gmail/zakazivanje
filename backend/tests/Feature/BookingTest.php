@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\BusinessSetting;
@@ -46,7 +47,7 @@ class BookingTest extends TestCase
 
         $this->ana = $this->staff('Ana', null, [$this->cut->id, $this->blow->id]);
         $this->milica = $this->staff('Milica', 'automatic', [$this->cut->id]);
-        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
     }
 
     private function staff(string $name, ?string $mode, array $serviceIds): StaffMember

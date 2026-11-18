@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\StaffInviteNotification;
@@ -15,7 +16,7 @@ class StaffAccountService
         $account = $staff->account()->first();
 
         if (blank($staff->email)) {
-            if ($account?->role === User::ROLE_WORKER) {
+            if ($account?->role === UserRole::Worker) {
                 $this->deactivate($account);
             }
 
@@ -24,17 +25,17 @@ class StaffAccountService
 
         $sameEmail = User::where('email', $staff->email)->first();
         if ($sameEmail && $sameEmail->id !== $account?->id) {
-            if ($sameEmail->role === User::ROLE_CLIENT || $sameEmail->staff_member_id !== null) {
+            if ($sameEmail->role === UserRole::Client || $sameEmail->staff_member_id !== null) {
                 throw ValidationException::withMessages(['email' => ['Ovaj email već koristi drugi nalog.']]);
             }
             $account?->forceFill(['staff_member_id' => null])->save();
-            if ($account?->role === User::ROLE_WORKER) {
+            if ($account?->role === UserRole::Worker) {
                 $this->deactivate($account);
             }
             $account = $sameEmail;
         }
 
-        $account ??= new User(['role' => User::ROLE_WORKER]);
+        $account ??= new User(['role' => UserRole::Worker]);
         $account->fill([
             'first_name' => $staff->first_name,
             'last_name' => $staff->last_name,
@@ -42,7 +43,7 @@ class StaffAccountService
             'phone' => $account->phone ?? $staff->phone,
         ]);
         $account->staff_member_id = $staff->id;
-        if ($account->role === User::ROLE_WORKER) {
+        if ($account->role === UserRole::Worker) {
             $account->active = $staff->active ?? true;
         }
         $account->save();

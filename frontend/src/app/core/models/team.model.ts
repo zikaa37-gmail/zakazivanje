@@ -1,6 +1,4 @@
-import { UiMode, UserRole } from './user.model';
-
-export type StaffRole = Exclude<UserRole, 'client'>;
+import { Role, UiMode, UserRole } from './user.model';
 
 export interface TeamMember {
   id: number;
@@ -8,7 +6,7 @@ export interface TeamMember {
   last_name: string;
   email: string;
   phone: string | null;
-  role: StaffRole;
+  role: UserRole;
   active: boolean;
   ui_mode?: UiMode;
   staff_member_id: number | null;
@@ -22,14 +20,14 @@ export interface TeamMemberPayload {
   last_name: string;
   email: string;
   phone: string | null;
-  role: StaffRole;
+  role: UserRole;
   active?: boolean;
   ui_mode?: UiMode;
   send_invite?: boolean;
 }
 
-export const STAFF_ROLE_OPTIONS: { value: StaffRole; label: string; hint: string }[] = [
-  { value: 'manager', label: 'Menadžer', hint: 'Vodi salon umesto vlasnika: termini, klijenti, zaposleni, usluge, cene, recenzije, galerija, podešavanja; izveštaje šalje vlasniku. Ne vidi finansijsku statistiku i ne menja naloge vlasnika.' },
-  { value: 'owner', label: 'Vlasnik', hint: 'Sve, uključujući finansijsku statistiku i naloge vlasnika.' },
-  { value: 'worker', label: 'Radnik', hint: 'Samo svoj dan: kalendar, termini, klijenti, svoj pazar i bakšiš. Samo za nalog vezan za zaposlenog.' },
+export const STAFF_ROLE_OPTIONS: { value: UserRole; label: string; hint: string }[] = [
+  { value: Role.Manager, label: 'Menadžer', hint: 'Vodi salon umesto vlasnika: termini, klijenti, zaposleni, usluge, cene, recenzije, galerija, podešavanja; izveštaje šalje vlasniku. Ne vidi finansijsku statistiku i ne menja naloge vlasnika.' },
+  { value: Role.Owner, label: 'Vlasnik', hint: 'Sve, uključujući finansijsku statistiku i naloge vlasnika.' },
+  { value: Role.Worker, label: 'Radnik', hint: 'Samo svoj dan: kalendar, termini, klijenti, svoj pazar i bakšiš. Samo za nalog vezan za zaposlenog.' },
 ];

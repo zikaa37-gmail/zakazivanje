@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\StaffMember;
@@ -19,12 +20,12 @@ class ServiceCategoryTest extends TestCase
     {
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
     }
 
     public function test_categories_are_managed_by_managers_only(): void
     {
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test'])->id]);
+        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test'])->id]);
         $this->actingAsJwt($worker)->postJson('/api/service-categories', ['name' => 'Nokti'])->assertForbidden();
 
         $id = $this->actingAsJwt($this->owner)->postJson('/api/service-categories', ['name' => 'Nokti'])

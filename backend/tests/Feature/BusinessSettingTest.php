@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,7 +28,7 @@ class BusinessSettingTest extends TestCase
         $this->putJson('/api/business-settings', $payload)->assertUnauthorized();
         $this->actingAsJwt(User::factory()->create())->putJson('/api/business-settings', $payload)->assertForbidden();
 
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
         $this->actingAsJwt($admin)->putJson('/api/business-settings', $payload)
             ->assertOk()->assertJsonPath('name', 'Berbernica Mika');
 
@@ -36,7 +37,7 @@ class BusinessSettingTest extends TestCase
 
     public function test_unknown_category_is_rejected(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
 
         $this->actingAsJwt($admin)->putJson('/api/business-settings', ['name' => 'Salon', 'category' => 'bakery', 'booking_confirmation' => 'manual'])
             ->assertUnprocessable()->assertJsonValidationErrors('category');

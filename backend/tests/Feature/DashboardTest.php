@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\Service;
@@ -25,7 +26,7 @@ class DashboardTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->cut->id]);
@@ -123,14 +124,14 @@ class DashboardTest extends TestCase
         $this->assertEqualsWithDelta(2000, $filtered['expected_revenue'], 0.01);
         $this->assertCount(2, $filtered['staff']);
 
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
+        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id]);
         $own = $this->actingAsJwt($worker)->postJson('/api/dashboard/today', ['staff_member_id' => $marko->id])->assertOk()->json();
         $this->assertSame($this->ana->id, $own['staff_member_id']);
         $this->assertCount(1, $own['appointments']);
         $this->assertSame($this->ana->id, $own['appointments'][0]['staff_member_id']);
         $this->assertSame([], $own['pending']);
 
-        $office = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $office = User::factory()->create(['role' => UserRole::Manager]);
         $all = $this->actingAsJwt($office)->postJson('/api/dashboard/today')->assertOk()->json();
         $this->assertNull($all['staff_member_id']);
         $this->assertCount(2, $all['appointments']);

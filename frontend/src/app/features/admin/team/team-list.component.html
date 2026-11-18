@@ -23,9 +23,9 @@
           <div class="font-semibold truncate">{{ member.first_name }} {{ member.last_name }}</div>
           <div class="text-xs muted truncate">{{ member.email }}</div>
           <div class="flex flex-wrap gap-1 mt-1">
-            <span class="badge" [class.badge-success]="member.role === 'owner'" [class.badge-neutral]="member.role !== 'owner'">{{ roleLabel(member) }}</span>
+            <span class="badge" [class.badge-success]="member.role === role.Owner" [class.badge-neutral]="member.role !== role.Owner">{{ roleLabel(member) }}</span>
             @if (member.staff_member) {
-              <span class="badge badge-neutral">Zaposleni{{ member.staff_member.title ? ' · ' + member.staff_member.title : '' }}</span>
+              <span class="badge badge-neutral">Radi usluge</span>
             }
             @if (!member.active) {
               <span class="badge badge-danger">Neaktivan</span>

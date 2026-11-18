@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
@@ -42,8 +43,8 @@ class SalonTemplateTest extends TestCase
         $member = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'A', 'email' => 'ana@salon.test', 'color' => '#c2185b']);
         $member->workingHours()->create(['weekday' => 1, 'week' => 1, 'starts_at' => '09:00', 'ends_at' => '17:00']);
         $member->services()->sync([$service->id]);
-        User::factory()->create(['role' => User::ROLE_OWNER, 'email' => 'vlasnik@salon.test', 'first_name' => 'Vlasnica']);
-        User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'ana@salon.test', 'staff_member_id' => $member->id]);
+        User::factory()->create(['role' => UserRole::Owner, 'email' => 'vlasnik@salon.test', 'first_name' => 'Vlasnica']);
+        User::factory()->create(['role' => UserRole::Worker, 'email' => 'ana@salon.test', 'staff_member_id' => $member->id]);
         $client = User::factory()->create();
         Appointment::create(['client_id' => $client->id, 'staff_member_id' => $member->id, 'starts_at' => now()->addDay(), 'ends_at' => now()->addDay()->addHour(), 'status' => 'confirmed', 'price' => 1500]);
 
@@ -51,8 +52,8 @@ class SalonTemplateTest extends TestCase
         File::moveDirectory(database_path('data/salons/x'), $this->dir);
         $this->assertFileExists($this->dir.'/logo.png');
 
-        $quick = User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'brza@test.rs', 'password' => Hash::make('tajna'), 'staff_member_id' => StaffMember::create(['first_name' => 'Q', 'last_name' => 'Q'])->id]);
-        $gone = User::factory()->create(['role' => User::ROLE_WORKER, 'email' => 'visak@test.rs', 'staff_member_id' => StaffMember::create(['first_name' => 'V', 'last_name' => 'V'])->id]);
+        $quick = User::factory()->create(['role' => UserRole::Worker, 'email' => 'brza@test.rs', 'password' => Hash::make('tajna'), 'staff_member_id' => StaffMember::create(['first_name' => 'Q', 'last_name' => 'Q'])->id]);
+        $gone = User::factory()->create(['role' => UserRole::Worker, 'email' => 'visak@test.rs', 'staff_member_id' => StaffMember::create(['first_name' => 'V', 'last_name' => 'V'])->id]);
         $demo = User::factory()->create(['email' => 'demo1@demo.zakazivanje.rs']);
         config(['auth_jwt.quick_login_emails' => ['brza@test.rs']]);
         $service = app(\App\Services\SalonTemplateService::class);

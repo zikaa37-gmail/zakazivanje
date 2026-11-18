@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\ChatMessage;
@@ -89,7 +90,7 @@ class ChatService
     public function startByStaff(User $staff, User $client, string $body, ?int $appointmentId = null, ?string $subject = null): ChatMessage
     {
         $this->ensureEnabled();
-        if ($client->role !== User::ROLE_CLIENT || $client->password === null) {
+        if ($client->role !== UserRole::Client || $client->password === null) {
             throw ValidationException::withMessages(['client_id' => ['Klijent nema nalog u aplikaciji — javite mu se telefonom.']]);
         }
 
@@ -166,8 +167,8 @@ class ChatService
         $staffMemberId = $session->appointment?->staff_member_id;
 
         return User::where('active', true)
-            ->where(fn ($q) => $q->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])
-                ->when($staffMemberId, fn ($q) => $q->orWhere(fn ($q) => $q->where('role', User::ROLE_WORKER)->where('staff_member_id', $staffMemberId))))
+            ->where(fn ($q) => $q->whereIn('role', [UserRole::Owner, UserRole::Manager])
+                ->when($staffMemberId, fn ($q) => $q->orWhere(fn ($q) => $q->where('role', UserRole::Worker)->where('staff_member_id', $staffMemberId))))
             ->get();
     }
 
@@ -182,7 +183,7 @@ class ChatService
             'created_at' => $message->created_at?->toIso8601String(),
             'author_id' => $message->user_id,
             'author_name' => $author ? trim($author->first_name.' '.$author->last_name) : null,
-            'from_client' => $author?->role === User::ROLE_CLIENT,
+            'from_client' => $author?->role === UserRole::Client,
         ];
     }
 

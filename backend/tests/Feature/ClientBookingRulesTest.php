@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Service;
 use App\Models\StaffMember;
@@ -61,7 +62,7 @@ class ClientBookingRulesTest extends TestCase
             ->assertJsonPath('errors.starts_at.0', 'Online se zakazuje najranije za sutra.');
         $this->book('2026-10-20 09:00')->assertCreated();
 
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
         $this->actingAsJwt($admin)->postJson('/api/appointments', [
             'client_id' => $this->client->id, 'service_ids' => [$this->cut->id], 'staff_member_id' => $this->ana->id, 'starts_at' => '2026-10-19 14:00',
         ])->assertCreated();
@@ -109,7 +110,7 @@ class ClientBookingRulesTest extends TestCase
 
     public function test_settings_validate_allowed_values(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
 
         $this->actingAsJwt($admin)->putJson('/api/business-settings', [
             'name' => 'Salon', 'category' => 'other', 'booking_confirmation' => 'manual',

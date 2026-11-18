@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\CancellationFee;
@@ -26,7 +27,7 @@ class CancellationFeeController extends Controller
 
     public function clientStatus(User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         return $this->fees->status($client);
     }

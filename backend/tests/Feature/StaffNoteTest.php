@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\InboxNotification;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -17,10 +18,10 @@ class StaffNoteTest extends TestCase
     public function test_worker_posts_note_and_only_selected_staff_are_notified(): void
     {
         Notification::fake();
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $jelena = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'T'])->id]);
-        $marko = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T'])->id]);
-        $sandra = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Sandra', 'last_name' => 'T'])->id]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $jelena = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'T'])->id]);
+        $marko = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T'])->id]);
+        $sandra = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Sandra', 'last_name' => 'T'])->id]);
 
         StaffMember::create(['first_name' => 'Bez', 'last_name' => 'Naloga']);
         $recipients = $this->actingAsJwt($jelena)->postJson('/api/notes/recipients')->assertOk()->assertJsonCount(5)->json();
@@ -60,10 +61,10 @@ class StaffNoteTest extends TestCase
     public function test_replies_make_a_thread_unread_for_everyone_else_until_seen(): void
     {
         Notification::fake();
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $jelena = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'T'])->id]);
-        $sandra = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Sandra', 'last_name' => 'T'])->id]);
-        $marko = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T'])->id]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $jelena = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'T'])->id]);
+        $sandra = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Sandra', 'last_name' => 'T'])->id]);
+        $marko = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Marko', 'last_name' => 'T'])->id]);
 
         $id = $this->actingAsJwt($jelena)->postJson('/api/notes', ['body' => 'Pokvario se fen', 'recipient_ids' => [$sandra->id]])->json('id');
         $this->actingAsJwt($sandra)->postJson("/api/notes/{$id}/read")->assertOk();
@@ -98,7 +99,7 @@ class StaffNoteTest extends TestCase
 
     public function test_note_is_a_titled_topic(): void
     {
-        $user = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $user = User::factory()->create(['role' => UserRole::Owner]);
 
         $this->actingAsJwt($user)->postJson('/api/notes', ['title' => 'Farbe', 'body' => 'Treba naručiti 7.1', 'recipient_ids' => []])
             ->assertCreated()->assertJsonPath('title', 'Farbe')->assertJsonPath('body', 'Treba naručiti 7.1');

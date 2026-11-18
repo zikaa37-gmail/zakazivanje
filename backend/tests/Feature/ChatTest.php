@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\ChatSession;
@@ -42,10 +43,10 @@ class ChatTest extends TestCase
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->marko = StaffMember::create(['first_name' => 'Marko', 'last_name' => 'Test']);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $this->office = User::factory()->create(['role' => User::ROLE_MANAGER]);
-        $this->anaWorker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
-        $this->markoWorker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->marko->id]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->office = User::factory()->create(['role' => UserRole::Manager]);
+        $this->anaWorker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id]);
+        $this->markoWorker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->marko->id]);
     }
 
     private function appointmentWith(StaffMember $staff): Appointment

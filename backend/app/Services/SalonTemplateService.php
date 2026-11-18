@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\Promotion;
@@ -72,7 +73,7 @@ class SalonTemplateService
                 ...collect(self::PROMOTION_FIELDS)->mapWithKeys(fn ($key) => [$key => $key === 'weekdays' ? $p->weekdays : $p->getRawOriginal($key)])->all(),
                 'services' => $p->services->pluck('name')->values()->all(),
             ])->values()->all(),
-            'accounts' => User::whereIn('role', User::STAFF_ROLES)->where('active', true)->orderBy('id')->get()->map(fn (User $u) => [
+            'accounts' => User::whereIn('role', UserRole::staff())->where('active', true)->orderBy('id')->get()->map(fn (User $u) => [
                 'first_name' => $u->first_name,
                 'last_name' => $u->last_name,
                 'email' => $u->email,
@@ -104,7 +105,7 @@ class SalonTemplateService
     {
         return User::query()
             ->where(fn ($q) => $q->whereIn('email', $emails)->when($clients, fn ($q) => $q->orWhere(fn ($q) => $q
-                ->where('role', User::ROLE_CLIENT)
+                ->where('role', UserRole::Client)
                 ->where(fn ($q) => $q->whereNull('email')->orWhere('email', 'not like', '%@'.DemoDataSeeder::DOMAIN)))))
             ->orderBy('id')
             ->get()
@@ -194,7 +195,7 @@ class SalonTemplateService
                 }
                 $user = new User(Arr::only($a, ['first_name', 'last_name', 'email', 'phone']));
                 $user->forceFill([
-                    'role' => $a['role'] ?? User::ROLE_WORKER,
+                    'role' => $a['role'] ?? UserRole::Worker,
                     'password' => Hash::make($a['password'] ?? $password ?? Str::random(40)),
                     'email_verified_at' => now(),
                     'staff_member_id' => $member?->id,
@@ -218,7 +219,7 @@ class SalonTemplateService
                 $member = $free->shift();
                 if ($member) {
                     $user->forceFill(['staff_member_id' => $member->id, 'first_name' => $member->first_name, 'last_name' => $member->last_name])->save();
-                } elseif ($user->role === User::ROLE_WORKER) {
+                } elseif ($user->role === UserRole::Worker) {
                     $user->delete();
                     $accounts--;
                 }

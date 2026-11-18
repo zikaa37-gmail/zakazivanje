@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -33,7 +34,7 @@ class MarketingService
 
     public function recordLogin(User $user, array $referral): void
     {
-        if (! $referral['source'] || $user->role !== User::ROLE_CLIENT || $user->created_at?->gt(now()->subHour())) {
+        if (! $referral['source'] || $user->role !== UserRole::Client || $user->created_at?->gt(now()->subHour())) {
             return;
         }
 
@@ -69,7 +70,7 @@ class MarketingService
             });
 
         User::query()
-            ->where('role', User::ROLE_CLIENT)
+            ->where('role', UserRole::Client)
             ->whereNotNull('signup_source')
             ->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])
             ->selectRaw('signup_source, signup_campaign, COUNT(*) as total')
