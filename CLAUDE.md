@@ -274,7 +274,7 @@ Potvrda termina po usluzi: `services.booking_confirmation` (bar jedna „ručno�
 akcija sa kodom važi samo uz `promo_code` pri zakazivanju (`PriceQuoteService::quote`), upotreba se broji preko `appointment_items.promotion_id`;
 šabloni praznika u `core/utils/promo-presets.ts`, `/book?kod=`. Naplata beleži bakšiš (`appointments.tip`). Registracija: nalog klijenta je aktivan
 tek posle linka iz mejla (`email_verification_sent_at`, važi `User::VERIFICATION_DAYS` = 3, link prijavljuje i vraća na `next`); ponovna registracija
-nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja (`staff_notes`,
+nepotvrđenog mejla ažurira nalog i šalje novi link; zaštita od botova: polje `website` i `started_at` (< 3 s). Beleške osoblja su teme (`staff_notes.title`, spisak tema + prepiska kao na Porukama; `staff_notes`,
 `staff_note_recipients`): status novo / preuzeto (`taken_by`) / urađeno, pročitano po primaocu, obaveštenje izabranima + uvek
 `business_settings.note_always_notify_ids` (podrazumevano vlasnici i menadžeri). Prepiska: `staff_note_replies` (`POST /notes/{id}/replies`), odgovor dodaje autora i onog ko odgovara u
 `staff_note_recipients` i ostalima vraća `read_at` na null; `staff_notes.last_reply_at` — urađena beleška sa novijim odgovorom je opet nepročitana.
@@ -316,10 +316,11 @@ uvek, radnik samo za svog zaposlenog. Nova obaveštenja za korisnika idu kroz `t
 `private-user-{id}` (osoblje sluša i taj kanal); frontend `InboxService` + `<app-inbox-bell>` (zaglavlje, a na desktopu admina u bočnom
 meniju): Nepročitano / Sve, klik označava pročitano i vodi na `link`, „Označi sve kao pročitano“, „Sva obaveštenja“ → stranica
 `/admin/notifications` (osoblje) / `/notifications` (klijent), `NotificationsPageComponent`: po danima, „Prikaži starija“, sopstveno stanje (`InboxService.page()`).
-Poruke sa klijentima (chat): `chat_sessions` (klijent, opciono termin, `expires_at` = kraj dana, `closed_at`, `assigned_to` = ko je prvi
-odgovorio), `chat_messages`, `chat_reads` (`last_read_message_id` po korisniku); pravila samo u `ChatService` (klijentova poruka otvara novi
-razgovor ako nema aktivnog, odgovor osoblja ponovo otvara završen; vlasnik i menadžer vide sve, radnik samo razgovore o svojim
-terminima; nepročitano za osoblje = poruke klijenta). Pusher događaj `chat` na `private-user-{id}`; `chat:notify-unread` (na 5 min) šalje
+Poruke sa klijentima (chat) su **teme**: `chat_sessions` (klijent, `subject`, opciono termin, `closed_at` — otvorena dok je neko ne završi,
+`expires_at` se više ne koristi; `assigned_to` = ko je prvi odgovorio), `chat_messages`, `chat_reads` (`last_read_message_id` po korisniku); pravila samo u
+`ChatService` (klijent šalje u temu `session_id`, ili otvara novu sa `subject`, a o terminu nastavlja otvorenu temu tog termina; odgovor ponovo otvara
+završenu; vlasnik i menadžer vide sve teme i učesnike (`participants`), radnik teme o svojim terminima i one u kojima je pisao / koje je otvorio;
+nepročitano za osoblje = poruke klijenta). Pusher događaj `chat` na `private-user-{id}`; `chat:notify-unread` (na 5 min) šalje
 klijentu mejl / WhatsApp za poruke salona nepročitane 15 min (`notified_at`). Prekidač `chat_enabled` (podrazumevano uključen, Podešavanja →
 Zakazivanje). Frontend: `ChatService`, `<app-chat-thread>` (deljen prikaz i unos), klijent `<app-chat-widget>` (dugme dole desno u javnoj
 školjci, „Poruka salonu“ na terminu, `?chat=1`), osoblje `/admin/chat` (Aktivni / Završeni, `?session=` ili `?client=&appointment=&name=` za

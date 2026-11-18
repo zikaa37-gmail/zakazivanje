@@ -26,26 +26,46 @@ class ChatService
         }
     }
 
-    public function activeFor(User $client): ?ChatSession
+    public function openTopic(User $client, ?int $appointmentId): ?ChatSession
     {
-        return ChatSession::where('client_id', $client->id)->active()->latest('id')->first();
+        return ChatSession::where('client_id', $client->id)
+            ->active()
+            ->when($appointmentId, fn ($q) => $q->where('appointment_id', $appointmentId), fn ($q) => $q->whereNull('appointment_id'))
+            ->latest('id')
+            ->first();
     }
 
-    public function sendByClient(User $client, string $body, ?int $appointmentId = null): ChatMessage
+    public function subjectFor(?string $subject, ?int $appointmentId, string $fallback): string
+    {
+        $subject = trim((string) $subject);
+        if ($subject !== '') {
+            return mb_substr($subject, 0, 150);
+        }
+        $appointment = $appointmentId ? Appointment::with('items')->find($appointmentId) : null;
+
+        return $appointment
+            ? 'Termin '.$appointment->starts_at->format('d.m. \u H:i').' · '.$appointment->items->pluck('name')->join(' + ')
+            : $fallback;
+    }
+
+    public function sendByClient(User $client, string $body, ?int $appointmentId = null, ?int $sessionId = null, ?string $subject = null): ChatMessage
     {
         $this->ensureEnabled();
         if ($appointmentId !== null && ! Appointment::where('id', $appointmentId)->where('client_id', $client->id)->exists()) {
             throw ValidationException::withMessages(['appointment_id' => ['Termin nije pronađen.']]);
         }
 
-        return DB::transaction(function () use ($client, $body, $appointmentId) {
-            $session = $this->activeFor($client) ?? ChatSession::create([
-                'client_id' => $client->id,
-                'started_by' => $client->id,
-                'expires_at' => now()->endOfDay(),
-            ]);
-            if ($appointmentId !== null && $session->appointment_id === null) {
-                $session->appointment_id = $appointmentId;
+        return DB::transaction(function () use ($client, $body, $appointmentId, $sessionId, $subject) {
+            if ($sessionId !== null) {
+                $session = ChatSession::where('client_id', $client->id)->findOrFail($sessionId);
+                $session->fill(['closed_at' => null, 'closed_by' => null]);
+            } else {
+                $session = (filled($subject) ? null : $this->openTopic($client, $appointmentId)) ?? ChatSession::create([
+                    'client_id' => $client->id,
+                    'started_by' => $client->id,
+                    'appointment_id' => $appointmentId,
+                    'subject' => $this->subjectFor($subject, $appointmentId, 'Pitanje'),
+                ]);
             }
 
             return $this->append($session, $client, $body);
@@ -58,7 +78,7 @@ class ChatService
 
         return DB::transaction(function () use ($staff, $session, $body) {
             if (! $session->isActive()) {
-                $session->fill(['closed_at' => null, 'closed_by' => null, 'expires_at' => now()->endOfDay()]);
+                $session->fill(['closed_at' => null, 'closed_by' => null]);
             }
             $session->assigned_to ??= $staff->id;
 
@@ -66,7 +86,7 @@ class ChatService
         });
     }
 
-    public function startByStaff(User $staff, User $client, string $body, ?int $appointmentId = null): ChatMessage
+    public function startByStaff(User $staff, User $client, string $body, ?int $appointmentId = null, ?string $subject = null): ChatMessage
     {
         $this->ensureEnabled();
         if ($client->role !== User::ROLE_CLIENT || $client->password === null) {
@@ -76,16 +96,14 @@ class ChatService
         if ($appointmentId !== null && ! Appointment::where('id', $appointmentId)->where('client_id', $client->id)->exists()) {
             throw ValidationException::withMessages(['appointment_id' => ['Termin nije pronađen.']]);
         }
-        $session = $this->activeFor($client) ?? new ChatSession([
+        $session = (filled($subject) || $appointmentId === null ? null : $this->openTopic($client, $appointmentId)) ?? new ChatSession([
             'client_id' => $client->id,
+            'appointment_id' => $appointmentId,
+            'subject' => $this->subjectFor($subject, $appointmentId, 'Poruka salona'),
             'started_by' => $staff->id,
             'assigned_to' => $staff->id,
-            'expires_at' => now()->endOfDay(),
         ]);
-        if ($appointmentId !== null && $session->appointment_id === null) {
-            $session->appointment_id = $appointmentId;
-        }
-        abort_unless($this->canSee($staff, $session), 403);
+        abort_unless($staff->isManager() || ($appointmentId !== null && $this->ownsAppointment($staff, $appointmentId)), 403);
 
         return $this->sendByStaff($staff, $session, $body);
     }
@@ -112,17 +130,22 @@ class ChatService
             return true;
         }
 
-        return $staff->staff_member_id !== null
-            && $session->appointment_id !== null
-            && Appointment::where('id', $session->appointment_id)->where('staff_member_id', $staff->staff_member_id)->exists();
+        return $session->assigned_to === $staff->id
+            || $session->started_by === $staff->id
+            || ($session->appointment_id !== null && $this->ownsAppointment($staff, $session->appointment_id));
     }
 
     public function visibleTo(User $staff): Builder
     {
-        return ChatSession::query()->when(! $staff->isManager(), fn ($q) => $q->whereHas(
-            'appointment',
-            fn ($a) => $a->where('staff_member_id', $staff->staff_member_id ?? 0),
-        ));
+        return ChatSession::query()->when(! $staff->isManager(), fn ($q) => $q->where(fn ($w) => $w
+            ->whereHas('appointment', fn ($a) => $a->where('staff_member_id', $staff->staff_member_id ?? 0))
+            ->orWhere('assigned_to', $staff->id)
+            ->orWhere('started_by', $staff->id)));
+    }
+
+    private function ownsAppointment(User $staff, int $appointmentId): bool
+    {
+        return $staff->staff_member_id !== null && Appointment::where('id', $appointmentId)->where('staff_member_id', $staff->staff_member_id)->exists();
     }
 
     public function unreadCount(User $user): int

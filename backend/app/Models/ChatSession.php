@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['client_id', 'appointment_id', 'started_by', 'assigned_to', 'expires_at', 'closed_at', 'closed_by', 'last_message_at'])]
+#[Fillable(['client_id', 'appointment_id', 'subject', 'started_by', 'assigned_to', 'expires_at', 'closed_at', 'closed_by', 'last_message_at'])]
 class ChatSession extends Model
 {
     protected function casts(): array
@@ -42,16 +42,16 @@ class ChatSession extends Model
 
     public function isActive(): bool
     {
-        return $this->closed_at === null && $this->expires_at->isFuture();
+        return $this->closed_at === null;
     }
 
     public function scopeActive(Builder $query): void
     {
-        $query->whereNull('closed_at')->where('expires_at', '>', now());
+        $query->whereNull('closed_at');
     }
 
     public function scopeInactive(Builder $query): void
     {
-        $query->where(fn ($q) => $q->whereNotNull('closed_at')->orWhere('expires_at', '<=', now()));
+        $query->whereNotNull('closed_at');
     }
 }

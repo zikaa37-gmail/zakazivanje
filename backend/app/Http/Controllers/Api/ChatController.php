@@ -29,8 +29,9 @@ class ChatController extends Controller
         $user = $request->user();
         $sessions = ChatSession::where('client_id', $user->id)
             ->with(['messages.author:id,first_name,last_name,role', 'appointment.items', 'appointment.staffMember:id,first_name,last_name'])
-            ->latest('id')
-            ->limit(10)
+            ->orderByRaw('closed_at is not null')
+            ->orderByDesc('last_message_at')
+            ->limit(20)
             ->get();
 
         return [
@@ -44,9 +45,11 @@ class ChatController extends Controller
         $data = $request->validate([
             'body' => self::BODY_RULES,
             'appointment_id' => ['nullable', 'integer'],
+            'session_id' => ['nullable', 'integer'],
+            'subject' => ['nullable', 'string', 'max:150'],
         ], self::BODY_MESSAGES);
 
-        $message = $this->chat->sendByClient($request->user(), $data['body'], $data['appointment_id'] ?? null);
+        $message = $this->chat->sendByClient($request->user(), $data['body'], $data['appointment_id'] ?? null, $data['session_id'] ?? null, $data['subject'] ?? null);
 
         return response()->json($this->chat->present($message), 201);
     }
@@ -73,6 +76,14 @@ class ChatController extends Controller
             ->get();
 
         $unread = $this->chat->unreadBySession($user, $sessions->pluck('id')->all());
+        $participants = ChatMessage::query()
+            ->whereIn('chat_session_id', $sessions->pluck('id'))
+            ->whereNotNull('user_id')
+            ->with('author:id,first_name,role')
+            ->get(['chat_session_id', 'user_id'])
+            ->filter(fn (ChatMessage $m) => $m->author && $m->author->role !== User::ROLE_CLIENT)
+            ->groupBy('chat_session_id')
+            ->map(fn ($messages) => $messages->pluck('author.first_name')->unique()->values());
         $last = ChatMessage::whereIn('id', ChatMessage::selectRaw('max(id)')->whereIn('chat_session_id', $sessions->pluck('id'))->groupBy('chat_session_id'))->get()->keyBy('chat_session_id');
 
         return [
@@ -81,6 +92,7 @@ class ChatController extends Controller
                 'unread' => (int) ($unread[$s->id] ?? 0),
                 'last_message' => isset($last[$s->id]) ? Str::limit($last[$s->id]->body, 80) : null,
                 'last_from_client' => isset($last[$s->id]) && $last[$s->id]->user_id === $s->client_id,
+                'participants' => $participants[$s->id] ?? [],
             ])->values(),
             'unread_count' => $this->chat->unreadCount($user),
         ];
@@ -92,13 +104,13 @@ class ChatController extends Controller
         $session->load(['client:id,first_name,last_name,nickname,phone,email', 'assignee:id,first_name,last_name', 'messages.author:id,first_name,last_name,role', 'appointment.items', 'appointment.staffMember:id,first_name,last_name']);
         $this->chat->markRead($session, $request->user());
 
-        $earlier = ChatSession::where('client_id', $session->client_id)->whereKeyNot($session->id)->where('id', '<', $session->id)
-            ->with('messages.author:id,first_name,last_name,role')->latest('id')->limit(3)->get();
+        $topics = $this->chat->visibleTo($request->user())->where('client_id', $session->client_id)->whereKeyNot($session->id)
+            ->orderByDesc('last_message_at')->limit(10)->get(['id', 'subject', 'closed_at', 'last_message_at', 'created_at']);
 
         return [
             ...$this->presentSession($session, true),
             'client' => $session->client?->only(['id', 'first_name', 'last_name', 'nickname', 'phone', 'email']),
-            'earlier' => $earlier->map(fn (ChatSession $s) => $this->presentSession($s, true))->values(),
+            'other_topics' => $topics->map(fn (ChatSession $s) => ['id' => $s->id, 'subject' => $this->subject($s), 'active' => $s->isActive(), 'last_message_at' => $s->last_message_at?->toIso8601String()])->values(),
             'unread_count' => $this->chat->unreadCount($request->user()),
         ];
     }
@@ -116,10 +128,11 @@ class ChatController extends Controller
         $data = $request->validate([
             'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', User::ROLE_CLIENT)],
             'appointment_id' => ['nullable', 'integer'],
+            'subject' => ['nullable', 'string', 'max:150'],
             'body' => self::BODY_RULES,
         ], self::BODY_MESSAGES);
 
-        $message = $this->chat->startByStaff($request->user(), User::findOrFail($data['client_id']), $data['body'], $data['appointment_id'] ?? null);
+        $message = $this->chat->startByStaff($request->user(), User::findOrFail($data['client_id']), $data['body'], $data['appointment_id'] ?? null, $data['subject'] ?? null);
 
         return response()->json(['session_id' => $message->chat_session_id, 'message' => $this->chat->present($message)], 201);
     }
@@ -140,16 +153,21 @@ class ChatController extends Controller
         return ['message' => 'Razgovor je završen.'];
     }
 
+    private function subject(ChatSession $session): string
+    {
+        return $session->subject ?: 'Razgovor '.$session->created_at?->format('d.m.Y.');
+    }
+
     private function presentSession(ChatSession $session, bool $withMessages = false): array
     {
         $appointment = $session->appointment;
 
         return [
             'id' => $session->id,
+            'subject' => $this->subject($session),
             'client_id' => $session->client_id,
             'client_name' => $session->relationLoaded('client') && $session->client ? $session->client->salonName() : null,
             'active' => $session->isActive(),
-            'expires_at' => $session->expires_at?->toIso8601String(),
             'closed_at' => $session->closed_at?->toIso8601String(),
             'last_message_at' => $session->last_message_at?->toIso8601String(),
             'created_at' => $session->created_at?->toIso8601String(),

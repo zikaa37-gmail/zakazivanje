@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['author_id', 'body', 'taken_by', 'taken_at', 'resolved_at', 'resolved_by', 'last_reply_at'])]
+#[Fillable(['author_id', 'title', 'body', 'taken_by', 'taken_at', 'resolved_at', 'resolved_by', 'last_reply_at'])]
 class StaffNote extends Model
 {
     protected function casts(): array

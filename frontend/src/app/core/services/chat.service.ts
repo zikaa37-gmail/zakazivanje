@@ -26,10 +26,10 @@ export interface ChatAppointmentRef {
 
 export interface ChatSession {
   id: number;
+  subject: string;
   client_id: number;
   client_name: string | null;
   active: boolean;
-  expires_at: string;
   closed_at: string | null;
   last_message_at: string | null;
   created_at: string;
@@ -39,11 +39,19 @@ export interface ChatSession {
   unread?: number;
   last_message?: string | null;
   last_from_client?: boolean;
+  participants?: string[];
+}
+
+export interface ChatTopicRef {
+  id: number;
+  subject: string;
+  active: boolean;
+  last_message_at: string | null;
 }
 
 export interface ChatSessionDetail extends ChatSession {
   client: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null } | null;
-  earlier: ChatSession[];
+  other_topics: ChatTopicRef[];
   unread_count: number;
 }
 
@@ -116,8 +124,12 @@ export class ChatService {
     return this.http.post<{ sessions: ChatSession[]; unread_count: number }>(`${this.api}/my`, {}, quiet());
   }
 
-  sendMine(body: string, appointmentId: number | null): Observable<ChatMessage> {
-    return this.http.post<ChatMessage>(`${this.api}/my/messages`, { body, appointment_id: appointmentId }, quiet());
+  sendMine(body: string, target: { sessionId?: number | null; appointmentId?: number | null; subject?: string | null }): Observable<ChatMessage> {
+    return this.http.post<ChatMessage>(
+      `${this.api}/my/messages`,
+      { body, session_id: target.sessionId ?? null, appointment_id: target.appointmentId ?? null, subject: target.subject ?? null },
+      quiet(),
+    );
   }
 
   readMine(): void {
@@ -148,7 +160,7 @@ export class ChatService {
     return this.http.post<{ message: string }>(`${this.api}/sessions/${id}/close`, {});
   }
 
-  start(clientId: number, appointmentId: number | null, body: string): Observable<{ session_id: number; message: ChatMessage }> {
-    return this.http.post<{ session_id: number; message: ChatMessage }>(`${this.api}/start`, { client_id: clientId, appointment_id: appointmentId, body });
+  start(clientId: number, appointmentId: number | null, body: string, subject: string | null = null): Observable<{ session_id: number; message: ChatMessage }> {
+    return this.http.post<{ session_id: number; message: ChatMessage }>(`${this.api}/start`, { client_id: clientId, appointment_id: appointmentId, subject, body });
   }
 }

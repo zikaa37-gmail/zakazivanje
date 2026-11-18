@@ -6,7 +6,9 @@ import { SKIP_LOADER } from '../interceptors/loader.interceptor';
 
 export interface StaffNote {
   id: number;
+  title: string;
   body: string;
+  last_activity_at: string;
   created_at: string;
   author: { id: number; name: string } | null;
   status: 'open' | 'taken' | 'done';
@@ -55,8 +57,8 @@ export class StaffNoteService {
     return this.http.post<NoteRecipient[]>(`${this.api}/recipients`, {}, { context: new HttpContext().set(SKIP_LOADER, true) });
   }
 
-  create(body: string, recipientIds: number[]): Observable<StaffNote> {
-    return this.http.post<StaffNote>(this.api, { body, recipient_ids: recipientIds });
+  create(title: string, body: string, recipientIds: number[]): Observable<StaffNote> {
+    return this.http.post<StaffNote>(this.api, { title, body, recipient_ids: recipientIds });
   }
 
   toggleResolved(id: number): Observable<StaffNote> {

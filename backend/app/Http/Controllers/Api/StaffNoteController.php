@@ -12,6 +12,7 @@ use App\Notifications\StaffNoteNotification;
 use App\Notifications\StaffNoteReplyNotification;
 use App\Services\Inbox;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -81,6 +82,7 @@ class StaffNoteController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
+            'title' => ['nullable', 'string', 'max:150'],
             'body' => ['required', 'string', 'min:2', 'max:2000'],
             'recipient_ids' => ['array'],
             'recipient_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', User::STAFF_ROLES)],
@@ -88,7 +90,9 @@ class StaffNoteController extends Controller
             'body.required' => 'Napiši belešku.',
         ]);
 
-        $note = StaffNote::create(['author_id' => $user->id, 'body' => trim($data['body'])]);
+        $body = trim($data['body']);
+        $title = trim($data['title'] ?? '') ?: Str::limit(trim(strtok($body, "\n") ?: $body), 60);
+        $note = StaffNote::create(['author_id' => $user->id, 'title' => $title, 'body' => $body]);
         $ids = array_unique([...($data['recipient_ids'] ?? []), ...BusinessSetting::current()->noteAlwaysNotifyIds()]);
         $recipients = User::whereKey($ids)->whereIn('role', User::STAFF_ROLES)->where('active', true)->whereKeyNot($user->id)->get();
         $note->recipients()->sync($recipients->pluck('id'));
@@ -173,7 +177,9 @@ class StaffNoteController extends Controller
 
         return [
             'id' => $note->id,
+            'title' => $note->title ?: Str::limit($note->body, 60),
             'body' => $note->body,
+            'last_activity_at' => ($note->last_reply_at ?? $note->created_at)?->format('Y-m-d H:i'),
             'created_at' => $note->created_at?->format('Y-m-d H:i'),
             'author' => $note->author ? ['id' => $note->author->id, 'name' => trim($note->author->first_name.' '.$note->author->last_name)] : null,
             'status' => $note->resolved_at ? 'done' : ($note->taken_by ? 'taken' : 'open'),

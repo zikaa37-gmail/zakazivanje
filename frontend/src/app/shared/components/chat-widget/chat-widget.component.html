@@ -8,35 +8,51 @@
 } @else {
   <section class="chat-panel" role="dialog" aria-label="Poruke salonu" data-testid="chat-panel">
     <header class="chat-head">
-      @if (business.logo()) {
+      @if (view() !== 'list' && sessions().length > 0) {
+        <button type="button" class="chat-close" aria-label="Sve teme" (click)="backToList()" data-testid="chat-back"><span appIcon="arrow-left" [iconSize]="20" aria-hidden="true"></span></button>
+      } @else if (business.logo()) {
         <img class="chat-logo" [src]="business.logo()" alt="" />
       }
       <div class="min-w-0 flex-1">
-        <div class="chat-title">{{ business.name() }}</div>
-        <div class="chat-subtitle">Odgovaramo u radno vreme salona</div>
+        <div class="chat-title">{{ view() === 'topic' ? topic()?.subject : view() === 'new' ? 'Nova tema' : business.name() }}</div>
+        <div class="chat-subtitle">{{ view() === 'topic' ? business.name() : 'Odgovaramo u radno vreme salona' }}</div>
       </div>
       <button type="button" class="chat-close" aria-label="Zatvori" (click)="close()" data-testid="chat-close">
         <span appIcon="close" [iconSize]="20" aria-hidden="true"></span>
       </button>
     </header>
 
-    @if (chat.widgetAppointment(); as ap) {
-      <div class="chat-about" data-testid="chat-about">
-        <span class="min-w-0 truncate">U vezi sa terminom {{ ap.starts_at | srDate }} u {{ ap.starts_at.slice(11, 16) }} · {{ ap.services }}</span>
-        <button type="button" class="chat-close" aria-label="Ukloni termin" (click)="chat.widgetAppointment.set(null)"><span appIcon="close" [iconSize]="14" aria-hidden="true"></span></button>
-      </div>
-    }
-
     @if (error()) {
       <div class="chat-error" role="alert">{{ error() }}</div>
     }
 
-    <app-chat-thread
-      [sessions]="ordered()"
-      perspective="client"
-      [sending]="sending()"
-      [emptyText]="loading() ? '' : 'Pišite nam — pitanje o terminu, usluzi ili bilo šta drugo.'"
-      (send)="send($event)"
-    />
+    @switch (view()) {
+      @case ('list') {
+        <div class="chat-topics" data-testid="chat-topics">
+          <button type="button" class="chat-topic-new" (click)="newTopic()" data-testid="chat-new-topic"><span appIcon="plus" aria-hidden="true"></span> Nova tema</button>
+          @for (s of sessions(); track s.id) {
+            <button type="button" class="chat-topic" [class.closed]="!s.active" (click)="openTopic(s)" [attr.data-testid]="'chat-topic-' + s.id">
+              <span class="chat-topic-subject">{{ s.subject }}</span>
+              <span class="chat-topic-meta">{{ (s.last_message_at ?? s.created_at) | srDate }}{{ s.active ? '' : ' · završena' }}</span>
+            </button>
+          }
+        </div>
+      }
+      @case ('new') {
+        @if (chat.widgetAppointment(); as ap) {
+          <div class="chat-about" data-testid="chat-about">
+            <span class="min-w-0 truncate">U vezi sa terminom {{ ap.starts_at | srDate }} u {{ ap.starts_at.slice(11, 16) }} · {{ ap.services }}</span>
+          </div>
+        } @else {
+          <div class="chat-subject">
+            <input appInput size="s" [formControl]="subject" maxlength="150" placeholder="Tema, npr. Pitanje o ceni" aria-label="Tema" data-testid="chat-subject" />
+          </div>
+        }
+        <app-chat-thread perspective="client" [sending]="sending()" [emptyText]="loading() ? '' : 'Pišite nam — pitanje o terminu, usluzi ili bilo šta drugo. Svaka tema ima svoju prepisku.'" (send)="send($event)" />
+      }
+      @default {
+        <app-chat-thread [sessions]="topicThread()" perspective="client" [sending]="sending()" placeholder="Odgovor u ovoj temi..." (send)="send($event)" />
+      }
+    }
   </section>
 }

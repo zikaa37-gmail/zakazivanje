@@ -1,9 +1,9 @@
 <div class="page-header" [class.chat-hide-mobile]="showConversation()">
   <div>
-    <div class="page-title-row"><h1 class="page-title">Poruke</h1><app-info-tip heading="Poruke"><p>Razgovori sa klijentima. Svaki razgovor traje do kraja dana ili dok ga ne završite („Završi"); kasnija poruka klijenta otvara nov.</p><p class="mt-2">Ako klijent ne pročita vašu poruku za 15 minuta, stiže mu i mejl / WhatsApp. Pisati se može samo klijentima sa nalogom u aplikaciji.</p></app-info-tip></div>
+    <div class="page-title-row"><h1 class="page-title">Poruke</h1><app-info-tip heading="Poruke"><p>Prepiska sa klijentima po temama: svako pitanje ili termin ima svoju temu, pa se razgovori ne mešaju. Tema je otvorena dok je ne završite („Završi"); odgovor je ponovo otvara.</p><p class="mt-2">Vlasnik i menadžer vide sve teme i ko je šta pisao, i mogu da se uključe; radnik vidi teme o svojim terminima i one u kojima je pisao. Ako klijent ne pročita poruku za 15 minuta, stiže mu i mejl / WhatsApp.</p></app-info-tip></div>
   </div>
   @if (auth.isManager()) {
-    <button type="button" appBtn (click)="togglePicking()" data-testid="chat-new"><span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poruka</span></button>
+    <button type="button" appBtn size="s" (click)="togglePicking()" data-testid="chat-new"><span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poruka</span></button>
   }
 </div>
 
@@ -27,18 +27,19 @@
 <div class="chat-layout">
   <aside class="chat-list" [class.chat-hide-mobile]="showConversation()" data-testid="chat-list">
     <div class="chip-group p-3 border-b border-[var(--color-border)]">
-      <button type="button" class="chip" [class.selected]="status() === 'active'" (click)="setStatus('active')" data-testid="chat-tab-active">Aktivni</button>
-      <button type="button" class="chip" [class.selected]="status() === 'closed'" (click)="setStatus('closed')" data-testid="chat-tab-closed">Završeni</button>
+      <button type="button" class="chip" [class.selected]="status() === 'active'" (click)="setStatus('active')" data-testid="chat-tab-active">Otvorene</button>
+      <button type="button" class="chip" [class.selected]="status() === 'closed'" (click)="setStatus('closed')" data-testid="chat-tab-closed">Završene</button>
     </div>
     <div class="chat-list-scroll">
       @if (loading() && sessions().length === 0) {
       } @else if (sessions().length === 0) {
-        <p class="empty-state">{{ status() === 'active' ? 'Nema aktivnih razgovora.' : 'Nema završenih razgovora.' }}</p>
+        <p class="empty-state">{{ status() === 'active' ? 'Nema otvorenih tema.' : 'Nema završenih tema.' }}</p>
       } @else {
         @for (s of sessions(); track s.id) {
           <button type="button" class="chat-item" [class.selected]="s.id === selectedId()" [class.unread]="(s.unread ?? 0) > 0" (click)="select(s)" [attr.data-testid]="'chat-session-' + s.id">
             <span class="avatar avatar-initials avatar-sm shrink-0">{{ (s.client_name ?? '?').slice(0, 1) }}</span>
             <span class="min-w-0 flex-1">
+              <span class="chat-item-subject">{{ s.subject }}</span>
               <span class="chat-item-top">
                 <span class="chat-item-name">{{ s.client_name }}</span>
                 <span class="chat-item-time">{{ time(s.last_message_at) }}</span>
@@ -49,13 +50,13 @@
                   <span class="chat-item-count">{{ s.unread }}</span>
                 }
               </span>
-              @if (s.appointment || s.assignee) {
+              @if (s.appointment || s.participants?.length) {
                 <span class="chat-item-meta">
                   @if (s.appointment) {
                     Termin {{ s.appointment.starts_at | srDate }} · {{ s.appointment.staff }}
                   }
-                  @if (s.assignee) {
-                    · odgovara {{ s.assignee }}
+                  @if (s.participants?.length) {
+                    {{ s.appointment ? ' · ' : '' }}pišu: {{ s.participants!.join(', ') }}
                   }
                 </span>
               }
@@ -71,21 +72,27 @@
       <header class="chat-conv-head">
         <button type="button" class="btn-icon chat-back" aria-label="Nazad" (click)="back()"><span appIcon="arrow-left" aria-hidden="true"></span></button>
         <div class="min-w-0 flex-1">
-          <div class="font-semibold truncate">Nova poruka: {{ d.name }}</div>
+          <div class="font-semibold truncate">Nova tema: {{ d.name }}</div>
           <div class="text-xs muted">Klijent vidi poruku u aplikaciji; ako je ne pročita za 15 minuta, stiže mu i mejl / WhatsApp.</div>
         </div>
       </header>
+      @if (!d.appointmentId) {
+        <div class="chat-subject-field">
+          <input appInput size="s" [formControl]="draftSubject" maxlength="150" placeholder="Tema, npr. Pomeranje termina" aria-label="Tema" data-testid="chat-draft-subject" />
+        </div>
+      }
       <app-chat-thread perspective="staff" [sending]="sending()" emptyText="Napišite prvu poruku." (send)="send($event)" />
     } @else if (detail(); as d) {
       <header class="chat-conv-head">
         <button type="button" class="btn-icon chat-back" aria-label="Nazad" (click)="back()"><span appIcon="arrow-left" aria-hidden="true"></span></button>
         <div class="min-w-0 flex-1">
-          <div class="font-semibold truncate">{{ d.client | clientName }}</div>
+          <div class="font-semibold truncate" data-testid="chat-subject">{{ d.subject }}</div>
           <div class="text-xs muted truncate">
+            {{ d.client | clientName }} ·
             @if (d.client?.phone) {
               <a [href]="'tel:' + d.client!.phone">{{ d.client!.phone }}</a> ·
             }
-            {{ d.active ? 'aktivan do kraja dana' : 'završen' }}
+            {{ d.active ? 'otvorena tema' : 'završena tema' }}
             @if (d.appointment) {
               · termin {{ d.appointment.starts_at | srDate }} u {{ d.appointment.starts_at.slice(11, 16) }}, {{ d.appointment.services }}
             }
@@ -95,7 +102,15 @@
           <button type="button" appBtn theme="secondary" size="s" (click)="closeSession()" data-testid="chat-close-session">Završi</button>
         }
       </header>
-      <app-chat-thread [sessions]="threadSessions()" perspective="staff" [sending]="sending()" [placeholder]="d.active ? 'Napiši poruku...' : 'Odgovor ponovo otvara razgovor...'" (send)="send($event)" />
+      @if (d.other_topics.length) {
+        <div class="chat-other-topics" data-testid="chat-other-topics">
+          <span class="text-xs muted">Druge teme:</span>
+          @for (t of d.other_topics; track t.id) {
+            <button type="button" class="chip" (click)="goTo(t.id)" [attr.data-testid]="'chat-topic-' + t.id">{{ t.subject }}{{ t.active ? '' : ' · završena' }}</button>
+          }
+        </div>
+      }
+      <app-chat-thread [sessions]="threadSessions()" perspective="staff" [sending]="sending()" [placeholder]="d.active ? 'Odgovor u ovoj temi...' : 'Odgovor ponovo otvara temu...'" (send)="send($event)" />
     } @else {
       <div class="chat-placeholder muted">
         <span appIcon="message-square" [iconSize]="32" aria-hidden="true"></span>
