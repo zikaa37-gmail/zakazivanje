@@ -104,6 +104,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/staff-absences/list` | `{status?, include_past?}` — odsustva (radnik koji radi usluge vidi svoja i ona koja je upisao) |
 | POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / menadžer → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
+| PUT | `/staff-absences/{id}` | `{starts_on, ends_on, type, note?}` — izmena (vlasnik / menadžer svako, upisani dok čeka); preklapanje se proverava bez tog odsustva, odobrenom se pomera i blokada |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
 | POST | `/cancellation-fees/list` | `{client_id?, status?: free\|open\|paid\|waived}` — naknade za kasno otkazivanje |
 | GET | `/clients/{id}/cancellation-status` | odbrojavanje i dug klijenta (kao `/my-cancellation-status`) |
