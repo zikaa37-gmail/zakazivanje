@@ -12,9 +12,10 @@ use App\Models\User;
 use App\Services\AppointmentNotifier;
 use App\Services\AvailabilityService;
 use App\Services\BookingService;
-use App\Services\ChangeNoticeService;
 use App\Services\CancellationFeeService;
+use App\Services\ChangeNoticeService;
 use App\Services\ClientDisciplineService;
+use App\Services\PaymentLedger;
 use App\Services\RecurrenceService;
 use App\Services\StaffAbsenceService;
 use App\Services\WaitlistService;
@@ -175,14 +176,14 @@ class AppointmentController extends Controller
         return $appointment;
     }
 
-    public function complete(Request $request, Appointment $appointment)
+    public function complete(Request $request, Appointment $appointment, PaymentLedger $ledger)
     {
         $data = $request->validate([
             'service_outcome' => ['required', Rule::in(Appointment::OUTCOMES)],
             'due_amount' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'payment' => ['required', Rule::in(['full', 'partial', 'none'])],
             'paid_amount' => ['nullable', 'required_if:payment,partial', 'numeric', 'min:0', 'max:10000000'],
-            'payment_method' => ['nullable', 'required_unless:payment,none', Rule::in(Appointment::PAYMENT_METHODS)],
+            'payment_method' => ['nullable', 'required_unless:payment,none', Rule::in(PaymentLedger::methods())],
             'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
             'note' => ['nullable', 'string', 'max:2000'],
         ], [
@@ -211,16 +212,19 @@ class AppointmentController extends Controller
         $previous = $appointment->status;
         $owedBefore = $appointment->outstanding();
         $paidBefore = $appointment->paidAmount();
-        $appointment->update([
-            'status' => Appointment::STATUS_COMPLETED,
-            'service_outcome' => $data['service_outcome'],
-            'due_amount' => $due,
-            'paid_amount' => $paid,
-            'completion_note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
-            'payment_method' => $paid > 0 ? $data['payment_method'] : null,
-            'paid_at' => $paid > 0 ? ($appointment->paid_at ?? now()) : null,
-            'tip' => $paid > 0 ? round((float) ($data['tip'] ?? 0), 2) : 0,
-        ]);
+        DB::transaction(function () use ($appointment, $ledger, $paid, $due, $data, $user, $paidBefore) {
+            $ledger->settle($appointment->loadMissing('client'), $paid, $data['payment_method'] ?? null, $user);
+            $appointment->update([
+                'status' => Appointment::STATUS_COMPLETED,
+                'service_outcome' => $data['service_outcome'],
+                'due_amount' => $due,
+                'paid_amount' => $paid,
+                'completion_note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
+                'payment_method' => $paid > 0 ? ($paid > $paidBefore ? $data['payment_method'] : ($appointment->payment_method ?? $data['payment_method'])) : null,
+                'paid_at' => $paid > 0 ? ($appointment->paid_at ?? now()) : null,
+                'tip' => $paid > 0 ? round((float) ($data['tip'] ?? 0), 2) : 0,
+            ]);
+        });
 
         if ($previous !== Appointment::STATUS_COMPLETED && $data['service_outcome'] !== Appointment::OUTCOME_NOT_DONE) {
             $this->notifier->statusChanged($appointment, $previous);

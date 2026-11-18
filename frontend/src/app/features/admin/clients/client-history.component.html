@@ -37,6 +37,8 @@
         </div>
       </div>
 
+      <app-client-wallet [clientId]="h.client.id" />
+
       <app-client-fees [clientId]="h.client.id" [showAll]="true" />
 
       @if (h.work_notes.length > 0) {

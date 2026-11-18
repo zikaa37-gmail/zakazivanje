@@ -91,6 +91,16 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
 | POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
+| POST | `/clients/{id}/wallet` | stanje klijenta i promene (`balance`, `entries`) |
+| POST | `/clients/{id}/wallet/deposit` | uplata unapred: `amount`, `payment_method`, `note` |
+| POST | `/clients/{id}/wallet/redeem` | poklon kartica na stanje klijenta: `code` |
+| POST | `/clients/{id}/wallet/adjust` | menadžer: ispravka `amount` (±), `note` |
+| POST | `/gift-cards/list` | `status`, `search` |
+| POST | `/gift-cards` | prodaja: `amount`, `payment_method`, `buyer_name`, `recipient_name`, `note`, `expires_on` |
+| POST | `/gift-cards/check` | `code` |
+| POST | `/gift-cards/{id}/cancel` | menadžer, samo neiskorišćena |
+| POST | `/my-wallet` | klijent: svoje stanje |
+| POST | `/my-wallet/redeem` | klijent: unos koda poklon kartice |
 | POST | `/appointments/{id}/complete` | završetak: `service_outcome` (`done` / `partial` / `not_done`), `due_amount`, `payment` (`full` / `partial` / `none`), `paid_amount`, `payment_method`, `tip`, `note` (obavezna kad nešto nije u redu) |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |

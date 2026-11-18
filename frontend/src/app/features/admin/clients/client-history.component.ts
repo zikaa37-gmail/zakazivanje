@@ -13,6 +13,7 @@ import { ModalComponent } from '../../../shared/components/modal/modal.component
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
+import { ClientWalletComponent } from './client-wallet.component';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { ClientFeesComponent } from './client-fees.component';
 import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
@@ -43,7 +44,7 @@ const REASONS: Record<string, string> = {
 @Component({
   selector: 'app-client-history',
   standalone: true,
-  imports: [ClientNamePipe, ClientNicknameComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
+  imports: [ClientNamePipe, ClientNicknameComponent, ClientWalletComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
   templateUrl: './client-history.component.html',
 })
 export class ClientHistoryComponent implements OnInit {

@@ -21,7 +21,9 @@ export interface ReportTotals {
   discount: number;
   paid: number;
   unpaid: number;
-  by_method: { cash: number; card: number; bank: number };
+  by_method: { cash: number; card: number; bank: number; wallet?: number };
+  not_done?: number;
+  partial_done?: number;
   tips: number;
   average_ticket: number;
   booked_minutes: number;
@@ -39,6 +41,7 @@ export interface Report {
   staff_member: { id: number; name: string; active: boolean } | null;
   period: { type: ReportPeriod; from: string; to: string; label: string };
   totals: ReportTotals;
+  prepaid: { deposits: number; gift_cards: number; gift_cards_count: number; by_method: { cash: number; card: number; bank: number } } | null;
   staff: (ReportTotals & { id: number; name: string; active: boolean })[];
   days: { date: string; label: string; appointments: number; completed: number; cancelled: number; revenue: number }[];
   services: { name: string; count: number; revenue: number }[];

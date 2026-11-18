@@ -3,6 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SERVICE_OUTCOMES, ServiceOutcome } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { WalletService } from '../../../core/services/wallet.service';
 import { CompletionService } from '../../../core/services/completion.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
@@ -26,9 +27,11 @@ export class CompleteDialogComponent {
   protected completion = inject(CompletionService);
   private appointments = inject(AppointmentService);
   private toast = inject(ToastService);
+  private wallets = inject(WalletService);
 
   readonly outcomes = SERVICE_OUTCOMES;
-  readonly methods = PAYMENT_METHODS;
+  readonly methods = PAYMENT_METHODS.filter((m) => m.value !== 'wallet');
+  readonly balance = signal(0);
   readonly payments: { value: Payment; label: string }[] = [
     { value: 'full', label: 'Plaćeno u celosti' },
     { value: 'partial', label: 'Delimično' },
@@ -84,6 +87,8 @@ export class CompleteDialogComponent {
         this.paidAmount.setValue(a?.paid_at && paidBefore < dueBefore ? paidBefore : null);
         this.tip.setValue(a?.tip ? a.tip : null);
         this.note.setValue(a?.completion_note ?? '');
+        this.balance.set(0);
+        if (a?.client_id) this.wallets.forClient(a.client_id).subscribe({ next: (w) => this.balance.set(w.balance), error: () => undefined });
       });
     });
   }

@@ -1,0 +1,116 @@
+<div class="page-header">
+  <div>
+    <div class="page-title-row">
+      <h1 class="page-title">Poklon kartice</h1>
+      <app-info-tip heading="Poklon kartice">
+        <p>Prodaja poklon kartica: kupac plati iznos, a dobija kod (i karticu za štampu) koji poklanja.</p>
+        <p class="mt-2">Kad dođe, kod se unosi u Klijenti → Istorijat → Stanje → „Poklon kartica“, ili ga klijent sam unese u profilu. Iznos prelazi na njegovo stanje, a usluge se plaćaju „Sa stanja“.</p>
+      </app-info-tip>
+    </div>
+  </div>
+  <button type="button" appBtn size="s" (click)="openForm()" data-testid="gift-card-add">
+    <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Nova poklon kartica</span>
+  </button>
+</div>
+
+<div class="sticky-toolbar">
+  <div class="flex flex-wrap items-center gap-2">
+    <div class="chip-group">
+      @for (f of filters; track f.label) {
+        <button type="button" class="chip" [class.selected]="status() === f.value" (click)="status.set(f.value)" [attr.data-testid]="'gift-filter-' + (f.value ?? 'all')">{{ f.label }}</button>
+      }
+    </div>
+    <input appInput size="s" type="search" class="flex-1 min-w-[10rem]" [formControl]="search" placeholder="Kod, kupac ili za koga..." data-testid="gift-search" />
+  </div>
+</div>
+
+@if (loading() && cards().length === 0) {
+} @else if (cards().length === 0) {
+  <div class="card empty-state">Nema poklon kartica za ovaj prikaz.</div>
+} @else {
+  @if (status() === 'active') {
+    <p class="text-sm muted mb-2">Aktivnih: {{ cards().length }} · ukupno {{ activeTotal() | rsd }} (obaveza salona prema kupcima).</p>
+  }
+  <div class="card flex flex-col">
+    @for (c of cards(); track c.id) {
+      <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.is-dimmed]="c.status !== 'active'" [attr.data-testid]="'gift-card-' + c.id">
+        <span appIcon="gift" class="text-[var(--color-primary)] shrink-0" aria-hidden="true"></span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-mono font-semibold tracking-wider">{{ code(c) }}</span>
+            <span [class]="'badge ' + statusInfo[c.status].badge">{{ statusInfo[c.status].label }}</span>
+          </div>
+          <div class="text-sm muted truncate">
+            {{ c.buyer_name || 'Kupac nije upisan' }}{{ c.recipient_name ? ' → ' + c.recipient_name : '' }} · {{ c.created_at | srDate }} · {{ paymentLabel(c) }}{{ c.seller ? ' · ' + c.seller.first_name : '' }}
+          </div>
+          @if (c.status === 'redeemed' && c.redeemer) {
+            <div class="text-xs muted">Iskoristio/la {{ c.redeemer | clientName }} {{ c.redeemed_at! | srDate }}</div>
+          } @else if (c.expires_on) {
+            <div class="text-xs muted">Važi do {{ c.expires_on | srDate }}</div>
+          }
+        </div>
+        <span class="font-bold shrink-0">{{ c.amount | rsd }}</span>
+        <app-row-actions [actions]="actions(c)" (selected)="onAction(c, $event)" [attr.data-testid]="'gift-actions-' + c.id" />
+      </div>
+    }
+  </div>
+}
+
+@if (formOpen()) {
+  <app-modal title="Nova poklon kartica" footerMode="custom" (cancelled)="formOpen.set(false)" testId="gift-card-modal">
+    <app-error-message [message]="formError()" />
+    <div class="flex flex-col gap-3">
+      <div class="field !mb-0">
+        <label for="gift-amount">Iznos <span class="required-mark">*</span></label>
+        <input id="gift-amount" appInput size="m" type="number" min="100" step="500" inputmode="numeric" [formControl]="amount" data-testid="gift-amount" />
+        <div class="chip-group mt-1">
+          @for (q of quickAmounts; track q) {
+            <button type="button" class="chip" [class.selected]="amount.value === q" (click)="amount.setValue(q)">{{ q | rsd }}</button>
+          }
+        </div>
+      </div>
+      <div class="field !mb-0">
+        <span class="text-sm font-semibold">Kupac je platio <span class="required-mark">*</span></span>
+        <div class="chip-group mt-1">
+          @for (m of methods; track m.value) {
+            <button type="button" class="chip" [class.selected]="method() === m.value" (click)="method.set(m.value)" [attr.data-testid]="'gift-method-' + m.value">{{ m.label }}</button>
+          }
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field !mb-0">
+          <label for="gift-buyer">Kupac</label>
+          <input id="gift-buyer" appInput size="m" [formControl]="buyer" placeholder="Ko kupuje" data-testid="gift-buyer" />
+        </div>
+        <div class="field !mb-0">
+          <label for="gift-recipient">Za koga</label>
+          <input id="gift-recipient" appInput size="m" [formControl]="recipient" placeholder="Ime na kartici" data-testid="gift-recipient" />
+        </div>
+      </div>
+      <div class="field !mb-0">
+        <label for="gift-note">Poruka na kartici</label>
+        <input id="gift-note" appInput size="m" [formControl]="note" maxlength="500" placeholder="npr. Srećan rođendan!" />
+      </div>
+      <div class="field !mb-0">
+        <label for="gift-expires">Važi do</label>
+        <input id="gift-expires" appInput size="m" type="date" [min]="minDate" [formControl]="expires" />
+        <span class="text-xs muted">Prazno = bez roka.</span>
+      </div>
+    </div>
+    <app-button modal-footer size="s" [loading]="saving()" (click)="save()" data-testid="gift-save">Prodaj karticu</app-button>
+  </app-modal>
+}
+
+@if (sold(); as c) {
+  <app-modal title="Poklon kartica je spremna" footerMode="none" (cancelled)="sold.set(null)" testId="gift-sold">
+    <div class="flex flex-col items-center gap-3 text-center">
+      <div class="text-sm muted">{{ c.recipient_name ? 'Za: ' + c.recipient_name : 'Poklon kartica' }}</div>
+      <div class="text-3xl font-bold">{{ c.amount | rsd }}</div>
+      <div class="font-mono text-2xl tracking-widest border border-dashed border-[var(--color-border)] rounded-lg px-4 py-2" data-testid="gift-sold-code">{{ code(c) }}</div>
+      <div class="flex gap-2">
+        <button type="button" appBtn theme="secondary" size="s" (click)="copy(c)"><span appIcon="copy" aria-hidden="true"></span> Kopiraj kod</button>
+        <button type="button" appBtn size="s" (click)="print(c)" data-testid="gift-print"><span appIcon="file-text" aria-hidden="true"></span> Štampaj</button>
+      </div>
+    </div>
+  </app-modal>
+}

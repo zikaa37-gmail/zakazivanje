@@ -47,6 +47,9 @@
               @for (m of methods; track m.value) {
                 <button type="button" class="chip" [class.selected]="method() === m.value" [attr.aria-pressed]="method() === m.value" (click)="method.set(m.value)" [attr.data-testid]="'complete-method-' + m.value">{{ m.label }}</button>
               }
+              @if (balance() > 0) {
+                <button type="button" class="chip" [class.selected]="method() === 'wallet'" [attr.aria-pressed]="method() === 'wallet'" (click)="method.set('wallet')" data-testid="complete-method-wallet">Sa stanja ({{ balance() | rsd }})</button>
+              }
             </div>
           </div>
           <div class="field !mb-0">

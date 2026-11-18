@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\AppManifestController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AppointmentPaymentController;
 use App\Http\Controllers\Api\AuthController;
@@ -8,18 +9,18 @@ use App\Http\Controllers\Api\BlockedTimeController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BusinessSettingController;
 use App\Http\Controllers\Api\CancellationFeeController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\GiftCardController;
+use App\Http\Controllers\Api\InboxController;
 use App\Http\Controllers\Api\InstagramPostController;
 use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\MyAppointmentController;
-use App\Http\Controllers\Api\AppManifestController;
-use App\Http\Controllers\Api\ChatController;
-use App\Http\Controllers\Api\PushController;
-use App\Http\Controllers\Api\InboxController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PromotionController;
+use App\Http\Controllers\Api\PushController;
 use App\Http\Controllers\Api\RealtimeController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReviewController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Api\StaffMemberController;
 use App\Http\Controllers\Api\StaffNoteController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\WaitlistController;
+use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['status' => 'ok']);
@@ -94,6 +96,8 @@ Route::middleware('jwt')->group(function () {
     Route::delete('/my-waitlist/{entry}', [WaitlistController::class, 'destroy']);
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
+    Route::post('/my-wallet', [WalletController::class, 'mine']);
+    Route::post('/my-wallet/redeem', [WalletController::class, 'redeemMine'])->middleware('throttle:booking');
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
     Route::post('/my-appointments/{appointment}/cancel-preview', [MyAppointmentController::class, 'cancelPreview']);
     Route::get('/my-cancellation-status', [MyAppointmentController::class, 'cancellationStatus']);
@@ -129,6 +133,12 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
     Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
+    Route::post('/clients/{client}/wallet', [WalletController::class, 'show']);
+    Route::post('/clients/{client}/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/clients/{client}/wallet/redeem', [WalletController::class, 'redeem']);
+    Route::post('/gift-cards/list', [GiftCardController::class, 'index']);
+    Route::post('/gift-cards', [GiftCardController::class, 'store']);
+    Route::post('/gift-cards/check', [GiftCardController::class, 'check']);
     Route::post('/appointments/{appointment}/payment', [AppointmentPaymentController::class, 'details']);
     Route::post('/appointments/{appointment}/slip', [AppointmentPaymentController::class, 'slip']);
     Route::post('/appointments/{appointment}/paid', [AppointmentPaymentController::class, 'markPaid']);
@@ -239,6 +249,8 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::delete('/gallery/{image}', [GalleryController::class, 'destroy']);
 
     Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::post('/clients/{client}/wallet/adjust', [WalletController::class, 'adjust']);
+    Route::post('/gift-cards/{giftCard}/cancel', [GiftCardController::class, 'cancel']);
     Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
     Route::post('/clients/{client}/delete-check', [ClientController::class, 'deleteCheck']);

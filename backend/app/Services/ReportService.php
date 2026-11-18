@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\BusinessSetting;
+use App\Models\GiftCard;
 use App\Models\OpeningHour;
 use App\Models\Review;
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Models\WalletEntry;
 use App\Notifications\ReportNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
@@ -106,6 +108,7 @@ class ReportService
             'staff_member' => $staff ? ['id' => $staff->id, 'name' => trim($staff->first_name.' '.$staff->last_name), 'active' => $staff->active] : null,
             'period' => ['type' => $period, 'from' => $from->toDateString(), 'to' => $to->toDateString(), 'label' => $range['label']],
             'totals' => $this->totals($appointments, $availableByStaff->sum(), $reviews, $from),
+            'prepaid' => $staff ? null : $this->prepaid($from, $to),
             'staff' => $staff ? [] : $staffMembers->map(fn (StaffMember $s) => [
                 'id' => $s->id,
                 'name' => trim($s->first_name.' '.$s->last_name),
@@ -231,7 +234,7 @@ class ReportService
             'unpaid' => round($completed->sum(fn (Appointment $a) => $a->outstanding()), 2),
             'not_done' => $completed->where('service_outcome', Appointment::OUTCOME_NOT_DONE)->count(),
             'partial_done' => $completed->where('service_outcome', Appointment::OUTCOME_PARTIAL)->count(),
-            'by_method' => collect(Appointment::PAYMENT_METHODS)->mapWithKeys(fn ($m) => [$m => round($paid->where('payment_method', $m)->sum(fn (Appointment $a) => $a->paidAmount()), 2)])->all(),
+            'by_method' => app(PaymentLedger::class)->byMethod($paid),
             'tips' => round($paid->sum('tip'), 2),
             'average_ticket' => $completed->count() > 0 ? round($completed->avg(fn (Appointment $a) => $a->dueAmount()), 2) : 0,
             'booked_minutes' => (int) $booked,
@@ -241,6 +244,21 @@ class ReportService
             'new_clients' => $firstVisits->filter(fn ($first) => CarbonImmutable::parse($first)->gte($from->startOfDay()))->count(),
             'rating' => $reviews->count() > 0 ? round($reviews->avg('rating'), 1) : null,
             'reviews' => $reviews->count(),
+        ];
+    }
+
+    private function prepaid(CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $range = [$from->startOfDay(), $to->endOfDay()];
+        $deposits = WalletEntry::where('kind', WalletEntry::KIND_DEPOSIT)->whereBetween('created_at', $range)->get(['amount', 'payment_method']);
+        $cards = GiftCard::whereNull('cancelled_at')->whereBetween('created_at', $range)->get(['amount', 'payment_method']);
+        $all = $deposits->concat($cards);
+
+        return [
+            'deposits' => round($deposits->sum('amount'), 2),
+            'gift_cards' => round($cards->sum('amount'), 2),
+            'gift_cards_count' => $cards->count(),
+            'by_method' => collect(Appointment::PAYMENT_METHODS)->mapWithKeys(fn ($m) => [$m => round($all->where('payment_method', $m)->sum('amount'), 2)])->all(),
         ];
     }
 
