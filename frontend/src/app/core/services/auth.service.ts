@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
-import { CommunicationChannel, UiMode, User } from '../models/user.model';
+import { CommunicationChannel, Role, STAFF_ROLES, UiMode, User } from '../models/user.model';
 import { MarketingService } from './marketing.service';
 
 const ACCESS_TOKEN_KEY = 'zk_access_token';
@@ -48,10 +48,10 @@ export class AuthService {
 
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.currentUserSignal() !== null);
-  readonly isOwner = computed(() => this.currentUserSignal()?.role === 'owner');
-  readonly isStaff = computed(() => ['owner', 'manager', 'worker'].includes(this.currentUserSignal()?.role ?? ''));
-  readonly isOfficeWorker = computed(() => this.currentUserSignal()?.role === 'manager');
-  readonly isServiceWorker = computed(() => this.currentUserSignal()?.role === 'worker');
+  readonly isOwner = computed(() => this.currentUserSignal()?.role === Role.Owner);
+  readonly isStaff = computed(() => STAFF_ROLES.includes(this.currentUserSignal()?.role ?? Role.Client));
+  readonly isOfficeWorker = computed(() => this.currentUserSignal()?.role === Role.Manager);
+  readonly isServiceWorker = computed(() => this.currentUserSignal()?.role === Role.Worker);
   readonly isManager = computed(() => this.isOwner() || this.isOfficeWorker());
   readonly isSuspended = computed(() => this.currentUserSignal()?.suspended === true);
   readonly homeUrl = computed(() => (this.isStaff() ? '/admin' : this.isSuspended() ? '/suspended' : this.isAuthenticated() ? '/my-appointments' : '/'));

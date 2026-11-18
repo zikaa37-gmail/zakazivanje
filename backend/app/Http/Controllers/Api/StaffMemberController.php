@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\StaffMember;
+use App\Models\User;
 use App\Services\StaffAbsenceService;
 use App\Services\StaffAccountService;
 use App\Services\StaffDeactivationService;
@@ -40,7 +42,7 @@ class StaffMemberController extends Controller
     {
         $data = $this->validated($request);
 
-        $staff = DB::transaction(fn () => $this->persist(new StaffMember, $data));
+        $staff = DB::transaction(fn () => $this->persist(new StaffMember, $data, $request->user()));
 
         return response()->json($staff, 201);
     }
@@ -57,7 +59,7 @@ class StaffMemberController extends Controller
             $this->deactivation->stopRecurrences($staffMember);
         }
 
-        return DB::transaction(fn () => $this->persist($staffMember, $data));
+        return DB::transaction(fn () => $this->persist($staffMember, $data, $request->user()));
     }
 
     public function setActive(Request $request, StaffMember $staffMember)
@@ -91,6 +93,7 @@ class StaffMemberController extends Controller
             'first_name' => ['required', 'string', 'min:2', 'max:100'],
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
             'title' => ['nullable', 'string', 'max:100'],
+            'role' => ['sometimes', Rule::in(UserRole::staff())],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[\d\s+\-()]+$/'],
             'email' => ['required', 'email', 'max:255', Rule::unique('staff_members', 'email')->ignore($request->route('staffMember'))],
             'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -164,9 +167,9 @@ class StaffMemberController extends Controller
         }
     }
 
-    private function persist(StaffMember $staff, array $data): StaffMember
+    private function persist(StaffMember $staff, array $data, User $actor): StaffMember
     {
-        $staff->fill(collect($data)->except(['service_ids', 'working_hours'])->all())->save();
+        $staff->fill(collect($data)->except(['service_ids', 'working_hours', 'role'])->all())->save();
 
         if (array_key_exists('service_ids', $data)) {
             $staff->services()->sync($data['service_ids']);
@@ -177,8 +180,27 @@ class StaffMemberController extends Controller
             $staff->workingHours()->createMany($data['working_hours']);
         }
 
-        $this->accounts->sync($staff);
+        $account = $this->accounts->sync($staff);
+
+        if ($account && isset($data['role']) && UserRole::from($data['role']) !== $account->role) {
+            $this->changeRole($actor, $account, UserRole::from($data['role']));
+        }
 
         return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active']);
+    }
+
+    private function changeRole(User $actor, User $account, UserRole $role): void
+    {
+        if (! $actor->isOwner() && ($account->isOwner() || $role === UserRole::Owner)) {
+            abort(403, 'Ulogu vlasnika menja samo vlasnik.');
+        }
+        if ($account->is($actor)) {
+            throw ValidationException::withMessages(['role' => ['Ne možeš da promeniš svoju ulogu.']]);
+        }
+        if ($account->isOwner() && ! User::where('role', UserRole::Owner)->where('active', true)->whereKeyNot($account->id)->exists()) {
+            throw ValidationException::withMessages(['role' => ['Mora da ostane bar jedan aktivan vlasnik.']]);
+        }
+
+        $account->forceFill(['role' => $role])->save();
     }
 }

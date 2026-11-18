@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Events\ClientActivity;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
@@ -56,7 +57,7 @@ class ClientDisciplineService
 
     public function refresh(User $client): User
     {
-        if ($client->role !== User::ROLE_CLIENT) {
+        if ($client->role !== UserRole::Client) {
             return $client;
         }
 
@@ -117,7 +118,7 @@ class ClientDisciplineService
     public function restrictions(?User $client): array
     {
         $settings = BusinessSetting::current();
-        $zone = $client?->role === User::ROLE_CLIENT && $settings->discipline_enabled ? ($client->discipline_zone ?? User::ZONE_GREEN) : User::ZONE_GREEN;
+        $zone = $client?->role === UserRole::Client && $settings->discipline_enabled ? ($client->discipline_zone ?? User::ZONE_GREEN) : User::ZONE_GREEN;
 
         return [
             'zone' => $zone,
@@ -174,7 +175,7 @@ class ClientDisciplineService
 
     public function logAvailability(?User $client, array $data): void
     {
-        if ($client?->role !== User::ROLE_CLIENT || ! Cache::add("activity:availability:{$client->id}", true, now()->addMinutes(30))) {
+        if ($client?->role !== UserRole::Client || ! Cache::add("activity:availability:{$client->id}", true, now()->addMinutes(30))) {
             return;
         }
 
@@ -219,7 +220,7 @@ class ClientDisciplineService
 
     private function notifyOwners(ClientDisciplineNotification $notification): void
     {
-        $owners = User::where('role', User::ROLE_OWNER)->where('active', true)->get();
+        $owners = User::where('role', UserRole::Owner)->where('active', true)->get();
         app(Inbox::class)->deliver($owners, $notification);
         Notification::send($owners->filter(fn (User $owner) => filled($owner->email)), $notification);
     }

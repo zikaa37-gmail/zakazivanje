@@ -1,5 +1,14 @@
 export type UserRole = 'client' | 'owner' | 'manager' | 'worker';
 
+export const Role: Record<'Client' | 'Owner' | 'Manager' | 'Worker', UserRole> = {
+  Client: 'client',
+  Owner: 'owner',
+  Manager: 'manager',
+  Worker: 'worker',
+};
+
+export const STAFF_ROLES: UserRole[] = [Role.Owner, Role.Manager, Role.Worker];
+
 export type CommunicationChannel = 'email' | 'whatsapp' | 'both';
 
 export type Gender = 'female' | 'male';
@@ -50,5 +59,5 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export function userRoleLabel(user: Pick<User, 'role' | 'staff_member_id'>): string {
-  return user.role !== 'worker' && user.role !== 'client' && user.staff_member_id !== null ? `${ROLE_LABELS[user.role]} · radi usluge` : ROLE_LABELS[user.role];
+  return user.role !== Role.Worker && user.role !== Role.Client && user.staff_member_id !== null ? `${ROLE_LABELS[user.role]} · radi usluge` : ROLE_LABELS[user.role];
 }

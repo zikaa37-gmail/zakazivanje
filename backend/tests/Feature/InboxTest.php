@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\InboxNotification;
@@ -41,10 +42,10 @@ class InboxTest extends TestCase
         $this->ana = $this->staff('Ana');
         $this->marko = $this->staff('Marko');
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $this->office = User::factory()->create(['role' => User::ROLE_MANAGER, 'email' => null]);
-        $this->anaWorker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
-        $this->markoWorker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->marko->id]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->office = User::factory()->create(['role' => UserRole::Manager, 'email' => null]);
+        $this->anaWorker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id]);
+        $this->markoWorker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->marko->id]);
     }
 
     private function staff(string $name): StaffMember
@@ -78,7 +79,7 @@ class InboxTest extends TestCase
 
         foreach ([$this->owner, $this->office, $this->anaWorker] as $user) {
             $items = $this->inboxOf($user);
-            $this->assertCount(1, $items, $user->role);
+            $this->assertCount(1, $items, $user->role->value);
             $this->assertSame('Novi termin čeka potvrdu', $items[0]->title);
             $this->assertSame($appointment->id, $items[0]->appointment_id);
             $this->assertSame('/admin/appointments?date=2026-10-20', $items[0]->link);

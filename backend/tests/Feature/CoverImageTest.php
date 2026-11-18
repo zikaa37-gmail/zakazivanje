@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,7 +28,7 @@ class CoverImageTest extends TestCase
 
     public function test_cover_is_served_as_file_and_not_inlined(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
 
         $this->getJson('/api/public/business')->assertJsonPath('cover_url', null);
         $this->get('/api/public/business/cover')->assertNotFound();
@@ -48,7 +49,7 @@ class CoverImageTest extends TestCase
 
     public function test_rejects_non_image(): void
     {
-        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $admin = User::factory()->create(['role' => UserRole::Owner]);
 
         $this->save($admin, ['cover_image' => 'data:text/html;base64,PGI+'])->assertUnprocessable()->assertJsonValidationErrors('cover_image');
     }

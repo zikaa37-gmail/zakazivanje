@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Promotion;
 use App\Models\Service;
@@ -19,7 +20,7 @@ class CatalogTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
     }
 
     public function test_admin_routes_require_admin(): void

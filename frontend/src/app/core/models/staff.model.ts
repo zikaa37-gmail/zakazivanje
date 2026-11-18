@@ -31,7 +31,7 @@ export interface StaffMember {
 export interface StaffMemberPayload {
   first_name: string;
   last_name: string;
-  title: string | null;
+  role: UserRole;
   phone: string | null;
   email: string | null;
   color: string | null;

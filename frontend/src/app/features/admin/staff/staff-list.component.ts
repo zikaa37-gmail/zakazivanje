@@ -7,7 +7,9 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../core/models/business-setting.model';
 import { SalonService } from '../../../core/models/service.model';
 import { StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
-import { ROLE_LABELS } from '../../../core/models/user.model';
+import { STAFF_ROLE_OPTIONS } from '../../../core/models/team.model';
+import { ROLE_LABELS, Role, UserRole } from '../../../core/models/user.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
@@ -49,6 +51,7 @@ export class StaffListComponent {
   private staffService = inject(StaffService);
   private catalog = inject(ServiceCatalogService);
   private confirm = inject(ConfirmService);
+  private auth = inject(AuthService);
   private toast = inject(ToastService);
   protected business = inject(BusinessSettingService);
 
@@ -96,7 +99,7 @@ export class StaffListComponent {
   readonly form = this.fb.group({
     first_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     last_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    title: this.fb.control<string | null>(null),
+    role: this.fb.nonNullable.control<UserRole>(Role.Worker),
     phone: this.fb.control<string | null>(null, Validators.required),
     email: this.fb.control<string | null>(null, [Validators.required, Validators.email]),
     color: this.fb.nonNullable.control(PALETTE[0]),
@@ -199,6 +202,20 @@ export class StaffListComponent {
     return CONFIRMATION_OPTIONS.find((o) => o.value === member.booking_confirmation)?.label ?? '';
   }
 
+  readonly roleOptions = computed(() => {
+    const current = this.editing()?.account?.role;
+    const order = [Role.Worker, Role.Manager, Role.Owner];
+    return order
+      .map((value) => STAFF_ROLE_OPTIONS.find((o) => o.value === value)!)
+      .filter((o) => o.value !== Role.Owner || this.auth.isOwner() || current === Role.Owner);
+  });
+  readonly roleLocked = computed(() => {
+    const account = this.editing()?.account;
+    if (!account) return false;
+    return account.id === this.auth.currentUser()?.id || (account.role === Role.Owner && !this.auth.isOwner());
+  });
+  readonly roleHint = signal('');
+
   accountLabel(member: StaffMember): string {
     return member.account ? ROLE_LABELS[member.account.role] : '';
   }
@@ -219,13 +236,16 @@ export class StaffListComponent {
     this.form.reset({
       first_name: member?.first_name ?? '',
       last_name: member?.last_name ?? '',
-      title: member?.title ?? null,
+      role: member?.account?.role ?? Role.Worker,
       phone: member?.phone ?? null,
       email: member?.email ?? null,
       color: member?.color ?? PALETTE[this.staff().length % PALETTE.length],
       booking_confirmation: member?.booking_confirmation ?? null,
       active: member?.active ?? true,
     });
+    if (this.roleLocked()) this.form.controls.role.disable();
+    else this.form.controls.role.enable();
+    this.updateRoleHint();
     this.selectedServices.set(new Set(member?.services.map((s) => s.id) ?? []));
     const first = this.salonShifts()[0];
     const hours = member?.working_hours ?? [1, 2, 3, 4, 5].map((weekday) => ({ weekday, week: 0, starts_at: first?.starts_at ?? '09:00', ends_at: first?.ends_at ?? '17:00' }));
@@ -234,6 +254,10 @@ export class StaffListComponent {
     this.activeWeek.set(member?.current_week ?? 0);
     this.shifts.set(hours.map((h) => this.shift(h.weekday, h.starts_at, h.ends_at, h.week ?? 0)));
     this.modalOpen.set(true);
+  }
+
+  updateRoleHint(): void {
+    this.roleHint.set(STAFF_ROLE_OPTIONS.find((o) => o.value === this.form.controls.role.value)?.hint.replace(' Samo za nalog vezan za zaposlenog.', '') ?? '');
   }
 
   closeForm(): void {
@@ -290,7 +314,6 @@ export class StaffListComponent {
     const value = this.form.getRawValue();
     const payload: StaffMemberPayload = {
       ...value,
-      title: value.title || null,
       phone: value.phone || null,
       email: value.email || null,
       service_ids: [...this.selectedServices()],

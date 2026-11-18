@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\ClientActivityLog;
@@ -38,7 +39,7 @@ class ClientDisciplineTest extends TestCase
         $this->ana->services()->sync([$this->cut->id]);
         $this->ana->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
         $this->client = User::factory()->create(['password' => Hash::make('tajna123')]);
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
     }
 
     private function book(string $at)
@@ -93,7 +94,7 @@ class ClientDisciplineTest extends TestCase
     {
         $this->pastAppointment(Appointment::STATUS_CONFIRMED);
         $second = $this->pastAppointment(Appointment::STATUS_CONFIRMED, ['starts_at' => '2026-10-12 10:00', 'ends_at' => '2026-10-12 10:30']);
-        $worker = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $worker = User::factory()->create(['role' => UserRole::Manager]);
 
         foreach (Appointment::all() as $appointment) {
             $this->actingAsJwt($worker)->postJson("/api/appointments/{$appointment->id}/status", ['status' => 'no_show'])->assertOk();
@@ -120,7 +121,7 @@ class ClientDisciplineTest extends TestCase
 
     public function test_owner_suspends_client_and_client_sees_it_after_login(): void
     {
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
+        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         $this->actingAsJwt($worker)->putJson("/api/clients/{$this->client->id}/zone", ['zone' => 'red'])->assertForbidden();
 
         $this->actingAsJwt($this->owner)->putJson("/api/clients/{$this->client->id}/zone", ['zone' => 'red', 'reason' => 'Stalno otkazuje'])

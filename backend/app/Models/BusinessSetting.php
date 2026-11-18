@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Appends;
@@ -134,6 +135,6 @@ class BusinessSetting extends Model
     public function noteAlwaysNotifyIds(): array
     {
         return $this->note_always_notify_ids
-            ?? User::whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])->where('active', true)->pluck('id')->all();
+            ?? User::whereIn('role', [UserRole::Owner, UserRole::Manager])->where('active', true)->pluck('id')->all();
     }
 }

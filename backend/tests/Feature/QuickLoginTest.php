@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,7 +13,7 @@ class QuickLoginTest extends TestCase
 
     public function test_quick_login_is_off_without_configured_emails(): void
     {
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
         config(['auth_jwt.quick_login_emails' => []]);
 
         $this->getJson('/api/auth/quick-logins')->assertOk()->assertExactJson([]);
@@ -21,10 +22,10 @@ class QuickLoginTest extends TestCase
 
     public function test_only_configured_active_accounts_can_quick_login(): void
     {
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER, 'first_name' => 'Jelena']);
-        $manager = User::factory()->create(['role' => User::ROLE_MANAGER, 'first_name' => 'Luka']);
-        $inactive = User::factory()->create(['role' => User::ROLE_WORKER, 'active' => false]);
-        $other = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $owner = User::factory()->create(['role' => UserRole::Owner, 'first_name' => 'Jelena']);
+        $manager = User::factory()->create(['role' => UserRole::Manager, 'first_name' => 'Luka']);
+        $inactive = User::factory()->create(['role' => UserRole::Worker, 'active' => false]);
+        $other = User::factory()->create(['role' => UserRole::Owner]);
         config(['auth_jwt.quick_login_emails' => [$manager->email, $owner->email, $inactive->email]]);
 
         $this->getJson('/api/auth/quick-logins')->assertOk()->assertExactJson([

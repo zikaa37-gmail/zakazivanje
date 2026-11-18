@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Promotion;
 use App\Models\Service;
@@ -34,7 +35,7 @@ class PromoCodeTest extends TestCase
             'allow_guest_booking' => true,
         ]);
 
-        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 30, 'price' => 2000]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->cut->id]);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\CancellationFee;
@@ -29,7 +30,7 @@ class ClientController extends Controller
         $search = trim($data['search'] ?? '');
 
         return User::query()
-            ->where('role', User::ROLE_CLIENT)
+            ->where('role', UserRole::Client)
             ->when($data['zone'] ?? null, fn ($q, $zone) => $q->where('discipline_zone', $zone))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -49,7 +50,7 @@ class ClientController extends Controller
     public function directory()
     {
         return User::query()
-            ->where('role', User::ROLE_CLIENT)
+            ->where('role', UserRole::Client)
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get()
@@ -58,14 +59,14 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        $client = User::create([...$this->validated($request), 'role' => User::ROLE_CLIENT]);
+        $client = User::create([...$this->validated($request), 'role' => UserRole::Client]);
 
         return response()->json($this->present($client->refresh()), 201);
     }
 
     public function update(Request $request, User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         $client->update($this->validated($request, $client));
 
@@ -74,7 +75,7 @@ class ClientController extends Controller
 
     public function nickname(Request $request, User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         $data = $request->validate(['nickname' => ['nullable', 'string', 'max:60']], ['nickname.max' => 'Nadimak može imati najviše 60 znakova.']);
         $client->nickname = filled($data['nickname'] ?? null) ? trim($data['nickname']) : null;
@@ -85,7 +86,7 @@ class ClientController extends Controller
 
     public function activity(Request $request, User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         $data = $request->validate(['before_id' => ['nullable', 'integer']]);
 
@@ -107,7 +108,7 @@ class ClientController extends Controller
 
     public function zone(Request $request, User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         $data = $request->validate([
             'zone' => ['nullable', Rule::in(User::ZONES)],
@@ -127,7 +128,7 @@ class ClientController extends Controller
 
     public function destroy(User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         $impact = $this->deleteImpact($client);
         if ($impact['history'] > 0) {
@@ -141,7 +142,7 @@ class ClientController extends Controller
 
     public function deleteCheck(User $client)
     {
-        abort_unless($client->role === User::ROLE_CLIENT, 404);
+        abort_unless($client->role === UserRole::Client, 404);
 
         return $this->deleteImpact($client);
     }

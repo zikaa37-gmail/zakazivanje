@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\GalleryImage;
@@ -21,7 +22,7 @@ class MarketingTest extends TestCase
     {
         $this->travelTo('2026-10-19 08:00:00');
         Notification::fake();
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
         $cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 30, 'price' => 1500]);
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test', 'booking_confirmation' => BusinessSetting::CONFIRMATION_AUTOMATIC]);
         $ana->services()->sync([$cut->id]);
@@ -60,13 +61,13 @@ class MarketingTest extends TestCase
             ->assertJsonPath('rows.0.new_clients', 1)
             ->assertJsonPath('instagram', null);
 
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER]);
+        $worker = User::factory()->create(['role' => UserRole::Worker]);
         $this->actingAsJwt($worker)->postJson('/api/dashboard/sources', ['from' => '2026-10-01', 'to' => '2026-10-31'])->assertForbidden();
     }
 
     public function test_gallery_images_can_be_featured_and_marked_as_salon(): void
     {
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
         $image = GalleryImage::create(['data' => 'data:image/png;base64,AAAA', 'mime' => 'image/png', 'width' => 10, 'height' => 10]);
 
         $this->actingAsJwt($owner)->putJson("/api/gallery/{$image->id}", ['kind' => 'salon', 'featured' => true])
@@ -79,8 +80,8 @@ class MarketingTest extends TestCase
     public function test_owner_connects_instagram_through_oauth(): void
     {
         config(['instagram.app_id' => '123', 'instagram.app_secret' => 'secret']);
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
-        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         Http::fake([
             'api.instagram.com/oauth/access_token' => Http::response(['access_token' => 'short-token', 'user_id' => 1]),
             'graph.instagram.com/access_token*' => Http::response(['access_token' => str_repeat('l', 40), 'expires_in' => 5000000]),
@@ -106,7 +107,7 @@ class MarketingTest extends TestCase
 
     public function test_instagram_feed_is_optional_and_token_stays_private(): void
     {
-        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $owner = User::factory()->create(['role' => UserRole::Owner]);
         $this->getJson('/api/public/instagram')->assertOk()->assertExactJson([]);
 
         Http::fake([

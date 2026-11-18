@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use App\Services\ReportService;
@@ -33,7 +34,7 @@ class SendScheduledReports extends Command
             'month' => $settings->report_auto_monthly && $date->isLastOfMonth(),
         ]));
 
-        $recipients = User::whereIn('role', User::STAFF_ROLES)->where('active', true)->with('staffMember')->get();
+        $recipients = User::whereIn('role', UserRole::staff())->where('active', true)->with('staffMember')->get();
         $sent = 0;
 
         foreach ($periods as $period) {
