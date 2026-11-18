@@ -128,6 +128,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments/pending-count', [AppointmentController::class, 'pendingCount']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
+    Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
     Route::post('/appointments/{appointment}/payment', [AppointmentPaymentController::class, 'details']);
     Route::post('/appointments/{appointment}/slip', [AppointmentPaymentController::class, 'slip']);
     Route::post('/appointments/{appointment}/paid', [AppointmentPaymentController::class, 'markPaid']);

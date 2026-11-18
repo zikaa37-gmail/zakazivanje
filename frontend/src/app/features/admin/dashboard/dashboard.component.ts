@@ -1,3 +1,4 @@
+import { CompletionService } from '../../../core/services/completion.service';
 import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -90,6 +91,7 @@ export class DashboardComponent {
     return id ? (this.staff().find((m) => m.id === id)?.first_name ?? null) : null;
   });
   private appointmentService = inject(AppointmentService);
+  private completion = inject(CompletionService);
   private staffService = inject(StaffService);
   private toast = inject(ToastService);
   private rsd = new RsdPipe();
@@ -229,14 +231,8 @@ export class DashboardComponent {
     return own && ['pending', 'confirmed'].includes(a.status) && a.starts_at <= nowDateTime();
   }
 
-  complete(a: Appointment): void {
-    this.appointmentService.setStatus(a.id, 'completed').subscribe({
-      next: () => {
-        this.toast.success('Termin je završen. Naplatu upiši klikom na termin.');
-        this.loadToday();
-      },
-      error: (err) => this.toast.error(apiErrorMessage(err, 'Nije uspelo.')),
-    });
+  async complete(a: Appointment): Promise<void> {
+    if (await this.completion.open(a)) this.loadToday();
   }
 
   confirm(a: Appointment, event: Event): void {

@@ -172,6 +172,36 @@ class AppointmentController extends Controller
         return $appointment;
     }
 
+    public function complete(Request $request, Appointment $appointment)
+    {
+        $data = $request->validate([
+            'payment_method' => ['nullable', Rule::in(Appointment::PAYMENT_METHODS)],
+            'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $user = $request->user();
+        abort_if($user->isServiceWorker() && $appointment->staff_member_id !== $user->staff_member_id, 403, 'Završavaš samo svoje termine.');
+        if (! in_array($appointment->status, [Appointment::STATUS_PENDING, Appointment::STATUS_CONFIRMED, Appointment::STATUS_COMPLETED], true)) {
+            throw ValidationException::withMessages(['status' => ['Otkazan termin ili termin bez dolaska ne može da se završi.']]);
+        }
+
+        $previous = $appointment->status;
+        $method = $data['payment_method'] ?? null;
+        $appointment->update([
+            'status' => Appointment::STATUS_COMPLETED,
+            'completion_note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
+            'payment_method' => $method ?? $appointment->payment_method,
+            'paid_at' => $method ? ($appointment->paid_at ?? now()) : $appointment->paid_at,
+            'tip' => $method ? round((float) ($data['tip'] ?? 0), 2) : $appointment->tip,
+        ]);
+
+        if ($previous !== Appointment::STATUS_COMPLETED) {
+            $this->notifier->statusChanged($appointment, $previous);
+        }
+
+        return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);
+    }
+
     public function reschedule(Request $request, Appointment $appointment)
     {
         $data = $request->validate([

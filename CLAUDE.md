@@ -26,7 +26,7 @@ i nalozi vlasnika (menadžer ne pravi, ne menja i ne briše vlasnika). Rute: `ro
 `role:manager` za upravljanje, `role:owner` za finansije; frontend `staffGuard` / `managerGuard`, meni po `managerOnly`;
 vlasnik i menadžer imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
 Menadžer izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
-automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
+automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); „Završen“ svuda otvara `<app-complete-dialog>` (`CompletionService`, u `AdminShellComponent`): naplata ili „Naplata kasnije“, bakšiš i `appointments.completion_note` (beleška posle termina, `POST /appointments/{id}/complete`; `admin_note` i `completion_note` vidi samo osoblje — `Appointment::toArray()`), beleške u istorijatu klijenta (`work_notes`); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
 Svaki zaposleni sa emailom automatski ima nalog radnika (`StaffAccountService::sync()`);
 zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Uloge su enum `UserRole` (`app/Enums/UserRole.php`) (`role` je cast na enum, podrazumevano `client`), na frontendu `Role` / `STAFF_ROLES` u `user.model.ts`; nove uloge idu tu. Uloga zaposlenog se bira i u formi zaposlenog (`role` uz `PUT /staff/{id}`, ista pravila kao Nalozi), umesto nekadašnje „Pozicije“.
 

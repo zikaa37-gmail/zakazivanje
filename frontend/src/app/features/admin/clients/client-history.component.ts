@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Client, ClientActivity, ClientHistory, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
+import { Client, ClientActivity, ClientHistory, DisciplineZone, WorkNote, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClientService } from '../../../core/services/client.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -182,5 +182,9 @@ export class ClientHistoryComponent implements OnInit {
     const client = { ...history.client, nickname };
     this.history.set({ ...history, client });
     this.changed.emit(client);
+  }
+
+  itemNames(note: WorkNote): string {
+    return note.items.map((i) => i.name).join(', ');
   }
 }

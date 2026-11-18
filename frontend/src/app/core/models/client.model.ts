@@ -38,6 +38,15 @@ export interface ClientHistory {
   stats: ClientStats;
   logs: ClientActivity[];
   has_more: boolean;
+  work_notes: WorkNote[];
+}
+
+export interface WorkNote {
+  id: number;
+  starts_at: string;
+  completion_note: string;
+  items: { name: string }[];
+  staff_member: { first_name: string } | null;
 }
 
 export interface ZonePayload {

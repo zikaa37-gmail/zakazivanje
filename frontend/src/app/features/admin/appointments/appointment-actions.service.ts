@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { CompletionService } from '../../../core/services/completion.service';
 import { CancellationFeeService } from '../../../core/services/cancellation-fee.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -18,6 +19,7 @@ export class AppointmentActionsService {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private fees = inject(CancellationFeeService);
+  private completion = inject(CompletionService);
 
   actions(a: Appointment): RowAction[] {
     const list: RowAction[] = [];
@@ -72,6 +74,8 @@ export class AppointmentActionsService {
         return true;
       }
 
+      if (action === 'completed') return await this.completion.open(a);
+
       const question = this.statusQuestion(a, action as AppointmentStatus);
       if (question) {
         const ok = await this.confirm.confirm({ ...question, cancelLabel: 'Ne', danger: action === 'no_show' });
@@ -89,7 +93,6 @@ export class AppointmentActionsService {
   private statusQuestion(a: Appointment, status: AppointmentStatus): { title: string; message: string; confirmLabel: string } | null {
     const who = `${clientName(a.client)} (${timeOf(a.starts_at)})`;
     if (status === 'no_show') return { title: 'Klijent nije došao', message: `Označiti da ${who} nije došao? Klijentu se upisuju poeni discipline.`, confirmLabel: 'Nije došao' };
-    if (status === 'completed') return { title: 'Završen termin', message: `Označiti termin ${who} kao završen? Klijent dobija molbu za ocenu.`, confirmLabel: 'Završen' };
     if (status === 'pending') return { title: 'Vraćanje na čekanje', message: `Vratiti termin ${who} na čekanje potvrde?`, confirmLabel: 'Vrati' };
     if (status === 'confirmed' && a.status !== 'pending') return { title: 'Vraćanje termina', message: `Vratiti termin ${who} kao potvrđen? Vreme se ponovo zauzima.`, confirmLabel: 'Vrati' };
     return null;

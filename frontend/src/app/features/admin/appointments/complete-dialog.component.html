@@ -1,0 +1,40 @@
+@if (appointment(); as a) {
+  <app-modal title="Termin je odrađen" footerMode="custom" (cancelled)="cancel()" testId="complete-dialog">
+    <app-error-message [message]="error()" />
+    <div class="flex flex-col gap-4">
+      <div class="text-sm">
+        <div class="font-semibold">{{ a.client | clientName }} · {{ time() }}</div>
+        <div class="muted">{{ services() }}</div>
+        <div class="mt-1">Ukupno: <strong>{{ a.total | rsd }}</strong></div>
+      </div>
+
+      @if (alreadyPaid()) {
+        <div class="text-sm" data-testid="complete-already-paid"><span class="badge badge-success">Plaćeno</span> {{ paidLabel() }}</div>
+      } @else {
+        <div class="field !mb-0">
+          <span class="text-sm font-semibold">Naplata</span>
+          <div class="chip-group mt-1">
+            @for (m of methods; track m.value) {
+              <button type="button" class="chip" [class.selected]="choice() === m.value" [attr.aria-pressed]="choice() === m.value" (click)="choose(m.value)" [attr.data-testid]="'complete-pay-' + m.value">{{ m.label }}</button>
+            }
+            <button type="button" class="chip" [class.selected]="choice() === 'later'" [attr.aria-pressed]="choice() === 'later'" (click)="choose('later')" data-testid="complete-pay-later">Naplata kasnije</button>
+          </div>
+        </div>
+        @if (choice() && choice() !== 'later') {
+          <div class="field !mb-0">
+            <label for="complete-tip">Bakšiš</label>
+            <input id="complete-tip" appInput size="m" type="number" min="0" step="50" inputmode="numeric" placeholder="0" [formControl]="tip" data-testid="complete-tip" />
+          </div>
+        }
+      }
+
+      <div class="field !mb-0">
+        <label for="complete-note">Beleška posle termina</label>
+        <textarea id="complete-note" appInput size="m" rows="3" maxlength="2000" [formControl]="note" placeholder="npr. Završila skoro sve, sutra dolazi na feniranje" data-testid="complete-note"></textarea>
+        <span class="text-xs muted">Vidi samo osoblje — u detaljima termina i u istorijatu klijenta.</span>
+      </div>
+    </div>
+
+    <app-button modal-footer size="s" [loading]="saving()" [disabled]="!alreadyPaid() && choice() === null" (click)="save()" data-testid="complete-save">{{ confirmLabel() }}</app-button>
+  </app-modal>
+}
