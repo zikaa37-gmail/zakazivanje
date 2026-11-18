@@ -1,5 +1,5 @@
 import { ConfirmationMode } from './business-setting.model';
-import { UserRole } from './user.model';
+import { UiMode, UserRole } from './user.model';
 
 export interface WorkingHour {
   weekday: number;
@@ -25,13 +25,14 @@ export interface StaffMember {
   current_week: number;
   working_hours: WorkingHour[];
   services: { id: number; name: string }[];
-  account?: { id: number; role: UserRole; active: boolean } | null;
+  account?: { id: number; role: UserRole; active: boolean; ui_mode: UiMode } | null;
 }
 
 export interface StaffMemberPayload {
   first_name: string;
   last_name: string;
   role: UserRole;
+  ui_mode: UiMode;
   phone: string | null;
   email: string | null;
   color: string | null;
