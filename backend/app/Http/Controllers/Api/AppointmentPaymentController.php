@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
+use App\Services\AppointmentNotifier;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,7 +13,7 @@ use RuntimeException;
 
 class AppointmentPaymentController extends Controller
 {
-    public function __construct(private PaymentService $payments) {}
+    public function __construct(private PaymentService $payments, private AppointmentNotifier $notifier) {}
 
     public function details(Appointment $appointment)
     {
@@ -32,12 +33,16 @@ class AppointmentPaymentController extends Controller
         ]);
 
         $paid = isset($data['method']);
+        $owedBefore = $appointment->outstanding();
         $appointment->update([
             'payment_method' => $data['method'] ?? null,
             'paid_at' => $paid ? ($appointment->paid_at ?? now()) : null,
             'paid_amount' => $paid ? round((float) ($appointment->status === Appointment::STATUS_COMPLETED ? ($appointment->due_amount ?? $appointment->total) : $appointment->total), 2) : null,
             'tip' => $paid ? round((float) ($data['tip'] ?? 0), 2) : 0,
         ]);
+        if ($paid && $owedBefore > 0) {
+            $this->notifier->debtPaid($appointment, $owedBefore, $request->user());
+        }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);
     }
