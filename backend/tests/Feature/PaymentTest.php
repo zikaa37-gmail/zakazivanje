@@ -102,6 +102,27 @@ class PaymentTest extends TestCase
         $this->actingAsJwt($this->admin)->postJson($paid, ['method' => 'bitcoin'])->assertUnprocessable();
     }
 
+    public function test_staff_completes_with_payment_and_internal_note(): void
+    {
+        $this->actingAsJwt($this->admin)->postJson("/api/appointments/{$this->appointment->id}/complete", ['payment_method' => 'card', 'tip' => 300, 'note' => 'Sutra dolazi na feniranje'])
+            ->assertOk()
+            ->assertJsonPath('status', Appointment::STATUS_COMPLETED)
+            ->assertJsonPath('payment_method', 'card')
+            ->assertJsonPath('tip', 300)
+            ->assertJsonPath('completion_note', 'Sutra dolazi na feniranje');
+        $this->assertNotNull($this->appointment->fresh()->paid_at);
+
+        $this->actingAsJwt($this->admin)->postJson("/api/clients/{$this->client->id}/activity")
+            ->assertOk()->assertJsonPath('work_notes.0.completion_note', 'Sutra dolazi na feniranje');
+
+        $this->actingAsJwt($this->client)->postJson('/api/my-appointments/list', ['scope' => 'past'])
+            ->assertOk()->assertJsonMissingPath('data.0.completion_note')->assertDontSee('feniranje');
+
+        $later = Appointment::find($this->appointment->id);
+        $later->update(['status' => Appointment::STATUS_CANCELLED]);
+        $this->actingAsJwt($this->admin)->postJson("/api/appointments/{$later->id}/complete", [])->assertUnprocessable();
+    }
+
     public function test_online_payment_requires_bank_account(): void
     {
         BusinessSetting::current()->update(['bank_account' => null]);

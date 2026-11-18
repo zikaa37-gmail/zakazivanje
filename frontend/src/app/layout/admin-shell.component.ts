@@ -1,3 +1,4 @@
+import { CompleteDialogComponent } from '../features/admin/appointments/complete-dialog.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -24,7 +25,7 @@ interface NavItem {
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, IconDirective, InboxBellComponent],
+  imports: [RouterOutlet, RouterLink, IconDirective, InboxBellComponent, CompleteDialogComponent],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',
   host: {

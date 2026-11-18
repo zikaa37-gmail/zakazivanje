@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
 
-#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'processing_offset', 'processing_minutes', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'change_notice', 'change_notice_at', 'paid_at', 'payment_method', 'tip', 'link_group'])]
-#[Hidden(['change_notice'])]
+#[Fillable(['client_id', 'staff_member_id', 'recurrence_id', 'starts_at', 'ends_at', 'processing_offset', 'processing_minutes', 'status', 'source', 'price', 'discount', 'total', 'note', 'admin_note', 'completion_note', 'confirmed_at', 'cancelled_at', 'cancelled_by', 'free_change_reason', 'change_notice', 'change_notice_at', 'paid_at', 'payment_method', 'tip', 'link_group'])]
+#[Hidden(['change_notice', 'admin_note', 'completion_note'])]
 class Appointment extends Model
 {
     public const STATUS_PENDING = 'pending';
@@ -78,6 +79,20 @@ class Appointment extends Model
     public function review(): HasOne
     {
         return $this->hasOne(Review::class);
+    }
+
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+        if (Auth::user()?->isStaff()) {
+            foreach (['admin_note', 'completion_note'] as $key) {
+                if (array_key_exists($key, $this->getAttributes())) {
+                    $array[$key] = $this->getAttribute($key);
+                }
+            }
+        }
+
+        return $array;
     }
 
     public function items(): HasMany

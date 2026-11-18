@@ -28,6 +28,7 @@ export interface Appointment {
   total: number;
   note: string | null;
   admin_note: string | null;
+  completion_note?: string | null;
   items: AppointmentItem[];
   staff_member?: { id: number; first_name: string; last_name: string; title?: string | null; color: string | null };
   client?: { id: number; first_name: string; last_name: string; nickname?: string | null; phone: string | null; email: string | null };

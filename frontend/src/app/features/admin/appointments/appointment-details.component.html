@@ -96,6 +96,9 @@
     @if (appointment().admin_note) {
       <div class="text-sm"><span class="muted">Interna napomena:</span> {{ appointment().admin_note }}</div>
     }
+    @if (appointment().completion_note) {
+      <div class="text-sm" data-testid="details-completion-note"><span class="muted">Beleška posle termina:</span> {{ appointment().completion_note }}</div>
+    }
 
     <div class="flex flex-wrap gap-2">
       @if (appointment().status === 'pending') {

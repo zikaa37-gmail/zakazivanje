@@ -4,6 +4,7 @@ import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SKIP_LOADER } from '../interceptors/loader.interceptor';
 import { ColleagueRef } from '../models/staff-absence.model';
+import { PaymentMethod } from '../models/payment.model';
 import { AdminAppointmentPayload, Appointment, AppointmentStatus, BlockedTime, Recurrence } from '../models/appointment.model';
 
 export interface AppointmentFilters {
@@ -39,6 +40,12 @@ export class AppointmentService {
 
   setStatus(id: number, status: AppointmentStatus): Observable<Appointment> {
     return this.http.post<Appointment>(`${this.api}/${id}/status`, { status }).pipe(tap(() => this.refreshPendingCount()));
+  }
+
+  complete(id: number, paymentMethod: PaymentMethod | null, tip: number, note: string): Observable<Appointment> {
+    return this.http
+      .post<Appointment>(`${this.api}/${id}/complete`, { payment_method: paymentMethod, tip, note: note || null })
+      .pipe(tap(() => this.refreshPendingCount()));
   }
 
   cancel(id: number, scope: 'this' | 'series', byClient = false): Observable<{ message: string }> {

@@ -39,6 +39,23 @@
 
       <app-client-fees [clientId]="h.client.id" [showAll]="true" />
 
+      @if (h.work_notes.length > 0) {
+        <div data-testid="client-work-notes">
+          <h3 class="font-semibold mb-2">Beleške posle termina</h3>
+          <div class="flex flex-col">
+            @for (w of h.work_notes; track w.id) {
+              <div class="flex items-start gap-3 py-2 border-t border-[var(--color-bg)] text-sm">
+                <span class="w-24 shrink-0 text-xs muted">{{ w.starts_at | srDate }}</span>
+                <div class="min-w-0">
+                  <div class="text-xs muted">{{ w.staff_member?.first_name ?? '' }}{{ w.items.length ? ' · ' : '' }}{{ itemNames(w) }}</div>
+                  <div>{{ w.completion_note }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
       @if (isManager()) {
         <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="card flex flex-col gap-2" novalidate data-testid="client-zone-form">
           <h3 class="font-semibold">Ručna zona</h3>

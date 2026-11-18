@@ -102,6 +102,13 @@ class ClientController extends Controller
             'client' => $this->present($this->discipline->refresh($client)),
             'stats' => $this->discipline->stats($client),
             'logs' => $logs,
+            'work_notes' => ($data['before_id'] ?? null) ? [] : Appointment::query()
+                ->where('client_id', $client->id)
+                ->whereNotNull('completion_note')
+                ->with(['items:id,appointment_id,name', 'staffMember:id,first_name'])
+                ->orderByDesc('starts_at')
+                ->limit(10)
+                ->get(['id', 'staff_member_id', 'starts_at', 'completion_note']),
             'has_more' => $logs->count() === 100,
         ];
     }
