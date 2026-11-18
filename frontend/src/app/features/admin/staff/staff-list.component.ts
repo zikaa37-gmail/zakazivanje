@@ -8,7 +8,7 @@ import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../
 import { SalonService } from '../../../core/models/service.model';
 import { StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
 import { STAFF_ROLE_OPTIONS } from '../../../core/models/team.model';
-import { ROLE_LABELS, Role, UserRole } from '../../../core/models/user.model';
+import { ROLE_LABELS, Role, UI_MODES, UiMode, UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
@@ -100,6 +100,7 @@ export class StaffListComponent {
     first_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     last_name: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     role: this.fb.nonNullable.control<UserRole>(Role.Worker),
+    ui_mode: this.fb.nonNullable.control<UiMode>('standard'),
     phone: this.fb.control<string | null>(null, Validators.required),
     email: this.fb.control<string | null>(null, [Validators.required, Validators.email]),
     color: this.fb.nonNullable.control(PALETTE[0]),
@@ -215,6 +216,15 @@ export class StaffListComponent {
     return account.id === this.auth.currentUser()?.id || (account.role === Role.Owner && !this.auth.isOwner());
   });
   readonly roleHint = signal('');
+  readonly uiModes = UI_MODES;
+
+  uiModeHint(): string {
+    return UI_MODES.find((m) => m.value === this.form.controls.ui_mode.value)?.hint ?? '';
+  }
+
+  takesBookings(member: StaffMember): boolean {
+    return member.active && member.services.length > 0;
+  }
 
   accountLabel(member: StaffMember): string {
     return member.account ? ROLE_LABELS[member.account.role] : '';
@@ -237,6 +247,7 @@ export class StaffListComponent {
       first_name: member?.first_name ?? '',
       last_name: member?.last_name ?? '',
       role: member?.account?.role ?? Role.Worker,
+      ui_mode: member?.account?.ui_mode ?? 'standard',
       phone: member?.phone ?? null,
       email: member?.email ?? null,
       color: member?.color ?? PALETTE[this.staff().length % PALETTE.length],

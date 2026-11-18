@@ -163,7 +163,7 @@ export class CalendarComponent {
   });
 
   readonly visibleStaff = computed(() =>
-    this.staff().filter((s) => s.active && (this.staffFilter() === null || s.id === this.staffFilter())),
+    this.staff().filter((s) => s.active && (s.services.length > 0 || this.appointments().some((a) => a.staff_member_id === s.id)) && (this.staffFilter() === null || s.id === this.staffFilter())),
   );
 
   readonly visibleAppointments = computed(() =>

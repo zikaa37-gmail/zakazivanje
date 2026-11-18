@@ -53,21 +53,29 @@
         @for (service of member.services; track service.id; let last = $last) {
           {{ service.name }}{{ last ? '' : ', ' }}
         } @empty {
-          <span class="muted">Nije dodeljeno</span>
+          <span class="muted">Ne radi usluge — klijenti ga ne vide pri zakazivanju</span>
         }
       </div>
     </div>
-    <div>
-      <div class="text-xs font-semibold muted">Radno vreme · {{ hoursSummary(member) }}</div>
-      <div class="flex gap-1 mt-1">
-        @for (day of weekdays; track day.value) {
-          <span class="day-dot" [class.on]="workDays(member).has(day.value)" [title]="day.label">{{ day.short }}</span>
-        }
+    @if (member.services.length > 0) {
+      <div>
+        <div class="text-xs font-semibold muted">Radno vreme · {{ hoursSummary(member) }}</div>
+        <div class="flex gap-1 mt-1">
+          @for (day of weekdays; track day.value) {
+            <span class="day-dot" [class.on]="workDays(member).has(day.value)" [title]="day.label">{{ day.short }}</span>
+          }
+        </div>
       </div>
-    </div>
+    }
     <div class="flex flex-wrap gap-2">
-      <span class="badge" [class.badge-success]="member.active" [class.badge-neutral]="!member.active">{{ member.active ? 'Aktivan' : 'Neaktivan' }}</span>
-      <span class="badge badge-neutral">Potvrda: {{ modeLabel(member) }}</span>
+      @if (takesBookings(member)) {
+        <span class="badge badge-success">Prima termine</span>
+        <span class="badge badge-neutral">Potvrda: {{ modeLabel(member) }}</span>
+      } @else if (member.active) {
+        <span class="badge badge-neutral" data-testid="staff-no-bookings">Ne prima termine</span>
+      } @else {
+        <span class="badge badge-neutral">Neaktivan</span>
+      }
     </div>
   </div>
 </ng-template>
@@ -151,6 +159,7 @@
             <span class="muted text-sm">Prvo dodaj usluge na stranici Usluge.</span>
           }
         </div>
+        <span class="text-xs muted">{{ selectedServices().size === 0 ? 'Bez usluga ne prima termine i klijenti ga ne vide pri zakazivanju — npr. menadžer koji samo vodi salon.' : 'Klijenti ga biraju za označene usluge.' }}</span>
       </div>
 
       <div class="field">
@@ -223,7 +232,19 @@
         </div>
       </div>
 
-      <app-toggle [checked]="form.controls.active.value" label="Aktivan (prima termine)" (checkedChange)="form.controls.active.setValue($event)" />
+      @if (editing()?.account; as account) {
+        <div class="field mt-3" data-testid="staff-ui-mode">
+          <span class="text-sm font-semibold">Prikaz</span>
+          <div class="chip-group mt-1">
+            @for (mode of uiModes; track mode.value) {
+              <button type="button" class="chip" [class.selected]="form.controls.ui_mode.value === mode.value" [attr.aria-pressed]="form.controls.ui_mode.value === mode.value" (click)="form.controls.ui_mode.setValue(mode.value)" [attr.data-testid]="'staff-ui-mode-' + mode.value">{{ mode.label }}</button>
+            }
+          </div>
+          <span class="text-xs muted">{{ uiModeHint() }}</span>
+        </div>
+      }
+
+      <app-toggle [checked]="form.controls.active.value" label="Aktivan" (checkedChange)="form.controls.active.setValue($event)" />
     </form>
 
     <app-button modal-footer theme="primary" size="s" [loading]="saving()" (click)="save()" data-testid="staff-save">Sačuvaj</app-button>

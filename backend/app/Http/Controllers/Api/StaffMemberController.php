@@ -31,7 +31,7 @@ class StaffMemberController extends Controller
         $data = $request->validate(['include_inactive' => ['sometimes', 'boolean']]);
 
         return StaffMember::query()
-            ->with(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active'])
+            ->with(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode'])
             ->when(! ($data['include_inactive'] ?? true), fn ($q) => $q->where('active', true))
             ->orderBy('sort_order')
             ->orderBy('first_name')
@@ -82,7 +82,7 @@ class StaffMemberController extends Controller
         });
 
         return [
-            ...$staffMember->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active'])->toArray(),
+            ...$staffMember->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode'])->toArray(),
             'cancelled_appointments' => $cancelled,
         ];
     }
@@ -94,6 +94,7 @@ class StaffMemberController extends Controller
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
             'title' => ['nullable', 'string', 'max:100'],
             'role' => ['sometimes', Rule::in(UserRole::staff())],
+            'ui_mode' => ['sometimes', Rule::in(User::UI_MODES)],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[\d\s+\-()]+$/'],
             'email' => ['required', 'email', 'max:255', Rule::unique('staff_members', 'email')->ignore($request->route('staffMember'))],
             'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -169,7 +170,7 @@ class StaffMemberController extends Controller
 
     private function persist(StaffMember $staff, array $data, User $actor): StaffMember
     {
-        $staff->fill(collect($data)->except(['service_ids', 'working_hours', 'role'])->all())->save();
+        $staff->fill(collect($data)->except(['service_ids', 'working_hours', 'role', 'ui_mode'])->all())->save();
 
         if (array_key_exists('service_ids', $data)) {
             $staff->services()->sync($data['service_ids']);
@@ -185,8 +186,11 @@ class StaffMemberController extends Controller
         if ($account && isset($data['role']) && UserRole::from($data['role']) !== $account->role) {
             $this->changeRole($actor, $account, UserRole::from($data['role']));
         }
+        if ($account && isset($data['ui_mode']) && ($actor->isOwner() || ! $account->isOwner())) {
+            $account->forceFill(['ui_mode' => $data['ui_mode']])->save();
+        }
 
-        return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active']);
+        return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode']);
     }
 
     private function changeRole(User $actor, User $account, UserRole $role): void

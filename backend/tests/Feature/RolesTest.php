@@ -88,6 +88,9 @@ class RolesTest extends TestCase
 
         $this->actingAsJwt($this->owner)->putJson("/api/staff/{$id}", $this->staffPayload(['role' => UserRole::Worker]))->assertOk()
             ->assertJsonPath('account.role', UserRole::Worker);
+
+        $this->actingAsJwt($this->owner)->putJson("/api/staff/{$id}", $this->staffPayload(['ui_mode' => 'spacious']))->assertOk()
+            ->assertJsonPath('account.ui_mode', 'spacious');
     }
 
     public function test_staff_email_of_client_is_rejected_and_owner_is_linked(): void
