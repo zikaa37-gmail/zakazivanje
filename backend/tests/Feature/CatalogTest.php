@@ -28,6 +28,19 @@ class CatalogTest extends TestCase
         $this->actingAsJwt(User::factory()->create())->postJson('/api/services/list')->assertForbidden();
     }
 
+    public function test_service_list_marks_booked_services_and_disabling_keeps_them(): void
+    {
+        $service = Service::create(['name' => 'Masaža', 'duration_minutes' => 60, 'price' => 2000]);
+
+        $this->actingAsJwt($this->admin)->postJson('/api/services/list')->assertOk()->assertJsonPath('0.booked', false);
+
+        $this->actingAsJwt($this->admin)->putJson("/api/services/{$service->id}", [
+            'name' => 'Masaža', 'duration_minutes' => 60, 'price' => 2000, 'active' => false, 'staff_member_ids' => [],
+        ])->assertOk();
+        $this->assertFalse($service->fresh()->active);
+        $this->assertDatabaseHas('services', ['id' => $service->id]);
+    }
+
     public function test_staff_with_services_and_working_hours(): void
     {
         $service = Service::create(['name' => 'Šišanje', 'duration_minutes' => 30, 'price' => 1500]);

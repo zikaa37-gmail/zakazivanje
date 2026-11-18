@@ -67,3 +67,10 @@
 .row-actions-item-danger {
   color: var(--color-danger);
 }
+
+.row-actions-item-separated {
+  margin-top: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius) var(--radius);
+}

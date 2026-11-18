@@ -7,6 +7,7 @@ export interface RowAction {
   icon: IconName;
   disabled?: boolean;
   danger?: boolean;
+  separated?: boolean;
 }
 
 @Component({

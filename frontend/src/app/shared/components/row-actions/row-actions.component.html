@@ -22,6 +22,7 @@
         type="button"
         class="row-actions-item"
         [class.row-actions-item-danger]="action.danger"
+        [class.row-actions-item-separated]="action.separated"
         [disabled]="action.disabled"
         (click)="select(action)"
         role="menuitem"

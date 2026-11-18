@@ -21,6 +21,7 @@ class ServiceController extends Controller
     {
         return $this->ordered(Service::query()
             ->with('staffMembers:id,first_name,last_name')
+            ->withExists('appointmentItems as booked')
             ->get());
     }
 
