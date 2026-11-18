@@ -31,10 +31,12 @@ class AppointmentPaymentController extends Controller
             'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
         ]);
 
+        $paid = isset($data['method']);
         $appointment->update([
             'payment_method' => $data['method'] ?? null,
-            'paid_at' => isset($data['method']) ? ($appointment->paid_at ?? now()) : null,
-            'tip' => isset($data['method']) ? round((float) ($data['tip'] ?? 0), 2) : 0,
+            'paid_at' => $paid ? ($appointment->paid_at ?? now()) : null,
+            'paid_amount' => $paid ? round((float) ($appointment->status === Appointment::STATUS_COMPLETED ? ($appointment->due_amount ?? $appointment->total) : $appointment->total), 2) : null,
+            'tip' => $paid ? round((float) ($data['tip'] ?? 0), 2) : 0,
         ]);
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);

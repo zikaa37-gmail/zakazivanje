@@ -3,7 +3,7 @@ import { Component, OnInit, computed, inject, input, output, signal } from '@ang
 import { Router } from '@angular/router';
 import { ChatService } from '../../../core/services/chat.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Appointment, STATUS_LABELS } from '../../../core/models/appointment.model';
+import { Appointment, SERVICE_OUTCOMES, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
 import { ColleagueRef } from '../../../core/models/staff-absence.model';
 import { StaffMember } from '../../../core/models/staff.model';
@@ -53,7 +53,13 @@ export class AppointmentDetailsComponent implements OnInit {
   readonly paymentMethods = PAYMENT_METHODS;
   readonly paymentLabel = (method: PaymentMethod | null) => PAYMENT_METHODS.find((m) => m.value === method)?.label ?? '';
   readonly showIps = signal(false);
-  readonly canTakePayment = computed(() => this.appointment().total > 0 && !['cancelled', 'no_show'].includes(this.appointment().status));
+  readonly canTakePayment = computed(() => {
+    const a = this.appointment();
+    if (['cancelled', 'no_show'].includes(a.status)) return false;
+    return a.status === 'completed' ? (a.outstanding ?? 0) > 0 : a.total > 0;
+  });
+  readonly fullyPaid = computed(() => !!this.appointment().paid_at && (this.appointment().outstanding ?? 0) === 0);
+  readonly outcomeLabel = computed(() => SERVICE_OUTCOMES.find((o) => o.value === this.appointment().service_outcome)?.label ?? '');
   readonly hasBankAccount = computed(() => !!this.business.settings()?.bank_account);
   readonly feeEnabled = computed(() => this.business.settings()?.cancellation_fee_enabled ?? false);
 

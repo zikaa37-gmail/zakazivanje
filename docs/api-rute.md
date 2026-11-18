@@ -91,7 +91,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
 | POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
-| POST | `/appointments/{id}/complete` | odrađeno: `payment_method` (ili `null` = naplata kasnije), `tip`, `note` → `completion_note` (interno) |
+| POST | `/appointments/{id}/complete` | završetak: `service_outcome` (`done` / `partial` / `not_done`), `due_amount`, `payment` (`full` / `partial` / `none`), `paid_amount`, `payment_method`, `tip`, `note` (obavezna kad nešto nije u redu) |
 | POST | `/appointments/{id}/cancel` | `{scope: this \| series, by_client?}` (`by_client` = klijent je otkazao preko salona, računa se u disciplinu) — `series` otkazuje ovaj i sve sledeće i zaustavlja ponavljanje |
 | POST | `/recurrences/list` | aktivna ponavljanja |
 | POST | `/appointments/{id}/reschedule` | `{staff_member_id, starts_at, notify?, delay_notice?}` — pomeranje (`delay_notice` = prevlačenje u kalendaru: obaveštenje ide 2 min posle poslednjeg pomeranja, `appointments:send-change-notices`) (provera zauzetosti i da zaposleni radi usluge), klijent dobija obaveštenje; promena zaposlenog = prebacivanje (`free_change_reason = transferred`, obaveštenje klijentu, oba zaposlena, vlasniku i menadžerima) |

@@ -36,6 +36,12 @@
           <option [value]="s.value" [selected]="s.value === statusFilter()">{{ s.label }}</option>
         }
       </select>
+      <select appInput class="!w-auto" [value]="billingFilter() ?? ''" (change)="billingFilter.set($any($event.target).value || null)" aria-label="Naplata" data-testid="billing-filter">
+        <option value="">Naplata: sve</option>
+        @for (b of billingOptions; track b.value) {
+          <option [value]="b.value" [selected]="b.value === billingFilter()">{{ b.label }}</option>
+        }
+      </select>
       <div class="relative flex-1 min-w-[12rem]">
         <input appInput type="search" style="padding-left: 2.25rem" placeholder="Klijent ili telefon..." [formControl]="search" data-testid="appointment-search" />
         <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
@@ -78,6 +84,16 @@
               @if (a.note) {
                 <div class="text-xs muted truncate">„{{ a.note }}"</div>
               }
+              @if ((a.outstanding ?? 0) > 0 || a.service_outcome === 'not_done' || a.service_outcome === 'partial') {
+                <div class="flex flex-wrap gap-1 mt-1">
+                  @if ((a.outstanding ?? 0) > 0) {
+                    <button type="button" class="badge badge-danger cursor-pointer" (click)="onAction(a, 'completed')" title="Naplati ostatak" [attr.data-testid]="'owes-' + a.id">Duguje {{ a.outstanding! | rsd }}</button>
+                  }
+                  @if (a.service_outcome === 'not_done' || a.service_outcome === 'partial') {
+                    <span class="badge badge-warning">{{ a.service_outcome === 'not_done' ? 'Nije odrađeno' : 'Usluga delimično' }}</span>
+                  }
+                </div>
+              }
             </div>
             <div class="hidden sm:block text-right shrink-0" [class.cancelled-content]="a.status === 'cancelled'">
               <div class="font-semibold">{{ a.total | rsd }}</div>
@@ -86,7 +102,7 @@
               }
             </div>
             <span [class]="'badge shrink-0 ' + statuses[a.status].badge">{{ statuses[a.status].label }}</span>
-            @if (a.paid_at) {
+            @if (a.paid_at && !a.outstanding) {
               <span class="badge badge-success shrink-0" title="Plaćeno">Plaćeno</span>
             }
             @if (canComplete(a)) {

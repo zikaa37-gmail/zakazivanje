@@ -13,6 +13,7 @@ export interface DashboardToday {
   pending: Appointment[];
   staff: { id: number; name: string; color: string | null; hours: string; appointments: number }[];
   expected_revenue: number;
+  billing: { outstanding_count: number; outstanding_amount: number; not_done_count: number };
 }
 
 export interface DashboardSummary {

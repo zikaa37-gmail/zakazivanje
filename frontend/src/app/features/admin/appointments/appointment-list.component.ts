@@ -4,9 +4,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { Appointment, AppointmentStatus, STATUS_LABELS } from '../../../core/models/appointment.model';
+import { Appointment, AppointmentStatus, BillingFilter, STATUS_LABELS } from '../../../core/models/appointment.model';
 import { StaffMember } from '../../../core/models/staff.model';
-import { AppointmentService } from '../../../core/services/appointment.service';
+import { AppointmentFilters, AppointmentService } from '../../../core/services/appointment.service';
 import { StaffService } from '../../../core/services/staff.service';
 import { apiErrorMessage } from '../../../core/utils/api-error';
 import { addDays, longDate, timeOf, today } from '../../../core/utils/dates';
@@ -57,6 +57,12 @@ export class AppointmentListComponent {
   private readonly ownStaffId = this.auth.isServiceWorker() ? (this.auth.currentUser()?.staff_member_id ?? null) : null;
   readonly staffFilter = signal<number | null>(this.ownStaffId);
   readonly statusFilter = signal<AppointmentStatus | null>(null);
+  readonly billingFilter = signal<BillingFilter | null>(null);
+  readonly billingOptions: { value: BillingFilter; label: string }[] = [
+    { value: 'outstanding', label: 'Za naplatu (svi periodi)' },
+    { value: 'partial', label: 'Usluga delimično' },
+    { value: 'not_done', label: 'Usluga nije odrađena' },
+  ];
   readonly search = new FormControl('', { nonNullable: true });
   readonly searchTerm = signal('');
 
@@ -99,7 +105,7 @@ export class AppointmentListComponent {
   readonly prefill = signal<AppointmentPrefill>({});
 
   readonly wideScreen = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
-  readonly activeFilters = computed(() => [this.staffFilter() !== this.ownStaffId, this.statusFilter() !== null, this.searchTerm() !== ''].filter(Boolean).length);
+  readonly activeFilters = computed(() => [this.staffFilter() !== this.ownStaffId, this.statusFilter() !== null, this.billingFilter() !== null, this.searchTerm() !== ''].filter(Boolean).length);
   readonly filtersTitle = computed(() => (this.activeFilters() ? `Filteri (${this.activeFilters()})` : 'Filteri'));
 
   readonly pickerOpen = signal(false);
@@ -112,6 +118,8 @@ export class AppointmentListComponent {
     const params = inject(ActivatedRoute).snapshot.queryParamMap;
     this.applyDateParam(params.get('date'));
     this.staffFilter.set(Number(params.get('staff')) || this.ownStaffId);
+    const billing = params.get('billing');
+    if (billing === 'outstanding' || billing === 'partial' || billing === 'not_done') this.billingFilter.set(billing);
     this.staffService.list().subscribe((staff) => this.staff.set(staff));
     this.appointmentService.refreshPendingCount();
 
@@ -120,7 +128,7 @@ export class AppointmentListComponent {
       .subscribe((value) => this.searchTerm.set(value.trim()));
 
     effect(() => {
-      const filters = { ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), search: this.searchTerm() || null };
+      const filters = { ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), billing: this.billingFilter(), search: this.searchTerm() || null };
       untracked(() => this.load(filters));
     });
   }
@@ -147,6 +155,7 @@ export class AppointmentListComponent {
   clearFilters(): void {
     this.staffFilter.set(this.ownStaffId);
     this.statusFilter.set(null);
+    this.billingFilter.set(null);
     this.search.setValue('');
     this.searchTerm.set('');
   }
@@ -161,7 +170,7 @@ export class AppointmentListComponent {
   }
 
   reload(quiet = false): void {
-    this.load({ ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), search: this.searchTerm() || null }, quiet);
+    this.load({ ...this.range(), staff_member_id: this.staffFilter(), status: this.statusFilter(), billing: this.billingFilter(), search: this.searchTerm() || null }, quiet);
   }
 
   startTime(a: Appointment): string {
@@ -202,7 +211,7 @@ export class AppointmentListComponent {
     this.reload();
   }
 
-  private load(filters: { from: string; to: string; staff_member_id: number | null; status: AppointmentStatus | null; search: string | null }, quiet = false): void {
+  private load(filters: AppointmentFilters, quiet = false): void {
     this.loading.set(!quiet);
     this.error.set(null);
     this.appointmentService.list(filters, quiet).subscribe({
