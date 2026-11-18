@@ -20,7 +20,7 @@ CREATE TABLE `zk_blocked_times` (
   KEY `zk_blocked_times_staff_member_id_foreign` (`staff_member_id`),
   KEY `zk_blocked_times_starts_at_ends_at_index` (`starts_at`,`ends_at`),
   CONSTRAINT `zk_blocked_times_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;

@@ -18,12 +18,16 @@ CREATE TABLE `zk_appointments` (
   `processing_offset` smallint unsigned DEFAULT NULL,
   `processing_minutes` smallint unsigned DEFAULT NULL,
   `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `service_outcome` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `source` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'online',
   `price` decimal(10,2) NOT NULL DEFAULT '0.00',
   `discount` decimal(10,2) NOT NULL DEFAULT '0.00',
   `total` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `due_amount` decimal(10,2) DEFAULT NULL,
+  `paid_amount` decimal(10,2) DEFAULT NULL,
   `note` text COLLATE utf8mb4_unicode_ci,
   `admin_note` text COLLATE utf8mb4_unicode_ci,
+  `completion_note` text COLLATE utf8mb4_unicode_ci,
   `confirmed_at` timestamp NULL DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
   `cancelled_by` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -49,7 +53,7 @@ CREATE TABLE `zk_appointments` (
   CONSTRAINT `zk_appointments_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `zk_appointments_recurrence_id_foreign` FOREIGN KEY (`recurrence_id`) REFERENCES `zk_appointment_recurrences` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_appointments_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;

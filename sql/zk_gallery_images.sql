@@ -25,7 +25,7 @@ CREATE TABLE `zk_gallery_images` (
   PRIMARY KEY (`id`),
   KEY `zk_gallery_images_service_id_foreign` (`service_id`),
   CONSTRAINT `zk_gallery_images_service_id_foreign` FOREIGN KEY (`service_id`) REFERENCES `zk_services` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;

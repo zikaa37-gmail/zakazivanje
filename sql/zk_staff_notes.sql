@@ -27,7 +27,7 @@ CREATE TABLE `zk_staff_notes` (
   CONSTRAINT `zk_staff_notes_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_resolved_by_foreign` FOREIGN KEY (`resolved_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_taken_by_foreign` FOREIGN KEY (`taken_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;
