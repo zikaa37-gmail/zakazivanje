@@ -9,6 +9,7 @@ use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\AdminAppointmentNotification;
 use App\Notifications\AppointmentNotification;
+use App\Notifications\DebtPaidNotification;
 use App\Notifications\ReviewRequestNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Notification;
@@ -167,6 +168,15 @@ class AppointmentNotifier
         if ($send) {
             Notification::send($this->salonRecipients($appointment), $notification);
         }
+    }
+
+    public function debtPaid(Appointment $appointment, float $amount, ?User $by): void
+    {
+        if ($amount <= 0) {
+            return;
+        }
+        $managers = User::where('active', true)->whereIn('role', [UserRole::Owner, UserRole::Manager])->get();
+        $this->inbox->deliver($managers, new DebtPaidNotification($appointment->loadMissing('client'), $amount, $by));
     }
 
     private function staffInbox(Appointment $appointment, array $staffIds = []): Collection

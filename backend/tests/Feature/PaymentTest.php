@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
+use App\Models\InboxNotification;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -139,6 +140,23 @@ class PaymentTest extends TestCase
 
         $this->appointment->fresh()->update(['status' => Appointment::STATUS_CANCELLED]);
         $this->actingAsJwt($this->admin)->postJson($complete, ['service_outcome' => 'done', 'due_amount' => $total, 'payment' => 'none', 'note' => 'x'])->assertUnprocessable();
+    }
+
+    public function test_paying_debt_notifies_owner_and_managers(): void
+    {
+        $manager = User::factory()->create(['role' => UserRole::Manager]);
+        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->appointment->staff_member_id]);
+        $total = (float) $this->appointment->total;
+        $this->actingAsJwt($worker)->postJson("/api/appointments/{$this->appointment->id}/complete", ['service_outcome' => 'done', 'due_amount' => $total, 'payment' => 'none', 'note' => 'Plaća sutra'])->assertOk();
+        $this->assertSame(0, InboxNotification::where('kind', 'debt_paid')->count());
+
+        $this->actingAsJwt($worker)->postJson("/api/appointments/{$this->appointment->id}/complete", ['service_outcome' => 'done', 'due_amount' => $total, 'payment' => 'partial', 'paid_amount' => 500, 'payment_method' => 'cash', 'note' => 'Deo'])->assertOk();
+        $this->assertSame(2, InboxNotification::where('kind', 'debt_paid')->count());
+        $this->assertStringContainsString('ostaje još', InboxNotification::where('user_id', $manager->id)->latest('id')->first()->body);
+
+        $this->actingAsJwt($manager)->postJson("/api/appointments/{$this->appointment->id}/paid", ['method' => 'card'])->assertOk();
+        $this->assertSame(1, InboxNotification::where('kind', 'debt_paid')->where('user_id', $this->admin->id)->where('body', 'like', '%dug je zatvoren%')->count());
+        $this->assertSame(1, InboxNotification::where('kind', 'debt_paid')->where('user_id', $manager->id)->count());
     }
 
     public function test_online_payment_requires_bank_account(): void

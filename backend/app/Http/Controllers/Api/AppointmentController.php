@@ -209,6 +209,8 @@ class AppointmentController extends Controller
         }
 
         $previous = $appointment->status;
+        $owedBefore = $appointment->outstanding();
+        $paidBefore = $appointment->paidAmount();
         $appointment->update([
             'status' => Appointment::STATUS_COMPLETED,
             'service_outcome' => $data['service_outcome'],
@@ -224,6 +226,9 @@ class AppointmentController extends Controller
             $this->notifier->statusChanged($appointment, $previous);
         } else {
             $this->notifier->changedSilently($appointment);
+        }
+        if ($previous === Appointment::STATUS_COMPLETED && $owedBefore > 0 && $paid > $paidBefore) {
+            $this->notifier->debtPaid($appointment, round($paid - $paidBefore, 2), $user);
         }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);
