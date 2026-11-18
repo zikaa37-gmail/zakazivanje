@@ -1,4 +1,4 @@
-export type PaymentMethod = 'cash' | 'card' | 'bank' | 'wallet';
+export type PaymentMethod = 'cash' | 'card' | 'bank' | 'wallet' | 'gift_card';
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'cash', label: 'Gotovina' },
@@ -11,6 +11,7 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   card: 'Kartica',
   bank: 'Uplata na račun',
   wallet: 'Sa stanja',
+  gift_card: 'Poklon kartica',
 };
 
 export interface PaymentDetails {

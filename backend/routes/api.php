@@ -97,7 +97,8 @@ Route::middleware('jwt')->group(function () {
 
     Route::post('/my-appointments/list', [MyAppointmentController::class, 'index']);
     Route::post('/my-wallet', [WalletController::class, 'mine']);
-    Route::post('/my-wallet/redeem', [WalletController::class, 'redeemMine'])->middleware('throttle:booking');
+    Route::post('/my-wallet/claim', [WalletController::class, 'claimMine'])->middleware('throttle:booking');
+    Route::post('/my-appointments/{appointment}/pay', [WalletController::class, 'payMine'])->middleware('throttle:booking');
     Route::post('/my-appointments/{appointment}/cancel', [MyAppointmentController::class, 'cancel']);
     Route::post('/my-appointments/{appointment}/cancel-preview', [MyAppointmentController::class, 'cancelPreview']);
     Route::get('/my-cancellation-status', [MyAppointmentController::class, 'cancellationStatus']);
@@ -135,7 +136,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
     Route::post('/clients/{client}/wallet', [WalletController::class, 'show']);
     Route::post('/clients/{client}/wallet/deposit', [WalletController::class, 'deposit']);
-    Route::post('/clients/{client}/wallet/redeem', [WalletController::class, 'redeem']);
+    Route::post('/clients/{client}/wallet/claim', [WalletController::class, 'claim']);
     Route::post('/gift-cards/list', [GiftCardController::class, 'index']);
     Route::post('/gift-cards', [GiftCardController::class, 'store']);
     Route::post('/gift-cards/check', [GiftCardController::class, 'check']);

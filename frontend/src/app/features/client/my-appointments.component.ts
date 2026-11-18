@@ -1,3 +1,4 @@
+import { ClientPayDialogComponent } from './client-pay-dialog.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Appointment, STATUS_LABELS } from '../../core/models/appointment.model';
@@ -27,7 +28,7 @@ import { ChatService } from '../../core/services/chat.service';
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [RouterLink, ButtonDirective, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, ModalComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
+  imports: [RouterLink, ButtonDirective, ClientPayDialogComponent, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, ModalComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
   templateUrl: './my-appointments.component.html',
 })
 export class MyAppointmentsComponent {
@@ -52,6 +53,7 @@ export class MyAppointmentsComponent {
   readonly mode = signal<'list' | 'calendar'>('list');
   readonly rescheduling = signal<Appointment | null>(null);
   readonly paying = signal<Appointment | null>(null);
+  readonly ipsFor = signal<Appointment | null>(null);
   readonly reviewing = signal<Appointment | null>(null);
   private waitlist = inject(WaitlistService);
   readonly waitlistEntries = signal<WaitlistEntry[]>([]);

@@ -19,6 +19,7 @@ use App\Services\PaymentLedger;
 use App\Services\RecurrenceService;
 use App\Services\StaffAbsenceService;
 use App\Services\WaitlistService;
+use App\Services\WalletService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -183,11 +184,11 @@ class AppointmentController extends Controller
             'due_amount' => ['required', 'numeric', 'min:0', 'max:10000000'],
             'payment' => ['required', Rule::in(['full', 'partial', 'none'])],
             'paid_amount' => ['nullable', 'required_if:payment,partial', 'numeric', 'min:0', 'max:10000000'],
-            'payment_method' => ['nullable', 'required_unless:payment,none', Rule::in(PaymentLedger::methods())],
+            'payment_method' => ['nullable', Rule::in(PaymentLedger::methods())],
+            'gift_card_code' => ['nullable', 'string', 'max:30'],
             'tip' => ['nullable', 'numeric', 'min:0', 'max:1000000'],
             'note' => ['nullable', 'string', 'max:2000'],
         ], [
-            'payment_method.required_unless' => 'Izaberi kako je plaćeno.',
             'paid_amount.required_if' => 'Upiši koliko je plaćeno.',
         ]);
         $due = round((float) $data['due_amount'], 2);
@@ -212,15 +213,16 @@ class AppointmentController extends Controller
         $previous = $appointment->status;
         $owedBefore = $appointment->outstanding();
         $paidBefore = $appointment->paidAmount();
-        DB::transaction(function () use ($appointment, $ledger, $paid, $due, $data, $user, $paidBefore) {
-            $ledger->settle($appointment->loadMissing('client'), $paid, $data['payment_method'] ?? null, $user);
+        $card = filled($data['gift_card_code'] ?? null) ? app(WalletService::class)->findGiftCard($data['gift_card_code']) : null;
+        DB::transaction(function () use ($appointment, $ledger, $paid, $due, $data, $user, $paidBefore, $card) {
+            $ledger->settle($appointment->loadMissing('client'), $paid, $data['payment_method'] ?? null, $user, $card);
             $appointment->update([
                 'status' => Appointment::STATUS_COMPLETED,
                 'service_outcome' => $data['service_outcome'],
                 'due_amount' => $due,
                 'paid_amount' => $paid,
                 'completion_note' => filled($data['note'] ?? null) ? trim($data['note']) : null,
-                'payment_method' => $paid > 0 ? ($paid > $paidBefore ? $data['payment_method'] : ($appointment->payment_method ?? $data['payment_method'])) : null,
+                'payment_method' => $paid > 0 ? ($paid > $paidBefore ? ($data['payment_method'] ?? ($card ? PaymentLedger::GIFT_CARD : null)) : $appointment->payment_method) : null,
                 'paid_at' => $paid > 0 ? ($appointment->paid_at ?? now()) : null,
                 'tip' => $paid > 0 ? round((float) ($data['tip'] ?? 0), 2) : 0,
             ]);
@@ -233,6 +235,10 @@ class AppointmentController extends Controller
         }
         if ($previous === Appointment::STATUS_COMPLETED && $owedBefore > 0 && $paid > $paidBefore) {
             $this->notifier->debtPaid($appointment, round($paid - $paidBefore, 2), $user);
+        }
+
+        if ($card) {
+            $appointment->setAttribute('gift_card_left', $card->refresh()->balance);
         }
 
         return $appointment->load(['items', 'staffMember:id,first_name,last_name,color', 'client:id,first_name,last_name,nickname,phone,email', 'recurrence:id,interval_weeks,active']);

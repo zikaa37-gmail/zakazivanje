@@ -147,9 +147,12 @@
                 <s class="muted text-sm font-normal">{{ a.price | rsd }}</s>
               }
               {{ a.total | rsd }}
-              @if (a.paid_at) {
+              @if (a.paid_at && !a.amount_left) {
                 <span class="badge badge-success" [attr.data-testid]="'my-paid-' + a.id">Plaćeno</span>
-              } @else if (a.can_pay) {
+              } @else if ((a.amount_left ?? 0) > 0) {
+                @if (a.paid_at) {
+                  <span class="badge badge-warning">Ostalo {{ a.amount_left! | rsd }}</span>
+                }
                 <button type="button" appBtn size="s" (click)="paying.set(a)" [attr.data-testid]="'my-pay-' + a.id">Plati</button>
               }
             </span>
@@ -205,7 +208,10 @@
 }
 
 @if (paying(); as appointment) {
-  <app-payment-dialog [appointmentId]="appointment.id" [asClient]="true" (closed)="paying.set(null)" />
+  <app-client-pay-dialog [appointment]="appointment" (closed)="paying.set(null)" (paid)="paying.set(null); load(true)" (ips)="ipsFor.set(appointment); paying.set(null)" />
+}
+@if (ipsFor(); as appointment) {
+  <app-payment-dialog [appointmentId]="appointment.id" [asClient]="true" (closed)="ipsFor.set(null)" />
 }
 
 @if (rescheduling(); as appointment) {
