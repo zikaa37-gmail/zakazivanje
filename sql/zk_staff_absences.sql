@@ -1,4 +1,4 @@
--- Tabela `zk_staff_absences`: šema i podaci iz lokalne baze (17.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_absences`: šema i podaci iz lokalne baze (18.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -32,7 +32,7 @@ CREATE TABLE `zk_staff_absences` (
   CONSTRAINT `zk_staff_absences_decided_by_foreign` FOREIGN KEY (`decided_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_absences_requested_by_foreign` FOREIGN KEY (`requested_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_absences_staff_member_id_foreign` FOREIGN KEY (`staff_member_id`) REFERENCES `zk_staff_members` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;
