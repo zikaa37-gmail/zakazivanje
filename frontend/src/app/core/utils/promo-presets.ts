@@ -110,6 +110,36 @@ export const PROMO_PRESETS: PromoPreset[] = [
     oncePerClient: false,
     range: (y) => [new Date(y, 11, 20), new Date(y, 11, 31)],
   },
+  {
+    key: 'christmas',
+    label: 'Božić',
+    name: 'Božićna akcija',
+    code: 'BOZIC',
+    percent: 10,
+    description: 'Doteraj se za Badnji dan i Božić — popust od 1. do 6. januara.',
+    oncePerClient: false,
+    range: (y) => [new Date(y, 0, 1), new Date(y, 0, 6)],
+  },
+  {
+    key: 'slava',
+    label: 'Slava',
+    name: 'Za slavu',
+    code: 'SLAVA',
+    percent: 10,
+    description: 'Spremi se za svoju slavu — popust uz kod, jednom po klijentu, kad god da slaviš.',
+    oncePerClient: true,
+    range: () => null,
+  },
+  {
+    key: 'matura',
+    label: 'Matura',
+    name: 'Matura',
+    code: 'MATURA',
+    percent: 15,
+    description: 'Frizura, šminka i nokti za maturu — popust za maturante od sredine maja do kraja juna.',
+    oncePerClient: true,
+    range: (y) => [new Date(y, 4, 15), new Date(y, 5, 30)],
+  },
 ];
 
 export function nextPresetRange(preset: PromoPreset): [string, string] | null {
