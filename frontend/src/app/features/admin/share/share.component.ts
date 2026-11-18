@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { environment } from '../../../../environments/environment';
@@ -38,7 +39,7 @@ const DEFAULT_PRIMARY = '#0f766e';
 @Component({
   selector: 'app-share',
   standalone: true,
-  imports: [ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, SrDateTimePipe],
+  imports: [InfoTipComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, SrDateTimePipe],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
 })

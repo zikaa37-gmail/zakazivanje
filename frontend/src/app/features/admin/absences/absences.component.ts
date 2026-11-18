@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -22,12 +23,11 @@ import { AffectedAppointmentsComponent } from '../appointments/affected-appointm
 @Component({
   selector: 'app-absences',
   standalone: true,
-  imports: [AffectedAppointmentsComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
+  imports: [InfoTipComponent, AffectedAppointmentsComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
   template: `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Odsustva</h1>
-        <p class="page-subtitle">Bolovanje, odmor ili „ne radim danas". Upisuje bilo ko, a odobrava vlasnik ili menadžer. Termini tog dana se prebacuju kolegi ili se klijent zamoli da sam pomeri.</p>
+        <div class="page-title-row"><h1 class="page-title">Odsustva</h1><app-info-tip heading="Odsustva"><p>Bolovanje, odmor ili „ne radim danas". Upisuje bilo ko iz osoblja, a odobrava vlasnik ili menadžer — njihov upis je odmah odobren.</p><p class="mt-2">Odobreni dani se zatvaraju za zakazivanje. Termine iz tog perioda prebacite kolegi, zamolite klijenta da sam pomeri ili otkažite („Termini tog perioda"). Pogrešan datum ispravljate sa „Izmeni".</p></app-info-tip></div>
       </div>
     </div>
 

@@ -17,6 +17,7 @@ export class BusinessSettingService {
     return url ? `${environment.apiUrl}${url}` : null;
   });
   readonly name = computed(() => this.settings()?.name ?? 'Zakazivanje');
+  readonly shortName = computed(() => this.name().replace(/^(frizerski|kozmetički|kozmeticki|beauty|nail|spa)?\s*salon\s+/i, '').trim() || this.name());
   readonly logo = computed(() => this.settings()?.logo ?? null);
   readonly staffTerm = computed(() => this.settings()?.staff_term || 'radnik');
   readonly staffTermGenitive = computed(() => this.settings()?.staff_term_genitive || 'radnika');

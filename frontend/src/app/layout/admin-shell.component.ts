@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
-import { userRoleLabel } from '../core/models/user.model';
 import { AuthService } from '../core/services/auth.service';
 import { AppointmentService } from '../core/services/appointment.service';
 import { BusinessSettingService } from '../core/services/business-setting.service';
@@ -44,11 +43,6 @@ export class AdminShellComponent {
   readonly initials = computed(() => {
     const user = this.auth.currentUser();
     return user ? `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase() : '';
-  });
-
-  readonly roleLabel = computed(() => {
-    const user = this.auth.currentUser();
-    return user ? userRoleLabel(user) : '';
   });
 
   private readonly allNav: NavItem[] = [

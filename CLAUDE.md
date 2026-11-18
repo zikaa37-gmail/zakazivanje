@@ -71,6 +71,8 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Tailwind (`frontend/src/styles.scss` uvozi `tailwindcss`, tokeni teme su u
   `frontend/src/themes/colors.scss` preko `@theme`). Boje isključivo preko tokena (`bg-primary`,
   `var(--color-...)`), nikad hardkodovan hex. Primarna boja je teal (`#0f766e`).
+- Zaglavlje stranice: `.page-header` > `.page-title-row` (`h1.page-title`, opciono `.page-count`, `<app-info-tip>` sa opisom
+  stranice) — bez `.page-subtitle` ispod naslova; dugme „+ Novo…“ u zaglavlju ima tekst u `max-sm:sr-only` (na telefonu samo +).
 - Ponovljene kombinacije utility klasa grupiši u imenovanu klasu u `@layer components` u
   `styles.scss` (`.page-header`, `.actions-cell`, `.form-grid`).
 - Deljene komponente (preuzete iz `kosarkaska-evidencija`): `appBtn` direktiva i `<app-button>`

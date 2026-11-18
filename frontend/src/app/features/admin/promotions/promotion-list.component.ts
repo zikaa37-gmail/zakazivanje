@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -32,7 +33,7 @@ const TYPE_ICONS: Record<PromotionType, IconName> = {
 @Component({
   selector: 'app-promotion-list',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
+  imports: [InfoTipComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
   templateUrl: './promotion-list.component.html',
 })
 export class PromotionListComponent {

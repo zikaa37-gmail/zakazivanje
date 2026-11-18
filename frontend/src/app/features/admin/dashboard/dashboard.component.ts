@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ToggleComponent } from '../../../shared/components/toggle/toggle.component';
@@ -63,7 +64,7 @@ function readChartsPreference(): boolean {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [ClientNamePipe, RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
+  imports: [InfoTipComponent, ClientNamePipe, RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })

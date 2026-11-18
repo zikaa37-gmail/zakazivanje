@@ -1,3 +1,4 @@
+import { InfoTipComponent } from '../../../shared/components/info-tip/info-tip.component';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AdminReviews, Review, ratingLabel } from '../../../core/models/review.model';
@@ -20,7 +21,7 @@ type VisibilityFilter = 'all' | 'visible' | 'hidden';
 @Component({
   selector: 'app-review-list',
   standalone: true,
-  imports: [ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, ReviewSummaryComponent, SrDatePipe, StarsComponent],
+  imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, ReviewSummaryComponent, SrDatePipe, StarsComponent],
   templateUrl: './review-list.component.html',
 })
 export class ReviewListComponent {

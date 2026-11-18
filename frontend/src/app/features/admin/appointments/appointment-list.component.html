@@ -1,10 +1,9 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Termini</h1>
-    <p class="page-subtitle">{{ appointments().length }} u izabranom periodu</p>
+    <div class="page-title-row"><h1 class="page-title">Termini</h1>@if (!loading()) {<span class="page-count">{{ appointments().length }}</span>}<app-info-tip heading="Termini"><p>Svi termini u izabranom periodu; broj pored naslova je koliko ih je.</p><p class="mt-2">Period biraš gore, ostali filteri (zaposleni, status, pretraga) su u „Filteri". Klik na termin otvara detalje: potvrda, naplata, pomeranje, prebacivanje kolegi, poruka klijentu.</p></app-info-tip></div>
   </div>
   <button type="button" appBtn (click)="openForm()" data-testid="appointment-add">
-    <span appIcon="plus" aria-hidden="true"></span> Novi termin
+    <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Novi termin</span>
   </button>
 </div>
 

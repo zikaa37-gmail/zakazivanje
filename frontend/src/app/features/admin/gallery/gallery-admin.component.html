@@ -1,7 +1,6 @@
 <div class="page-header">
   <div>
-    <h1 class="page-title">Galerija</h1>
-    <p class="page-subtitle">{{ images().length }} slika · prevuci da promeniš redosled</p>
+    <div class="page-title-row"><h1 class="page-title">Galerija</h1>@if (!loading()) {<span class="page-count">{{ images().length }}</span>}<app-info-tip heading="Galerija"><p>Slike radova i salona koje klijenti vide u galeriji i na početnoj. Broj pored naslova je koliko ih je.</p><p class="mt-2">Prevuci sliku da promeniš redosled. Skrivenu sliku klijenti ne vide, a „Naš salon" slike idu u slajder na početnoj.</p></app-info-tip></div>
   </div>
   <label appBtn class="cursor-pointer" [class.pointer-events-none]="uploading()" data-testid="gallery-add">
     <span appIcon="upload" aria-hidden="true"></span> Dodaj slike
