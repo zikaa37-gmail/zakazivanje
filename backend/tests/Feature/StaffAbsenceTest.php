@@ -153,15 +153,24 @@ class StaffAbsenceTest extends TestCase
             ->assertJsonCount(1)->assertJsonPath('0.id', $this->client->id)->assertJsonMissingPath('0.avatar');
     }
 
-    public function test_client_with_history_cannot_be_deleted(): void
+    public function test_client_is_deactivated_instead_of_deleted(): void
     {
         $id = $this->book('2026-10-20 10:00');
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/delete-check")->assertOk()->assertJsonPath('future', 1)->assertJsonPath('history', 0);
+        $this->actingAsJwt($this->owner)->getJson("/api/clients/{$this->client->id}/deactivate-check")->assertOk()->assertJsonPath('future', 1);
 
-        $this->travelTo('2026-10-22 08:00:00');
-        $this->actingAsJwt($this->owner)->deleteJson("/api/clients/{$this->client->id}")->assertUnprocessable();
+        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/active", ['active' => false])->assertUnprocessable();
+        $this->assertTrue($this->client->fresh()->active);
+
+        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/active", ['active' => false, 'cancel_future' => true])
+            ->assertOk()->assertJsonPath('active', false)->assertJsonPath('cancelled_appointments', 1);
         $this->assertModelExists($this->client);
-        $this->assertNotNull(Appointment::find($id));
+        $this->assertSame('cancelled', Appointment::find($id)->status);
+
+        $this->actingAsJwt($this->owner)->postJson('/api/clients/directory')->assertOk()->assertJsonCount(0);
+        $this->actingAsJwt($this->owner)->postJson('/api/clients/list', [])->assertOk()->assertJsonPath('total', 0);
+        $this->actingAsJwt($this->owner)->postJson('/api/clients/list', ['active' => false])->assertOk()->assertJsonPath('data.0.id', $this->client->id);
+
+        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/active", ['active' => true])->assertOk()->assertJsonPath('active', true);
     }
 
     public function test_affected_appointments_list_client_phone_and_free_colleagues(): void

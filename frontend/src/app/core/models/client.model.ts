@@ -102,3 +102,9 @@ export interface Paginated<T> {
   last_page: number;
   total: number;
 }
+
+export interface ClientDeactivationImpact {
+  future: number;
+  balance: number;
+  gift_cards: number;
+}

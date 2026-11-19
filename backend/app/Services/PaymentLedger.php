@@ -33,6 +33,7 @@ class PaymentLedger
     public function settle(Appointment $appointment, float $target, ?string $method, ?User $by, ?GiftCard $card = null): float
     {
         return DB::transaction(function () use ($appointment, $target, $method, $by, $card) {
+            $this->lock($appointment);
             $delta = round($target - $this->paidSum($appointment), 2);
             $fromCard = 0.0;
             if ($delta > 0 && $card) {
@@ -57,7 +58,7 @@ class PaymentLedger
         $card = GiftCard::whereKey($card->id)->lockForUpdate()->first();
         $message = match ($card->status) {
             GiftCard::STATUS_USED => 'Na poklon kartici '.$card->formattedCode().' nema više sredstava.',
-            GiftCard::STATUS_EXPIRED => 'Poklon kartica '.$card->formattedCode().' je istekla '.$card->expires_on->format('d.m.Y.').'.',
+            GiftCard::STATUS_EXPIRED => 'Poklon kartica '.$card->formattedCode().' je istekla '.$card->expires_on->format('d.m.Y.'),
             GiftCard::STATUS_CANCELLED => 'Poklon kartica '.$card->formattedCode().' je poništena.',
             default => null,
         };
@@ -108,6 +109,11 @@ class PaymentLedger
 
             return $refunded;
         });
+    }
+
+    public function lock(Appointment $appointment): void
+    {
+        Appointment::whereKey($appointment->id)->lockForUpdate()->first(['id']);
     }
 
     private function add(Appointment $appointment, float $amount, string $method, ?User $by): void

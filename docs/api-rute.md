@@ -85,7 +85,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/services/quote` | `{service_ids, date?, completed_visits?, completed_visits_by_service?}` → cena sa akcijama (`PriceQuoteService`) |
 | POST | `/clients/list` | `{search?, page?, zone?}` → paginirano, `has_account`, `discipline_zone`, `discipline_points`, `zone_*` |
 | POST | `/clients/{id}/activity` | `{before_id?}` → `{client, stats (termini, otkazivanja, nedolasci, pouzdanost), logs (100, najnoviji prvi), has_more}` |
-| POST / PUT | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski) |
+| POST / PUT | `/clients`, `/clients/{id}` | klijenti (i bez naloga — telefonski); lista `active` (podrazumevano `true`) |
 | PUT | `/clients/{id}/nickname` | `{nickname: string \| null}` — nadimak (bilo ko iz osoblja; klijent ga nikad ne dobija) |
 | POST | `/appointments/list` | `{from, to, staff_member_id?, status?, search?}` |
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
@@ -118,7 +118,7 @@ Vlasnik i radnik — svakodnevni rad.
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
 | GET | `/staff/{id}/future-appointments` | budući termini zaposlenog (kao kod odsustva, sa `alternatives`); `POST /staff/{id}/active` sa `active: false` odbija dok ih ima, osim uz `cancel_future: true` (otkazuje sve uz obaveštenje, gasi ponavljanja) |
 | POST | `/clients/directory` | svi klijenti (bez slike) za izbor i pretragu na frontendu |
-| POST | `/clients/{id}/delete-check` | `{history, future}` — klijent sa istorijom termina se ne briše |
+| GET | `/clients/{id}/deactivate-check` | `{future, balance, gift_cards}` — šta deaktivacija dira |
 | PUT | `/auth/ui-mode` | `{ui_mode: standard \| spacious}` — prikaz za prijavljeni nalog (osoblje ga menja i u `PUT /team/{id}`) |
 | PUT | `/staff-absences/{id}` | `{starts_on, ends_on, type, note?}` — izmena (vlasnik / menadžer svako, upisani dok čeka); preklapanje se proverava bez tog odsustva, odobrenom se pomera i blokada |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
@@ -159,7 +159,8 @@ Vlasnik i radnik — svakodnevni rad.
 | DELETE | `/notes/{id}` | autor, vlasnik ili menadžer |
 | POST | `/promotions/list` | akcije |
 | POST / PUT / DELETE | `/promotions`, `/promotions/{id}` | `type`: `discount_percent`, `discount_amount`, `package`, `bundle`, `loyalty` + polja tog tipa, `service_ids`, `starts_on`, `ends_on`, `weekdays`, `code?`, `max_uses?`, `once_per_client` (lista vraća i `uses`) |
-| DELETE | `/clients/{id}` | brisanje klijenta |
+| POST | `/clients/{id}/active` | `{active, cancel_future?}` — deaktivacija / ponovna aktivacija (budući termini se otkazuju samo uz `cancel_future`) |
+| DELETE | `/clients/{id}` | deaktivira klijenta (otkazuje buduće termine) — klijenti se ne brišu |
 | PUT | `/clients/{id}/zone` | `{zone: green \| yellow \| orange \| red \| null, reason?, until?}` — ručna zona (`null` = ponovo automatski po poenima) |
 | POST | `/reviews/list` | `{rating?, staff_member_id?, visible?}` → `{summary, staff (prosek po zaposlenom), items}` |
 | PUT | `/reviews/{id}` | `{visible?, reply?}` — sakrivanje sa sajta, odgovor salona |

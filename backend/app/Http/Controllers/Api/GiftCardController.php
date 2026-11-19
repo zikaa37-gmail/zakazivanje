@@ -25,6 +25,7 @@ class GiftCardController extends Controller
 
         return GiftCard::query()
             ->with(['seller:id,first_name,last_name', 'owner:id,first_name,last_name,nickname'])
+            ->when($data['status'] ?? null, fn ($q, $status) => $q->status($status))
             ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
                 ->where('code', 'like', '%'.GiftCard::normalize($search).'%')
                 ->orWhere('card_number', 'like', "%{$search}%")
@@ -33,8 +34,7 @@ class GiftCardController extends Controller
                 ->orWhereHas('owner', fn ($o) => $o->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"))))
             ->orderByDesc('id')
             ->limit(300)
-            ->get()
-            ->when($data['status'] ?? null, fn ($cards, $status) => $cards->where('status', $status)->values());
+            ->get();
     }
 
     public function store(Request $request)

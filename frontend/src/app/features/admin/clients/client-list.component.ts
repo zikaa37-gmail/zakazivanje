@@ -5,7 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, firstValueFrom } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Client, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
+import { Client, ClientDeactivationImpact, ClientPayload, DisciplineZone, ZONES, ZONE_BY_VALUE } from '../../../core/models/client.model';
 import { COMMUNICATION_OPTIONS, CommunicationChannel, GENDER_OPTIONS, Gender } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { BusinessSettingService } from '../../../core/services/business-setting.service';
@@ -83,6 +83,8 @@ export class ClientListComponent {
   readonly zoneInfo = ZONE_BY_VALUE;
   readonly zoneFilter = signal<DisciplineZone | null>(null);
   readonly historyId = signal<number | null>(null);
+  readonly inactiveOnly = signal(false);
+  private readonly isManager = inject(AuthService).isManager();
 
   readonly phoneDevice = canPlaceCalls();
   private chat = inject(ChatService);
@@ -90,7 +92,6 @@ export class ClientListComponent {
   private readonly baseActions: RowAction[] = [
     { id: 'history', label: 'Istorijat i zona', icon: 'activity' },
     { id: 'edit', label: 'Izmeni', icon: 'edit' },
-    ...(inject(AuthService).isManager() ? [{ id: 'delete', label: 'Obriši', icon: 'trash' as const, danger: true }] : []),
   ];
 
   constructor() {
@@ -106,7 +107,7 @@ export class ClientListComponent {
   load(page = this.page()): void {
     this.loading.set(true);
     this.error.set(null);
-    this.clientService.list(this.search.value.trim(), page, this.zoneFilter()).subscribe({
+    this.clientService.list(this.search.value.trim(), page, this.zoneFilter(), { active: !this.inactiveOnly() }).subscribe({
       next: (result) => {
         this.clients.set(result.data);
         this.page.set(result.current_page);
@@ -126,14 +127,24 @@ export class ClientListComponent {
     this.load(1);
   }
 
+  toggleInactive(): void {
+    this.inactiveOnly.update((v) => !v);
+    this.load(1);
+  }
+
   onZoneChanged(client: Client): void {
     this.clients.update((list) => list.map((c) => (c.id === client.id ? { ...c, ...client } : c)));
   }
 
   rowActions(client: Client): RowAction[] {
-    const [history, edit, ...rest] = this.baseActions;
-    const message: RowAction[] = client.has_account && this.chat.enabled() ? [{ id: 'message', label: 'Pošalji poruku', icon: 'message-square' }] : [];
-    return [history, edit, ...message, ...contactActions(client.phone), ...rest];
+    const [history, edit] = this.baseActions;
+    const message: RowAction[] = client.has_account && client.active && this.chat.enabled() ? [{ id: 'message', label: 'Pošalji poruku', icon: 'message-square' }] : [];
+    const status: RowAction[] = !this.isManager
+      ? []
+      : client.active
+        ? [{ id: 'deactivate', label: 'Deaktiviraj', icon: 'lock', danger: true }]
+        : [{ id: 'activate', label: 'Aktiviraj', icon: 'unlock' }];
+    return [history, edit, ...message, ...contactActions(client.phone), ...status];
   }
 
   initials(client: Client): string {
@@ -145,7 +156,8 @@ export class ClientListComponent {
     if (action === 'edit') this.openForm(client);
     if (action === 'message') void this.router.navigate(['/admin/chat'], { queryParams: { client: client.id, name: clientName(client) } });
     openContact(action, client.phone);
-    if (action === 'delete') this.remove(client);
+    if (action === 'deactivate') void this.deactivate(client);
+    if (action === 'activate') void this.activate(client);
   }
 
   openForm(client: Client | null = null): void {
@@ -202,40 +214,50 @@ export class ClientListComponent {
     });
   }
 
-  private async remove(client: Client): Promise<void> {
-    let impact: { history: number; future: number };
+  private async deactivate(client: Client): Promise<void> {
+    let impact: ClientDeactivationImpact;
     try {
-      impact = await firstValueFrom(this.clientService.deleteCheck(client.id));
+      impact = await firstValueFrom(this.clientService.deactivateCheck(client.id));
     } catch (err) {
       this.toast.error(apiErrorMessage(err, 'Provera nije uspela.'));
       return;
     }
-    if (impact.history > 0) {
-      await this.confirm.confirm({
-        title: 'Klijent ne može da se obriše',
-        message: `${clientName(client)} ima termina u istoriji: ${impact.history}. Brisanjem bi nestali i prihodi u izveštajima, zato klijent ostaje u bazi.`,
-        confirmLabel: 'U redu',
-        cancelLabel: 'Zatvori',
-        danger: false,
-      });
-      return;
-    }
+    const name = clientName(client);
+    const notes = [
+      impact.future > 0 ? `Otkazuje se zakazanih termina: ${impact.future}, a ta vremena postaju slobodna.` : '',
+      impact.balance > 0 || impact.gift_cards > 0 ? 'Uplata unapred i poklon kartice ostaju sačuvane i vraćaju se ako ga ponovo aktiviraš.' : '',
+    ].filter(Boolean);
     const ok = await this.confirm.confirm({
-      title: 'Brisanje klijenta',
-      message:
-        impact.future > 0
-          ? `Obrisati klijenta ${clientName(client)}? Briše se i ${impact.future} zakazanih termina, a ta vremena postaju slobodna. Ovo ne može da se vrati.`
-          : `Obrisati klijenta ${clientName(client)}? Ovo ne može da se vrati.`,
-      confirmLabel: 'Obriši zauvek',
+      title: 'Deaktivacija klijenta',
+      message: [`Deaktivirati klijenta ${name}? Neće moći da se prijavi ni da zakazuje, a istorija ostaje.`, ...notes].join(' '),
+      confirmLabel: 'Deaktiviraj',
     });
     if (!ok) return;
 
-    this.clientService.delete(client.id).subscribe({
+    this.clientService.setActive(client.id, false, impact.future > 0).subscribe({
       next: () => {
-        this.toast.success('Klijent je obrisan.');
+        this.toast.success('Klijent je deaktiviran.');
         this.load();
       },
-      error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Deaktivacija nije uspela.')),
+    });
+  }
+
+  private async activate(client: Client): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Aktivacija klijenta',
+      message: `Ponovo aktivirati klijenta ${clientName(client)}? Moći će da se prijavi i zakazuje.`,
+      confirmLabel: 'Aktiviraj',
+      danger: false,
+    });
+    if (!ok) return;
+
+    this.clientService.setActive(client.id, true).subscribe({
+      next: () => {
+        this.toast.success('Klijent je ponovo aktivan.');
+        this.load();
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Aktivacija nije uspela.')),
     });
   }
 }

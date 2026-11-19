@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { SERVICE_OUTCOMES, ServiceOutcome } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
@@ -41,8 +42,6 @@ export class CompleteDialogComponent {
   ];
   readonly code = formatGiftCode;
 
-  readonly balance = signal(0);
-  readonly clientCards = signal<OwnedGiftCard[]>([]);
   readonly outcome = signal<ServiceOutcome>('done');
   readonly payment = signal<Payment | null>(null);
   readonly method = signal<PaymentMethod | null>(null);
@@ -62,6 +61,12 @@ export class CompleteDialogComponent {
   private readonly paidBefore = signal(0);
 
   readonly appointment = this.completion.request;
+  private readonly clientWallet = rxResource({
+    params: () => this.appointment()?.client_id ?? undefined,
+    stream: ({ params }) => this.wallets.forClient(params),
+  });
+  readonly balance = computed(() => (this.clientWallet.hasValue() ? this.clientWallet.value().balance : 0));
+  readonly clientCards = computed<OwnedGiftCard[]>(() => (this.clientWallet.hasValue() ? this.clientWallet.value().gift_cards : []));
   readonly time = computed(() => {
     const a = this.appointment();
     return a ? timeOf(a.starts_at) : '';
@@ -108,17 +113,6 @@ export class CompleteDialogComponent {
         this.paidAmount.setValue(a?.paid_at && paidBefore < dueBefore ? paidBefore : null);
         this.tip.setValue(a?.tip ? a.tip : null);
         this.note.setValue(a?.completion_note ?? '');
-        this.balance.set(0);
-        this.clientCards.set([]);
-        if (a?.client_id) {
-          this.wallets.forClient(a.client_id).subscribe({
-            next: (w) => {
-              this.balance.set(w.balance);
-              this.clientCards.set(w.gift_cards);
-            },
-            error: () => undefined,
-          });
-        }
       });
     });
   }
