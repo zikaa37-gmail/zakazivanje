@@ -13,7 +13,6 @@ const WEEKDAYS = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
 
 @Component({
   selector: 'app-month-calendar',
-  standalone: true,
   templateUrl: './month-calendar.component.html',
   styleUrl: './month-calendar.component.scss',
 })

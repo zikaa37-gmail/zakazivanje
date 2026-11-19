@@ -21,7 +21,6 @@ function niceMax(value: number): number {
 
 @Component({
   selector: 'app-column-chart',
-  standalone: true,
   templateUrl: './column-chart.component.html',
   styleUrl: './column-chart.component.scss',
 })

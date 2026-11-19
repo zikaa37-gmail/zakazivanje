@@ -5,7 +5,6 @@ export type ButtonSize = 's' | 'm' | 'l';
 
 @Directive({
   selector: '[appBtn]',
-  standalone: true,
 })
 export class ButtonDirective {
   readonly theme = input<ButtonTheme>('primary');

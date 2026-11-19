@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Appointment } from '../../core/models/appointment.model';
-import { Wallet, formatGiftCode } from '../../core/models/wallet.model';
+import { formatGiftCode } from '../../core/models/wallet.model';
 import { ToastService } from '../../core/services/toast.service';
 import { WalletService } from '../../core/services/wallet.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
@@ -16,7 +17,6 @@ import { SrDateTimePipe } from '../../shared/pipes/sr-date-time.pipe';
 
 @Component({
   selector: 'app-client-pay-dialog',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RsdPipe, SrDateTimePipe],
   template: `
     <app-modal title="Plaćanje" footerMode="none" (cancelled)="closed.emit()" testId="client-pay">
@@ -24,9 +24,9 @@ import { SrDateTimePipe } from '../../shared/pipes/sr-date-time.pipe';
       <p class="text-sm mb-3">{{ services() }} · {{ appointment().starts_at | srDateTime }}<br />Za plaćanje: <strong>{{ left() | rsd }}</strong></p>
 
       <div class="flex flex-col gap-2">
-        @if ((wallet()?.balance ?? 0) > 0) {
+        @if (balance() > 0) {
           <button type="button" appBtn theme="secondary" size="m" class="justify-between" [disabled]="busy()" (click)="pay('wallet', null)" data-testid="client-pay-wallet">
-            <span><span appIcon="coins" aria-hidden="true"></span> Sa stanja</span><span>{{ wallet()!.balance | rsd }}</span>
+            <span><span appIcon="coins" aria-hidden="true"></span> Sa stanja</span><span>{{ balance() | rsd }}</span>
           </button>
         }
         @for (c of activeCards(); track c.id) {
@@ -46,7 +46,7 @@ import { SrDateTimePipe } from '../../shared/pipes/sr-date-time.pipe';
     </app-modal>
   `,
 })
-export class ClientPayDialogComponent implements OnInit {
+export class ClientPayDialogComponent {
   private walletService = inject(WalletService);
   private toast = inject(ToastService);
 
@@ -55,18 +55,15 @@ export class ClientPayDialogComponent implements OnInit {
   readonly paid = output<void>();
   readonly ips = output<void>();
 
-  readonly wallet = signal<Wallet | null>(null);
+  private readonly wallet = rxResource({ stream: () => this.walletService.mine() });
+  readonly balance = computed(() => (this.wallet.hasValue() ? this.wallet.value().balance : 0));
   readonly busy = signal(false);
   readonly error = signal<string | null>(null);
   readonly codeInput = new FormControl('', { nonNullable: true });
   readonly code = formatGiftCode;
-  readonly activeCards = computed(() => (this.wallet()?.gift_cards ?? []).filter((c) => c.status === 'active'));
+  readonly activeCards = computed(() => (this.wallet.hasValue() ? this.wallet.value().gift_cards.filter((c) => c.status === 'active') : []));
   readonly left = computed(() => this.appointment().amount_left ?? this.appointment().total);
   readonly services = computed(() => this.appointment().items.map((i) => i.name).join(', '));
-
-  ngOnInit(): void {
-    this.walletService.mine().subscribe({ next: (w) => this.wallet.set(w), error: () => undefined });
-  }
 
   payWithCode(): void {
     const code = this.codeInput.value.trim();

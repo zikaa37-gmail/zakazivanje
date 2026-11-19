@@ -5,7 +5,6 @@ import { StarsComponent } from '../stars/stars.component';
 
 @Component({
   selector: 'app-review-card',
-  standalone: true,
   imports: [SrDatePipe, StarsComponent],
   template: `
     <article class="review" [attr.data-testid]="'review-' + review().id">

@@ -14,7 +14,6 @@ const WINDOW = 14;
 
 @Component({
   selector: 'app-reschedule',
-  standalone: true,
   imports: [ButtonComponent, ErrorMessageComponent, IconDirective, ModalComponent],
   templateUrl: './reschedule.component.html',
 })

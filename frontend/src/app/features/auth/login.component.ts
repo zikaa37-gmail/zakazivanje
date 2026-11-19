@@ -13,7 +13,6 @@ import { InputDirective } from '../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './login.component.html',
 })

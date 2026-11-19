@@ -3,7 +3,6 @@ import { IconDirective } from '../../directives/icon.directive';
 
 @Component({
   selector: 'app-accordion',
-  standalone: true,
   imports: [IconDirective],
   templateUrl: './accordion.component.html',
   styleUrl: './accordion.component.scss',

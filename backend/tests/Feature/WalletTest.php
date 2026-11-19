@@ -61,7 +61,7 @@ class WalletTest extends TestCase
             ->assertUnprocessable()->assertJsonValidationErrors('payment_method');
 
         $this->complete(['payment' => 'partial', 'paid_amount' => 1500, 'payment_method' => 'wallet', 'note' => 'Ostatak gotovinom'])->assertOk();
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet")->assertJsonPath('balance', 0);
+        $this->actingAsJwt($this->owner)->getJson("/api/clients/{$this->client->id}/wallet")->assertJsonPath('balance', 0);
 
         $this->complete(['payment' => 'full', 'payment_method' => 'cash'])->assertOk()->assertJsonPath('outstanding', 0);
 
@@ -72,7 +72,7 @@ class WalletTest extends TestCase
             ->assertJsonPath('prepaid.deposits', 1500);
 
         $this->actingAsJwt($this->owner)->postJson("/api/appointments/{$this->appointment->id}/paid", ['method' => null])->assertOk();
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet")->assertJsonPath('balance', 1500);
+        $this->actingAsJwt($this->owner)->getJson("/api/clients/{$this->client->id}/wallet")->assertJsonPath('balance', 1500);
     }
 
     public function test_physical_card_is_bearer_partial_and_can_be_claimed_once(): void
@@ -142,6 +142,7 @@ class WalletTest extends TestCase
             $this->actingAsJwt($this->owner)->postJson('/api/gift-cards/list', ['status' => $status])
                 ->assertOk()->assertJsonCount(1)->assertJsonPath('0.code', $code)->assertJsonPath('0.status', $status);
         }
+        $this->actingAsJwt($this->owner)->postJson('/api/gift-cards/list', ['search' => '%'])->assertOk()->assertJsonCount(0);
     }
 
     public function test_deactivated_client_keeps_balance_and_cards(): void
@@ -155,7 +156,7 @@ class WalletTest extends TestCase
 
         $this->assertModelExists($this->client);
         $this->assertFalse($this->client->fresh()->active);
-        $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet")->assertOk()->assertJsonPath('balance', 1500)->assertJsonCount(1, 'gift_cards');
+        $this->actingAsJwt($this->owner)->getJson("/api/clients/{$this->client->id}/wallet")->assertOk()->assertJsonPath('balance', 1500)->assertJsonCount(1, 'gift_cards');
         $this->actingAsJwt($this->client)->postJson('/api/my-wallet')->assertUnauthorized();
     }
 }

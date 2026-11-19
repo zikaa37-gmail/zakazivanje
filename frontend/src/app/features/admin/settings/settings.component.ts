@@ -59,7 +59,6 @@ const DEFAULT_COLORS: Record<ColorKey, string> = {
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, ImageCropperComponent, InfoTipComponent, InputDirective, ModalComponent, SrDatePipe, TimePickerComponent, ToggleComponent],
   templateUrl: './settings.component.html',
 })

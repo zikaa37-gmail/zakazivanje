@@ -3,7 +3,6 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-team-tabs',
-  standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
     <nav class="chip-group mb-4" aria-label="Zaposleni">

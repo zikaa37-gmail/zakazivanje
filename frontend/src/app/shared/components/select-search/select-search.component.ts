@@ -17,7 +17,6 @@ export interface SelectSearchOption<T> {
 
 @Component({
   selector: 'app-select-search',
-  standalone: true,
   imports: [IconDirective, SpinnerComponent],
   templateUrl: './select-search.component.html',
   styleUrl: './select-search.component.scss',

@@ -1,9 +1,10 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { Component, computed, effect, inject, linkedSignal, signal, untracked } from '@angular/core';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { SERVICE_OUTCOMES, ServiceOutcome } from '../../../core/models/appointment.model';
+import { map } from 'rxjs';
+import { Appointment, SERVICE_OUTCOMES, ServiceOutcome } from '../../../core/models/appointment.model';
 import { PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
-import { OwnedGiftCard, formatGiftCode } from '../../../core/models/wallet.model';
+import { GIFT_CARD_STATUS, OwnedGiftCard, formatGiftCode } from '../../../core/models/wallet.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { CompletionService } from '../../../core/services/completion.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -17,13 +18,15 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
+import { formatRsd } from '../../../core/utils/format';
 
 type Payment = 'full' | 'partial' | 'none';
 type Rest = PaymentMethod | 'debt';
 
+const toAmount = (value: number | null): number => Math.max(0, Number(value) || 0);
+
 @Component({
   selector: 'app-complete-dialog',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, ModalComponent, InputDirective, ClientNamePipe, RsdPipe],
   templateUrl: './complete-dialog.component.html',
 })
@@ -42,25 +45,35 @@ export class CompleteDialogComponent {
   ];
   readonly code = formatGiftCode;
 
-  readonly outcome = signal<ServiceOutcome>('done');
-  readonly payment = signal<Payment | null>(null);
-  readonly method = signal<PaymentMethod | null>(null);
-  readonly rest = signal<Rest | null>(null);
-  readonly card = signal<{ code: string; balance: number } | null>(null);
-  readonly checking = signal(false);
-  readonly saving = signal(false);
-  readonly error = signal<string | null>(null);
+  readonly appointment = this.completion.request;
   readonly due = new FormControl<number | null>(null);
   readonly paidAmount = new FormControl<number | null>(null);
   readonly tip = new FormControl<number | null>(null);
   readonly note = new FormControl('', { nonNullable: true });
   readonly cardCode = new FormControl('', { nonNullable: true });
-  private readonly dueValue = signal(0);
-  private readonly paidValue = signal(0);
-  private readonly noteValue = signal('');
-  private readonly paidBefore = signal(0);
+  private readonly dueValue = toSignal(this.due.valueChanges.pipe(map(toAmount)), { initialValue: 0 });
+  private readonly paidValue = toSignal(this.paidAmount.valueChanges.pipe(map(toAmount)), { initialValue: 0 });
+  private readonly noteValue = toSignal(this.note.valueChanges, { initialValue: '' });
 
-  readonly appointment = this.completion.request;
+  private readonly before = computed(() => {
+    const a = this.appointment();
+    const due = a?.due_amount ?? a?.total ?? 0;
+    const paid = a?.paid_at ? (a.paid_amount ?? a.total) : 0;
+    return { due, paid, wasPaid: !!a?.paid_at };
+  });
+  private readonly paidBefore = computed(() => this.before().paid);
+  readonly outcome = linkedSignal<ServiceOutcome>(() => this.appointment()?.service_outcome ?? 'done');
+  readonly payment = linkedSignal<Payment | null>(() => {
+    const b = this.before();
+    return b.wasPaid ? (b.paid >= b.due ? 'full' : 'partial') : null;
+  });
+  readonly method = linkedSignal<Appointment | null, PaymentMethod | null>({ source: this.appointment, computation: () => null });
+  readonly rest = linkedSignal<Appointment | null, Rest | null>({ source: this.appointment, computation: () => null });
+  readonly card = linkedSignal<Appointment | null, { code: string; balance: number } | null>({ source: this.appointment, computation: () => null });
+  readonly error = linkedSignal<Appointment | null, string | null>({ source: this.appointment, computation: () => null });
+  readonly checking = signal(false);
+  readonly saving = signal(false);
+
   private readonly clientWallet = rxResource({
     params: () => this.appointment()?.client_id ?? undefined,
     stream: ({ params }) => this.wallets.forClient(params),
@@ -93,26 +106,15 @@ export class CompleteDialogComponent {
   });
 
   constructor() {
-    this.due.valueChanges.subscribe((v) => this.dueValue.set(Math.max(0, Number(v) || 0)));
-    this.paidAmount.valueChanges.subscribe((v) => this.paidValue.set(Math.max(0, Number(v) || 0)));
-    this.note.valueChanges.subscribe((v) => this.noteValue.set(v));
     effect(() => {
       const a = this.appointment();
+      const { due, paid, wasPaid } = this.before();
       untracked(() => {
-        this.error.set(null);
-        this.outcome.set(a?.service_outcome ?? 'done');
-        const dueBefore = a?.due_amount ?? a?.total ?? 0;
-        const paidBefore = a?.paid_at ? (a.paid_amount ?? a.total) : 0;
-        this.paidBefore.set(paidBefore);
-        this.due.setValue(dueBefore);
-        this.payment.set(a?.paid_at ? (paidBefore >= dueBefore ? 'full' : 'partial') : null);
-        this.method.set(null);
-        this.rest.set(null);
-        this.card.set(null);
-        this.cardCode.reset('');
-        this.paidAmount.setValue(a?.paid_at && paidBefore < dueBefore ? paidBefore : null);
+        this.due.setValue(due);
+        this.paidAmount.setValue(wasPaid && paid < due ? paid : null);
         this.tip.setValue(a?.tip ? a.tip : null);
         this.note.setValue(a?.completion_note ?? '');
+        this.cardCode.reset('');
       });
     });
   }
@@ -153,7 +155,7 @@ export class CompleteDialogComponent {
       next: (card) => {
         this.checking.set(false);
         if (card.status !== 'active') {
-          this.error.set(`Kartica ${this.code(card.code)} nije aktivna (${card.status === 'used' ? 'potrošena' : card.status === 'expired' ? 'istekla' : 'poništena'}).`);
+          this.error.set(`Kartica ${this.code(card.code)} nije aktivna (${GIFT_CARD_STATUS[card.status].label.toLowerCase()}).`);
           return;
         }
         this.card.set({ code: card.code, balance: card.balance });
@@ -203,8 +205,8 @@ export class CompleteDialogComponent {
         next: (saved) => {
           this.saving.set(false);
           const owed = saved.outstanding ?? 0;
-          const cardLeft = saved.gift_card_left !== undefined && saved.gift_card_left !== null ? ` Na kartici je ostalo ${saved.gift_card_left.toLocaleString('sr-RS')} din.` : '';
-          this.toast.success((owed > 0 ? `Sačuvano. Za naplatu ostaje ${owed.toLocaleString('sr-RS')} din.` : 'Termin je završen, naplata je zatvorena.') + cardLeft);
+          const cardLeft = saved.gift_card_left !== undefined && saved.gift_card_left !== null ? ` Na kartici je ostalo ${formatRsd(saved.gift_card_left)}` : '';
+          this.toast.success((owed > 0 ? `Sačuvano. Za naplatu ostaje ${formatRsd(owed)}` : 'Termin je završen, naplata je zatvorena.') + cardLeft);
           this.completion.finish(true);
         },
         error: (err) => {

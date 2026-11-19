@@ -15,7 +15,6 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-staff-profile',
-  standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ChangePasswordComponent, DeviceNotificationsComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './staff-profile.component.html',
 })

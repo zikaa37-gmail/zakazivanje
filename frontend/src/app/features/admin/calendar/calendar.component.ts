@@ -78,7 +78,6 @@ function mondayOf(date: string): string {
 
 @Component({
   selector: 'app-calendar',
-  standalone: true,
   imports: [ReactiveFormsModule, CdkDrag, NgStyle, AppointmentDetailsComponent, AppointmentFormComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, MonthCalendarComponent, AccordionComponent, DatePickerDialogComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.scss',

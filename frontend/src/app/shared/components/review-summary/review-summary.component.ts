@@ -4,7 +4,6 @@ import { StarsComponent } from '../stars/stars.component';
 
 @Component({
   selector: 'app-review-summary',
-  standalone: true,
   imports: [StarsComponent],
   template: `
     <div class="summary" data-testid="review-summary">

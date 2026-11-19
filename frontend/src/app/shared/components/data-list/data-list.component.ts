@@ -2,7 +2,6 @@ import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-data-list',
-  standalone: true,
   templateUrl: './data-list.component.html',
   styleUrl: './data-list.component.scss',
 })

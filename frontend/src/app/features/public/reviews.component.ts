@@ -10,7 +10,6 @@ import { ReviewSummaryComponent } from '../../shared/components/review-summary/r
 
 @Component({
   selector: 'app-reviews',
-  standalone: true,
   imports: [InfoTipComponent, RouterLink, ErrorMessageComponent, ReviewCardComponent, ReviewSummaryComponent],
   template: `
     <div class="content-container py-4 md:py-8 flex flex-col gap-4 max-w-3xl">

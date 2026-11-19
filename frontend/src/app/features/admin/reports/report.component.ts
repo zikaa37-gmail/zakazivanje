@@ -21,7 +21,6 @@ type Scope = 'summary' | 'staff' | 'mine';
 
 @Component({
   selector: 'app-report',
-  standalone: true,
   imports: [InfoTipComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
   templateUrl: './report.component.html',
 })

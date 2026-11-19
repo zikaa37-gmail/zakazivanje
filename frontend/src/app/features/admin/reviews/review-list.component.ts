@@ -20,7 +20,6 @@ type VisibilityFilter = 'all' | 'visible' | 'hidden';
 
 @Component({
   selector: 'app-review-list',
-  standalone: true,
   imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, ReviewSummaryComponent, SrDatePipe, StarsComponent],
   templateUrl: './review-list.component.html',
 })

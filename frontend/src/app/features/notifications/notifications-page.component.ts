@@ -19,7 +19,6 @@ const dayKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)
 
 @Component({
   selector: 'app-notifications-page',
-  standalone: true,
   imports: [ButtonDirective, IconDirective, DeviceNotificationsComponent, ModalComponent, SrDateTimePipe],
   templateUrl: './notifications-page.component.html',
   styleUrl: './notifications-page.component.scss',

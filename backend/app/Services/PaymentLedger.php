@@ -12,13 +12,16 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentLedger
 {
-    public const WALLET = 'wallet';
+    public const string WALLET = 'wallet';
 
-    public const GIFT_CARD = 'gift_card';
+    public const string GIFT_CARD = 'gift_card';
 
-    private const PREPAID = [self::WALLET, self::GIFT_CARD];
+    private const array PREPAID = [self::WALLET, self::GIFT_CARD];
 
-    public function __construct(private WalletService $wallet, private Inbox $inbox) {}
+    public function __construct(
+        private readonly WalletService $wallet,
+        private readonly Inbox $inbox,
+    ) {}
 
     public static function methods(): array
     {

@@ -22,7 +22,6 @@ import { AffectedAppointmentsComponent } from '../appointments/affected-appointm
 
 @Component({
   selector: 'app-absences',
-  standalone: true,
   imports: [InfoTipComponent, AffectedAppointmentsComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, DateRangeComponent, ErrorMessageComponent, IconDirective, InputDirective],
   template: `
     <div class="page-header">

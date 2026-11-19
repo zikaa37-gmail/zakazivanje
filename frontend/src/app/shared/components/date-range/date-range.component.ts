@@ -18,7 +18,6 @@ interface RangeDay {
 
 @Component({
   selector: 'app-date-range',
-  standalone: true,
   imports: [IconDirective],
   host: { class: 'date-range' },
   template: `

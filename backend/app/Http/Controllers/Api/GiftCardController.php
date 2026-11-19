@@ -7,40 +7,47 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\GiftCard;
 use App\Services\WalletService;
+use App\Support\Like;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class GiftCardController extends Controller
 {
-    public function __construct(private WalletService $wallet) {}
+    public function __construct(private readonly WalletService $wallet) {}
 
-    public function index(Request $request)
+    private const array RELATIONS = ['seller:id,first_name,last_name', 'owner:id,first_name,last_name,nickname'];
+
+    public function index(Request $request): Collection
     {
         $data = $request->validate([
             'status' => ['nullable', Rule::in(GiftCard::STATUSES)],
             'search' => ['nullable', 'string', 'max:100'],
         ]);
         $search = trim($data['search'] ?? '');
+        $like = Like::contains($search);
+        $code = GiftCard::normalize($search);
 
         return GiftCard::query()
-            ->with(['seller:id,first_name,last_name', 'owner:id,first_name,last_name,nickname'])
+            ->with(self::RELATIONS)
             ->when($data['status'] ?? null, fn ($q, $status) => $q->status($status))
             ->when($search !== '', fn ($q) => $q->where(fn ($w) => $w
-                ->where('code', 'like', '%'.GiftCard::normalize($search).'%')
-                ->orWhere('card_number', 'like', "%{$search}%")
-                ->orWhere('buyer_name', 'like', "%{$search}%")
-                ->orWhere('recipient_name', 'like', "%{$search}%")
-                ->orWhereHas('owner', fn ($o) => $o->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%"))))
+                ->when($code !== '', fn ($c) => $c->where('code', 'like', Like::contains($code)))
+                ->orWhere('card_number', 'like', $like)
+                ->orWhere('buyer_name', 'like', $like)
+                ->orWhere('recipient_name', 'like', $like)
+                ->orWhereHas('owner', fn ($o) => $o->where('first_name', 'like', $like)->orWhere('last_name', 'like', $like))))
             ->orderByDesc('id')
             ->limit(300)
             ->get();
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'kind' => ['required', Rule::in([GiftCard::KIND_DIGITAL, GiftCard::KIND_PHYSICAL])],
+            'kind' => ['required', Rule::in(GiftCard::KINDS)],
             'amount' => ['required', 'numeric', 'min:100', 'max:10000000'],
             'payment_method' => ['required', Rule::in(Appointment::PAYMENT_METHODS)],
             'owner_id' => ['nullable', 'required_if:kind,digital', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Client->value)],
@@ -54,13 +61,13 @@ class GiftCardController extends Controller
             'owner_id.required_if' => 'Izaberi klijenta kome se poklanja.',
         ]);
 
-        return response()->json($this->wallet->sellGiftCard($data, $request->user())->load(['seller:id,first_name,last_name', 'owner:id,first_name,last_name,nickname']), 201);
+        return response()->json($this->wallet->sellGiftCard($data, $request->user())->load(self::RELATIONS), 201);
     }
 
-    public function check(Request $request)
+    public function check(Request $request): array
     {
         $data = $request->validate(['code' => ['required', 'string', 'max:30']]);
-        $card = $this->wallet->findGiftCard($data['code'])->load(['seller:id,first_name,last_name', 'owner:id,first_name,last_name,nickname']);
+        $card = $this->wallet->findGiftCard($data['code'])->load(self::RELATIONS);
 
         return [
             ...$card->toArray(),
@@ -68,7 +75,7 @@ class GiftCardController extends Controller
         ];
     }
 
-    public function cancel(GiftCard $giftCard)
+    public function cancel(GiftCard $giftCard): GiftCard
     {
         if ($giftCard->balance < $giftCard->amount) {
             throw ValidationException::withMessages(['code' => ['Kartica je već korišćena i ne može da se poništi.']]);

@@ -14,7 +14,6 @@ type View = 'list' | 'topic' | 'new';
 
 @Component({
   selector: 'app-chat-widget',
-  standalone: true,
   imports: [ChatThreadComponent, IconDirective, InputDirective, ReactiveFormsModule, SrDatePipe],
   templateUrl: './chat-widget.component.html',
   styleUrl: './chat-widget.component.scss',

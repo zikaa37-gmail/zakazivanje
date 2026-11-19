@@ -4,7 +4,6 @@ export type InputSize = 's' | 'm';
 
 @Directive({
   selector: '[appInput]',
-  standalone: true,
 })
 export class InputDirective {
   readonly size = input<InputSize>('s');

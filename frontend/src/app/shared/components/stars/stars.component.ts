@@ -3,7 +3,6 @@ import { ratingLabel } from '../../../core/models/review.model';
 
 @Component({
   selector: 'app-stars',
-  standalone: true,
   template: `
     <span class="stars" role="img" [attr.aria-label]="label()" [style.--star-size.px]="size()">
       @for (fill of fills(); track $index) {

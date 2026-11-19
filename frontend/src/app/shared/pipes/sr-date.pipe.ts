@@ -1,16 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { formatSrDate } from '../../core/utils/format';
 
-@Pipe({
-  name: 'srDate',
-  standalone: true,
-})
+@Pipe({ name: 'srDate' })
 export class SrDatePipe implements PipeTransform {
   transform(value: string | null | undefined): string {
-    if (!value) return '—';
-
-    const [year, month, day] = value.slice(0, 10).split('-');
-    if (!year || !month || !day) return value;
-
-    return `${day}.${month}.${year}`;
+    return formatSrDate(value);
   }
 }

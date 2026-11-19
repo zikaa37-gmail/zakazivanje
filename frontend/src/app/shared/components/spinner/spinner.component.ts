@@ -3,7 +3,6 @@ import { LoaderService } from '../../../core/services/loader.service';
 
 @Component({
   selector: 'app-spinner',
-  standalone: true,
   templateUrl: './spinner.component.html',
   styleUrl: './spinner.component.scss',
 })

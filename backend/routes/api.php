@@ -134,7 +134,7 @@ Route::middleware(['jwt', 'role:owner,manager,worker'])->group(function () {
     Route::post('/appointments', [AppointmentController::class, 'store']);
     Route::post('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatus']);
     Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
-    Route::post('/clients/{client}/wallet', [WalletController::class, 'show']);
+    Route::get('/clients/{client}/wallet', [WalletController::class, 'show']);
     Route::post('/clients/{client}/wallet/deposit', [WalletController::class, 'deposit']);
     Route::post('/clients/{client}/wallet/claim', [WalletController::class, 'claim']);
     Route::post('/gift-cards/list', [GiftCardController::class, 'index']);

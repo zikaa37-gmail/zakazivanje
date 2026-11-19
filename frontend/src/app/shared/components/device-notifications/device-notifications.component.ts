@@ -6,7 +6,6 @@ import { IconDirective } from '../../directives/icon.directive';
 
 @Component({
   selector: 'app-device-notifications',
-  standalone: true,
   imports: [ButtonDirective, IconDirective],
   templateUrl: './device-notifications.component.html',
 })

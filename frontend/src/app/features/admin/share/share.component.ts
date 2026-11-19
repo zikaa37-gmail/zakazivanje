@@ -25,6 +25,7 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 import { Brand, IMAGE_SIZES, ImageFormat, ShareTemplate, drawShareImage } from './share-image';
+import { formatSrDate } from '../../../core/utils/format';
 
 type TemplateKind = ShareTemplate['kind'];
 
@@ -38,7 +39,6 @@ const DEFAULT_PRIMARY = '#0f766e';
 
 @Component({
   selector: 'app-share',
-  standalone: true,
   imports: [InfoTipComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, SrDateTimePipe],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
@@ -381,7 +381,7 @@ export class ShareComponent {
   }
 
   private period(p: Promotion): string {
-    const format = (date: string) => date.split('-').reverse().join('.') + '.';
+    const format = (date: string) => formatSrDate(date) + '.';
     if (p.starts_on && p.ends_on) return `${format(p.starts_on)} – ${format(p.ends_on)}`;
     if (p.ends_on) return `do ${format(p.ends_on)}`;
     if (p.starts_on) return `od ${format(p.starts_on)}`;

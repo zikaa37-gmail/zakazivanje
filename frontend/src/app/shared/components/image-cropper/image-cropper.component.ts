@@ -4,7 +4,6 @@ import { ModalComponent } from '../modal/modal.component';
 
 @Component({
   selector: 'app-image-cropper',
-  standalone: true,
   imports: [ButtonDirective, ModalComponent],
   templateUrl: './image-cropper.component.html',
   styleUrl: './image-cropper.component.scss',

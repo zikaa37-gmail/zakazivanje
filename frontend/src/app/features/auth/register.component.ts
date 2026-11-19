@@ -12,7 +12,6 @@ import { InputDirective } from '../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './register.component.html',
 })

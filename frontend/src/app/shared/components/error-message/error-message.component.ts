@@ -2,7 +2,6 @@ import { Component, ElementRef, effect, input, viewChild } from '@angular/core';
 
 @Component({
   selector: 'app-error-message',
-  standalone: true,
   templateUrl: './error-message.component.html',
 })
 export class ErrorMessageComponent {

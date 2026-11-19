@@ -32,7 +32,6 @@ const WINDOW = 14;
 
 @Component({
   selector: 'app-book',
-  standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, DurationPipe, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
   templateUrl: './book.component.html',
 })

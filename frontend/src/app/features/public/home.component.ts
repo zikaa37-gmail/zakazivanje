@@ -23,7 +23,6 @@ import { BookingDraftService } from './booking-draft.service';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
   imports: [RouterLink, DurationPipe, IconDirective, ModalComponent, ReviewCardComponent, ReviewSummaryComponent, RsdPipe],
   templateUrl: './home.component.html',
 })

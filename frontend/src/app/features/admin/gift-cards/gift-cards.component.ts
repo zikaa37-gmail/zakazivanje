@@ -25,10 +25,10 @@ import { ClientNamePipe } from '../../../shared/pipes/client-name.pipe';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
+import { formatRsd, formatSrDate } from '../../../core/utils/format';
 
 @Component({
   selector: 'app-gift-cards',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InfoTipComponent, InputDirective, ModalComponent, RowActionsComponent, SelectSearchComponent, ClientNamePipe, RsdPipe, SrDatePipe, SrDateTimePipe],
   templateUrl: './gift-cards.component.html',
 })
@@ -192,8 +192,8 @@ export class GiftCardsComponent {
     const name = esc(this.business.name());
     const to = card.recipient_name ? `<p class="to">Za: ${esc(card.recipient_name)}</p>` : '';
     const note = card.note ? `<p class="note">${esc(card.note)}</p>` : '';
-    const until = card.expires_on ? `<p class="small">Važi do ${card.expires_on.split('-').reverse().join('.')}.</p>` : '';
-    const amount = `${card.amount.toLocaleString('sr-RS')} din.`;
+    const until = card.expires_on ? `<p class="small">Važi do ${formatSrDate(card.expires_on)}.</p>` : '';
+    const amount = formatRsd(card.amount);
     win.document.write(`<!doctype html><html lang="sr"><head><meta charset="utf-8"><title>Poklon kartica</title><style>
       body{font-family:system-ui,sans-serif;margin:0;display:flex;justify-content:center;padding:24px}
       .card{border:2px solid #333;border-radius:16px;padding:28px;width:340px;text-align:center}
@@ -209,7 +209,7 @@ export class GiftCardsComponent {
   private async cancel(card: GiftCard): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Poništavanje poklon kartice',
-      message: `Poništiti karticu ${this.code(card)} (${card.amount.toLocaleString('sr-RS')} din.)? Kod više neće moći da se koristi. Novac kupcu vraćaš posebno.`,
+      message: `Poništiti karticu ${this.code(card)} (${formatRsd(card.amount)})? Kod više neće moći da se koristi. Novac kupcu vraćaš posebno.`,
       confirmLabel: 'Poništi',
       cancelLabel: 'Ne',
     });

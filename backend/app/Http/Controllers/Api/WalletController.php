@@ -15,16 +15,16 @@ use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
 {
-    public function __construct(private WalletService $wallet) {}
+    public function __construct(private readonly WalletService $wallet) {}
 
-    public function show(User $client)
+    public function show(User $client): array
     {
         abort_unless($client->role === UserRole::Client, 404);
 
         return $this->wallet->summary($client);
     }
 
-    public function deposit(Request $request, User $client)
+    public function deposit(Request $request, User $client): array
     {
         abort_unless($client->role === UserRole::Client, 404);
         $data = $request->validate([
@@ -38,7 +38,7 @@ class WalletController extends Controller
         return $this->wallet->summary($client);
     }
 
-    public function adjust(Request $request, User $client)
+    public function adjust(Request $request, User $client): array
     {
         abort_unless($client->role === UserRole::Client, 404);
         $data = $request->validate([
@@ -51,7 +51,7 @@ class WalletController extends Controller
         return $this->wallet->summary($client);
     }
 
-    public function claim(Request $request, User $client)
+    public function claim(Request $request, User $client): array
     {
         abort_unless($client->role === UserRole::Client, 404);
         $data = $request->validate(['code' => ['required', 'string', 'max:30']]);
@@ -61,12 +61,12 @@ class WalletController extends Controller
         return $this->wallet->summary($client);
     }
 
-    public function mine(Request $request)
+    public function mine(Request $request): array
     {
         return $this->wallet->summary($request->user());
     }
 
-    public function claimMine(Request $request)
+    public function claimMine(Request $request): array
     {
         $data = $request->validate(['code' => ['required', 'string', 'max:30']]);
 
@@ -75,7 +75,7 @@ class WalletController extends Controller
         return $this->wallet->summary($request->user());
     }
 
-    public function payMine(Request $request, Appointment $appointment, PaymentLedger $ledger)
+    public function payMine(Request $request, Appointment $appointment, PaymentLedger $ledger): array
     {
         $client = $request->user();
         abort_unless($appointment->client_id === $client->id, 404);

@@ -35,7 +35,6 @@ export interface AppointmentPrefill {
 
 @Component({
   selector: 'app-appointment-form',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, InputDirective, ModalComponent, SelectSearchComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './appointment-form.component.html',
 })

@@ -9,7 +9,6 @@ const openModals: ModalComponent[] = [];
 
 @Component({
   selector: 'app-modal',
-  standalone: true,
   imports: [ButtonDirective, IconDirective],
   templateUrl: './modal.component.html',
   host: {

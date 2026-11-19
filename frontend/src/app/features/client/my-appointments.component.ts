@@ -24,10 +24,10 @@ import { RescheduleComponent } from './reschedule.component';
 import { ReviewFormComponent } from './review-form.component';
 import { RealtimeService } from '../../core/services/realtime.service';
 import { ChatService } from '../../core/services/chat.service';
+import { formatRsd } from '../../core/utils/format';
 
 @Component({
   selector: 'app-my-appointments',
-  standalone: true,
   imports: [RouterLink, ButtonDirective, ClientPayDialogComponent, ErrorMessageComponent, IconDirective, MonthCalendarComponent, LateCancelDialogComponent, ModalComponent, PaymentDialogComponent, RescheduleComponent, ReviewFormComponent, RsdPipe, StarsComponent],
   templateUrl: './my-appointments.component.html',
 })
@@ -318,7 +318,7 @@ export class MyAppointmentsComponent {
       next: (res) => {
         const fee = res.cancellation_fee;
         const done = res.cancelled_ids.length > 1 ? 'Termini su otkazani.' : 'Termin je otkazan.';
-        this.toast.success(fee && fee.amount > 0 ? `${done} Naknada od ${fee.amount.toLocaleString('sr-RS')} din. plaća se pri sledećem dolasku.` : done);
+        this.toast.success(fee && fee.amount > 0 ? `${done} Naknada od ${formatRsd(fee.amount)} plaća se pri sledećem dolasku.` : done);
         this.load();
         this.loadFeeStatus();
         if (this.mode() === 'calendar') this.loadAll();

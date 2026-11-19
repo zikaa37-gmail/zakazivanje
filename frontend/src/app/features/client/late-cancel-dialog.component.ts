@@ -5,7 +5,6 @@ import { RsdPipe } from '../../shared/pipes/rsd.pipe';
 
 @Component({
   selector: 'app-late-cancel-dialog',
-  standalone: true,
   imports: [ModalComponent, RsdPipe],
   template: `
     <app-modal

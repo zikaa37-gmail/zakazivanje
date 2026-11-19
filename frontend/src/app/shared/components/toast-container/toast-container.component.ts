@@ -13,7 +13,6 @@ const ICON_BY_TYPE: Record<ToastType, IconName> = {
 
 @Component({
   selector: 'app-toast-container',
-  standalone: true,
   imports: [IconDirective],
   templateUrl: './toast-container.component.html',
   styleUrl: './toast-container.component.scss',
