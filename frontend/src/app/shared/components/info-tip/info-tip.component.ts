@@ -3,7 +3,6 @@ import { IconDirective } from '../../directives/icon.directive';
 
 @Component({
   selector: 'app-info-tip',
-  standalone: true,
   imports: [IconDirective],
   host: {
     class: 'info-tip',

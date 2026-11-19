@@ -12,7 +12,6 @@ export interface RowAction {
 
 @Component({
   selector: 'app-row-actions',
-  standalone: true,
   imports: [IconDirective],
   templateUrl: './row-actions.component.html',
   styleUrl: './row-actions.component.scss',

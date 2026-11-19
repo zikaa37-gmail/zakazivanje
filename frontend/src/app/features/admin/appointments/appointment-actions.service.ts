@@ -12,6 +12,7 @@ import { contactActions, openContact } from '../../../core/utils/contact';
 import { timeOf } from '../../../core/utils/dates';
 import { RowAction } from '../../../shared/components/row-actions/row-actions.component';
 import { clientName } from '../../../core/utils/client-name';
+import { formatRsd } from '../../../core/utils/format';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentActionsService {
@@ -44,7 +45,7 @@ export class AppointmentActionsService {
     try {
       const preview = await firstValueFrom(this.fees.previewForSalon(a.id));
       if (!preview.late) return '';
-      if (!preview.free) return ` Kasno je — upisuje se naknada od ${preview.amount!.toLocaleString('sr-RS')} din.`;
+      if (!preview.free) return ` Kasno je — upisuje se naknada od ${formatRsd(preview.amount)}`;
       return preview.free_left_after === null
         ? ' Kasno je, ali je klijent oslobođen naknade.'
         : ` Kasno je, bez naplate (posle ovog klijentu ostaje još ${preview.free_left_after} bez naplate).`;

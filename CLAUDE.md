@@ -62,6 +62,11 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
   `@HostListener`. Nema `@NgModule`-a — sve je standalone.
 - Serovane form komponente iz `shared/` ne implementiraju `ControlValueAccessor`; primaju
   reaktivni `FormControl` kao ulaz (`readonly control = input.required<FormControl<T>>();`).
+- Podaci za prikaz se učitavaju preko `rxResource` (`params` / `stream`, `hasValue()` pre `value()`), vrednosti forme u signal preko `toSignal`,
+  stanje koje se vraća na početno pri promeni izvora preko `linkedSignal`; `standalone: true` se ne piše (podrazumevano).
+- Backend: zatvoreni skupovi vrednosti su tipizirane konstante (`public const string STATUS_X`, liste `public const array`), ne enum-i —
+  izuzetak je `UserRole`. Izvedena polja modela preko `Attribute::get()`, zavisnosti kroz konstruktor (`private readonly`), ne `app()`;
+  pretraga sa `like` ide kroz `App\Support\Like::contains()`.
 - Nema getter/setter TS property-a — `computed()` za izvedene vrednosti, eksplicitna metoda ili
   `.set()`/`.update()` na signalu za promenu.
 - Mobile-first: većina klijenata zakazuje sa telefona. Svaka stranica se prvo pravi za uzak ekran,
@@ -87,7 +92,7 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Globalne klase: `.card`, `.field`/`.field-error`, `.form-error-banner`, `.badge*`, `.data-table`,
   `.avatar*`, `.empty-state`, `.auth-page`/`.auth-card`, `.content-container`.
 - Format prikaza: datum `dd.mm.yyyy` (`SrDatePipe`), datum i vreme `SrDateTimePipe`, vreme `HH:mm`
-  (24h), novac `1.500 din.` (`RsdPipe`). Ne formatirati ručno.
+  (24h), novac `1.500 din.` (`RsdPipe`). Ne formatirati ručno — u TS-u (toast, potvrda, štampa) `formatRsd()` / `formatSrDate()` iz `core/utils/format.ts`.
 - Greške sa API-ja u poruku: `apiErrorMessage()` (`core/utils/api-error.ts`).
 - Stanje učitavanja: svaka lista ima svoj `loading` signal; dok traje učitavanje prikazuje se samo
   globalni loader, nikad „Nema …" tekst. Šablon: `@if (loading() && items().length === 0) {} @else

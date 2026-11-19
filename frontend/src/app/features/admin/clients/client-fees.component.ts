@@ -10,12 +10,12 @@ import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
 import { RsdPipe } from '../../../shared/pipes/rsd.pipe';
 import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
+import { formatRsd } from '../../../core/utils/format';
 
 type EditMode = 'waive' | 'adjust';
 
 @Component({
   selector: 'app-client-fees',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonDirective, InputDirective, RsdPipe, SrDateTimePipe],
   template: `
     @if (visible().length > 0) {
@@ -93,7 +93,7 @@ export class ClientFeesComponent implements OnInit {
   );
   readonly title = computed(() => {
     const open = this.fees().filter((f) => f.status === 'open').reduce((sum, f) => sum + f.amount, 0);
-    return open > 0 ? `Naknade za kasno otkazivanje · duguje ${open.toLocaleString('sr-RS')} din.` : 'Naknade za kasno otkazivanje';
+    return open > 0 ? `Naknade za kasno otkazivanje · duguje ${formatRsd(open)}` : 'Naknade za kasno otkazivanje';
   });
 
   ngOnInit(): void {

@@ -13,7 +13,9 @@ use Illuminate\Validation\ValidationException;
 
 class WalletService
 {
-    private const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    private const string CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    public function __construct(private readonly Inbox $inbox) {}
 
     public function balance(User $client): float
     {
@@ -100,7 +102,7 @@ class WalletService
             'sold_by' => $by?->id,
         ]);
         if ($card->owner) {
-            app(Inbox::class)->deliver([$card->owner], new GiftCardReceivedNotification($card));
+            $this->inbox->deliver([$card->owner], new GiftCardReceivedNotification($card));
         }
 
         return $card;

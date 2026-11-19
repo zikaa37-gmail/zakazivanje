@@ -19,7 +19,6 @@ import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 
 @Component({
   selector: 'app-notes',
-  standalone: true,
   imports: [InfoTipComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, SrDateTimePipe],
   templateUrl: './notes.component.html',
   styleUrl: './notes.component.scss',

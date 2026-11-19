@@ -5,7 +5,6 @@ const LABELS = ['', 'Loše', 'Može bolje', 'Dobro', 'Vrlo dobro', 'Odlično'];
 
 @Component({
   selector: 'app-star-input',
-  standalone: true,
   template: `
     <div class="star-input" role="radiogroup" aria-label="Ocena" (mouseleave)="hover.set(null)">
       @for (n of options; track n) {

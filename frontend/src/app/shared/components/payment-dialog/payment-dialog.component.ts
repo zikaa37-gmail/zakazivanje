@@ -12,7 +12,6 @@ import { ModalComponent } from '../modal/modal.component';
 
 @Component({
   selector: 'app-payment-dialog',
-  standalone: true,
   imports: [ButtonDirective, ErrorMessageComponent, IconDirective, ModalComponent, RsdPipe, SrDateTimePipe],
   templateUrl: './payment-dialog.component.html',
   styleUrl: './payment-dialog.component.scss',

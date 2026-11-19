@@ -15,7 +15,6 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-category-list',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
   templateUrl: './category-list.component.html',
 })

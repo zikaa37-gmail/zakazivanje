@@ -11,7 +11,7 @@ export class WalletService {
   private api = environment.apiUrl;
 
   forClient(clientId: number): Observable<Wallet> {
-    return this.http.post<Wallet>(`${this.api}/clients/${clientId}/wallet`, {});
+    return this.http.get<Wallet>(`${this.api}/clients/${clientId}/wallet`);
   }
 
   deposit(clientId: number, amount: number, paymentMethod: PaymentMethod, note: string | null): Observable<Wallet> {

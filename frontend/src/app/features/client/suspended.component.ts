@@ -7,7 +7,6 @@ import { ButtonDirective } from '../../shared/directives/button.directive';
 
 @Component({
   selector: 'app-suspended',
-  standalone: true,
   imports: [ButtonDirective, IconDirective],
   templateUrl: './suspended.component.html',
 })

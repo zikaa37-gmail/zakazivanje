@@ -5,7 +5,6 @@ import { ButtonDirective } from '../../directives/button.directive';
 
 @Component({
   selector: 'app-confirm-dialog',
-  standalone: true,
   imports: [ButtonDirective],
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.scss',

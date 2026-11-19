@@ -5,7 +5,6 @@ import { SrDatePipe } from '../../pipes/sr-date.pipe';
 
 @Component({
   selector: 'app-chat-thread',
-  standalone: true,
   imports: [IconDirective, SrDatePipe],
   templateUrl: './chat-thread.component.html',
   styleUrl: './chat-thread.component.scss',

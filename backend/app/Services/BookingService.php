@@ -21,6 +21,7 @@ class BookingService
         private AvailabilityService $availability,
         private PriceQuoteService $quotes,
         private ClientDisciplineService $discipline,
+        private PaymentLedger $ledger,
     ) {}
 
     public function book(
@@ -238,7 +239,7 @@ class BookingService
 
     public function cancel(Appointment $appointment, string $by): Appointment
     {
-        app(PaymentLedger::class)->refundPrepaid($appointment->loadMissing('client'), null);
+        $this->ledger->refundPrepaid($appointment->loadMissing('client'), null);
         $appointment->update([
             'status' => Appointment::STATUS_CANCELLED,
             'cancelled_at' => now(),

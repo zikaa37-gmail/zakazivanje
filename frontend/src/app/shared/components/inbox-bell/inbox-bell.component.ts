@@ -8,7 +8,6 @@ import { SrDateTimePipe } from '../../pipes/sr-date-time.pipe';
 
 @Component({
   selector: 'app-inbox-bell',
-  standalone: true,
   imports: [IconDirective, SrDateTimePipe],
   templateUrl: './inbox-bell.component.html',
   styleUrl: './inbox-bell.component.scss',

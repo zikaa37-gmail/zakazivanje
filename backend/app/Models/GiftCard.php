@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,19 +12,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['code', 'kind', 'card_number', 'amount', 'balance', 'buyer_name', 'recipient_name', 'owner_id', 'note', 'payment_method', 'expires_on', 'sold_by', 'cancelled_at'])]
 class GiftCard extends Model
 {
-    public const KIND_DIGITAL = 'digital';
+    public const string KIND_DIGITAL = 'digital';
 
-    public const KIND_PHYSICAL = 'physical';
+    public const string KIND_PHYSICAL = 'physical';
 
-    public const STATUS_ACTIVE = 'active';
+    public const string STATUS_ACTIVE = 'active';
 
-    public const STATUS_USED = 'used';
+    public const string STATUS_USED = 'used';
 
-    public const STATUS_EXPIRED = 'expired';
+    public const string STATUS_EXPIRED = 'expired';
 
-    public const STATUS_CANCELLED = 'cancelled';
+    public const string STATUS_CANCELLED = 'cancelled';
 
-    public const STATUSES = [self::STATUS_ACTIVE, self::STATUS_USED, self::STATUS_EXPIRED, self::STATUS_CANCELLED];
+    public const array KINDS = [self::KIND_DIGITAL, self::KIND_PHYSICAL];
+
+    public const array STATUSES = [self::STATUS_ACTIVE, self::STATUS_USED, self::STATUS_EXPIRED, self::STATUS_CANCELLED];
 
     protected $appends = ['status'];
 
@@ -37,19 +40,14 @@ class GiftCard extends Model
         ];
     }
 
-    public function getStatusAttribute(): string
+    protected function status(): Attribute
     {
-        if ($this->cancelled_at) {
-            return self::STATUS_CANCELLED;
-        }
-        if ($this->balance <= 0) {
-            return self::STATUS_USED;
-        }
-        if ($this->expires_on && $this->expires_on->endOfDay()->isPast()) {
-            return self::STATUS_EXPIRED;
-        }
-
-        return self::STATUS_ACTIVE;
+        return Attribute::get(fn (): string => match (true) {
+            $this->cancelled_at !== null => self::STATUS_CANCELLED,
+            $this->balance <= 0 => self::STATUS_USED,
+            $this->expires_on !== null && $this->expires_on->endOfDay()->isPast() => self::STATUS_EXPIRED,
+            default => self::STATUS_ACTIVE,
+        });
     }
 
     public function scopeStatus(Builder $query, string $status): Builder
@@ -81,7 +79,7 @@ class GiftCard extends Model
 
     public static function normalize(string $code): string
     {
-        return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        return strtoupper((string) preg_replace('/[^A-Za-z0-9]/', '', $code));
     }
 
     public function formattedCode(): string

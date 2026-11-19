@@ -24,7 +24,6 @@ interface NavItem {
 
 @Component({
   selector: 'app-admin-shell',
-  standalone: true,
   imports: [RouterOutlet, RouterLink, IconDirective, InboxBellComponent, CompleteDialogComponent],
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',

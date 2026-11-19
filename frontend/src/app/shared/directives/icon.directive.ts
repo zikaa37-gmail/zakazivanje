@@ -98,7 +98,6 @@ export type IconName = (typeof ICON_NAMES)[number];
 
 @Directive({
   selector: '[appIcon]',
-  standalone: true,
 })
 export class IconDirective {
   readonly name = input.required<IconName>({ alias: 'appIcon' });

@@ -31,7 +31,6 @@ import { clientName } from '../../../core/utils/client-name';
 
 @Component({
   selector: 'app-appointment-details',
-  standalone: true,
   imports: [ClientNicknameComponent, ReactiveFormsModule, ButtonComponent, ClientFeesComponent, ButtonDirective, IconDirective, InputDirective, ModalComponent, PaymentDialogComponent, RsdPipe, SpinnerComponent, SrDateTimePipe, TimePickerComponent],
   templateUrl: './appointment-details.component.html',
 })

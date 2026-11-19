@@ -43,7 +43,6 @@ const REASONS: Record<string, string> = {
 
 @Component({
   selector: 'app-client-history',
-  standalone: true,
   imports: [ClientNamePipe, ClientNicknameComponent, ClientWalletComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ClientFeesComponent, ErrorMessageComponent, InputDirective, ModalComponent, SrDatePipe, SrDateTimePipe],
   templateUrl: './client-history.component.html',
 })

@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { PAYMENT_LABELS, PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
-import { GIFT_CARD_STATUS, WALLET_KIND_LABELS, Wallet, WalletEntry, formatGiftCode } from '../../../core/models/wallet.model';
+import { GIFT_CARD_STATUS, WALLET_KIND_LABELS, WalletEntry, formatGiftCode } from '../../../core/models/wallet.model';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { SrDatePipe } from '../../../shared/pipes/sr-date.pipe';
 import { AuthService } from '../../../core/services/auth.service';
@@ -17,14 +18,13 @@ type Mode = 'deposit' | 'gift' | 'adjust';
 
 @Component({
   selector: 'app-client-wallet',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonDirective, IconDirective, InputDirective, RsdPipe, SrDatePipe, SrDateTimePipe],
   template: `
     <div class="rounded-lg border border-[var(--color-border)] p-3 flex flex-col gap-3" data-testid="client-wallet">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div class="text-sm font-semibold">Stanje (uplate unapred)</div>
-          <div class="text-xl font-bold" data-testid="wallet-balance">{{ wallet()?.balance ?? 0 | rsd }}</div>
+          <div class="text-xl font-bold" data-testid="wallet-balance">{{ balance() | rsd }}</div>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" appBtn theme="secondary" size="s" (click)="open('deposit')" data-testid="wallet-deposit">Uplata unapred</button>
@@ -91,15 +91,15 @@ type Mode = 'deposit' | 'gift' | 'adjust';
     </div>
   `,
 })
-export class ClientWalletComponent implements OnInit {
+export class ClientWalletComponent {
   private walletService = inject(WalletService);
   private toast = inject(ToastService);
   private auth = inject(AuthService);
 
   readonly clientId = input.required<number>();
 
-  readonly methods = PAYMENT_METHODS.filter((m) => m.value !== 'wallet');
-  readonly wallet = signal<Wallet | null>(null);
+  readonly methods = PAYMENT_METHODS.filter((m) => m.value !== 'wallet' && m.value !== 'gift_card');
+  readonly wallet = rxResource({ params: () => this.clientId(), stream: ({ params }) => this.walletService.forClient(params) });
   readonly mode = signal<Mode | null>(null);
   readonly method = signal<PaymentMethod | null>(null);
   readonly saving = signal(false);
@@ -109,14 +109,11 @@ export class ClientWalletComponent implements OnInit {
   readonly codeInput = new FormControl('', { nonNullable: true });
   readonly isManager = this.auth.isManager;
   readonly statusInfo = GIFT_CARD_STATUS;
-  readonly cards = computed(() => this.wallet()?.gift_cards ?? []);
-  readonly entries = computed(() => this.wallet()?.entries ?? []);
+  readonly balance = computed(() => (this.wallet.hasValue() ? this.wallet.value().balance : 0));
+  readonly cards = computed(() => (this.wallet.hasValue() ? this.wallet.value().gift_cards : []));
+  readonly entries = computed(() => (this.wallet.hasValue() ? this.wallet.value().entries : []));
   readonly code = formatGiftCode;
   readonly shown = computed(() => (this.showAll() ? this.entries() : this.entries().slice(0, 5)));
-
-  ngOnInit(): void {
-    this.walletService.forClient(this.clientId()).subscribe({ next: (w) => this.wallet.set(w), error: () => this.wallet.set({ balance: 0, gift_cards: [], entries: [] }) });
-  }
 
   kindLabel(e: WalletEntry): string {
     return WALLET_KIND_LABELS[e.kind];

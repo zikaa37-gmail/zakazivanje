@@ -8,7 +8,6 @@ import { MonthCalendarComponent, MonthCalendarItem } from '../month-calendar/mon
 
 @Component({
   selector: 'app-date-picker-dialog',
-  standalone: true,
   imports: [ButtonDirective, IconDirective, ModalComponent, MonthCalendarComponent],
   templateUrl: './date-picker-dialog.component.html',
 })

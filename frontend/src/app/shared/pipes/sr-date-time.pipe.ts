@@ -2,7 +2,6 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'srDateTime',
-  standalone: true,
 })
 export class SrDateTimePipe implements PipeTransform {
   transform(value: string | null | undefined): string {

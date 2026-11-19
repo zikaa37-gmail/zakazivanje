@@ -1,10 +1,12 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { GIFT_CARD_STATUS, WALLET_KIND_LABELS, Wallet, formatGiftCode } from '../../core/models/wallet.model';
+import { GIFT_CARD_STATUS, WALLET_KIND_LABELS, formatGiftCode } from '../../core/models/wallet.model';
 import { ToastService } from '../../core/services/toast.service';
 import { WalletService } from '../../core/services/wallet.service';
 import { apiErrorMessage } from '../../core/utils/api-error';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 import { IconDirective } from '../../shared/directives/icon.directive';
 import { InputDirective } from '../../shared/directives/input.directive';
 import { RsdPipe } from '../../shared/pipes/rsd.pipe';
@@ -12,11 +14,11 @@ import { SrDatePipe } from '../../shared/pipes/sr-date.pipe';
 
 @Component({
   selector: 'app-my-wallet',
-  standalone: true,
-  imports: [ReactiveFormsModule, ButtonComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
+  imports: [ReactiveFormsModule, ButtonComponent, ErrorMessageComponent, IconDirective, InputDirective, RsdPipe, SrDatePipe],
   template: `
     <div class="card flex flex-col gap-3" data-testid="my-wallet">
       <h2 class="text-base font-semibold">Poklon kartice i stanje</h2>
+      <app-error-message [message]="loadError()" />
 
       @if (cards().length > 0) {
         <div class="flex flex-col gap-2" data-testid="my-gift-cards">
@@ -38,10 +40,10 @@ import { SrDatePipe } from '../../shared/pipes/sr-date.pipe';
         </div>
       }
 
-      @if ((wallet()?.balance ?? 0) > 0) {
+      @if (balance() > 0) {
         <div class="flex items-center justify-between text-sm" data-testid="my-wallet-balance-row">
           <span>Uplaćeno unapred</span>
-          <span class="font-bold" data-testid="my-wallet-balance">{{ wallet()!.balance | rsd }}</span>
+          <span class="font-bold" data-testid="my-wallet-balance">{{ balance() | rsd }}</span>
         </div>
       }
 
@@ -54,9 +56,9 @@ import { SrDatePipe } from '../../shared/pipes/sr-date.pipe';
         <span class="text-xs muted">Kartica se dodaje na tvoj nalog — vidiš koliko je ostalo i plaćaš njome u „Moji termini“ ili u salonu, ne moraš da je nosiš.</span>
       </form>
 
-      @if (wallet()?.entries?.length) {
+      @if (recent().length > 0) {
         <div class="flex flex-col text-sm">
-          @for (e of wallet()!.entries.slice(0, 5); track e.id) {
+          @for (e of recent(); track e.id) {
             <div class="flex justify-between gap-3 py-1.5 border-t border-[var(--color-border)]">
               <span>{{ labels[e.kind] }} <span class="muted">· {{ e.created_at | srDate }}</span></span>
               <span class="font-semibold">{{ e.amount > 0 ? '+' : '' }}{{ e.amount | rsd }}</span>
@@ -78,21 +80,20 @@ import { SrDatePipe } from '../../shared/pipes/sr-date.pipe';
     }
   `,
 })
-export class MyWalletComponent implements OnInit {
+export class MyWalletComponent {
   private walletService = inject(WalletService);
   private toast = inject(ToastService);
 
   readonly labels = WALLET_KIND_LABELS;
   readonly statusInfo = GIFT_CARD_STATUS;
   readonly code = formatGiftCode;
-  readonly wallet = signal<Wallet | null>(null);
-  readonly cards = computed(() => this.wallet()?.gift_cards ?? []);
+  readonly wallet = rxResource({ stream: () => this.walletService.mine() });
+  readonly balance = computed(() => (this.wallet.hasValue() ? this.wallet.value().balance : 0));
+  readonly cards = computed(() => (this.wallet.hasValue() ? this.wallet.value().gift_cards : []));
+  readonly recent = computed(() => (this.wallet.hasValue() ? this.wallet.value().entries.slice(0, 5) : []));
+  readonly loadError = computed(() => (this.wallet.error() ? apiErrorMessage(this.wallet.error(), 'Stanje trenutno nije dostupno.') : null));
   readonly saving = signal(false);
   readonly codeInput = new FormControl('', { nonNullable: true });
-
-  ngOnInit(): void {
-    this.walletService.mine().subscribe({ next: (w) => this.wallet.set(w), error: () => undefined });
-  }
 
   claim(): void {
     const code = this.codeInput.value.trim();

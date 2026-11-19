@@ -10,7 +10,6 @@ import { ErrorMessageComponent } from '../error-message/error-message.component'
 
 @Component({
   selector: 'app-change-password',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ErrorMessageComponent, IconDirective, InputDirective],
   templateUrl: './change-password.component.html',
 })

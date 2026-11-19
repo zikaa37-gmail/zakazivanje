@@ -9,7 +9,6 @@ import { AppointmentActionsService } from './appointment-actions.service';
 
 @Component({
   selector: 'app-affected-appointments',
-  standalone: true,
   imports: [ButtonDirective, ClientNamePipe, IconDirective],
   template: `
     <div class="flex flex-col gap-2" data-testid="absence-affected">

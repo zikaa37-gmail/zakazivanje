@@ -35,7 +35,6 @@ const PERIODS: { value: Period; label: string }[] = [
 
 @Component({
   selector: 'app-appointment-list',
-  standalone: true,
   imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, AccordionComponent, AppointmentFormComponent, ButtonDirective, DatePickerDialogComponent, ErrorMessageComponent, IconDirective, InputDirective, RowActionsComponent, RsdPipe],
   templateUrl: './appointment-list.component.html',
 })

@@ -10,7 +10,6 @@ import { InputDirective } from '../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-verify-email',
-  standalone: true,
   imports: [ReactiveFormsModule, RouterLink, ButtonComponent, IconDirective, InputDirective],
   template: `
     <div class="auth-page">

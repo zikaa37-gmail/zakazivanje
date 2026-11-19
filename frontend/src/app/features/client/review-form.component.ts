@@ -13,7 +13,6 @@ import { InputDirective } from '../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-review-form',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ErrorMessageComponent, InputDirective, ModalComponent, StarInputComponent],
   template: `
     <app-modal title="Kako je bilo?" footerMode="custom" (cancelled)="closed.emit()" testId="review-modal">

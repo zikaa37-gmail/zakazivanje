@@ -17,7 +17,6 @@ interface NavItem {
 
 @Component({
   selector: 'app-public-shell',
-  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconDirective, SocialLinksComponent, InboxBellComponent, ChatWidgetComponent],
   templateUrl: './public-shell.component.html',
   styleUrl: './public-shell.component.scss',

@@ -9,7 +9,6 @@ import { InputDirective } from '../../directives/input.directive';
 
 @Component({
   selector: 'app-client-nickname',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonDirective, IconDirective, InputDirective],
   template: `
     @if (editing()) {

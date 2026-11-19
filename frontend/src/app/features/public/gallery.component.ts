@@ -13,7 +13,6 @@ const SALON_FILTER = '__salon';
 
 @Component({
   selector: 'app-gallery',
-  standalone: true,
   imports: [InfoTipComponent, RouterLink, ErrorMessageComponent, GalleryViewerComponent],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss',

@@ -8,7 +8,6 @@ const SPINNER_SIZE: Record<ButtonSize, number> = { s: 12, m: 16, l: 18 };
 
 @Component({
   selector: 'app-button',
-  standalone: true,
   imports: [SpinnerComponent],
   templateUrl: './button.component.html',
 })

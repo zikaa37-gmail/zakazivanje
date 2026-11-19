@@ -177,7 +177,7 @@ class AppointmentController extends Controller
         return $appointment;
     }
 
-    public function complete(Request $request, Appointment $appointment, PaymentLedger $ledger)
+    public function complete(Request $request, Appointment $appointment, PaymentLedger $ledger, WalletService $wallet)
     {
         $data = $request->validate([
             'service_outcome' => ['required', Rule::in(Appointment::OUTCOMES)],
@@ -213,7 +213,7 @@ class AppointmentController extends Controller
         $previous = $appointment->status;
         $owedBefore = $appointment->outstanding();
         $paidBefore = $appointment->paidAmount();
-        $card = filled($data['gift_card_code'] ?? null) ? app(WalletService::class)->findGiftCard($data['gift_card_code']) : null;
+        $card = filled($data['gift_card_code'] ?? null) ? $wallet->findGiftCard($data['gift_card_code']) : null;
         DB::transaction(function () use ($appointment, $ledger, $paid, $due, $data, $user, $paidBefore, $card) {
             $ledger->settle($appointment->loadMissing('client'), $paid, $data['payment_method'] ?? null, $user, $card);
             $appointment->update([

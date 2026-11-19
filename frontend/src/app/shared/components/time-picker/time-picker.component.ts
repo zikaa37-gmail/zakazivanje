@@ -9,7 +9,6 @@ const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
 
 @Component({
   selector: 'app-time-picker',
-  standalone: true,
   imports: [IconDirective],
   templateUrl: './time-picker.component.html',
   styleUrl: './time-picker.component.scss',

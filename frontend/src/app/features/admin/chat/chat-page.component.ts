@@ -28,7 +28,6 @@ interface Draft {
 
 @Component({
   selector: 'app-chat-page',
-  standalone: true,
   imports: [InfoTipComponent, InputDirective, ReactiveFormsModule, ClientNamePipe, ButtonDirective, ChatThreadComponent, ErrorMessageComponent, IconDirective, SelectSearchComponent, SrDatePipe],
   templateUrl: './chat-page.component.html',
   styleUrl: './chat-page.component.scss',

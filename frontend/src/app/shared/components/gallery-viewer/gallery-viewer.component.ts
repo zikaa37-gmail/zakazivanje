@@ -5,7 +5,6 @@ import { IconDirective } from '../../directives/icon.directive';
 
 @Component({
   selector: 'app-gallery-viewer',
-  standalone: true,
   imports: [ButtonDirective, IconDirective],
   templateUrl: './gallery-viewer.component.html',
   styleUrl: './gallery-viewer.component.scss',

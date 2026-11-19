@@ -5,7 +5,6 @@ import { IconDirective } from '../../directives/icon.directive';
 
 @Component({
   selector: 'app-social-links',
-  standalone: true,
   imports: [IconDirective],
   template: `
     @if (links().length > 0) {

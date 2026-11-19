@@ -34,7 +34,6 @@ interface CategoryRow {
 
 @Component({
   selector: 'app-service-suggestions',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent],
   templateUrl: './service-suggestions.component.html',
 })

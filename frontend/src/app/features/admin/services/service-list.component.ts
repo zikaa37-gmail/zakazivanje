@@ -36,7 +36,6 @@ const NEW_CATEGORY = -1;
 
 @Component({
   selector: 'app-service-list',
-  standalone: true,
   imports: [ReactiveFormsModule, ButtonComponent, CategoryListComponent, ServiceSuggestionsComponent, ButtonDirective, DataListComponent, DataRowComponent, DurationPipe, ErrorMessageComponent, IconDirective, InfoTipComponent, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
   templateUrl: './service-list.component.html',
 })

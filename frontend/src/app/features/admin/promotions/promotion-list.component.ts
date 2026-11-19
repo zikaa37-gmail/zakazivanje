@@ -32,7 +32,6 @@ const TYPE_ICONS: Record<PromotionType, IconName> = {
 
 @Component({
   selector: 'app-promotion-list',
-  standalone: true,
   imports: [InfoTipComponent, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, RsdPipe, SrDatePipe, ToggleComponent],
   templateUrl: './promotion-list.component.html',
 })

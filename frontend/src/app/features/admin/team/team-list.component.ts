@@ -22,7 +22,6 @@ import { TeamTabsComponent } from '../staff/team-tabs.component';
 
 @Component({
   selector: 'app-team-list',
-  standalone: true,
   imports: [InfoTipComponent, TeamTabsComponent, ReactiveFormsModule, RouterLink, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, SrDateTimePipe, ToggleComponent],
   templateUrl: './team-list.component.html',
 })

@@ -32,7 +32,6 @@ import { clientName } from '../../../core/utils/client-name';
 
 @Component({
   selector: 'app-client-list',
-  standalone: true,
   imports: [InfoTipComponent, ClientNamePipe, ReactiveFormsModule, ClientHistoryComponent, ButtonComponent, ButtonDirective, DataListComponent, DataRowComponent, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent],
   templateUrl: './client-list.component.html',
 })

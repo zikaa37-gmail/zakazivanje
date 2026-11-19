@@ -91,7 +91,7 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/appointments/pending-count` | broj budućih termina na čekanju |
 | POST | `/appointments` | salon zakazuje: `{client_id, service_ids, staff_member_id, starts_at, note?, admin_note?, recurrence?: {interval_weeks 1–4, count? \| ends_on?}}` → `{appointments, skipped}` |
 | POST | `/appointments/{id}/status` | `pending`, `confirmed`, `completed`, `cancelled`, `no_show` |
-| POST | `/clients/{id}/wallet` | stanje klijenta i promene (`balance`, `entries`) |
+| GET | `/clients/{id}/wallet` | stanje klijenta i promene (`balance`, `entries`) |
 | POST | `/clients/{id}/wallet/deposit` | uplata unapred: `amount`, `payment_method`, `note` |
 | POST | `/clients/{id}/wallet/claim` | poklon karticu (kod) dodaje na nalog klijenta |
 | POST | `/clients/{id}/wallet/adjust` | menadžer: ispravka `amount` (±), `note` |

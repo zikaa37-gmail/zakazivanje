@@ -64,7 +64,6 @@ function readChartsPreference(): boolean {
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
   imports: [InfoTipComponent, ClientNamePipe, RouterLink, AppointmentDetailsComponent, ButtonDirective, ColumnChartComponent, ErrorMessageComponent, IconDirective, RsdPipe, ToggleComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',

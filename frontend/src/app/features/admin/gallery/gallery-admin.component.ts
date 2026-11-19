@@ -23,7 +23,6 @@ import { InputDirective } from '../../../shared/directives/input.directive';
 
 @Component({
   selector: 'app-gallery-admin',
-  standalone: true,
   imports: [InfoTipComponent, CdkDrag, CdkDropList, ReactiveFormsModule, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, ToggleComponent],
   templateUrl: './gallery-admin.component.html',
   styleUrl: './gallery-admin.component.scss',
