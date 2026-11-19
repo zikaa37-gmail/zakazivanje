@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,6 +50,18 @@ class GiftCard extends Model
         }
 
         return self::STATUS_ACTIVE;
+    }
+
+    public function scopeStatus(Builder $query, string $status): Builder
+    {
+        $today = now()->toDateString();
+
+        return match ($status) {
+            self::STATUS_CANCELLED => $query->whereNotNull('cancelled_at'),
+            self::STATUS_USED => $query->whereNull('cancelled_at')->where('balance', '<=', 0),
+            self::STATUS_EXPIRED => $query->whereNull('cancelled_at')->where('balance', '>', 0)->where('expires_on', '<', $today),
+            default => $query->whereNull('cancelled_at')->where('balance', '>', 0)->where(fn ($q) => $q->whereNull('expires_on')->orWhere('expires_on', '>=', $today)),
+        };
     }
 
     public function seller(): BelongsTo

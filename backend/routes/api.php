@@ -254,7 +254,8 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/gift-cards/{giftCard}/cancel', [GiftCardController::class, 'cancel']);
     Route::post('/clients/{client}/activity', [ClientController::class, 'activity']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
-    Route::post('/clients/{client}/delete-check', [ClientController::class, 'deleteCheck']);
+    Route::post('/clients/{client}/active', [ClientController::class, 'setActive']);
+    Route::get('/clients/{client}/deactivate-check', [ClientController::class, 'deactivateCheck']);
     Route::put('/clients/{client}/zone', [ClientController::class, 'zone']);
 
     Route::post('/notification-logs/list', [NotificationController::class, 'logs']);

@@ -1,6 +1,6 @@
 <div class="page-header">
   <div>
-    <div class="page-title-row"><h1 class="page-title">Klijenti</h1>@if (!loading()) {<span class="page-count">{{ total() }}</span>}<app-info-tip heading="Klijenti"><p>Svi klijenti salona, i oni bez naloga (zakazani telefonom). Broj pored naslova je koliko ih je.</p><p class="mt-2">Pretraga radi po imenu, nadimku, telefonu i emailu. Meni „⋮": istorijat i zona, izmena, poruka, poziv / WhatsApp / Viber.</p></app-info-tip></div>
+    <div class="page-title-row"><h1 class="page-title">Klijenti</h1>@if (!loading()) {<span class="page-count">{{ total() }}</span>}<app-info-tip heading="Klijenti"><p>Svi klijenti salona, i oni bez naloga (zakazani telefonom). Broj pored naslova je koliko ih je.</p><p class="mt-2">Pretraga radi po imenu, nadimku, telefonu i emailu. Meni „⋮": istorijat i zona, izmena, poruka, poziv / WhatsApp / Viber.</p><p class="mt-2">Klijent se ne briše nego deaktivira: ne može da se prijavi ni da zakazuje, a istorija, uplate i kartice ostaju. Vidi se pod „Neaktivni“ i može ponovo da se aktivira.</p></app-info-tip></div>
   </div>
   <button type="button" appBtn size="s" (click)="openForm()" data-testid="client-add">
     <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Novi klijent</span>
@@ -12,24 +12,27 @@
   <span appIcon="search" class="absolute left-3 top-1/2 -translate-y-1/2 muted" aria-hidden="true"></span>
 </div>
 
-<div class="chip-scroll mb-4" role="radiogroup" aria-label="Zona" data-testid="client-zone-filter">
-  <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === null" [attr.aria-checked]="zoneFilter() === null" (click)="filterZone(null)">Svi</button>
-  @for (z of zones; track z.value) {
-    <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === z.value" [attr.aria-checked]="zoneFilter() === z.value" (click)="filterZone(z.value)" [attr.data-testid]="'client-zone-filter-' + z.value">{{ z.label }}</button>
-  }
+<div class="chip-scroll mb-4">
+  <div class="contents" role="radiogroup" aria-label="Zona" data-testid="client-zone-filter">
+    <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === null" [attr.aria-checked]="zoneFilter() === null" (click)="filterZone(null)">Svi</button>
+    @for (z of zones; track z.value) {
+      <button type="button" role="radio" class="chip" [class.selected]="zoneFilter() === z.value" [attr.aria-checked]="zoneFilter() === z.value" (click)="filterZone(z.value)" [attr.data-testid]="'client-zone-filter-' + z.value">{{ z.label }}</button>
+    }
+  </div>
+  <button type="button" class="chip" [class.selected]="inactiveOnly()" [attr.aria-pressed]="inactiveOnly()" (click)="toggleInactive()" data-testid="client-inactive-filter">Neaktivni</button>
 </div>
 
 <app-error-message [message]="error()" />
 
 @if (loading() && clients().length === 0) {
 } @else if (clients().length === 0) {
-  <div class="card empty-state">{{ search.value ? 'Nema klijenata za ovu pretragu.' : 'Još nema klijenata.' }}</div>
+  <div class="card empty-state">{{ search.value ? 'Nema klijenata za ovu pretragu.' : inactiveOnly() ? 'Nema neaktivnih klijenata.' : 'Još nema klijenata.' }}</div>
 } @else {
   <div class="card">
     <div class="hidden md:block">
       <app-data-list [columns]="columns" [headers]="['Klijent', 'Telefon', 'Napomena', 'Tip']">
         @for (client of clients(); track client.id) {
-          <app-data-row [columns]="columns" [attr.data-testid]="'client-' + client.id">
+          <app-data-row [columns]="columns" [class.is-dimmed]="!client.active" [attr.data-testid]="'client-' + client.id">
             <div class="flex items-center gap-3 min-w-0">
               <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
               <div class="min-w-0">
@@ -44,6 +47,9 @@
             }
             <div class="truncate muted">{{ client.note || '' }}</div>
             <div class="flex flex-wrap gap-1">
+              @if (!client.active) {
+                <span class="badge badge-neutral">Neaktivan</span>
+              }
               <span class="badge" [class.badge-success]="client.has_account" [class.badge-neutral]="!client.has_account">{{ client.has_account ? 'Nalog' : 'Bez naloga' }}</span>
               @if (client.discipline_zone !== 'green') {
                 <button type="button" class="badge" [class]="zoneInfo[client.discipline_zone].badge" (click)="historyId.set(client.id)" [attr.data-testid]="'client-zone-' + client.id">{{ zoneInfo[client.discipline_zone].label }}</button>
@@ -57,11 +63,14 @@
 
     <div class="md:hidden flex flex-col">
       @for (client of clients(); track client.id) {
-        <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0">
+        <div class="flex items-center gap-3 py-3 border-b border-[var(--color-bg)] last:border-b-0" [class.is-dimmed]="!client.active">
           <span class="avatar avatar-initials avatar-sm">{{ initials(client) }}</span>
           <div class="min-w-0 flex-1">
             <div class="font-semibold truncate">
               {{ client | clientName }}@if (client.nickname) {<span class="font-normal muted text-sm"> · {{ client.first_name }} {{ client.last_name }}</span>}
+              @if (!client.active) {
+                <span class="badge badge-neutral ml-1">Neaktivan</span>
+              }
               @if (client.discipline_zone !== 'green') {
                 <span class="badge ml-1" [class]="zoneInfo[client.discipline_zone].badge">{{ zoneInfo[client.discipline_zone].label }}</span>
               }

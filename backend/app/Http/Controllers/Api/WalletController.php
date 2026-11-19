@@ -84,22 +84,21 @@ class WalletController extends Controller
             'code' => ['nullable', 'required_if:source,gift_card', 'string', 'max:30'],
         ], ['code.required_if' => 'Upiši kod poklon kartice.']);
 
-        $left = $appointment->amountLeft();
-        if ($left <= 0 || ! in_array($appointment->status, [...Appointment::BLOCKING_STATUSES, Appointment::STATUS_COMPLETED], true)) {
-            throw ValidationException::withMessages(['source' => ['Za ovaj termin nema ništa za plaćanje.']]);
-        }
-
         $card = $data['source'] === PaymentLedger::GIFT_CARD ? $this->wallet->findGiftCard($data['code']) : null;
         if ($card && $card->owner_id && $card->owner_id !== $client->id) {
             throw ValidationException::withMessages(['code' => ['Ova poklon kartica je na drugom nalogu.']]);
         }
 
-        $paid = DB::transaction(function () use ($appointment, $ledger, $card, $left, $client) {
-            $appointment->loadMissing('client');
+        $paid = DB::transaction(function () use ($appointment, $ledger, $card, $client) {
+            $ledger->lock($appointment);
+            $appointment->refresh()->loadMissing('client');
+            $left = $appointment->amountLeft();
+            if ($left <= 0 || ! in_array($appointment->status, [...Appointment::BLOCKING_STATUSES, Appointment::STATUS_COMPLETED], true)) {
+                throw ValidationException::withMessages(['source' => ['Za ovaj termin nema ništa za plaćanje.']]);
+            }
             $take = $card ? $ledger->useGiftCard($appointment, $card, $left, $client) : $ledger->payFromWallet($appointment, $left, $client);
-            $total = $ledger->paidSum($appointment);
             $appointment->update([
-                'paid_amount' => $total,
+                'paid_amount' => $ledger->paidSum($appointment),
                 'paid_at' => $appointment->paid_at ?? now(),
                 'payment_method' => $card ? PaymentLedger::GIFT_CARD : PaymentLedger::WALLET,
             ]);

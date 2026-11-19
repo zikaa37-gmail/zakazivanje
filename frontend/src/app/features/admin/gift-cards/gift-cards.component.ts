@@ -1,5 +1,5 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, signal } from '@angular/core';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { PAYMENT_LABELS, PAYMENT_METHODS, PaymentMethod } from '../../../core/models/payment.model';
@@ -50,10 +50,15 @@ export class GiftCardsComponent {
     { value: 'expired', label: 'Istekle' },
   ];
 
-  readonly cards = signal<GiftCard[]>([]);
-  readonly loading = signal(true);
   readonly status = signal<GiftCardStatus | null>('active');
   readonly searchTerm = signal('');
+  private readonly list = rxResource({
+    params: () => ({ status: this.status(), search: this.searchTerm() }),
+    stream: ({ params }) => this.wallet.giftCards(params.status, params.search || null),
+  });
+  readonly cards = computed<GiftCard[]>(() => (this.list.hasValue() ? this.list.value() : []));
+  readonly loading = this.list.isLoading;
+  readonly loadError = computed(() => (this.list.error() ? apiErrorMessage(this.list.error(), 'Učitavanje nije uspelo.') : null));
   readonly search = new FormControl('', { nonNullable: true });
   readonly formOpen = signal(false);
   readonly saving = signal(false);
@@ -76,11 +81,6 @@ export class GiftCardsComponent {
 
   constructor() {
     this.search.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed()).subscribe((v) => this.searchTerm.set(v.trim()));
-    effect(() => {
-      const status = this.status();
-      const search = this.searchTerm();
-      untracked(() => this.load(status, search));
-    });
   }
 
   code(card: { code: string }): string {
@@ -152,7 +152,7 @@ export class GiftCardsComponent {
           this.saving.set(false);
           this.formOpen.set(false);
           this.sold.set(card);
-          this.load(this.status(), this.searchTerm());
+          this.list.reload();
         },
         error: (err) => {
           this.saving.set(false);
@@ -217,23 +217,9 @@ export class GiftCardsComponent {
     this.wallet.cancelGiftCard(card.id).subscribe({
       next: () => {
         this.toast.success('Kartica je poništena.');
-        this.load(this.status(), this.searchTerm());
+        this.list.reload();
       },
       error: (err) => this.toast.error(apiErrorMessage(err, 'Poništavanje nije uspelo.')),
-    });
-  }
-
-  private load(status: GiftCardStatus | null, search: string): void {
-    this.loading.set(true);
-    this.wallet.giftCards(status, search || null).subscribe({
-      next: (cards) => {
-        this.cards.set(cards);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.toast.error(apiErrorMessage(err, 'Učitavanje nije uspelo.'));
-      },
     });
   }
 }

@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\CancellationFee;
 use App\Models\ClientActivityLog;
 use App\Models\User;
+use App\Services\ClientDeactivationService;
 use App\Services\ClientDisciplineService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
-    public function __construct(private ClientDisciplineService $discipline) {}
+    public function __construct(
+        private readonly ClientDisciplineService $discipline,
+        private readonly ClientDeactivationService $deactivation,
+    ) {}
 
     private const PHONE_PATTERN = 'regex:/^[\d\s+\-()]+$/';
 
@@ -25,12 +29,14 @@ class ClientController extends Controller
             'search' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
             'zone' => ['nullable', Rule::in(User::ZONES)],
+            'active' => ['nullable', 'boolean'],
         ]);
 
         $search = trim($data['search'] ?? '');
 
         return User::query()
             ->where('role', UserRole::Client)
+            ->where('active', $data['active'] ?? true)
             ->when($data['zone'] ?? null, fn ($q, $zone) => $q->where('discipline_zone', $zone))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -51,6 +57,7 @@ class ClientController extends Controller
     {
         return User::query()
             ->where('role', UserRole::Client)
+            ->where('active', true)
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get()
@@ -137,31 +144,26 @@ class ClientController extends Controller
     {
         abort_unless($client->role === UserRole::Client, 404);
 
-        $impact = $this->deleteImpact($client);
-        if ($impact['history'] > 0) {
-            throw ValidationException::withMessages(['client' => ['Klijent ima istoriju termina — deaktiviraj ga umesto brisanja, da istorija i izveštaji ostanu tačni.']]);
-        }
+        $cancelled = $this->deactivation->setActive($client, false, true);
 
-        $client->delete();
-
-        return response()->json(['message' => 'Klijent je obrisan.']);
+        return ['message' => 'Klijent je deaktiviran.', 'cancelled_appointments' => $cancelled];
     }
 
-    public function deleteCheck(User $client)
+    public function setActive(Request $request, User $client)
+    {
+        abort_unless($client->role === UserRole::Client, 404);
+        $data = $request->validate(['active' => ['required', 'boolean'], 'cancel_future' => ['sometimes', 'boolean']]);
+
+        $cancelled = $this->deactivation->setActive($client, $data['active'], $data['cancel_future'] ?? false);
+
+        return [...$this->present($client->refresh()), 'cancelled_appointments' => $cancelled];
+    }
+
+    public function deactivateCheck(User $client)
     {
         abort_unless($client->role === UserRole::Client, 404);
 
-        return $this->deleteImpact($client);
-    }
-
-    private function deleteImpact(User $client): array
-    {
-        $appointments = Appointment::where('client_id', $client->id);
-
-        return [
-            'history' => (clone $appointments)->where('starts_at', '<=', now())->where('status', '!=', Appointment::STATUS_CANCELLED)->count(),
-            'future' => (clone $appointments)->blocking()->where('starts_at', '>', now())->count(),
-        ];
+        return $this->deactivation->impact($client);
     }
 
     private function validated(Request $request, ?User $client = null): array
@@ -179,7 +181,6 @@ class ClientController extends Controller
             'note' => ['nullable', 'string', 'max:2000'],
             'cancellation_discount_type' => ['nullable', Rule::in(CancellationFee::DISCOUNT_TYPES)],
             'cancellation_discount_value' => ['nullable', 'numeric', 'min:0', 'max:1000000', Rule::when($request->input('cancellation_discount_type') === CancellationFee::DISCOUNT_PERCENT, ['max:100'])],
-            'active' => ['boolean'],
         ]);
     }
 }

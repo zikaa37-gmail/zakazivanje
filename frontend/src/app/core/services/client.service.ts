@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ClientDirectoryService } from './client-directory.service';
-import { Client, ClientHistory, ClientPayload, DisciplineZone, Paginated, ZonePayload } from '../models/client.model';
+import { Client, ClientDeactivationImpact, ClientHistory, ClientPayload, DisciplineZone, Paginated, ZonePayload } from '../models/client.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClientService {
@@ -11,8 +11,9 @@ export class ClientService {
   private api = `${environment.apiUrl}/clients`;
   private directory = inject(ClientDirectoryService);
 
-  list(search: string, page = 1, zone: DisciplineZone | null = null, options: { context?: HttpContext } = {}): Observable<Paginated<Client>> {
-    return this.http.post<Paginated<Client>>(`${this.api}/list`, { search: search || null, page, zone }, options);
+  list(search: string, page = 1, zone: DisciplineZone | null = null, options: { context?: HttpContext; active?: boolean } = {}): Observable<Paginated<Client>> {
+    const { active = true, ...http } = options;
+    return this.http.post<Paginated<Client>>(`${this.api}/list`, { search: search || null, page, zone, active }, http);
   }
 
   history(id: number, beforeId: number | null = null): Observable<ClientHistory> {
@@ -35,11 +36,13 @@ export class ClientService {
     return this.http.put<Client>(`${this.api}/${id}/nickname`, { nickname }).pipe(tap(() => this.directory.invalidate()));
   }
 
-  deleteCheck(id: number): Observable<{ history: number; future: number }> {
-    return this.http.post<{ history: number; future: number }>(`${this.api}/${id}/delete-check`, {});
+  deactivateCheck(id: number): Observable<ClientDeactivationImpact> {
+    return this.http.get<ClientDeactivationImpact>(`${this.api}/${id}/deactivate-check`);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.api}/${id}`).pipe(tap(() => this.directory.invalidate()));
+  setActive(id: number, active: boolean, cancelFuture = false): Observable<Client & { cancelled_appointments: number }> {
+    return this.http
+      .post<Client & { cancelled_appointments: number }>(`${this.api}/${id}/active`, { active, cancel_future: cancelFuture })
+      .pipe(tap(() => this.directory.invalidate()));
   }
 }

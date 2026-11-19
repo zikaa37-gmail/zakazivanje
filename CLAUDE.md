@@ -21,7 +21,7 @@ Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik) i `worker`. Rad
 (`users.staff_member_id`) je onaj koji radi usluge: pregled dana i izveštaji samo za sebe, kalendar, termini, blokade, klijenti
 bez brisanja, lista čekanja. Radnik bez zaposlenog je menadžer (Zaposleni → Nalozi za prijavu, `/admin/team`) i radi umesto
 vlasnika: `User::isManager()` (vlasnik ili menadžer) — zaposleni, usluge, cene, recenzije, galerija, podeli,
-nalozi, podešavanja, brisanje klijenata i zone. Samo vlasniku ostaju finansijska statistika (`dashboard/stats`, `dashboard/sources`)
+nalozi, podešavanja, deaktivacija klijenata i zone. Samo vlasniku ostaju finansijska statistika (`dashboard/stats`, `dashboard/sources`)
 i nalozi vlasnika (menadžer ne pravi, ne menja i ne briše vlasnika). Rute: `role:owner,worker` za svakodnevni rad,
 `role:manager` za upravljanje, `role:owner` za finansije; frontend `staffGuard` / `managerGuard`, meni po `managerOnly`;
 vlasnik i menadžer imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
@@ -50,8 +50,9 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
 - Destructive UI actions use the shared confirm dialog (`ConfirmService`); do not introduce
   `window.confirm()`. Isto važi za sve što može da napravi problem (statusi termina, onemogućavanje, odobravanje).
   Brisanje ne sme da ostavi siročiće: zaposleni sa budućim terminima se ne deaktivira dok se termini ne reše
-  (`StaffDeactivationService`, `GET /staff/{id}/future-appointments`, `cancel_future`), klijent sa istorijom se ne briše
-  (`POST /clients/{id}/delete-check`). U meniju „⋮“ (`app-row-actions`) opasne radnje idu na dno, iza linije.
+  (`StaffDeactivationService`, `GET /staff/{id}/future-appointments`, `cancel_future`), klijent se nikad ne briše nego deaktivira
+  (`users.active`, `ClientDeactivationService`, `GET /clients/{id}/deactivate-check`, `POST /clients/{id}/active` sa `cancel_future`; `DELETE /clients/{id}` takođe samo deaktivira):
+  ne može da se prijavi, budući termini se otkazuju, stanje i kartice ostaju, lista „Neaktivni“. U meniju „⋮“ (`app-row-actions`) opasne radnje idu na dno, iza linije.
 - Prikaz po nalogu: `users.ui_mode` (`standard` / `spacious`, Nalozi za prijavu i Profil, `PUT /auth/ui-mode`) — klasa
   `ui-spacious` na `<html>` (veća dugmad i razmaci, potvrda se uključuje posle 1,2 s). Redovi koji su „ugašeni“ koriste `.is-dimmed`, ne `opacity`.
 - Do not add secrets to the repository. Local backend credentials belong in `backend/.env`,

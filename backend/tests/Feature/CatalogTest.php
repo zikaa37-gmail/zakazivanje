@@ -174,5 +174,7 @@ class CatalogTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => 'x@example.com', 'password' => 'x'])->assertUnprocessable();
 
         $this->actingAsJwt($this->admin)->deleteJson("/api/clients/{$id}")->assertOk();
+        $this->assertModelExists(User::find($id));
+        $this->assertFalse(User::find($id)->active);
     }
 }
