@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\RefreshToken;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
@@ -131,6 +132,24 @@ class AuthTest extends TestCase
         $this->assertNull($fresh->gender);
         $this->assertNull($fresh->favorite_staff_member_id);
         $this->assertSame('whatsapp', $fresh->preferred_communication);
+    }
+
+    public function test_refresh_token_lasts_a_year_and_each_use_extends_it(): void
+    {
+        User::factory()->create(['email' => 'godina@example.com']);
+        $tokens = $this->postJson('/api/auth/login', ['email' => 'godina@example.com', 'password' => 'password'])->assertOk()->json();
+
+        $this->travel(360)->days();
+        $tokens = $this->postJson('/api/auth/refresh', ['refresh_token' => $tokens['refresh_token']])->assertOk()->json();
+
+        $this->travel(360)->days();
+        $tokens = $this->postJson('/api/auth/refresh', ['refresh_token' => $tokens['refresh_token']])->assertOk()->json();
+
+        $this->travel(366)->days();
+        $this->postJson('/api/auth/refresh', ['refresh_token' => $tokens['refresh_token']])->assertUnprocessable();
+
+        $this->artisan('model:prune', ['--model' => [RefreshToken::class]])->assertSuccessful();
+        $this->assertSame(0, RefreshToken::count());
     }
 
     public function test_login_refresh_me_and_logout(): void
