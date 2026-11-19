@@ -135,7 +135,7 @@ Posle izmena pokreni relevantne testove: `php artisan test` (backend) i `npx ng 
 
 ## Current state
 
-Implementirano: JWT auth (login, refresh sa rotacijom, logout, registracija klijenta, potvrda
+Implementirano: JWT auth (pristupni token 60 min, refresh 365 dana i svako osvežavanje daje novih 365 — korisnik ostaje prijavljen dok koristi aplikaciju; istekli i opozvani refresh tokeni se brišu `model:prune` u 03:30; login, refresh sa rotacijom, logout, registracija klijenta, potvrda
 email-a tokenom, zaboravljena / reset lozinke, izmena profila i lozinke), admin sekcija
 (`/admin`, `AdminShellComponent`): zaposleni (usluge, radno vreme po danima sa više smena, boja,
 režim potvrde po zaposlenom), usluge (kategorija, trajanje, cena, ko radi), cene i akcije
