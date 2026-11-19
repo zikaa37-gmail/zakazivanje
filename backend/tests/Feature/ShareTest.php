@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +13,7 @@ class ShareTest extends TestCase
 
     public function test_admin_gets_qr_code_for_link(): void
     {
-        $admin = User::factory()->create(['role' => UserRole::Owner]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $response = $this->actingAsJwt($admin)->postJson('/api/share/qr', ['url' => 'https://zakazivanje.fiskultura.rs/book'])->assertOk();
 
@@ -24,7 +23,7 @@ class ShareTest extends TestCase
 
     public function test_qr_rejects_non_http_links_and_clients(): void
     {
-        $admin = User::factory()->create(['role' => UserRole::Owner]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->actingAsJwt($admin)->postJson('/api/share/qr', ['url' => 'javascript:alert(1)'])->assertUnprocessable();
 
         $client = User::factory()->create();
@@ -33,7 +32,7 @@ class ShareTest extends TestCase
 
     public function test_social_links_are_saved_and_public(): void
     {
-        $admin = User::factory()->create(['role' => UserRole::Owner]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $settings = BusinessSetting::current();
 
         $this->actingAsJwt($admin)->putJson('/api/business-settings', [

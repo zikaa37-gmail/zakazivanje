@@ -2,7 +2,6 @@
 
 namespace App\Listeners;
 
-use App\Enums\UserRole;
 use App\Events\ClientActivity;
 use App\Models\ClientActivityLog;
 use App\Models\User;
@@ -11,7 +10,7 @@ class RecordClientActivity
 {
     public function handle(ClientActivity $event): void
     {
-        if ($event->client->role !== UserRole::Client) {
+        if ($event->client->role !== User::ROLE_CLIENT) {
             return;
         }
 

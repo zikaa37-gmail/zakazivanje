@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -26,7 +25,7 @@ class StaffInviteNotification extends Notification
     {
         $business = BusinessSetting::current()->name;
         $url = rtrim(config('app.frontend_url'), '/').'/reset-password?token='.$this->token.'&email='.urlencode($notifiable->getEmailForPasswordReset());
-        $role = $notifiable->role === UserRole::Owner ? 'vlasnika' : 'radnika';
+        $role = $notifiable->role === User::ROLE_OWNER ? 'vlasnika' : 'radnika';
 
         return (new MailMessage)
             ->subject('Pristup aplikaciji — '.$business)

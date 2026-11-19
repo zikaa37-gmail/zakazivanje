@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
@@ -34,7 +33,7 @@ class AuthTest extends TestCase
         $this->postJson('/api/auth/register', $this->clientPayload())->assertCreated();
 
         $user = User::where('email', 'marija@example.com')->firstOrFail();
-        $this->assertSame(UserRole::Client, $user->role);
+        $this->assertSame(User::ROLE_CLIENT, $user->role);
         $this->assertNull($user->email_verified_at);
 
         $token = null;
@@ -118,7 +117,7 @@ class AuthTest extends TestCase
     public function test_staff_profile_keeps_client_fields_out_and_linked_worker_data_comes_from_staff_page(): void
     {
         $staff = StaffMember::create(['first_name' => 'Jelena', 'last_name' => 'Matović', 'phone' => '060 111 2222']);
-        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $staff->id, 'first_name' => 'Jelena', 'last_name' => 'Matović', 'phone' => '060 111 2222']);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $staff->id, 'first_name' => 'Jelena', 'last_name' => 'Matović', 'phone' => '060 111 2222']);
 
         $this->actingAsJwt($worker)->putJson('/api/auth/profile', [
             'first_name' => 'Drugo',

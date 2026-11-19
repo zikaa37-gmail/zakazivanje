@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\StaffMember;
@@ -175,7 +174,7 @@ class AppointmentNotifier
         if ($amount <= 0) {
             return;
         }
-        $managers = User::where('active', true)->whereIn('role', [UserRole::Owner, UserRole::Manager])->get();
+        $managers = User::where('active', true)->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])->get();
         $this->inbox->deliver($managers, new DebtPaidNotification($appointment->loadMissing('client'), $amount, $by));
     }
 
@@ -184,8 +183,8 @@ class AppointmentNotifier
         $ids = array_values(array_filter([$appointment->staff_member_id, ...$staffIds]));
 
         return User::where('active', true)
-            ->where(fn ($q) => $q->whereIn('role', [UserRole::Owner, UserRole::Manager])
-                ->orWhere(fn ($q) => $q->where('role', UserRole::Worker)->whereIn('staff_member_id', $ids)))
+            ->where(fn ($q) => $q->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])
+                ->orWhere(fn ($q) => $q->where('role', User::ROLE_WORKER)->whereIn('staff_member_id', $ids)))
             ->get();
     }
 
@@ -193,8 +192,8 @@ class AppointmentNotifier
     {
         return User::where('active', true)
             ->whereNotNull('email')
-            ->where(fn ($q) => $q->where('role', UserRole::Owner)
-                ->orWhere(fn ($q) => $q->whereIn('role', [UserRole::Manager, UserRole::Worker])->where('staff_member_id', $appointment->staff_member_id)))
+            ->where(fn ($q) => $q->where('role', User::ROLE_OWNER)
+                ->orWhere(fn ($q) => $q->whereIn('role', [User::ROLE_MANAGER, User::ROLE_WORKER])->where('staff_member_id', $appointment->staff_member_id)))
             ->get();
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
@@ -93,7 +92,7 @@ class StaffMemberController extends Controller
             'first_name' => ['required', 'string', 'min:2', 'max:100'],
             'last_name' => ['required', 'string', 'min:2', 'max:100'],
             'title' => ['nullable', 'string', 'max:100'],
-            'role' => ['sometimes', Rule::in(UserRole::staff())],
+            'role' => ['sometimes', Rule::in(User::STAFF_ROLES)],
             'ui_mode' => ['sometimes', Rule::in(User::UI_MODES)],
             'phone' => ['required', 'string', 'max:30', 'regex:/^[\d\s+\-()]+$/'],
             'email' => ['required', 'email', 'max:255', Rule::unique('staff_members', 'email')->ignore($request->route('staffMember'))],
@@ -183,8 +182,8 @@ class StaffMemberController extends Controller
 
         $account = $this->accounts->sync($staff);
 
-        if ($account && isset($data['role']) && UserRole::from($data['role']) !== $account->role) {
-            $this->changeRole($actor, $account, UserRole::from($data['role']));
+        if ($account && isset($data['role']) && $data['role'] !== $account->role) {
+            $this->changeRole($actor, $account, $data['role']);
         }
         if ($account && isset($data['ui_mode']) && ($actor->isOwner() || ! $account->isOwner())) {
             $account->forceFill(['ui_mode' => $data['ui_mode']])->save();
@@ -193,15 +192,15 @@ class StaffMemberController extends Controller
         return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode']);
     }
 
-    private function changeRole(User $actor, User $account, UserRole $role): void
+    private function changeRole(User $actor, User $account, string $role): void
     {
-        if (! $actor->isOwner() && ($account->isOwner() || $role === UserRole::Owner)) {
+        if (! $actor->isOwner() && ($account->isOwner() || $role === User::ROLE_OWNER)) {
             abort(403, 'Ulogu vlasnika menja samo vlasnik.');
         }
         if ($account->is($actor)) {
             throw ValidationException::withMessages(['role' => ['Ne možeš da promeniš svoju ulogu.']]);
         }
-        if ($account->isOwner() && ! User::where('role', UserRole::Owner)->where('active', true)->whereKeyNot($account->id)->exists()) {
+        if ($account->isOwner() && ! User::where('role', User::ROLE_OWNER)->where('active', true)->whereKeyNot($account->id)->exists()) {
             throw ValidationException::withMessages(['role' => ['Mora da ostane bar jedan aktivan vlasnik.']]);
         }
 

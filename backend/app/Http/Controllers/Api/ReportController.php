@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -46,7 +45,7 @@ class ReportController extends Controller
 
         $own = $user->staff_member_id !== null && (int) $request->input('staff_member_id') === $user->staff_member_id;
         if ($user->isOfficeWorker() && ! $own) {
-            $owners = User::where('role', UserRole::Owner)->where('active', true)->get();
+            $owners = User::where('role', User::ROLE_OWNER)->where('active', true)->get();
             foreach ($owners as $owner) {
                 $this->reports->send($owner, $report, $channel);
             }

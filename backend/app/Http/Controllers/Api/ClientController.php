@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\CancellationFee;
@@ -12,7 +11,6 @@ use App\Services\ClientDeactivationService;
 use App\Services\ClientDisciplineService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
@@ -35,7 +33,7 @@ class ClientController extends Controller
         $search = trim($data['search'] ?? '');
 
         return User::query()
-            ->where('role', UserRole::Client)
+            ->where('role', User::ROLE_CLIENT)
             ->where('active', $data['active'] ?? true)
             ->when($data['zone'] ?? null, fn ($q, $zone) => $q->where('discipline_zone', $zone))
             ->when($search !== '', function ($query) use ($search) {
@@ -56,7 +54,7 @@ class ClientController extends Controller
     public function directory()
     {
         return User::query()
-            ->where('role', UserRole::Client)
+            ->where('role', User::ROLE_CLIENT)
             ->where('active', true)
             ->orderBy('first_name')
             ->orderBy('last_name')
@@ -66,14 +64,14 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        $client = User::create([...$this->validated($request), 'role' => UserRole::Client]);
+        $client = User::create([...$this->validated($request), 'role' => User::ROLE_CLIENT]);
 
         return response()->json($this->present($client->refresh()), 201);
     }
 
     public function update(Request $request, User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $client->update($this->validated($request, $client));
 
@@ -82,7 +80,7 @@ class ClientController extends Controller
 
     public function nickname(Request $request, User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $data = $request->validate(['nickname' => ['nullable', 'string', 'max:60']], ['nickname.max' => 'Nadimak može imati najviše 60 znakova.']);
         $client->nickname = filled($data['nickname'] ?? null) ? trim($data['nickname']) : null;
@@ -93,7 +91,7 @@ class ClientController extends Controller
 
     public function activity(Request $request, User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $data = $request->validate(['before_id' => ['nullable', 'integer']]);
 
@@ -122,7 +120,7 @@ class ClientController extends Controller
 
     public function zone(Request $request, User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $data = $request->validate([
             'zone' => ['nullable', Rule::in(User::ZONES)],
@@ -142,7 +140,7 @@ class ClientController extends Controller
 
     public function destroy(User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         $cancelled = $this->deactivation->setActive($client, false, true);
 
@@ -151,7 +149,7 @@ class ClientController extends Controller
 
     public function setActive(Request $request, User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
         $data = $request->validate(['active' => ['required', 'boolean'], 'cancel_future' => ['sometimes', 'boolean']]);
 
         $cancelled = $this->deactivation->setActive($client, $data['active'], $data['cancel_future'] ?? false);
@@ -161,7 +159,7 @@ class ClientController extends Controller
 
     public function deactivateCheck(User $client)
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         return $this->deactivation->impact($client);
     }

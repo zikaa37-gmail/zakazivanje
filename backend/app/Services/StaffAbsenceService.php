@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\StaffAbsence;
@@ -168,6 +167,6 @@ class StaffAbsenceService
 
     private function managers(): Collection
     {
-        return User::query()->where('active', true)->whereIn('role', [UserRole::Owner, UserRole::Manager])->get();
+        return User::query()->where('active', true)->whereIn('role', [User::ROLE_OWNER, User::ROLE_MANAGER])->get();
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\StaffMember;
@@ -27,7 +26,7 @@ class ReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Jovanović']);
         $this->marko = StaffMember::create(['first_name' => 'Marko', 'last_name' => 'Marković', 'active' => false]);
         $this->client = User::factory()->create();
@@ -91,14 +90,14 @@ class ReportTest extends TestCase
 
     public function test_linked_worker_sees_only_own_report_and_admin_worker_only_sends_to_owner(): void
     {
-        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
 
         $this->actingAsJwt($worker)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])
             ->assertOk()->assertJsonPath('staff_member.id', $this->ana->id)->assertJsonCount(1, 'appointments');
         $this->actingAsJwt($worker)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02', 'staff_member_id' => $this->marko->id])
             ->assertUnprocessable();
 
-        $reception = User::factory()->create(['role' => UserRole::Manager]);
+        $reception = User::factory()->create(['role' => User::ROLE_MANAGER]);
         $this->actingAsJwt($reception)->postJson('/api/reports', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
         $this->actingAsJwt($reception)->postJson('/api/reports/pdf', ['period' => 'day', 'date' => '2026-11-02'])->assertForbidden();
 
@@ -129,8 +128,8 @@ class ReportTest extends TestCase
         Notification::assertNothingSent();
 
         BusinessSetting::current()->update(['report_auto_enabled' => true]);
-        User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id]);
-        User::factory()->create(['role' => UserRole::Manager]);
+        User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id]);
+        User::factory()->create(['role' => User::ROLE_MANAGER]);
 
         $this->artisan('reports:send-scheduled', ['--date' => '2026-11-30'])->assertSuccessful();
         Notification::assertCount(4);

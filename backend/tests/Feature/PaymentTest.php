@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\InboxNotification;
@@ -28,7 +27,7 @@ class PaymentTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
         $cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
@@ -144,8 +143,8 @@ class PaymentTest extends TestCase
 
     public function test_paying_debt_notifies_owner_and_managers(): void
     {
-        $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->appointment->staff_member_id]);
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->appointment->staff_member_id]);
         $total = (float) $this->appointment->total;
         $this->actingAsJwt($worker)->postJson("/api/appointments/{$this->appointment->id}/complete", ['service_outcome' => 'done', 'due_amount' => $total, 'payment' => 'none', 'note' => 'Plaća sutra'])->assertOk();
         $this->assertSame(0, InboxNotification::where('kind', 'debt_paid')->count());

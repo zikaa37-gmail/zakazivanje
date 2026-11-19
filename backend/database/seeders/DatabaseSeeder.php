@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Promotion;
 use App\Models\Service;
@@ -21,7 +20,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Zakazivanje',
             'email' => 'zakazivanje@fiskultura.rs',
             'password' => Hash::make('zakazivanje2026'),
-            'role' => UserRole::Owner,
+            'role' => User::ROLE_OWNER,
         ]);
 
         User::factory()->create([
@@ -29,7 +28,7 @@ class DatabaseSeeder extends Seeder
             'last_name' => 'Recepcija',
             'email' => 'radnik@fiskultura.rs',
             'password' => Hash::make('radnik2026'),
-            'role' => UserRole::Manager,
+            'role' => User::ROLE_MANAGER,
         ]);
 
         User::factory()->create([

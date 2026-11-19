@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\GiftCard;
 use App\Models\InboxNotification;
@@ -27,7 +26,7 @@ class WalletTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
         $cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
@@ -125,7 +124,7 @@ class WalletTest extends TestCase
         $this->actingAsJwt($this->owner)->postJson("/api/gift-cards/{$active->id}/cancel")->assertOk()->assertJsonPath('status', 'cancelled');
         $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/claim", ['code' => 'BBBB3333'])->assertUnprocessable();
 
-        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->appointment->staff_member_id]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->appointment->staff_member_id]);
         $this->actingAsJwt($worker)->postJson("/api/clients/{$this->client->id}/wallet/adjust", ['amount' => 500, 'note' => 'x'])->assertForbidden();
         $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/adjust", ['amount' => -500, 'note' => 'Greška'])->assertUnprocessable();
         $this->actingAsJwt($this->owner)->postJson("/api/clients/{$this->client->id}/wallet/adjust", ['amount' => 500, 'note' => 'Kompenzacija'])->assertOk()->assertJsonPath('balance', 500);

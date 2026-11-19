@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\GiftCard;
+use App\Models\User;
 use App\Services\WalletService;
 use App\Support\Like;
 use Illuminate\Database\Eloquent\Collection;
@@ -50,7 +50,7 @@ class GiftCardController extends Controller
             'kind' => ['required', Rule::in(GiftCard::KINDS)],
             'amount' => ['required', 'numeric', 'min:100', 'max:10000000'],
             'payment_method' => ['required', Rule::in(Appointment::PAYMENT_METHODS)],
-            'owner_id' => ['nullable', 'required_if:kind,digital', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Client->value)],
+            'owner_id' => ['nullable', 'required_if:kind,digital', 'integer', Rule::exists('users', 'id')->where('role', User::ROLE_CLIENT)],
             'card_number' => ['nullable', 'string', 'max:30'],
             'buyer_name' => ['nullable', 'string', 'max:150'],
             'recipient_name' => ['nullable', 'string', 'max:150'],
