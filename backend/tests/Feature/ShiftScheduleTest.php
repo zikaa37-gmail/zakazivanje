@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\OpeningHour;
 use App\Models\Service;
-use App\Models\StaffMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,7 +22,7 @@ class ShiftScheduleTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 06:00:00');
         BusinessSetting::current()->update(['booking_min_days_ahead' => 0, 'booking_lead_minutes' => 0, 'slot_interval_minutes' => 60]);
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
     }
 

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\Service;
@@ -39,7 +38,7 @@ class CalendarTest extends TestCase
         $this->nails = Service::create(['name' => 'Manikir', 'duration_minutes' => 60, 'price' => 2000]);
         $this->ana = $this->staff('Ana', [$this->cut->id]);
         $this->milica = $this->staff('Milica', [$this->cut->id, $this->nails->id]);
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['email' => 'petar@example.com']);
     }
 

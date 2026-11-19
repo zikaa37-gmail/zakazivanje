@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\StaffMember;
@@ -13,8 +12,8 @@ use App\Notifications\StaffNoteNotification;
 use App\Notifications\StaffNoteReplyNotification;
 use App\Services\Inbox;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -40,7 +39,7 @@ class StaffNoteController extends Controller
     {
         $always = BusinessSetting::current()->noteAlwaysNotifyIds();
         $accounts = User::query()
-            ->whereIn('role', UserRole::staff())
+            ->whereIn('role', User::STAFF_ROLES)
             ->where('active', true)
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'last_name', 'role', 'staff_member_id']);
@@ -86,7 +85,7 @@ class StaffNoteController extends Controller
             'title' => ['nullable', 'string', 'max:150'],
             'body' => ['required', 'string', 'min:2', 'max:2000'],
             'recipient_ids' => ['array'],
-            'recipient_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', UserRole::staff())],
+            'recipient_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', User::STAFF_ROLES)],
         ], [
             'body.required' => 'Napiši belešku.',
         ]);
@@ -95,7 +94,7 @@ class StaffNoteController extends Controller
         $title = trim($data['title'] ?? '') ?: Str::limit(trim(strtok($body, "\n") ?: $body), 60);
         $note = StaffNote::create(['author_id' => $user->id, 'title' => $title, 'body' => $body]);
         $ids = array_unique([...($data['recipient_ids'] ?? []), ...BusinessSetting::current()->noteAlwaysNotifyIds()]);
-        $recipients = User::whereKey($ids)->whereIn('role', UserRole::staff())->where('active', true)->whereKeyNot($user->id)->get();
+        $recipients = User::whereKey($ids)->whereIn('role', User::STAFF_ROLES)->where('active', true)->whereKeyNot($user->id)->get();
         $note->recipients()->sync($recipients->pluck('id'));
         foreach ($recipients as $recipient) {
             $notification = new StaffNoteNotification($note);

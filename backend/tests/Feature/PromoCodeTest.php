@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class PromoCodeTest extends TestCase
@@ -35,7 +35,7 @@ class PromoCodeTest extends TestCase
             'allow_guest_booking' => true,
         ]);
 
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 30, 'price' => 2000]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->cut->id]);
@@ -64,7 +64,7 @@ class PromoCodeTest extends TestCase
         return $this->withoutToken()->postJson('/api/bookings/quote', ['service_ids' => [$this->cut->id], 'date' => $date, 'promo_code' => $code])->assertOk()->json();
     }
 
-    private function book(string $at, string $phone, ?string $code): \Illuminate\Testing\TestResponse
+    private function book(string $at, string $phone, ?string $code): TestResponse
     {
         $this->app['auth']->forgetGuards();
 

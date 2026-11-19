@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\StaffAccountService;
@@ -19,9 +18,9 @@ class TeamController extends Controller
     public function index()
     {
         return User::query()
-            ->whereIn('role', UserRole::staff())
+            ->whereIn('role', User::STAFF_ROLES)
             ->with('staffMember:id,first_name,last_name,title,color,active')
-            ->orderByRaw('role = ? desc', [UserRole::Owner])
+            ->orderByRaw('role = ? desc', [User::ROLE_OWNER])
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get()
@@ -32,11 +31,11 @@ class TeamController extends Controller
     {
         $data = $request->validate([
             ...$this->profileRules(),
-            'role' => ['required', Rule::in([UserRole::Owner, UserRole::Manager])],
+            'role' => ['required', Rule::in([User::ROLE_OWNER, User::ROLE_MANAGER])],
             'send_invite' => ['boolean'],
         ]);
 
-        $this->ensureCanManage($request->user(), null, UserRole::from($data['role']));
+        $this->ensureCanManage($request->user(), null, $data['role']);
 
         $user = User::create([...collect($data)->except('send_invite')->all(), 'active' => true]);
 
@@ -50,20 +49,20 @@ class TeamController extends Controller
     public function update(Request $request, User $user)
     {
         abort_unless($user->isStaff(), 404);
-        $this->ensureCanManage($request->user(), $user, UserRole::tryFrom((string) $request->input('role')));
+        $this->ensureCanManage($request->user(), $user, $request->input('role'));
 
         $linked = $user->staff_member_id !== null;
         $data = $request->validate([
             ...($linked ? [] : $this->profileRules($user)),
-            'role' => ['required', Rule::in($linked ? UserRole::staff() : [UserRole::Owner, UserRole::Manager])],
+            'role' => ['required', Rule::in($linked ? User::STAFF_ROLES : [User::ROLE_OWNER, User::ROLE_MANAGER])],
             'active' => ['boolean'],
             'ui_mode' => ['sometimes', Rule::in(User::UI_MODES)],
         ]);
 
-        if ($user->is($request->user()) && (UserRole::from($data['role']) !== $user->role || ! ($data['active'] ?? true))) {
+        if ($user->is($request->user()) && ($data['role'] !== $user->role || ! ($data['active'] ?? true))) {
             throw ValidationException::withMessages(['role' => ['Ne možeš da promeniš ulogu ili deaktiviraš svoj nalog.']]);
         }
-        if ($user->isOwner() && (UserRole::from($data['role']) !== UserRole::Owner || ! ($data['active'] ?? true))) {
+        if ($user->isOwner() && ($data['role'] !== User::ROLE_OWNER || ! ($data['active'] ?? true))) {
             $this->ensureAnotherOwner($user);
         }
 
@@ -120,19 +119,19 @@ class TeamController extends Controller
         ];
     }
 
-    private function ensureCanManage(User $actor, ?User $target, ?UserRole $role = null): void
+    private function ensureCanManage(User $actor, ?User $target, ?string $role = null): void
     {
         if ($actor->isOwner()) {
             return;
         }
-        if ($target?->isOwner() || $role === UserRole::Owner) {
+        if ($target?->isOwner() || $role === User::ROLE_OWNER) {
             abort(403, 'Naloge vlasnika menja samo vlasnik.');
         }
     }
 
     private function ensureAnotherOwner(User $user): void
     {
-        $others = User::where('role', UserRole::Owner)->where('active', true)->whereKeyNot($user->id)->exists();
+        $others = User::where('role', User::ROLE_OWNER)->where('active', true)->whereKeyNot($user->id)->exists();
 
         if (! $others) {
             throw ValidationException::withMessages(['role' => ['Mora da ostane bar jedan aktivan vlasnik.']]);

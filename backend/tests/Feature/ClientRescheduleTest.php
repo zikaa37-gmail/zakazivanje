@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\Service;
@@ -38,7 +37,7 @@ class ClientRescheduleTest extends TestCase
         $this->ana = $this->staff('Ana');
         $this->milica = $this->staff('Milica');
         $this->client = User::factory()->create(['email' => 'petar@example.com']);
-        $this->admin = User::factory()->create(['role' => UserRole::Owner, 'email' => 'salon@example.com']);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER, 'email' => 'salon@example.com']);
     }
 
     private function staff(string $name): StaffMember

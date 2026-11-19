@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -24,7 +23,7 @@ class ClientNicknameTest extends TestCase
         parent::setUp();
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
-        $this->anaWorker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $ana->id]);
+        $this->anaWorker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $ana->id]);
         $this->appointment = Appointment::create([
             'client_id' => $this->client->id,
             'staff_member_id' => $ana->id,

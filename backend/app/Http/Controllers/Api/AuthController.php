@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\RefreshToken;
@@ -37,7 +36,7 @@ class AuthController extends Controller
         }
 
         $existing = User::where('email', $request->input('email'))
-            ->where('role', UserRole::Client)
+            ->where('role', User::ROLE_CLIENT)
             ->where(fn ($q) => $q->whereNull('password')->orWhereNull('email_verified_at'))
             ->first();
 
@@ -49,7 +48,7 @@ class AuthController extends Controller
 
         $user = $existing
             ? tap($existing)->update($data)
-            : User::create([...$data, 'role' => UserRole::Client]);
+            : User::create([...$data, 'role' => User::ROLE_CLIENT]);
         $referral = $this->marketing->referral($request);
         if ($referral['source'] && ! $user->signup_source) {
             $user->forceFill(['signup_source' => $referral['source'], 'signup_campaign' => $referral['campaign']])->save();
@@ -79,7 +78,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => ['Nalog je deaktiviran.']]);
         }
 
-        if ($user->role === UserRole::Client && $user->email_verified_at === null) {
+        if ($user->role === User::ROLE_CLIENT && $user->email_verified_at === null) {
             if (! $user->email_verification_sent_at || $user->email_verification_sent_at->lt(now()->subMinutes(10))) {
                 $user->sendEmailVerification($this->safeNext($request->input('next')));
             }
@@ -102,7 +101,7 @@ class AuthController extends Controller
             ->sortBy(fn (User $user) => array_search($user->email, $emails))
             ->map(fn (User $user) => [
                 'email' => $user->email,
-                'label' => $user->role->label().' ('.$user->first_name.')',
+                'label' => User::ROLE_LABELS[$user->role].' ('.$user->first_name.')',
             ]);
 
         return response()->json($users->values());

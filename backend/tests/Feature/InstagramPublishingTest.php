@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\InstagramPost;
 use App\Models\Service;
@@ -49,7 +48,7 @@ class InstagramPublishingTest extends TestCase
 
     public function test_publishing_requires_the_toggle_and_a_connected_account(): void
     {
-        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
         $payload = ['kind' => 'post', 'caption' => 'Jesenja akcija', 'image' => $this->jpeg()];
         $this->connect(['instagram_free_slots_days' => [1]]);
         $this->getJson('/api/public/business')
@@ -63,7 +62,7 @@ class InstagramPublishingTest extends TestCase
         $this->connect(['instagram_publishing_enabled' => false]);
         $this->actingAsJwt($owner)->postJson('/api/instagram/posts', $payload)->assertUnprocessable();
 
-        $worker = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
+        $worker = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => StaffMember::create(['first_name' => 'Radnik', 'last_name' => 'Test'])->id]);
         $this->actingAsJwt($worker)->postJson('/api/instagram/posts/list')->assertForbidden();
     }
 
@@ -71,7 +70,7 @@ class InstagramPublishingTest extends TestCase
     {
         $this->fakeGraph();
         $this->connect();
-        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $this->actingAsJwt($owner)->postJson('/api/instagram/posts', ['kind' => 'post', 'caption' => 'Jesenja akcija', 'image' => $this->jpeg()])
             ->assertCreated()
@@ -90,7 +89,7 @@ class InstagramPublishingTest extends TestCase
         $this->travelTo('2026-10-19 10:00:00');
         $this->fakeGraph();
         $this->connect();
-        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $id = $this->actingAsJwt($owner)->postJson('/api/instagram/posts', [
             'kind' => 'story', 'caption' => 'ne šalje se', 'image' => $this->jpeg(1080, 1920), 'scheduled_at' => '2026-10-19T12:00:00',
@@ -121,7 +120,7 @@ class InstagramPublishingTest extends TestCase
             'graph.instagram.com/m1?*' => Http::response(['permalink' => 'https://www.instagram.com/p/m1/']),
         ]);
         $this->connect();
-        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $id = $this->actingAsJwt($owner)->postJson('/api/instagram/posts', ['kind' => 'post', 'image' => $this->jpeg()])
             ->assertCreated()
@@ -148,7 +147,7 @@ class InstagramPublishingTest extends TestCase
         $ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $ana->services()->sync([$cut->id]);
         $ana->workingHours()->create(['weekday' => 2, 'starts_at' => '09:00', 'ends_at' => '11:00']);
-        $owner = User::factory()->create(['role' => UserRole::Owner]);
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
 
         $this->actingAsJwt($owner)->postJson('/api/instagram/free-slots/preview')
             ->assertOk()

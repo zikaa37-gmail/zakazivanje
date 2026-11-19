@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessSetting;
 use App\Models\CancellationFee;
@@ -141,7 +140,7 @@ class BusinessSettingController extends Controller
             'discipline_off_peak_percent' => ['sometimes', 'integer', 'between:10,90'],
             'report_auto_channel' => ['sometimes', Rule::in([ReportNotification::CHANNEL_MAIL, ReportNotification::CHANNEL_WHATSAPP])],
             'note_always_notify_ids' => ['sometimes', 'nullable', 'array'],
-            'note_always_notify_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', UserRole::staff())],
+            'note_always_notify_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->whereIn('role', User::STAFF_ROLES)],
             'opening_hours' => ['sometimes', 'array', 'size:7'],
             'opening_hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
             'opening_hours.*.opens_at' => ['nullable', 'date_format:H:i', 'required_with:opening_hours.*.closes_at'],

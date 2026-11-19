@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\BusinessSetting;
@@ -43,8 +42,8 @@ class StaffAbsenceTest extends TestCase
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 1500]);
         $this->ana = $this->staff('Ana');
         $this->milica = $this->staff('Milica');
-        $this->owner = User::factory()->create(['role' => UserRole::Owner, 'email' => 'vlasnik@example.com']);
-        $this->anaAccount = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->ana->id, 'email' => 'ana@example.com']);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER, 'email' => 'vlasnik@example.com']);
+        $this->anaAccount = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->ana->id, 'email' => 'ana@example.com']);
         $this->client = User::factory()->create(['email' => 'petar@example.com']);
     }
 
@@ -193,7 +192,7 @@ class StaffAbsenceTest extends TestCase
     public function test_transfer_to_colleague_notifies_everyone_and_allows_free_cancellation(): void
     {
         $id = $this->book('2026-10-19 14:00');
-        $milicaAccount = User::factory()->create(['role' => UserRole::Worker, 'staff_member_id' => $this->milica->id, 'email' => 'milica@example.com']);
+        $milicaAccount = User::factory()->create(['role' => User::ROLE_WORKER, 'staff_member_id' => $this->milica->id, 'email' => 'milica@example.com']);
         Notification::fake();
 
         $this->actingAsJwt($this->owner)->postJson("/api/appointments/{$id}/reschedule", [

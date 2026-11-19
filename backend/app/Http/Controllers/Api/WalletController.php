@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\User;
@@ -19,14 +18,14 @@ class WalletController extends Controller
 
     public function show(User $client): array
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
 
         return $this->wallet->summary($client);
     }
 
     public function deposit(Request $request, User $client): array
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:1', 'max:10000000'],
             'payment_method' => ['required', Rule::in(Appointment::PAYMENT_METHODS)],
@@ -40,7 +39,7 @@ class WalletController extends Controller
 
     public function adjust(Request $request, User $client): array
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'not_in:0', 'between:-10000000,10000000'],
             'note' => ['required', 'string', 'max:500'],
@@ -53,7 +52,7 @@ class WalletController extends Controller
 
     public function claim(Request $request, User $client): array
     {
-        abort_unless($client->role === UserRole::Client, 404);
+        abort_unless($client->role === User::ROLE_CLIENT, 404);
         $data = $request->validate(['code' => ['required', 'string', 'max:30']]);
 
         $this->wallet->claim($this->wallet->findGiftCard($data['code']), $client);

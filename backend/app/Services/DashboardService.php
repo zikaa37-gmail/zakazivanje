@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\AppointmentItem;
 use App\Models\BlockedTime;
@@ -148,7 +147,7 @@ class DashboardService
             'no_show_rate' => $finished > 0 ? round($noShows / $finished * 100, 1) : 0,
             'revenue' => round($completed->sum(fn (Appointment $a) => $a->dueAmount()), 2),
             'average_ticket' => $completed->count() > 0 ? round($completed->avg(fn (Appointment $a) => $a->dueAmount()), 2) : 0,
-            'new_clients' => User::where('role', UserRole::Client)->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])->count(),
+            'new_clients' => User::where('role', User::ROLE_CLIENT)->whereBetween('created_at', [$from->startOfDay(), $to->endOfDay()])->count(),
         ];
     }
 

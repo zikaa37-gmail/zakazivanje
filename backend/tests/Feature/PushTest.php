@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\ChatSession;
 use App\Models\PushSubscription;
 use App\Models\User;
@@ -40,7 +39,7 @@ class PushTest extends TestCase
         });
 
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
     }
 
     private function subscribe(User $user, string $endpoint = 'https://push.example.com/abc'): void

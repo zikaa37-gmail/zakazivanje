@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BlockedTime;
 use App\Models\BusinessSetting;
@@ -11,6 +10,7 @@ use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class BookingTest extends TestCase
@@ -47,7 +47,7 @@ class BookingTest extends TestCase
 
         $this->ana = $this->staff('Ana', null, [$this->cut->id, $this->blow->id]);
         $this->milica = $this->staff('Milica', 'automatic', [$this->cut->id]);
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
     }
 
     private function staff(string $name, ?string $mode, array $serviceIds): StaffMember
@@ -59,7 +59,7 @@ class BookingTest extends TestCase
         return $staff;
     }
 
-    private function guestBooking(array $overrides = []): \Illuminate\Testing\TestResponse
+    private function guestBooking(array $overrides = []): TestResponse
     {
         $this->app['auth']->forgetGuards();
 

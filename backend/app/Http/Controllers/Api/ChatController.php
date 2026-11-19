@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\ChatMessage;
 use App\Models\ChatSession;
@@ -82,7 +81,7 @@ class ChatController extends Controller
             ->whereNotNull('user_id')
             ->with('author:id,first_name,role')
             ->get(['chat_session_id', 'user_id'])
-            ->filter(fn (ChatMessage $m) => $m->author && $m->author->role !== UserRole::Client)
+            ->filter(fn (ChatMessage $m) => $m->author && $m->author->role !== User::ROLE_CLIENT)
             ->groupBy('chat_session_id')
             ->map(fn ($messages) => $messages->pluck('author.first_name')->unique()->values());
         $last = ChatMessage::whereIn('id', ChatMessage::selectRaw('max(id)')->whereIn('chat_session_id', $sessions->pluck('id'))->groupBy('chat_session_id'))->get()->keyBy('chat_session_id');
@@ -127,7 +126,7 @@ class ChatController extends Controller
     public function start(Request $request)
     {
         $data = $request->validate([
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Client)],
+            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', User::ROLE_CLIENT)],
             'appointment_id' => ['nullable', 'integer'],
             'subject' => ['nullable', 'string', 'max:150'],
             'body' => self::BODY_RULES,

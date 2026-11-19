@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\User;
 use App\Services\AiService;
@@ -20,7 +19,7 @@ class AiAssistantTest extends TestCase
     {
         parent::setUp();
         config(['services.anthropic.key' => null]);
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
     }
 
     public function test_ai_is_off_without_key_and_cannot_be_enabled(): void

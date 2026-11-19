@@ -10,7 +10,7 @@ class EnsureRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (! in_array($request->user()?->role?->value, $roles, true)) {
+        if (! in_array($request->user()?->role, $roles, true)) {
             abort(403, 'Nemaš pristup ovoj akciji.');
         }
 

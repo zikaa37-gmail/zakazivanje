@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
@@ -80,7 +79,7 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', UserRole::Client)],
+            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', User::ROLE_CLIENT)],
             'service_ids' => ['required', 'array', 'min:1'],
             'service_ids.*' => ['integer', 'distinct', 'exists:services,id'],
             'staff_member_id' => ['required', 'integer', 'exists:staff_members,id'],

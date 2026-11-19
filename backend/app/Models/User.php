@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\UserRole;
 use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use App\Services\WhatsAppService;
@@ -37,7 +36,24 @@ class User extends Authenticatable
 
     public const UI_MODES = ['standard', 'spacious'];
 
-    protected $attributes = ['role' => UserRole::Client->value];
+    public const string ROLE_CLIENT = 'client';
+
+    public const string ROLE_OWNER = 'owner';
+
+    public const string ROLE_MANAGER = 'manager';
+
+    public const string ROLE_WORKER = 'worker';
+
+    public const array STAFF_ROLES = [self::ROLE_OWNER, self::ROLE_MANAGER, self::ROLE_WORKER];
+
+    public const array ROLE_LABELS = [
+        self::ROLE_CLIENT => 'Klijent',
+        self::ROLE_OWNER => 'Vlasnik',
+        self::ROLE_MANAGER => 'Menadžer',
+        self::ROLE_WORKER => 'Radnik',
+    ];
+
+    protected $attributes = ['role' => self::ROLE_CLIENT];
 
     public const ZONE_GREEN = 'green';
 
@@ -56,7 +72,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'role' => UserRole::class,
             'favorite_staff_member_id' => 'integer',
             'staff_member_id' => 'integer',
             'discipline_points' => 'float',
@@ -113,7 +128,7 @@ class User extends Authenticatable
 
     public function isSuspended(): bool
     {
-        return $this->role === UserRole::Client && $this->discipline_zone === self::ZONE_RED;
+        return $this->role === self::ROLE_CLIENT && $this->discipline_zone === self::ZONE_RED;
     }
 
     protected function suspended(): Attribute
@@ -123,7 +138,7 @@ class User extends Authenticatable
 
     public function isOwner(): bool
     {
-        return $this->role === UserRole::Owner;
+        return $this->role === self::ROLE_OWNER;
     }
 
     public function isManager(): bool
@@ -133,17 +148,17 @@ class User extends Authenticatable
 
     public function isOfficeWorker(): bool
     {
-        return $this->role === UserRole::Manager;
+        return $this->role === self::ROLE_MANAGER;
     }
 
     public function isServiceWorker(): bool
     {
-        return $this->role === UserRole::Worker;
+        return $this->role === self::ROLE_WORKER;
     }
 
     public function isStaff(): bool
     {
-        return $this->role?->isStaff() ?? false;
+        return in_array($this->role, self::STAFF_ROLES, true);
     }
 
     public function fullName(): string

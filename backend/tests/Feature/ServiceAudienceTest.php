@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Service;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -69,7 +68,7 @@ class ServiceAudienceTest extends TestCase
 
     public function test_admin_is_held_to_the_same_rule(): void
     {
-        $admin = User::factory()->create(['role' => UserRole::Owner]);
+        $admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $petar = User::factory()->create(['gender' => 'male']);
 
         $this->actingAsJwt($admin)->postJson('/api/appointments', [

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\UserRole;
 use App\Events\ClientActivity;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
@@ -244,7 +243,7 @@ class BookingController extends Controller
         }
 
         $byPhone = User::query()
-            ->where('role', UserRole::Client)
+            ->where('role', User::ROLE_CLIENT)
             ->whereNull('password')
             ->whereNotNull('phone')
             ->get(['id', 'phone'])
@@ -259,7 +258,7 @@ class BookingController extends Controller
             'last_name' => $guest['last_name'],
             'phone' => $guest['phone'],
             'email' => $email,
-            'role' => UserRole::Client,
+            'role' => User::ROLE_CLIENT,
             'preferred_communication' => $email ? 'email' : 'whatsapp',
         ]);
     }

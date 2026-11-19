@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\Service;
@@ -36,7 +35,7 @@ class ChangeNoticeTest extends TestCase
         $cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 45, 'price' => 1500]);
         $this->ana = $this->staff('Ana', $cut);
         $this->milica = $this->staff('Milica', $cut);
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create();
 
         $this->id = $this->actingAsJwt($this->admin)->postJson('/api/appointments', [

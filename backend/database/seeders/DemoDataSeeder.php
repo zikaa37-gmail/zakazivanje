@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\ClientActivityLog;
 use App\Models\OpeningHour;
@@ -94,7 +93,7 @@ class DemoDataSeeder extends Seeder
                 'gender' => $female ? User::GENDER_FEMALE : User::GENDER_MALE,
                 'email' => "{$slug}@".self::DOMAIN,
                 'phone' => sprintf('+381 6%d %03d %04d', mt_rand(0, 9), mt_rand(100, 999), mt_rand(0, 9999)),
-                'role' => UserRole::Client,
+                'role' => User::ROLE_CLIENT,
                 'password' => $withAccount ? $password : null,
                 'preferred_communication' => $this->pick(['email', 'email', 'whatsapp', 'both']),
                 'favorite_staff_member_id' => mt_rand(1, 4) === 1 ? $staff->random()->id : null,

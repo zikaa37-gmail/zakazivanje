@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\Review;
@@ -31,7 +30,7 @@ class ReviewTest extends TestCase
         parent::setUp();
         $this->travelTo('2026-10-14 08:00:00');
 
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['first_name' => 'Petar', 'last_name' => 'Petrović']);
         $this->cut = Service::create(['name' => 'Šišanje', 'duration_minutes' => 60, 'price' => 2000]);
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);

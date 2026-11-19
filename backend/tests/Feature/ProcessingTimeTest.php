@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\BusinessSetting;
 use App\Models\Service;
 use App\Models\StaffMember;
@@ -35,7 +34,7 @@ class ProcessingTimeTest extends TestCase
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->color->id, $this->cut->id]);
         $this->ana->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
-        $this->admin = User::factory()->create(['role' => UserRole::Owner]);
+        $this->admin = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create();
     }
 

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Appointment;
 use App\Models\BusinessSetting;
 use App\Models\CancellationFee;
@@ -44,7 +43,7 @@ class CancellationFeeTest extends TestCase
         $this->ana = StaffMember::create(['first_name' => 'Ana', 'last_name' => 'Test']);
         $this->ana->services()->sync([$this->cut->id, $this->massage->id]);
         $this->ana->workingHours()->createMany(collect(range(1, 5))->map(fn ($d) => ['weekday' => $d, 'starts_at' => '09:00', 'ends_at' => '17:00'])->all());
-        $this->owner = User::factory()->create(['role' => UserRole::Owner]);
+        $this->owner = User::factory()->create(['role' => User::ROLE_OWNER]);
         $this->client = User::factory()->create(['email' => 'petar@example.com']);
     }
 
