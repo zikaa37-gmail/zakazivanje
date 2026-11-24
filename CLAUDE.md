@@ -330,8 +330,8 @@ nepročitano za osoblje = poruke klijenta). Pusher događaj `chat` na `private-u
 klijentu mejl / WhatsApp za poruke salona nepročitane 15 min (`notified_at`). Prekidač `chat_enabled` (podrazumevano uključen, Podešavanja →
 Zakazivanje). Frontend: `ChatService`, `<app-chat-thread>` (deljen prikaz i unos), klijent `<app-chat-widget>` (dugme dole desno u javnoj
 školjci, „Poruka salonu“ na terminu, `?chat=1`), osoblje `/admin/chat` (Aktivni / Završeni, `?session=` ili `?client=&appointment=&name=` za
-novu poruku iz detalja termina). Uslove nad spojenim tabelama ne pisati kao `whereRaw` sa imenima tabela — lokalna i produkciona baza imaju
-prefiks `zk_`, a testovi (SQLite) nemaju.
+novu poruku iz detalja termina). Uslove nad spojenim tabelama ne pisati kao `whereRaw` sa imenima tabela — sve baze (lokalna, test i produkciona,
+sve MySQL) imaju prefiks `zk_` iz `DB_PREFIX`.
 PWA i push na telefon: manifest `GET /api/public/manifest.webmanifest` i ikonica `GET /api/public/app-icon/{180|192|512}.png` (iz logoa salona,
 pozadina = boja ugla logoa; bez logoa početno slovo na primarnoj boji), `frontend/public/sw.js` (push → obaveštenje + `setAppBadge`, klik otvara
 `link`). Web Push sa sopstvenim VAPID ključevima (`WEBPUSH_*` u `.env`, `minishlink/web-push`), `push_subscriptions` po uređaju;
