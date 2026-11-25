@@ -202,6 +202,7 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::post('/staff/{staffMember}/active', [StaffMemberController::class, 'setActive']);
     Route::get('/staff/{staffMember}/future-appointments', [StaffMemberController::class, 'futureAppointments']);
     Route::post('/staff/{staffMember}/invite', [StaffMemberController::class, 'invite'])->middleware('throttle:booking');
+    Route::post('/staff/{staffMember}/password', [StaffMemberController::class, 'setPassword']);
 
     Route::post('/staff-absences/pending-count', [StaffAbsenceController::class, 'pendingCount']);
     Route::post('/staff-absences/{absence}/approve', [StaffAbsenceController::class, 'approve']);

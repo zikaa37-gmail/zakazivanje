@@ -43,6 +43,7 @@ export interface StaffMemberPayload {
   rotation_starts_on: string | null;
   working_hours: WorkingHour[];
   send_invite?: boolean;
+  password?: string | null;
 }
 
 export const WEEKDAYS: { value: number; short: string; label: string }[] = [

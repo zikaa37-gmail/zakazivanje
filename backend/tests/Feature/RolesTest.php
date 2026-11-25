@@ -206,6 +206,37 @@ class RolesTest extends TestCase
         $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/invite")->assertUnprocessable();
     }
 
+    public function test_manager_sets_password_so_worker_can_log_in_without_email(): void
+    {
+        $office = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $id = $this->actingAsJwt($office)->postJson('/api/staff', $this->staffPayload())->assertCreated()->json('id');
+        $worker = User::where('staff_member_id', $id)->first();
+
+        $this->actingAsJwt($office)->postJson("/api/staff/{$id}/password", ['password' => 'kratka'])->assertUnprocessable()->assertJsonValidationErrors('password');
+        $this->actingAsJwt($worker)->postJson("/api/staff/{$id}/password", ['password' => 'salon2026'])->assertForbidden();
+
+        $this->actingAsJwt($office)->postJson("/api/staff/{$id}/password", ['password' => 'salon2026'])->assertOk();
+        $this->postJson('/api/auth/login', ['email' => 'ana@salon.rs', 'password' => 'salon2026'])->assertOk();
+        $this->actingAsJwt($office)->postJson('/api/staff/list')->assertOk()->assertJsonPath('0.account.has_password', true);
+
+        $ownerStaff = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['email' => $this->owner->email]))->json('id');
+        $this->actingAsJwt($office)->postJson("/api/staff/{$ownerStaff}/password", ['password' => 'salon2026'])->assertForbidden();
+
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/password", ['password' => 'salon2027'])->assertUnprocessable();
+    }
+
+    public function test_new_staff_member_can_get_password_instead_of_invite(): void
+    {
+        Notification::fake();
+
+        $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['send_invite' => true, 'password' => 'salon2026']))
+            ->assertCreated()->assertJsonPath('account.has_password', true);
+
+        Notification::assertNothingSent();
+        $this->postJson('/api/auth/login', ['email' => 'ana@salon.rs', 'password' => 'salon2026'])->assertOk();
+    }
+
     public function test_last_owner_cannot_be_demoted_or_deactivated(): void
     {
         $ownerStaff = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['email' => $this->owner->email]))->json('id');

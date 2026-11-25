@@ -77,6 +77,11 @@ class StaffAccountService
         $user->notify(new StaffInviteNotification(Password::broker()->createToken($user)));
     }
 
+    public function setPassword(User $user, string $password): void
+    {
+        $user->forceFill(['password' => $password])->save();
+    }
+
     private function deactivate(User $account): void
     {
         $account->forceFill(['active' => false])->save();

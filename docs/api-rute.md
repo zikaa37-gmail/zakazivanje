@@ -138,7 +138,7 @@ Vlasnik i radnik — svakodnevni rad.
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`), `staff_term` + `staff_term_genitive` (kako se zovu zaposleni: „Tvoj frizer“ / „kod tvog frizera“), `ai_enabled` (samo uz sačuvan API ključ) |
-| POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); `email` (obavezan) je nalog za prijavu (`users.staff_member_id`), `role`, `ui_mode`, `send_invite` (samo pri dodavanju); vlasnika menja samo vlasnik |
+| POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); `email` (obavezan) je nalog za prijavu (`users.staff_member_id`), `role`, `ui_mode`, `send_invite` i `password` (samo pri dodavanju; uz lozinku se pozivnica ne šalje); vlasnika menja samo vlasnik |
 | POST | `/staff/{id}/active` | `{active}` — deaktivacija umesto brisanja (termini i statistika ostaju, ne nudi se za zakazivanje, nalog radnika se gasi) → zaposleni + `future_appointments` |
 | POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `service_category_id`, `staff_member_ids`; odgovor nosi i `category` (naziv kategorije) |
 | GET | `/service-categories` | kategorije po redosledu, sa `services_count` i `active_services_count` |
@@ -181,3 +181,4 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
 | POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom korisniku |
 | POST | `/staff/{id}/invite` | mejl sa linkom za postavljanje lozinke (nalog zaposlenog; vlasnika samo vlasnik) |
+| POST | `/staff/{id}/password` | `password` (min 8): vlasnik / menadžer sam postavlja lozinku zaposlenom (vlasnika samo vlasnik; ne za neaktivne) |
