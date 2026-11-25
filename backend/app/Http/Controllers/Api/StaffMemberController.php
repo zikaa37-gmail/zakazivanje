@@ -40,11 +40,15 @@ class StaffMemberController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $password = $request->validate(['password' => ['nullable', 'string', 'min:8', 'max:100']])['password'] ?? null;
 
         $staff = DB::transaction(fn () => $this->persist(new StaffMember, $data, $request->user()));
 
         $account = $staff->account()->first();
-        if (($data['send_invite'] ?? false) && $account) {
+        if ($password !== null && $account) {
+            $this->accounts->setPassword($account, $password);
+            $staff->load(['account' => $this->accountColumns(...)]);
+        } elseif (($data['send_invite'] ?? false) && $account) {
             $this->accounts->invite($account);
         }
 
@@ -110,6 +114,24 @@ class StaffMemberController extends Controller
         $this->accounts->invite($account);
 
         return response()->json(['message' => "Pozivnica je poslata na {$account->email}."]);
+    }
+
+    public function setPassword(Request $request, StaffMember $staffMember)
+    {
+        $this->ensureCanManage($request->user(), $staffMember);
+        $data = $request->validate(['password' => ['required', 'string', 'min:8', 'max:100']]);
+        $account = $staffMember->account;
+
+        if (! $account) {
+            throw ValidationException::withMessages(['password' => ['Zaposleni nema nalog. Prvo mu upiši email.']]);
+        }
+        if (! $account->active) {
+            throw ValidationException::withMessages(['password' => ['Zaposleni je neaktivan. Prvo ga aktiviraj.']]);
+        }
+
+        $this->accounts->setPassword($account, $data['password']);
+
+        return response()->json(['message' => "Lozinka je postavljena. Prijava: {$account->email}"]);
     }
 
     private function accountColumns($query): void

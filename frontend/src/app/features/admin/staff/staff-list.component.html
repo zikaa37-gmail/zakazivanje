@@ -434,12 +434,28 @@
         (checkedChange)="form.controls.active.setValue($event)"
       />
       @if (!editing()) {
-        <app-toggle
-          [checked]="form.controls.send_invite.value"
-          label="Pošalji pozivnicu na email (link za postavljanje lozinke)"
-          (checkedChange)="form.controls.send_invite.setValue($event)"
-          data-testid="staff-send-invite"
-        />
+        <div class="field mt-3">
+          <label for="staff-password" class="text-sm font-semibold">Lozinka za prijavu (nije obavezno)</label>
+          <input
+            id="staff-password"
+            appInput
+            size="m"
+            type="text"
+            autocomplete="off"
+            [formControl]="form.controls.password"
+            placeholder="npr. salon2026"
+            data-testid="staff-password"
+          />
+          <span class="text-xs muted">Upiši lozinku i saopšti je zaposlenom, pa ne mora ništa da podešava. Bar 8 znakova.</span>
+        </div>
+        @if (!form.controls.password.value) {
+          <app-toggle
+            [checked]="form.controls.send_invite.value"
+            label="Pošalji pozivnicu na email (link za postavljanje lozinke)"
+            (checkedChange)="form.controls.send_invite.setValue($event)"
+            data-testid="staff-send-invite"
+          />
+        }
       }
     </form>
 
@@ -495,5 +511,44 @@
     >
       {{ l.appointments.length > 0 ? 'Otkaži sve i deaktiviraj' : 'Deaktiviraj' }}
     </button>
+  </app-modal>
+}
+
+@if (passwordFor(); as p) {
+  <app-modal
+    [title]="(p.account?.has_password ? 'Nova lozinka — ' : 'Lozinka — ') + p.first_name + ' ' + p.last_name"
+    footerMode="custom"
+    (cancelled)="passwordFor.set(null)"
+    testId="staff-password-modal"
+  >
+    <app-error-message [message]="passwordError()" />
+    <form (submit)="$event.preventDefault(); savePassword()" novalidate>
+      <div class="field">
+        <label for="staff-new-password" class="text-sm font-semibold">Lozinka</label>
+        <div class="flex gap-2">
+          <input
+            id="staff-new-password"
+            appInput
+            size="m"
+            type="text"
+            class="flex-1 min-w-0"
+            autocomplete="off"
+            [formControl]="newPassword"
+            data-testid="staff-new-password"
+          />
+          <button type="button" appBtn theme="secondary" size="s" (click)="suggestNewPassword()" data-testid="staff-suggest-password">
+            Predloži
+          </button>
+        </div>
+        <span class="text-xs muted">Bar 8 znakova. Zapiši je ili saopšti zaposlenom.</span>
+      </div>
+      <p class="text-sm mt-3">
+        Prijava: <strong>{{ p.email }}</strong> i ova lozinka. Zaposleni kasnije može sam da je promeni u Profilu.
+      </p>
+    </form>
+    <button modal-footer type="button" appBtn theme="secondary" size="s" (click)="passwordFor.set(null)">Otkaži</button>
+    <app-button modal-footer theme="primary" size="s" [loading]="passwordSaving()" (click)="savePassword()" data-testid="staff-password-save"
+      >Sačuvaj lozinku</app-button
+    >
   </app-modal>
 }

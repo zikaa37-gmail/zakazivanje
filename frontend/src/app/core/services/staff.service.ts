@@ -26,6 +26,10 @@ export class StaffService {
     return this.http.post<{ message: string }>(`${this.api}/${id}/invite`, {});
   }
 
+  setPassword(id: number, password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.api}/${id}/password`, { password });
+  }
+
   setActive(id: number, active: boolean, cancelFuture = false): Observable<StaffMember & { cancelled_appointments: number }> {
     return this.http.post<StaffMember & { cancelled_appointments: number }>(`${this.api}/${id}/active`, { active, cancel_future: cancelFuture });
   }

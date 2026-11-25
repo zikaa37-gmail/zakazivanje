@@ -106,13 +106,24 @@ export class StaffListComponent {
     booking_confirmation: this.fb.control<ConfirmationMode | null>(null),
     active: this.fb.nonNullable.control(true),
     send_invite: this.fb.nonNullable.control(true),
+    password: this.fb.nonNullable.control('', Validators.minLength(8)),
   });
+
+  readonly passwordFor = signal<StaffMember | null>(null);
+  readonly passwordSaving = signal(false);
+  readonly passwordError = signal<string | null>(null);
+  readonly newPassword = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(8)]);
 
   rowActions(member: StaffMember): RowAction[] {
     if (member.account?.role === Role.Owner && !this.auth.isOwner()) return [];
     return [
       { id: 'edit', label: 'Izmeni', icon: 'edit' },
-      ...(member.active && member.account ? [{ id: 'invite', label: member.account.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' as const }] : []),
+      ...(member.active && member.account
+        ? [
+            { id: 'password', label: member.account.has_password ? 'Promeni lozinku' : 'Postavi lozinku', icon: 'key' as const },
+            { id: 'invite', label: member.account.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' as const },
+          ]
+        : []),
       member.active ? { id: 'deactivate', label: 'Deaktiviraj', icon: 'lock', danger: true } : { id: 'activate', label: 'Aktiviraj', icon: 'unlock' },
     ];
   }
@@ -239,6 +250,7 @@ export class StaffListComponent {
   onAction(member: StaffMember, action: string): void {
     if (action === 'edit') this.openForm(member);
     if (action === 'invite') this.invite(member);
+    if (action === 'password') this.openPassword(member);
     if (action === 'deactivate') this.deactivate(member);
     if (action === 'activate') this.activate(member);
   }
@@ -257,6 +269,7 @@ export class StaffListComponent {
       booking_confirmation: member?.booking_confirmation ?? null,
       active: member?.active ?? true,
       send_invite: !member,
+      password: '',
     });
     if (this.roleLocked()) this.form.controls.role.disable();
     else this.form.controls.role.enable();
@@ -322,7 +335,7 @@ export class StaffListComponent {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.formError.set('Popuni ime, prezime, telefon i email.');
+      this.formError.set(this.form.controls.password.invalid ? 'Lozinka mora imati bar 8 znakova.' : 'Popuni ime, prezime, telefon i email.');
       return;
     }
 
@@ -331,6 +344,8 @@ export class StaffListComponent {
       ...value,
       phone: value.phone || null,
       email: value.email || null,
+      password: this.editing() ? undefined : value.password || null,
+      send_invite: value.send_invite && !value.password,
       service_ids: [...this.selectedServices()],
       rotation_weeks: this.rotationWeeks(),
       rotation_starts_on: this.rotationWeeks() > 1 ? this.rotationStart() : null,
@@ -346,7 +361,7 @@ export class StaffListComponent {
       next: () => {
         this.saving.set(false);
         this.modalOpen.set(false);
-        this.toast.success(member ? 'Zaposleni je sačuvan.' : value.send_invite ? 'Zaposleni je dodat i pozivnica je poslata.' : 'Zaposleni je dodat.');
+        this.toast.success(member ? 'Zaposleni je sačuvan.' : value.password ? `Zaposleni je dodat. Prijava: ${value.email} i lozinka koju si upisao.` : value.send_invite ? 'Zaposleni je dodat i pozivnica je poslata.' : 'Zaposleni je dodat.');
         this.load();
       },
       error: (err) => {
@@ -354,6 +369,45 @@ export class StaffListComponent {
         this.formError.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
       },
     });
+  }
+
+  openPassword(member: StaffMember): void {
+    this.newPassword.reset(this.suggestPassword());
+    this.passwordError.set(null);
+    this.passwordFor.set(member);
+  }
+
+  suggestNewPassword(): void {
+    this.newPassword.setValue(this.suggestPassword());
+  }
+
+  savePassword(): void {
+    const member = this.passwordFor();
+    if (!member) return;
+    if (this.newPassword.invalid) {
+      this.passwordError.set('Lozinka mora imati bar 8 znakova.');
+      return;
+    }
+    this.passwordSaving.set(true);
+    this.passwordError.set(null);
+    this.staffService.setPassword(member.id, this.newPassword.value).subscribe({
+      next: (res) => {
+        this.passwordSaving.set(false);
+        this.passwordFor.set(null);
+        this.toast.success(res.message);
+        this.load();
+      },
+      error: (err) => {
+        this.passwordSaving.set(false);
+        this.passwordError.set(apiErrorMessage(err, 'Postavljanje lozinke nije uspelo.'));
+      },
+    });
+  }
+
+  private suggestPassword(): string {
+    const words = ['salon', 'termin', 'makaze', 'cesalj', 'frizura', 'boja', 'pramen', 'sjaj'];
+    const word = words[Math.floor(Math.random() * words.length)];
+    return `${word}${1000 + Math.floor(Math.random() * 9000)}`;
   }
 
   private invite(member: StaffMember): void {
