@@ -1,4 +1,4 @@
--- Tabela `zk_promotions`: šema i podaci iz lokalne baze (19.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_promotions`: šema i podaci iz lokalne baze (25.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -31,7 +31,7 @@ CREATE TABLE `zk_promotions` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `zk_promotions_code_unique` (`code`),
   KEY `zk_promotions_type_index` (`type`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 SET FOREIGN_KEY_CHECKS=1;
