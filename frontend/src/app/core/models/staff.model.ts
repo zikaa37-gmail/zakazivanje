@@ -55,3 +55,11 @@ export const WEEKDAYS: { value: number; short: string; label: string }[] = [
   { value: 6, short: 'S', label: 'Subota' },
   { value: 7, short: 'N', label: 'Nedelja' },
 ];
+
+export interface StaffDeleteCheck {
+  appointments: number;
+  paid_appointments: number;
+  reviews: number;
+  absences: number;
+  has_account: boolean;
+}

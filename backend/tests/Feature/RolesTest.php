@@ -69,7 +69,33 @@ class RolesTest extends TestCase
         $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();
         $this->assertFalse($worker->refresh()->active);
         $this->assertModelExists(StaffMember::find($id));
-        $this->actingAsJwt($this->owner)->deleteJson("/api/staff/{$id}")->assertStatus(405);
+    }
+
+    public function test_only_inactive_staff_member_is_deleted_with_everything_linked(): void
+    {
+        $id = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload())->assertCreated()->json('id');
+        $account = User::where('staff_member_id', $id)->first();
+        $client = User::factory()->create(['favorite_staff_member_id' => $id]);
+        $appointment = Appointment::create(['client_id' => $client->id, 'staff_member_id' => $id, 'starts_at' => '2026-10-02 10:00', 'ends_at' => '2026-10-02 10:30', 'status' => 'completed', 'source' => 'admin', 'price' => 1000, 'discount' => 0, 'total' => 1000]);
+
+        $this->actingAsJwt($this->owner)->deleteJson("/api/staff/{$id}")->assertUnprocessable()->assertJsonValidationErrors('active');
+
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$id}/active", ['active' => false])->assertOk();
+        $this->actingAsJwt($this->owner)->getJson("/api/staff/{$id}/delete-check")->assertOk()
+            ->assertJsonPath('appointments', 1)->assertJsonPath('has_account', true);
+
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $ownerMemberId = $this->actingAsJwt($this->owner)->postJson('/api/staff', $this->staffPayload(['email' => 'vlasnik2@salon.rs', 'role' => User::ROLE_OWNER]))->assertCreated()->json('id');
+        $this->actingAsJwt($this->owner)->postJson("/api/staff/{$ownerMemberId}/active", ['active' => false])->assertOk();
+        $this->actingAsJwt($manager)->deleteJson("/api/staff/{$ownerMemberId}")->assertForbidden();
+
+        $this->actingAsJwt($manager)->deleteJson("/api/staff/{$id}")->assertNoContent();
+
+        $this->assertModelMissing($appointment);
+        $this->assertModelMissing($account);
+        $this->assertNull(StaffMember::find($id));
+        $this->assertNull($client->refresh()->favorite_staff_member_id);
+        $this->assertModelExists($client);
     }
 
     public function test_role_is_chosen_in_staff_form(): void

@@ -117,6 +117,8 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/staff-absences` | `{staff_member_id, starts_on, ends_on, type: sick\|vacation\|other, note?}` — upisuje bilo ko iz osoblja; vlasnik / menadžer → odmah odobreno (blokada celih dana), inače čeka i oni dobijaju obaveštenje |
 | GET | `/staff-absences/{id}/appointments` | termini zaposlenog u periodu, sa telefonom klijenta i `alternatives` (slobodne kolege) |
 | GET | `/staff/{id}/future-appointments` | budući termini zaposlenog (kao kod odsustva, sa `alternatives`); `POST /staff/{id}/active` sa `active: false` odbija dok ih ima, osim uz `cancel_future: true` (otkazuje sve uz obaveštenje, gasi ponavljanja) |
+| GET | `/staff/{id}/delete-check` | pre trajnog brisanja: `{appointments, paid_appointments, reviews, absences, has_account}` |
+| DELETE | `/staff/{id}` | trajno briše **neaktivnog** zaposlenog kaskadno: termini (sa uplatama, recenzijama, naknadama), radno vreme, usluge, blokade, odsustva, ponavljanja i nalog za prijavu; aktivan → 422; vlasnika briše samo vlasnik; sebe ne |
 | POST | `/clients/directory` | svi klijenti (bez slike) za izbor i pretragu na frontendu |
 | GET | `/clients/{id}/deactivate-check` | `{future, balance, gift_cards}` — šta deaktivacija dira |
 | PUT | `/auth/ui-mode` | `{ui_mode: standard \| spacious}` — prikaz za prijavljeni nalog (osoblje ga menja i u `PUT /staff/{id}`) |

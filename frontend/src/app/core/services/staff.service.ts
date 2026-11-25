@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { StaffMember, StaffMemberPayload } from '../models/staff.model';
+import { StaffDeleteCheck, StaffMember, StaffMemberPayload } from '../models/staff.model';
 
 @Injectable({ providedIn: 'root' })
 export class StaffService {
@@ -36,5 +36,13 @@ export class StaffService {
 
   futureAppointments(id: number): Observable<AffectedAppointment[]> {
     return this.http.get<AffectedAppointment[]>(`${this.api}/${id}/future-appointments`);
+  }
+
+  deleteCheck(id: number): Observable<StaffDeleteCheck> {
+    return this.http.get<StaffDeleteCheck>(`${this.api}/${id}/delete-check`);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/${id}`);
   }
 }
