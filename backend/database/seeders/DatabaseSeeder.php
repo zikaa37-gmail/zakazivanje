@@ -8,12 +8,13 @@ use App\Models\Service;
 use App\Models\ServiceCategory;
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Services\StaffAccountService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run(): void
+    public function run(StaffAccountService $accounts): void
     {
         User::factory()->create([
             'first_name' => 'Vlasnik',
@@ -104,5 +105,7 @@ class DatabaseSeeder extends Seeder
             ->services()->sync($services->only(['Muško šišanje'])->pluck('id'));
 
         Promotion::create(['name' => 'Svaka 10. poseta −50%', 'type' => Promotion::TYPE_LOYALTY, 'loyalty_visits' => 10, 'discount_percent' => 50]);
+
+        $accounts->linkUnlinkedAccounts();
     }
 }

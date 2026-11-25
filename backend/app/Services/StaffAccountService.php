@@ -42,9 +42,7 @@ class StaffAccountService
             'phone' => $account->phone ?? $staff->phone,
         ]);
         $account->staff_member_id = $staff->id;
-        if ($account->role === User::ROLE_WORKER) {
-            $account->active = $staff->active ?? true;
-        }
+        $account->active = $staff->active ?? true;
         $account->save();
 
         if (! $account->active) {
@@ -52,6 +50,26 @@ class StaffAccountService
         }
 
         return $account;
+    }
+
+    public function linkUnlinkedAccounts(): int
+    {
+        $accounts = User::whereIn('role', User::STAFF_ROLES)->whereNull('staff_member_id')->orderBy('id')->get();
+
+        foreach ($accounts as $account) {
+            $member = StaffMember::where('email', $account->email)->whereDoesntHave('account')->first()
+                ?? StaffMember::create([
+                    'first_name' => $account->first_name,
+                    'last_name' => $account->last_name,
+                    'email' => $account->email,
+                    'phone' => $account->phone,
+                    'active' => $account->active,
+                    'sort_order' => (int) StaffMember::max('sort_order') + 1,
+                ]);
+            $account->forceFill(['staff_member_id' => $member->id])->save();
+        }
+
+        return $accounts->count();
     }
 
     public function invite(User $user): void

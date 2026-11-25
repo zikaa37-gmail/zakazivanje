@@ -289,7 +289,7 @@ async function run(b, before) {
   await o.waitForTimeout(1000);
 
   await go(o, '/admin/staff', 1500, '[data-testid^=staff-actions-]');
-  await shot(o, 'admin-08-zaposleni', [{ sel: '[data-testid=team-tab-staff]' }, { sel: '[data-testid=team-tab-accounts]' }, { sel: '[data-testid=staff-add]' }], { scroll: false });
+  await shot(o, 'admin-08-zaposleni', [{ sel: '[data-testid=staff-add]' }], { scroll: false });
   await o.click('[data-testid=staff-add]');
   await o.waitForTimeout(600);
   await shot(o, 'admin-09-novi-zaposleni', [{ sel: '[data-testid=staff-first-name]' }, { sel: '[data-testid=staff-last-name]' }, { sel: '[data-testid=staff-confirmation]' }], { block: 'start' });
@@ -307,10 +307,9 @@ async function run(b, before) {
   await shot(o, 'admin-11-radno-vreme-zaposlenog', [{ sel: '[data-guide=shift]' }, { sel: '[data-guide=time]' }, { sel: '[data-guide=copy]' }], { scroll: false });
   await closeModal(o);
 
-  await go(o, '/admin/team', 1500, '.row-actions-trigger');
-  await shot(o, 'admin-12-nalozi', [{ sel: '[data-testid=team-tab-accounts]' }, { sel: '[data-testid=team-add]' }], { scroll: false });
+  await go(o, '/admin/staff', 1500, '.row-actions-trigger');
   await o.evaluate(() => {
-    const rows = [...document.querySelectorAll('[data-testid^=team-]')].filter((r) => /^team-\d+$/.test(r.dataset.testid));
+    const rows = [...document.querySelectorAll('[data-testid^=staff-]')].filter((r) => /^staff-\d+$/.test(r.dataset.testid));
     const row = rows.find((r) => r.textContent.includes('Čeka lozinku')) ?? rows.find((r) => r.querySelector('.row-actions-trigger'));
     row?.querySelector('.row-actions-trigger')?.setAttribute('data-guide', 'invite');
     row?.scrollIntoView({ block: 'center' });

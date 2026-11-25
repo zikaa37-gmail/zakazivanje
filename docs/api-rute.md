@@ -119,7 +119,7 @@ Vlasnik i radnik — svakodnevni rad.
 | GET | `/staff/{id}/future-appointments` | budući termini zaposlenog (kao kod odsustva, sa `alternatives`); `POST /staff/{id}/active` sa `active: false` odbija dok ih ima, osim uz `cancel_future: true` (otkazuje sve uz obaveštenje, gasi ponavljanja) |
 | POST | `/clients/directory` | svi klijenti (bez slike) za izbor i pretragu na frontendu |
 | GET | `/clients/{id}/deactivate-check` | `{future, balance, gift_cards}` — šta deaktivacija dira |
-| PUT | `/auth/ui-mode` | `{ui_mode: standard \| spacious}` — prikaz za prijavljeni nalog (osoblje ga menja i u `PUT /team/{id}`) |
+| PUT | `/auth/ui-mode` | `{ui_mode: standard \| spacious}` — prikaz za prijavljeni nalog (osoblje ga menja i u `PUT /staff/{id}`) |
 | PUT | `/staff-absences/{id}` | `{starts_on, ends_on, type, note?}` — izmena (vlasnik / menadžer svako, upisani dok čeka); preklapanje se proverava bez tog odsustva, odobrenom se pomera i blokada |
 | DELETE | `/staff-absences/{id}` | uklanja odsustvo i blokadu (menadžer, ili onaj ko je upisao dok čeka) |
 | POST | `/cancellation-fees/list` | `{client_id?, status?: free\|open\|paid\|waived}` — naknade za kasno otkazivanje |
@@ -138,7 +138,7 @@ Vlasnik i radnik — svakodnevni rad.
 | Metoda | Ruta | Opis |
 | --- | --- | --- |
 | PUT | `/business-settings` | podaci o biznisu, logo (data URL), `theme_primary/secondary/tertiary`, `booking_confirmation` (`manual` / `automatic`), `staff_term` + `staff_term_genitive` (kako se zovu zaposleni: „Tvoj frizer“ / „kod tvog frizera“), `ai_enabled` (samo uz sačuvan API ključ) |
-| POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); sa `email` zaposleni automatski dobija nalog radnika (`users.staff_member_id`) |
+| POST / PUT | `/staff`, `/staff/{id}` | `service_ids`, `working_hours: [{weekday 1–7, starts_at, ends_at}]` (više smena po danu, bez preklapanja), `booking_confirmation` (`null` = kao biznis); `email` (obavezan) je nalog za prijavu (`users.staff_member_id`), `role`, `ui_mode`, `send_invite` (samo pri dodavanju); vlasnika menja samo vlasnik |
 | POST | `/staff/{id}/active` | `{active}` — deaktivacija umesto brisanja (termini i statistika ostaju, ne nudi se za zakazivanje, nalog radnika se gasi) → zaposleni + `future_appointments` |
 | POST / PUT / DELETE | `/services`, `/services/{id}` | `duration_minutes`, `price`, `service_category_id`, `staff_member_ids`; odgovor nosi i `category` (naziv kategorije) |
 | GET | `/service-categories` | kategorije po redosledu, sa `services_count` i `active_services_count` |
@@ -180,6 +180,4 @@ Vlasnik i radnik — svakodnevni rad.
 | POST | `/dashboard/stats` | `{from, to}` (najviše godinu dana) → `summary`, `previous` (prethodni period iste dužine), `series` po danu, `top_services`, `staff_utilization` |
 | POST | `/notification-logs/list` | `{status?}` → poslednjih 100 slanja (tip, kanal, primalac, status) |
 | POST | `/notifications/test` | `{channel: mail \| whatsapp}` → probna poruka trenutnom korisniku |
-| POST | `/team/list` | nalozi osoblja (vlasnici i radnici) sa `staff_member`, `has_password` |
-| POST / PUT / DELETE | `/team`, `/team/{id}` | `{first_name, last_name, email, phone?, role: owner \| worker, active?, send_invite?}` — menadžer ili vlasnik; nalogu zaposlenog menjaju se samo `role` i `active`; mora ostati bar jedan aktivan vlasnik |
-| POST | `/team/{id}/invite` | mejl sa linkom za postavljanje lozinke |
+| POST | `/staff/{id}/invite` | mejl sa linkom za postavljanje lozinke (nalog zaposlenog; vlasnika samo vlasnik) |

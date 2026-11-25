@@ -25,7 +25,7 @@ export interface StaffMember {
   current_week: number;
   working_hours: WorkingHour[];
   services: { id: number; name: string }[];
-  account?: { id: number; role: UserRole; active: boolean; ui_mode: UiMode } | null;
+  account?: { id: number; role: UserRole; active: boolean; ui_mode: UiMode; has_password: boolean; last_login_at: string | null } | null;
 }
 
 export interface StaffMemberPayload {
@@ -42,6 +42,7 @@ export interface StaffMemberPayload {
   rotation_weeks: number;
   rotation_starts_on: string | null;
   working_hours: WorkingHour[];
+  send_invite?: boolean;
 }
 
 export const WEEKDAYS: { value: number; short: string; label: string }[] = [
