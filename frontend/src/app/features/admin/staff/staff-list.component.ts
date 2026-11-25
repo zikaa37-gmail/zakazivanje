@@ -6,7 +6,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CONFIRMATION_OPTIONS, ConfirmationMode, ShiftTemplate } from '../../../core/models/business-setting.model';
 import { SalonService } from '../../../core/models/service.model';
-import { StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
+import { StaffDeleteCheck, StaffMember, StaffMemberPayload, WEEKDAYS } from '../../../core/models/staff.model';
 import { STAFF_ROLE_OPTIONS } from '../../../core/models/team.model';
 import { ROLE_LABELS, Role, UI_MODES, UiMode, UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -124,7 +124,12 @@ export class StaffListComponent {
             { id: 'invite', label: member.account.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' as const },
           ]
         : []),
-      member.active ? { id: 'deactivate', label: 'Deaktiviraj', icon: 'lock', danger: true } : { id: 'activate', label: 'Aktiviraj', icon: 'unlock' },
+      ...(member.active
+        ? [{ id: 'deactivate', label: 'Deaktiviraj', icon: 'lock' as const, danger: true }]
+        : [
+            { id: 'activate', label: 'Aktiviraj', icon: 'unlock' as const },
+            { id: 'delete', label: 'Obriši trajno', icon: 'trash' as const, danger: true },
+          ]),
     ];
   }
 
@@ -248,6 +253,7 @@ export class StaffListComponent {
     if (action === 'password') this.openPassword(member);
     if (action === 'deactivate') this.deactivate(member);
     if (action === 'activate') this.activate(member);
+    if (action === 'delete') this.remove(member);
   }
 
   openForm(member: StaffMember | null = null): void {
@@ -462,6 +468,35 @@ export class StaffListComponent {
       danger: false,
     });
     if (ok) this.setActive(member, true);
+  }
+
+  private remove(member: StaffMember): void {
+    this.staffService.deleteCheck(member.id).subscribe({
+      next: (check) => void this.confirmRemove(member, check),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Provera nije uspela.')),
+    });
+  }
+
+  private async confirmRemove(member: StaffMember, check: StaffDeleteCheck): Promise<void> {
+    const parts = [
+      check.appointments ? `termini: ${check.appointments}${check.paid_appointments ? ` (od toga sa uplatom: ${check.paid_appointments})` : ''}` : null,
+      check.reviews ? `recenzije: ${check.reviews}` : null,
+      check.absences ? `odsustva: ${check.absences}` : null,
+      check.has_account ? 'nalog za prijavu' : null,
+    ].filter(Boolean);
+    const ok = await this.confirm.confirm({
+      title: 'Trajno brisanje zaposlenog',
+      message: `${member.first_name} ${member.last_name} se briše zauvek, zajedno sa radnim vremenom, uslugama i blokadama${parts.length ? `, i: ${parts.join(', ')}` : ''}. Termini nestaju iz izveštaja i statistike, a ovo ne može da se vrati.`,
+      confirmLabel: 'Obriši trajno',
+    });
+    if (!ok) return;
+    this.staffService.delete(member.id).subscribe({
+      next: () => {
+        this.toast.success('Zaposleni je obrisan.');
+        this.load();
+      },
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Brisanje nije uspelo.')),
+    });
   }
 
   private setActive(member: StaffMember, active: boolean, cancelFuture = false): void {

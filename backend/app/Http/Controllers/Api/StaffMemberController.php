@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\StaffAbsenceService;
 use App\Services\StaffAccountService;
 use App\Services\StaffDeactivationService;
+use App\Services\StaffDeletionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class StaffMemberController extends Controller
 {
-    public function __construct(private StaffAccountService $accounts, private StaffDeactivationService $deactivation) {}
+    public function __construct(private StaffAccountService $accounts, private StaffDeactivationService $deactivation, private StaffDeletionService $deletion) {}
 
     public function futureAppointments(StaffMember $staffMember, StaffAbsenceService $absences)
     {
@@ -97,6 +98,29 @@ class StaffMemberController extends Controller
             ...$staffMember->load(['workingHours', 'services:id,name', 'account' => $this->accountColumns(...)])->toArray(),
             'cancelled_appointments' => $cancelled,
         ];
+    }
+
+    public function deleteCheck(Request $request, StaffMember $staffMember)
+    {
+        $this->ensureCanManage($request->user(), $staffMember);
+
+        return $this->deletion->summary($staffMember);
+    }
+
+    public function destroy(Request $request, StaffMember $staffMember)
+    {
+        $this->ensureCanManage($request->user(), $staffMember);
+
+        if ($staffMember->active) {
+            throw ValidationException::withMessages(['active' => ['Aktivan zaposleni ne može da se obriše. Prvo ga deaktiviraj.']]);
+        }
+        if ($staffMember->account?->is($request->user())) {
+            throw ValidationException::withMessages(['active' => ['Ne možeš da obrišeš sebe.']]);
+        }
+
+        $this->deletion->delete($staffMember);
+
+        return response()->noContent();
     }
 
     public function invite(Request $request, StaffMember $staffMember)
