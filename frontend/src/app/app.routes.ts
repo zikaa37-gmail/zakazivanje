@@ -182,9 +182,7 @@ export const routes: Routes = [
       },
       {
         path: 'team',
-        canActivate: [managerGuard],
-        title: 'Zaposleni · Nalozi za prijavu',
-        loadComponent: () => import('./features/admin/team/team-list.component').then((m) => m.TeamListComponent),
+        redirectTo: 'staff',
       },
       {
         path: 'profile',

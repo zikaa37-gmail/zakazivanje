@@ -56,7 +56,7 @@ export class AdminShellComponent {
     { path: '/admin/clients', label: 'Klijenti', icon: 'user', section: 'daily', managerOnly: true },
     { path: '/admin/reviews', label: 'Recenzije', icon: 'star', section: 'daily', managerOnly: true },
     { path: '/admin/reports', label: 'Izveštaji', icon: 'file-text', section: 'daily', managerOnly: true },
-    { path: '/admin/staff', label: 'Zaposleni', icon: 'users', section: 'manage', managerOnly: true, alsoActive: ['/admin/team'] },
+    { path: '/admin/staff', label: 'Zaposleni', icon: 'users', section: 'manage', managerOnly: true },
     { path: '/admin/services', label: 'Usluge', icon: 'scissors', section: 'manage', managerOnly: true },
     { path: '/admin/promotions', label: 'Cene i akcije', icon: 'percent', section: 'manage', managerOnly: true },
     { path: '/admin/gallery', label: 'Galerija', icon: 'image', section: 'manage', managerOnly: true },

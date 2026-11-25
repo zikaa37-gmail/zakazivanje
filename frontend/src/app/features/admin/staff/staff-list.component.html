@@ -1,35 +1,55 @@
 <div class="page-header">
   <div>
-    <div class="page-title-row"><h1 class="page-title">Zaposleni</h1><app-info-tip heading="Zaposleni"><p>Ko radi usluge, koje i u koje vreme (radno vreme po danima, smene, rotacija).</p><p class="mt-2">Zaposleni sa emailom dobija i nalog za prijavu. Zaposleni se ne briše nego deaktivira — termini i statistika ostaju na njegovom imenu.</p></app-info-tip></div>
+    <div class="page-title-row">
+      <h1 class="page-title">Zaposleni</h1>
+      <app-info-tip heading="Zaposleni"
+        ><p>Svi u salonu na jednom mestu: uloga (vlasnik, menadžer, radnik), nalog za prijavu, a za one koji rade usluge i koje usluge i u koje vreme.</p>
+        <p class="mt-2">
+          Svako se prijavljuje svojim emailom. Ko ne radi usluge (npr. recepcija) ostaje bez usluga i klijenti ga ne vide. Zaposleni se ne briše nego deaktivira —
+          termini i statistika ostaju na njegovom imenu.
+        </p></app-info-tip
+      >
+    </div>
   </div>
   <button type="button" appBtn size="s" (click)="openForm()" data-testid="staff-add">
-    <span appIcon="plus" aria-hidden="true"></span><span class="max-sm:sr-only">Novi zaposleni</span>
+    <span appIcon="plus" aria-hidden="true"></span
+    ><span class="max-sm:sr-only">Novi zaposleni</span>
   </button>
 </div>
-
-<app-team-tabs />
 
 <app-error-message [message]="error()" />
 
 @if (loading() && staff().length === 0) {
 } @else if (staff().length === 0) {
-  <div class="card empty-state">Još nema zaposlenih. Dodaj prvog da bi klijenti mogli da zakazuju.</div>
+  <div class="card empty-state">
+    Još nema zaposlenih. Dodaj prvog da bi klijenti mogli da zakazuju.
+  </div>
 } @else {
   @if (activeStaff().length === 0) {
     <div class="card empty-state">Nema aktivnih zaposlenih.</div>
   } @else {
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       @for (member of activeStaff(); track member.id) {
-        <ng-container [ngTemplateOutlet]="staffCard" [ngTemplateOutletContext]="{ $implicit: member }" />
+        <ng-container
+          [ngTemplateOutlet]="staffCard"
+          [ngTemplateOutletContext]="{ $implicit: member }"
+        />
       }
     </div>
   }
 
   @if (inactiveStaff().length > 0) {
-    <app-accordion title="Neaktivni ({{ inactiveStaff().length }})" class="block mt-4" data-testid="staff-inactive">
+    <app-accordion
+      title="Neaktivni ({{ inactiveStaff().length }})"
+      class="block mt-4"
+      data-testid="staff-inactive"
+    >
       <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @for (member of inactiveStaff(); track member.id) {
-          <ng-container [ngTemplateOutlet]="staffCard" [ngTemplateOutletContext]="{ $implicit: member }" />
+          <ng-container
+            [ngTemplateOutlet]="staffCard"
+            [ngTemplateOutletContext]="{ $implicit: member }"
+          />
         }
       </div>
     </app-accordion>
@@ -39,12 +59,32 @@
 <ng-template #staffCard let-member>
   <div class="card flex flex-col gap-3" [attr.data-testid]="'staff-' + member.id">
     <div class="flex items-center gap-3">
-      <span class="avatar avatar-lg avatar-initials text-lg" [style.background]="member.color + '22'" [style.color]="member.color">{{ initials(member) }}</span>
+      <span
+        class="avatar avatar-lg avatar-initials text-lg"
+        [style.background]="member.color + '22'"
+        [style.color]="member.color"
+        >{{ initials(member) }}</span
+      >
       <div class="min-w-0 flex-1">
         <div class="font-semibold truncate">{{ member.first_name }} {{ member.last_name }}</div>
-        <div class="text-sm muted truncate" data-testid="staff-account">{{ accountLabel(member) || '—' }}</div>
+        <div class="text-sm muted truncate" data-testid="staff-account">
+          {{ accountLabel(member) || '—' }}
+        </div>
+        @if (member.account; as account) {
+          <div class="text-xs muted truncate" data-testid="staff-last-login">
+            @if (account.last_login_at) {
+              Poslednja prijava {{ account.last_login_at | srDateTime }}
+            } @else {
+              Još se nije prijavio/la
+            }
+          </div>
+        }
       </div>
-      <app-row-actions [actions]="rowActions(member)" (selected)="onAction(member, $event)" [attr.data-testid]="'staff-actions-' + member.id" />
+      <app-row-actions
+        [actions]="rowActions(member)"
+        (selected)="onAction(member, $event)"
+        [attr.data-testid]="'staff-actions-' + member.id"
+      />
     </div>
     <hr class="border-[var(--color-border)]" />
     <div>
@@ -62,7 +102,12 @@
         <div class="text-xs font-semibold muted">Radno vreme · {{ hoursSummary(member) }}</div>
         <div class="flex gap-1 mt-1">
           @for (day of weekdays; track day.value) {
-            <span class="day-dot" [class.on]="workDays(member).has(day.value)" [title]="day.label">{{ day.short }}</span>
+            <span
+              class="day-dot"
+              [class.on]="workDays(member).has(day.value)"
+              [title]="day.label"
+              >{{ day.short }}</span
+            >
           }
         </div>
       </div>
@@ -72,9 +117,12 @@
         <span class="badge badge-success">Prima termine</span>
         <span class="badge badge-neutral">Potvrda: {{ modeLabel(member) }}</span>
       } @else if (member.active) {
-        <span class="badge badge-neutral" data-testid="staff-no-bookings">Ne prima termine</span>
+        <span class="badge badge-neutral" data-testid="staff-no-bookings">Nema termine</span>
       } @else {
         <span class="badge badge-neutral">Neaktivan</span>
+      }
+      @if (member.active && member.account && !member.account.has_password) {
+        <span class="badge badge-warning" data-testid="staff-no-password">Čeka lozinku</span>
       }
     </div>
   </div>
@@ -93,20 +141,41 @@
       <div class="form-grid">
         <div class="field">
           <label for="staff-first">Ime <span class="required-mark">*</span></label>
-          <input id="staff-first" appInput size="m" formControlName="first_name" data-testid="staff-first-name" />
+          <input
+            id="staff-first"
+            appInput
+            size="m"
+            formControlName="first_name"
+            data-testid="staff-first-name"
+          />
         </div>
         <div class="field">
           <label for="staff-last">Prezime <span class="required-mark">*</span></label>
-          <input id="staff-last" appInput size="m" formControlName="last_name" data-testid="staff-last-name" />
+          <input
+            id="staff-last"
+            appInput
+            size="m"
+            formControlName="last_name"
+            data-testid="staff-last-name"
+          />
         </div>
         <div class="field">
           <label for="staff-role">Uloga</label>
-          <select id="staff-role" appInput size="m" formControlName="role" (change)="updateRoleHint()" data-testid="staff-role">
+          <select
+            id="staff-role"
+            appInput
+            size="m"
+            formControlName="role"
+            (change)="updateRoleHint()"
+            data-testid="staff-role"
+          >
             @for (option of roleOptions(); track option.value) {
               <option [ngValue]="option.value">{{ option.label }}</option>
             }
           </select>
-          <span class="text-xs muted">{{ roleLocked() ? 'Svoju ulogu i ulogu vlasnika ne možeš da menjaš ovde.' : roleHint() }}</span>
+          <span class="text-xs muted">{{
+            roleLocked() ? 'Svoju ulogu i ulogu vlasnika ne možeš da menjaš ovde.' : roleHint()
+          }}</span>
         </div>
         <div class="field">
           <label for="staff-phone">Telefon <span class="required-mark">*</span></label>
@@ -115,11 +184,19 @@
         <div class="field">
           <label for="staff-email">Email <span class="required-mark">*</span></label>
           <input id="staff-email" appInput size="m" type="email" formControlName="email" />
-          <p class="text-xs muted mt-1">Ovim mejlom se prijavljuje u aplikaciju, sa ulogom izabranom gore. Ako i ti radiš usluge, upiši se ovde istim mejlom kojim se prijavljuješ.</p>
+          <p class="text-xs muted mt-1">
+            Ovim mejlom se prijavljuje u aplikaciju, sa ulogom izabranom gore.
+          </p>
         </div>
         <div class="field">
           <label for="staff-confirmation">Potvrda termina</label>
-          <select id="staff-confirmation" appInput size="m" formControlName="booking_confirmation" data-testid="staff-confirmation">
+          <select
+            id="staff-confirmation"
+            appInput
+            size="m"
+            formControlName="booking_confirmation"
+            data-testid="staff-confirmation"
+          >
             <option [ngValue]="null">Kao biznis ({{ defaultModeLabel().toLowerCase() }})</option>
             @for (option of confirmationOptions; track option.value) {
               <option [ngValue]="option.value">{{ option.label }}</option>
@@ -136,12 +213,19 @@
               type="button"
               class="w-8 h-8 rounded-full border-2"
               [style.background]="color"
-              [style.border-color]="form.controls.color.value === color ? 'var(--color-text)' : 'transparent'"
+              [style.border-color]="
+                form.controls.color.value === color ? 'var(--color-text)' : 'transparent'
+              "
               [attr.aria-label]="'Boja ' + color"
               (click)="form.controls.color.setValue(color)"
             ></button>
           }
-          <input type="color" class="w-8 h-8 cursor-pointer" formControlName="color" aria-label="Druga boja" />
+          <input
+            type="color"
+            class="w-8 h-8 cursor-pointer"
+            formControlName="color"
+            aria-label="Druga boja"
+          />
         </div>
       </div>
 
@@ -149,7 +233,13 @@
         <label>Usluge koje radi</label>
         <div class="chip-group">
           @for (service of services(); track service.id) {
-            <button type="button" class="chip" [class.selected]="selectedServices().has(service.id)" (click)="toggleService(service.id)" [attr.data-testid]="'staff-service-' + service.id">
+            <button
+              type="button"
+              class="chip"
+              [class.selected]="selectedServices().has(service.id)"
+              (click)="toggleService(service.id)"
+              [attr.data-testid]="'staff-service-' + service.id"
+            >
               @if (selectedServices().has(service.id)) {
                 <span appIcon="check" [iconSize]="14" aria-hidden="true"></span>
               }
@@ -159,24 +249,63 @@
             <span class="muted text-sm">Prvo dodaj usluge na stranici Usluge.</span>
           }
         </div>
-        <span class="text-xs muted">{{ selectedServices().size === 0 ? 'Bez usluga ne prima termine i klijenti ga ne vide pri zakazivanju — npr. menadžer koji samo vodi salon.' : 'Klijenti ga biraju za označene usluge.' }}</span>
+        <span class="text-xs muted">{{
+          selectedServices().size === 0
+            ? 'Bez usluga nema termine i klijenti ga ne vide pri zakazivanju — npr. menadžer koji samo vodi salon.'
+            : 'Klijenti ga biraju za označene usluge.'
+        }}</span>
       </div>
 
       <div class="field">
         <label>Raspored</label>
-        <div class="chip-group" role="radiogroup" aria-label="Raspored" data-testid="staff-rotation">
+        <div
+          class="chip-group"
+          role="radiogroup"
+          aria-label="Raspored"
+          data-testid="staff-rotation"
+        >
           @for (o of rotationOptions; track o.value) {
-            <button type="button" role="radio" class="chip" [class.selected]="rotationWeeks() === o.value" [attr.aria-checked]="rotationWeeks() === o.value" (click)="setRotation(o.value)" [attr.data-testid]="'staff-rotation-' + o.value">{{ o.label }}</button>
+            <button
+              type="button"
+              role="radio"
+              class="chip"
+              [class.selected]="rotationWeeks() === o.value"
+              [attr.aria-checked]="rotationWeeks() === o.value"
+              (click)="setRotation(o.value)"
+              [attr.data-testid]="'staff-rotation-' + o.value"
+            >
+              {{ o.label }}
+            </button>
           }
         </div>
         @if (rotationWeeks() > 1) {
           <div class="flex flex-wrap items-center gap-2 mt-2">
-            <label for="staff-rotation-start" class="text-sm muted">1. nedelja počinje (ponedeljak)</label>
-            <input id="staff-rotation-start" appInput class="!w-auto" type="date" [value]="rotationStart()" (change)="setRotationStart($any($event.target).value)" data-testid="staff-rotation-start" />
+            <label for="staff-rotation-start" class="text-sm muted"
+              >1. nedelja počinje (ponedeljak)</label
+            >
+            <input
+              id="staff-rotation-start"
+              appInput
+              class="!w-auto"
+              type="date"
+              [value]="rotationStart()"
+              (change)="setRotationStart($any($event.target).value)"
+              data-testid="staff-rotation-start"
+            />
           </div>
           <div class="chip-group mt-2" role="tablist" aria-label="Nedelja u rasporedu">
             @for (w of weekTabs(); track w) {
-              <button type="button" role="tab" class="chip" [class.selected]="activeWeek() === w" [attr.aria-selected]="activeWeek() === w" (click)="activeWeek.set(w)" [attr.data-testid]="'staff-week-' + w">{{ w + 1 }}. nedelja{{ thisWeekIndex() === w ? ' (ova)' : '' }}</button>
+              <button
+                type="button"
+                role="tab"
+                class="chip"
+                [class.selected]="activeWeek() === w"
+                [attr.aria-selected]="activeWeek() === w"
+                (click)="activeWeek.set(w)"
+                [attr.data-testid]="'staff-week-' + w"
+              >
+                {{ w + 1 }}. nedelja{{ thisWeekIndex() === w ? ' (ova)' : '' }}
+              </button>
             }
           </div>
         }
@@ -184,48 +313,94 @@
 
       <div class="field">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <label>Radno vreme{{ rotationWeeks() > 1 ? ' · ' + (activeWeek() + 1) + '. nedelja' : '' }}</label>
+          <label
+            >Radno vreme{{
+              rotationWeeks() > 1 ? ' · ' + (activeWeek() + 1) + '. nedelja' : ''
+            }}</label
+          >
           <span class="flex flex-wrap gap-1">
             @if (rotationWeeks() > 1 && activeWeek() > 0) {
-              <button type="button" appBtn theme="ghost" size="s" (click)="fillFromPrevious()" data-testid="staff-swap-week">Kao {{ activeWeek() }}. nedelja, pre podne ↔ popodne</button>
+              <button
+                type="button"
+                appBtn
+                theme="ghost"
+                size="s"
+                (click)="fillFromPrevious()"
+                data-testid="staff-swap-week"
+              >
+                Kao {{ activeWeek() }}. nedelja, pre podne ↔ popodne
+              </button>
             }
-            <button type="button" appBtn theme="ghost" size="s" (click)="copyMondayToWeekdays()">Kopiraj ponedeljak na radne dane</button>
+            <button type="button" appBtn theme="ghost" size="s" (click)="copyMondayToWeekdays()">
+              Kopiraj ponedeljak na radne dane
+            </button>
           </span>
         </div>
         <div class="flex flex-col gap-2">
           @for (day of weekdays; track day.value) {
-            <div class="flex flex-col gap-2 py-2 border-b border-[var(--color-bg)]" [class.opacity-50]="!salonOpen(day.value)">
+            <div
+              class="flex flex-col gap-2 py-2 border-b border-[var(--color-bg)]"
+              [class.opacity-50]="!salonOpen(day.value)"
+            >
               <div class="flex flex-wrap items-center gap-2">
                 <label class="checkbox-field w-28 shrink-0">
-                  <input type="checkbox" [disabled]="!salonOpen(day.value)" [checked]="shiftsFor(day.value).length > 0" (change)="toggleDay(day.value, $any($event.target).checked)" [attr.data-testid]="'staff-day-' + day.value" />
+                  <input
+                    type="checkbox"
+                    [disabled]="!salonOpen(day.value)"
+                    [checked]="shiftsFor(day.value).length > 0"
+                    (change)="toggleDay(day.value, $any($event.target).checked)"
+                    [attr.data-testid]="'staff-day-' + day.value"
+                  />
                   {{ day.label }}
                 </label>
                 @if (salonOpen(day.value)) {
                   <span class="chip-group">
                     @for (s of salonShifts(); track s.name) {
-                      <button type="button" class="chip" [class.selected]="dayShiftName(day.value) === s.name" (click)="applyShift(day.value, s)" [attr.data-testid]="'staff-shift-' + day.value + '-' + $index">{{ s.name }}</button>
+                      <button
+                        type="button"
+                        class="chip"
+                        [class.selected]="dayShiftName(day.value) === s.name"
+                        (click)="applyShift(day.value, s)"
+                        [attr.data-testid]="'staff-shift-' + day.value + '-' + $index"
+                      >
+                        {{ s.name }}
+                      </button>
                     }
-                    <button type="button" class="chip" [class.selected]="shiftsFor(day.value).length > 0 && !dayShiftName(day.value)" (click)="setCustom(day.value)">Drugo vreme</button>
+                    <button
+                      type="button"
+                      class="chip"
+                      [class.selected]="shiftsFor(day.value).length > 0 && !dayShiftName(day.value)"
+                      (click)="setCustom(day.value)"
+                    >
+                      Drugo vreme
+                    </button>
                   </span>
                 }
                 <span class="text-xs muted ml-auto">{{ salonHours(day.value) }}</span>
               </div>
               <div class="flex flex-wrap items-center gap-2 pl-0 sm:pl-30">
-              @for (row of shiftsFor(day.value); track row) {
-                <div class="flex items-center gap-1">
-                  <app-time-picker [control]="row.start" />
-                  <span class="muted">–</span>
-                  <app-time-picker [control]="row.end" />
-                  <button type="button" class="btn-icon" aria-label="Ukloni smenu" (click)="removeShift(row)">
-                    <span appIcon="close" [iconSize]="14" aria-hidden="true"></span>
+                @for (row of shiftsFor(day.value); track row) {
+                  <div class="flex items-center gap-1">
+                    <app-time-picker [control]="row.start" />
+                    <span class="muted">–</span>
+                    <app-time-picker [control]="row.end" />
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      aria-label="Ukloni smenu"
+                      (click)="removeShift(row)"
+                    >
+                      <span appIcon="close" [iconSize]="14" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                } @empty {
+                  <span class="muted text-sm">Ne radi</span>
+                }
+                @if (shiftsFor(day.value).length > 0) {
+                  <button type="button" appBtn theme="ghost" size="s" (click)="addShift(day.value)">
+                    + smena
                   </button>
-                </div>
-              } @empty {
-                <span class="muted text-sm">Ne radi</span>
-              }
-              @if (shiftsFor(day.value).length > 0) {
-                <button type="button" appBtn theme="ghost" size="s" (click)="addShift(day.value)">+ smena</button>
-              }
+                }
               </div>
             </div>
           }
@@ -237,29 +412,88 @@
           <span class="text-sm font-semibold">Prikaz</span>
           <div class="chip-group mt-1">
             @for (mode of uiModes; track mode.value) {
-              <button type="button" class="chip" [class.selected]="form.controls.ui_mode.value === mode.value" [attr.aria-pressed]="form.controls.ui_mode.value === mode.value" (click)="form.controls.ui_mode.setValue(mode.value)" [attr.data-testid]="'staff-ui-mode-' + mode.value">{{ mode.label }}</button>
+              <button
+                type="button"
+                class="chip"
+                [class.selected]="form.controls.ui_mode.value === mode.value"
+                [attr.aria-pressed]="form.controls.ui_mode.value === mode.value"
+                (click)="form.controls.ui_mode.setValue(mode.value)"
+                [attr.data-testid]="'staff-ui-mode-' + mode.value"
+              >
+                {{ mode.label }}
+              </button>
             }
           </div>
           <span class="text-xs muted">{{ uiModeHint() }}</span>
         </div>
       }
 
-      <app-toggle [checked]="form.controls.active.value" label="Aktivan" (checkedChange)="form.controls.active.setValue($event)" />
+      <app-toggle
+        [checked]="form.controls.active.value"
+        label="Aktivan"
+        (checkedChange)="form.controls.active.setValue($event)"
+      />
+      @if (!editing()) {
+        <app-toggle
+          [checked]="form.controls.send_invite.value"
+          label="Pošalji pozivnicu na email (link za postavljanje lozinke)"
+          (checkedChange)="form.controls.send_invite.setValue($event)"
+          data-testid="staff-send-invite"
+        />
+      }
     </form>
 
-    <app-button modal-footer theme="primary" size="s" [loading]="saving()" (click)="save()" data-testid="staff-save">Sačuvaj</app-button>
+    <app-button
+      modal-footer
+      theme="primary"
+      size="s"
+      [loading]="saving()"
+      (click)="save()"
+      data-testid="staff-save"
+      >Sačuvaj</app-button
+    >
   </app-modal>
 }
 
 @if (leaving(); as l) {
-  <app-modal [title]="'Budući termini — ' + l.member.first_name + ' ' + l.member.last_name" size="l" footerMode="custom" (cancelled)="leaving.set(null)" testId="staff-leaving">
+  <app-modal
+    [title]="'Budući termini — ' + l.member.first_name + ' ' + l.member.last_name"
+    size="l"
+    footerMode="custom"
+    (cancelled)="leaving.set(null)"
+    testId="staff-leaving"
+  >
     @if (l.appointments.length > 0) {
-      <p class="text-sm mb-3">Pre deaktivacije reši zakazane termine: prebaci ih kolegi, zamoli klijenta da sam pomeri ili otkaži. Ostalo: <strong>{{ l.appointments.length }}</strong>.</p>
+      <p class="text-sm mb-3">
+        Pre deaktivacije reši zakazane termine: prebaci ih kolegi, zamoli klijenta da sam pomeri ili
+        otkaži. Ostalo: <strong>{{ l.appointments.length }}</strong
+        >.
+      </p>
       <app-affected-appointments [appointments]="l.appointments" (changed)="refreshLeaving()" />
     } @else {
       <p class="text-sm">Svi termini su rešeni. Zaposleni može da se deaktivira.</p>
     }
-    <button modal-footer type="button" appBtn theme="secondary" size="s" (click)="leaving.set(null)" data-testid="staff-leaving-close">Zatvori</button>
-    <button modal-footer type="button" appBtn theme="danger" size="s" (click)="deactivateLeaving()" data-testid="staff-leaving-deactivate">{{ l.appointments.length > 0 ? 'Otkaži sve i deaktiviraj' : 'Deaktiviraj' }}</button>
+    <button
+      modal-footer
+      type="button"
+      appBtn
+      theme="secondary"
+      size="s"
+      (click)="leaving.set(null)"
+      data-testid="staff-leaving-close"
+    >
+      Zatvori
+    </button>
+    <button
+      modal-footer
+      type="button"
+      appBtn
+      theme="danger"
+      size="s"
+      (click)="deactivateLeaving()"
+      data-testid="staff-leaving-deactivate"
+    >
+      {{ l.appointments.length > 0 ? 'Otkaži sve i deaktiviraj' : 'Deaktiviraj' }}
+    </button>
   </app-modal>
 }

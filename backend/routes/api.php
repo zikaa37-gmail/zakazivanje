@@ -30,7 +30,6 @@ use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\StaffAbsenceController;
 use App\Http\Controllers\Api\StaffMemberController;
 use App\Http\Controllers\Api\StaffNoteController;
-use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\WaitlistController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
@@ -202,18 +201,13 @@ Route::middleware(['jwt', 'role:owner,manager'])->group(function () {
     Route::put('/staff/{staffMember}', [StaffMemberController::class, 'update']);
     Route::post('/staff/{staffMember}/active', [StaffMemberController::class, 'setActive']);
     Route::get('/staff/{staffMember}/future-appointments', [StaffMemberController::class, 'futureAppointments']);
+    Route::post('/staff/{staffMember}/invite', [StaffMemberController::class, 'invite'])->middleware('throttle:booking');
 
     Route::post('/staff-absences/pending-count', [StaffAbsenceController::class, 'pendingCount']);
     Route::post('/staff-absences/{absence}/approve', [StaffAbsenceController::class, 'approve']);
     Route::post('/staff-absences/{absence}/reject', [StaffAbsenceController::class, 'reject']);
     Route::post('/cancellation-fees/{fee}/waive', [CancellationFeeController::class, 'waive']);
     Route::post('/cancellation-fees/{fee}/adjust', [CancellationFeeController::class, 'adjust']);
-
-    Route::post('/team/list', [TeamController::class, 'index']);
-    Route::post('/team', [TeamController::class, 'store']);
-    Route::put('/team/{user}', [TeamController::class, 'update']);
-    Route::post('/team/{user}/invite', [TeamController::class, 'invite'])->middleware('throttle:booking');
-    Route::delete('/team/{user}', [TeamController::class, 'destroy']);
 
     Route::post('/services', [ServiceController::class, 'store']);
     Route::put('/services/{service}', [ServiceController::class, 'update']);

@@ -17,9 +17,10 @@ Prati isti obrazac kao `D:\Playground\Angular\kosarkaska-evidencija` (a ona `pra
 pogledaj taj repo za referentne konvencije (auth interceptor, core/services po entitetu, deljene
 komponente, deploy na cPanel) ako nešto ovde nije eksplicitno napisano.
 
-Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik) i `worker`. Radnik vezan za zaposlenog
-(`users.staff_member_id`) je onaj koji radi usluge: pregled dana i izveštaji samo za sebe, kalendar, termini, blokade, klijenti
-bez brisanja, lista čekanja. Radnik bez zaposlenog je menadžer (Zaposleni → Nalozi za prijavu, `/admin/team`) i radi umesto
+Uloge: `client` (registruje se sam, zakazuje), `owner` (vlasnik), `manager` (menadžer) i `worker` (radnik). Svako iz osoblja je zaposleni
+(`users.staff_member_id`, jedna lista Zaposleni `/admin/staff` sa ulogom; `/admin/team` preusmerava tamo); ko ne radi usluge ostaje zaposleni bez usluga.
+Radnik radi usluge: pregled dana i izveštaji samo za sebe, kalendar, termini, blokade, klijenti
+bez brisanja, lista čekanja. Menadžer radi umesto
 vlasnika: `User::isManager()` (vlasnik ili menadžer) — zaposleni, usluge, cene, recenzije, galerija, podeli,
 nalozi, podešavanja, deaktivacija klijenata i zone. Samo vlasniku ostaju finansijska statistika (`dashboard/stats`, `dashboard/sources`)
 i nalozi vlasnika (menadžer ne pravi, ne menja i ne briše vlasnika). Rute: `role:owner,worker` za svakodnevni rad,
@@ -27,8 +28,8 @@ i nalozi vlasnika (menadžer ne pravi, ne menja i ne briše vlasnika). Rute: `ro
 vlasnik i menadžer imaju meni u dva taba, Svakodnevno i Upravljanje (`section` u `AdminShellComponent`).
 Menadžer izveštaje samo šalje vlasniku (`/reports/send`), ne vidi ih (`/reports`, `/reports/pdf` → 403) i ne dobija
 automatske. Naplata: `appointments.tip` (bakšiš, nije prihod); „Završen“ svuda otvara `<app-complete-dialog>` (`CompletionService`, u `AdminShellComponent`): usluga odrađena / delimično / nije (`service_outcome`), za naplatu (`due_amount`), plaćeno u celosti / delimično / nije (`paid_amount`), bakšiš i `appointments.completion_note` (beleška posle termina, `POST /appointments/{id}/complete`; `admin_note` i `completion_note` vidi samo osoblje — `Appointment::toArray()`), beleške u istorijatu klijenta (`work_notes`); dug = `Appointment::outstanding()` (prihod u izveštajima = `dueAmount()`, naplaćeno = `paidAmount()`), praćenje: lista termina filter „Naplata“ (`billing`, „Za naplatu“ bez obzira na period), kartica „Za naplatu“ na Pregledu, „Naplati ostatak“ u meniju ⋮; stanje klijenta (`wallet_entries`, `WalletService`: uplata unapred, plaćanje „Sa stanja“ `wallet`, povraćaj, ispravka menadžera) i poklon kartice (`gift_cards` sa svojim `balance`, kod od 8 znakova, na donosioca; `kind` digitalna = `owner_id` (nalog primaoca, obaveštenje) / fizička = kod rukom na praznoj kartici + `card_number`; „dodaj na nalog“ upisom koda (`claim`) pretvara fizičku u digitalnu; plaćanje `gift_card` u celosti ili delimično, ostatak drugim načinom ili dug; `/admin/gift-cards` sa „Proveri kod“; klijent: Profil `<app-my-wallet>`, „Moji termini → Plati“ `<app-client-pay-dialog>` (`POST /my-appointments/{id}/pay`), osoblje: Istorijat `<app-client-wallet>`); otkazan termin vraća uplate sa stanja i kartica (`PaymentLedger::refundPrepaid`); svaka uplata na terminu je red u `appointment_payments` (`PaymentLedger::settle()` — jedino mesto za uplate, `paid_amount` je zbir, izveštaj `by_method` iz evidencije, `prepaid` = depoziti i prodate kartice); naplata duga (doplata kroz završetak ili `/paid`) šalje vlasniku i menadžerima obaveštenje u zvonce (`AppointmentNotifier::debtPaid`, `DebtPaidNotification`); izveštaj računa naplaćeno za sve neotkazane termine sa `paid_at`.
-Svaki zaposleni sa emailom automatski ima nalog radnika (`StaffAccountService::sync()`);
-zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Uloge su konstante `User::ROLE_*` (`STAFF_ROLES`, `ROLE_LABELS`, podrazumevano `client`), na frontendu `Role` / `STAFF_ROLES` u `user.model.ts`; nove uloge idu tu. Uloga zaposlenog se bira i u formi zaposlenog (`role` uz `PUT /staff/{id}`, ista pravila kao Nalozi), umesto nekadašnje „Pozicije“.
+Svaki zaposleni ima nalog za prijavu sa svojim emailom (`StaffAccountService::sync()`; nalog osoblja bez zaposlenog dobija ga kroz `linkUnlinkedAccounts()` — seeder, šablon salona, migracija), pozivnica `POST /staff/{id}/invite` (i `send_invite` pri dodavanju), na kartici uloga, poslednja prijava i „Čeka lozinku“; deaktivacija gasi i prijavu (ne sebe i ne poslednjeg vlasnika);
+zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i statistika ostaju na njegovom imenu). Uloge su konstante `User::ROLE_*` (`STAFF_ROLES`, `ROLE_LABELS`, podrazumevano `client`), na frontendu `Role` / `STAFF_ROLES` u `user.model.ts`; nove uloge idu tu. Uloga zaposlenog se bira i u formi zaposlenog (`role` uz `PUT /staff/{id}`, menadžer ne menja vlasnika), umesto nekadašnje „Pozicije“.
 
 ## Working conventions
 
@@ -53,7 +54,7 @@ zaposleni se ne briše nego deaktivira (`POST /staff/{id}/active`, termini i sta
   (`StaffDeactivationService`, `GET /staff/{id}/future-appointments`, `cancel_future`), klijent se nikad ne briše nego deaktivira
   (`users.active`, `ClientDeactivationService`, `GET /clients/{id}/deactivate-check`, `POST /clients/{id}/active` sa `cancel_future`; `DELETE /clients/{id}` takođe samo deaktivira):
   ne može da se prijavi, budući termini se otkazuju, stanje i kartice ostaju, lista „Neaktivni“. U meniju „⋮“ (`app-row-actions`) opasne radnje idu na dno, iza linije.
-- Prikaz po nalogu: `users.ui_mode` (`standard` / `spacious`, Nalozi za prijavu i Profil, `PUT /auth/ui-mode`) — klasa
+- Prikaz po nalogu: `users.ui_mode` (`standard` / `spacious`, forma zaposlenog i Profil, `PUT /auth/ui-mode`) — klasa
   `ui-spacious` na `<html>` (veća dugmad i razmaci, potvrda se uključuje posle 1,2 s). Redovi koji su „ugašeni“ koriste `.is-dimmed`, ne `opacity`.
 - Do not add secrets to the repository. Local backend credentials belong in `backend/.env`,
   production values in `deploy/.env` (both outside git).

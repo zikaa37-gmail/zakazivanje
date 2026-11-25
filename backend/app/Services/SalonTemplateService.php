@@ -224,6 +224,8 @@ class SalonTemplateService
                 }
             }
 
+            app(StaffAccountService::class)->linkUnlinkedAccounts();
+
             return [...$this->counts($data), 'accounts' => $accounts];
         });
     }

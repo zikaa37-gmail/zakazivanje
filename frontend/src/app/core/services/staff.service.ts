@@ -22,6 +22,10 @@ export class StaffService {
     return this.http.put<StaffMember>(`${this.api}/${id}`, payload);
   }
 
+  invite(id: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.api}/${id}/invite`, {});
+  }
+
   setActive(id: number, active: boolean, cancelFuture = false): Observable<StaffMember & { cancelled_appointments: number }> {
     return this.http.post<StaffMember & { cancelled_appointments: number }>(`${this.api}/${id}/active`, { active, cancel_future: cancelFuture });
   }

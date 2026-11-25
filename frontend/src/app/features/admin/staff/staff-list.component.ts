@@ -28,7 +28,7 @@ import { ToggleComponent } from '../../../shared/components/toggle/toggle.compon
 import { ButtonDirective } from '../../../shared/directives/button.directive';
 import { IconDirective } from '../../../shared/directives/icon.directive';
 import { InputDirective } from '../../../shared/directives/input.directive';
-import { TeamTabsComponent } from './team-tabs.component';
+import { SrDateTimePipe } from '../../../shared/pipes/sr-date-time.pipe';
 
 interface ShiftRow {
   weekday: number;
@@ -41,7 +41,7 @@ const PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#1d4ed8', '#15803d
 
 @Component({
   selector: 'app-staff-list',
-  imports: [InfoTipComponent, AffectedAppointmentsComponent, TeamTabsComponent, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
+  imports: [InfoTipComponent, AffectedAppointmentsComponent, SrDateTimePipe, NgTemplateOutlet, ReactiveFormsModule, AccordionComponent, ButtonComponent, ButtonDirective, ErrorMessageComponent, IconDirective, InputDirective, ModalComponent, RowActionsComponent, TimePickerComponent, ToggleComponent],
   templateUrl: './staff-list.component.html',
 })
 export class StaffListComponent {
@@ -105,11 +105,14 @@ export class StaffListComponent {
     color: this.fb.nonNullable.control(PALETTE[0]),
     booking_confirmation: this.fb.control<ConfirmationMode | null>(null),
     active: this.fb.nonNullable.control(true),
+    send_invite: this.fb.nonNullable.control(true),
   });
 
   rowActions(member: StaffMember): RowAction[] {
+    if (member.account?.role === Role.Owner && !this.auth.isOwner()) return [];
     return [
       { id: 'edit', label: 'Izmeni', icon: 'edit' },
+      ...(member.active && member.account ? [{ id: 'invite', label: member.account.has_password ? 'Pošalji link za lozinku' : 'Pošalji pozivnicu', icon: 'send' as const }] : []),
       member.active ? { id: 'deactivate', label: 'Deaktiviraj', icon: 'lock', danger: true } : { id: 'activate', label: 'Aktiviraj', icon: 'unlock' },
     ];
   }
@@ -235,6 +238,7 @@ export class StaffListComponent {
 
   onAction(member: StaffMember, action: string): void {
     if (action === 'edit') this.openForm(member);
+    if (action === 'invite') this.invite(member);
     if (action === 'deactivate') this.deactivate(member);
     if (action === 'activate') this.activate(member);
   }
@@ -252,6 +256,7 @@ export class StaffListComponent {
       color: member?.color ?? PALETTE[this.staff().length % PALETTE.length],
       booking_confirmation: member?.booking_confirmation ?? null,
       active: member?.active ?? true,
+      send_invite: !member,
     });
     if (this.roleLocked()) this.form.controls.role.disable();
     else this.form.controls.role.enable();
@@ -341,13 +346,20 @@ export class StaffListComponent {
       next: () => {
         this.saving.set(false);
         this.modalOpen.set(false);
-        this.toast.success(member ? 'Zaposleni je sačuvan.' : 'Zaposleni je dodat.');
+        this.toast.success(member ? 'Zaposleni je sačuvan.' : value.send_invite ? 'Zaposleni je dodat i pozivnica je poslata.' : 'Zaposleni je dodat.');
         this.load();
       },
       error: (err) => {
         this.saving.set(false);
         this.formError.set(apiErrorMessage(err, 'Čuvanje nije uspelo.'));
       },
+    });
+  }
+
+  private invite(member: StaffMember): void {
+    this.staffService.invite(member.id).subscribe({
+      next: (res) => this.toast.success(res.message),
+      error: (err) => this.toast.error(apiErrorMessage(err, 'Slanje nije uspelo.')),
     });
   }
 
@@ -391,7 +403,7 @@ export class StaffListComponent {
   private async confirmDeactivate(member: StaffMember): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Deaktivacija zaposlenog',
-      message: `${member.first_name} ${member.last_name} se više neće nuditi za zakazivanje niti prikazivati u kalendaru, a nalog radnika se gasi. Termini i lična statistika ostaju sačuvani, a zaposlenog možeš ponovo da aktiviraš.`,
+      message: `${member.first_name} ${member.last_name} se više neće nuditi za zakazivanje niti prikazivati u kalendaru, a prijava u aplikaciju se gasi. Termini i lična statistika ostaju sačuvani, a zaposlenog možeš ponovo da aktiviraš.`,
       confirmLabel: 'Deaktiviraj',
     });
     if (ok) this.setActive(member, false);
@@ -400,7 +412,7 @@ export class StaffListComponent {
   private async activate(member: StaffMember): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Aktivacija zaposlenog',
-      message: `${member.first_name} ${member.last_name} će ponovo moći da prima termine i pojaviće se u kalendaru, a nalog radnika se ponovo uključuje.`,
+      message: `${member.first_name} ${member.last_name} će ponovo moći da prima termine i pojaviće se u kalendaru, a prijava u aplikaciju se ponovo uključuje.`,
       confirmLabel: 'Aktiviraj',
       danger: false,
     });

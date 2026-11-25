@@ -30,7 +30,7 @@ class StaffMemberController extends Controller
         $data = $request->validate(['include_inactive' => ['sometimes', 'boolean']]);
 
         return StaffMember::query()
-            ->with(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode'])
+            ->with(['workingHours', 'services:id,name', 'account' => $this->accountColumns(...)])
             ->when(! ($data['include_inactive'] ?? true), fn ($q) => $q->where('active', true))
             ->orderBy('sort_order')
             ->orderBy('first_name')
@@ -43,14 +43,21 @@ class StaffMemberController extends Controller
 
         $staff = DB::transaction(fn () => $this->persist(new StaffMember, $data, $request->user()));
 
+        $account = $staff->account()->first();
+        if (($data['send_invite'] ?? false) && $account) {
+            $this->accounts->invite($account);
+        }
+
         return response()->json($staff, 201);
     }
 
     public function update(Request $request, StaffMember $staffMember)
     {
+        $this->ensureCanManage($request->user(), $staffMember);
         $data = $this->validated($request);
 
         if ($staffMember->active && array_key_exists('active', $data) && ! $data['active']) {
+            $this->ensureCanDeactivate($request->user(), $staffMember);
             $future = $this->deactivation->futureAppointments($staffMember)->count();
             if ($future > 0) {
                 throw ValidationException::withMessages(['active' => ["{$staffMember->first_name} ima budućih termina: {$future}. Deaktiviraj iz liste zaposlenih (meni ⋮ → Deaktiviraj), gde možeš da ih prebaciš ili otkažeš."]]);
@@ -63,10 +70,12 @@ class StaffMemberController extends Controller
 
     public function setActive(Request $request, StaffMember $staffMember)
     {
+        $this->ensureCanManage($request->user(), $staffMember);
         $data = $request->validate(['active' => ['required', 'boolean'], 'cancel_future' => ['sometimes', 'boolean']]);
 
         $cancelled = 0;
         if (! $data['active']) {
+            $this->ensureCanDeactivate($request->user(), $staffMember);
             $future = $this->deactivation->futureAppointments($staffMember)->count();
             if ($future > 0 && ! ($data['cancel_future'] ?? false)) {
                 throw ValidationException::withMessages(['active' => ["{$staffMember->first_name} ima budućih termina: {$future}. Prebaci ih kolegi ili ih otkaži pre deaktivacije."]]);
@@ -81,9 +90,54 @@ class StaffMemberController extends Controller
         });
 
         return [
-            ...$staffMember->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode'])->toArray(),
+            ...$staffMember->load(['workingHours', 'services:id,name', 'account' => $this->accountColumns(...)])->toArray(),
             'cancelled_appointments' => $cancelled,
         ];
+    }
+
+    public function invite(Request $request, StaffMember $staffMember)
+    {
+        $this->ensureCanManage($request->user(), $staffMember);
+        $account = $staffMember->account;
+
+        if (! $account || blank($account->email)) {
+            throw ValidationException::withMessages(['email' => ['Zaposleni nema nalog sa email adresom.']]);
+        }
+        if (! $account->active) {
+            throw ValidationException::withMessages(['email' => ['Zaposleni je neaktivan. Prvo ga aktiviraj.']]);
+        }
+
+        $this->accounts->invite($account);
+
+        return response()->json(['message' => "Pozivnica je poslata na {$account->email}."]);
+    }
+
+    private function accountColumns($query): void
+    {
+        $query->select(['id', 'staff_member_id', 'role', 'active', 'ui_mode', 'last_login_at'])
+            ->selectRaw('case when password is null then 0 else 1 end as has_password')
+            ->withCasts(['has_password' => 'boolean']);
+    }
+
+    private function ensureCanManage(User $actor, StaffMember $staff): void
+    {
+        if (! $actor->isOwner() && $staff->account?->isOwner()) {
+            abort(403, 'Vlasnika menja samo vlasnik.');
+        }
+    }
+
+    private function ensureCanDeactivate(User $actor, StaffMember $staff): void
+    {
+        $account = $staff->account;
+        if (! $account) {
+            return;
+        }
+        if ($account->is($actor)) {
+            throw ValidationException::withMessages(['active' => ['Ne možeš da deaktiviraš sebe.']]);
+        }
+        if ($account->isOwner() && ! User::where('role', User::ROLE_OWNER)->where('active', true)->whereKeyNot($account->id)->exists()) {
+            throw ValidationException::withMessages(['active' => ['Mora da ostane bar jedan aktivan vlasnik.']]);
+        }
     }
 
     private function validated(Request $request): array
@@ -100,6 +154,7 @@ class StaffMemberController extends Controller
             'booking_confirmation' => ['nullable', Rule::in(BusinessSetting::CONFIRMATION_MODES)],
             'avatar' => ['nullable', 'string', 'max:2000000'],
             'active' => ['boolean'],
+            'send_invite' => ['sometimes', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'service_ids' => ['array'],
             'service_ids.*' => ['integer', 'exists:services,id'],
@@ -169,7 +224,7 @@ class StaffMemberController extends Controller
 
     private function persist(StaffMember $staff, array $data, User $actor): StaffMember
     {
-        $staff->fill(collect($data)->except(['service_ids', 'working_hours', 'role', 'ui_mode'])->all())->save();
+        $staff->fill(collect($data)->except(['service_ids', 'working_hours', 'role', 'ui_mode', 'send_invite'])->all())->save();
 
         if (array_key_exists('service_ids', $data)) {
             $staff->services()->sync($data['service_ids']);
@@ -189,7 +244,7 @@ class StaffMemberController extends Controller
             $account->forceFill(['ui_mode' => $data['ui_mode']])->save();
         }
 
-        return $staff->load(['workingHours', 'services:id,name', 'account:id,staff_member_id,role,active,ui_mode']);
+        return $staff->load(['workingHours', 'services:id,name', 'account' => $this->accountColumns(...)]);
     }
 
     private function changeRole(User $actor, User $account, string $role): void
