@@ -160,22 +160,22 @@
           />
         </div>
         <div class="field">
-          <label for="staff-role">Uloga</label>
-          <select
-            id="staff-role"
-            appInput
-            size="m"
-            formControlName="role"
-            (change)="updateRoleHint()"
-            data-testid="staff-role"
-          >
+          <span class="flex items-center gap-1">
+            <label for="staff-role">Uloga</label>
+            <app-info-tip heading="Uloga">
+              @for (option of roleOptions(); track option.value) {
+                <p [class.mt-2]="!$first"><strong>{{ option.label }}:</strong> {{ option.hint }}</p>
+              }
+              @if (roleLocked()) {
+                <p class="mt-2">Svoju ulogu i ulogu vlasnika ne možeš da menjaš ovde.</p>
+              }
+            </app-info-tip>
+          </span>
+          <select id="staff-role" appInput size="m" formControlName="role" data-testid="staff-role">
             @for (option of roleOptions(); track option.value) {
               <option [ngValue]="option.value">{{ option.label }}</option>
             }
           </select>
-          <span class="text-xs muted">{{
-            roleLocked() ? 'Svoju ulogu i ulogu vlasnika ne možeš da menjaš ovde.' : roleHint()
-          }}</span>
         </div>
         <div class="field">
           <label for="staff-phone">Telefon <span class="required-mark">*</span></label>
@@ -409,7 +409,14 @@
 
       @if (editing()?.account; as account) {
         <div class="field mt-3" data-testid="staff-ui-mode">
-          <span class="text-sm font-semibold">Prikaz</span>
+          <span class="flex items-center gap-1">
+            <span class="text-sm font-semibold">Prikaz</span>
+            <app-info-tip heading="Prikaz">
+              @for (mode of uiModes; track mode.value) {
+                <p [class.mt-2]="!$first"><strong>{{ mode.label }}:</strong> {{ mode.hint }}</p>
+              }
+            </app-info-tip>
+          </span>
           <div class="chip-group mt-1">
             @for (mode of uiModes; track mode.value) {
               <button
@@ -424,7 +431,6 @@
               </button>
             }
           </div>
-          <span class="text-xs muted">{{ uiModeHint() }}</span>
         </div>
       }
 

@@ -228,12 +228,7 @@ export class StaffListComponent {
     if (!account) return false;
     return account.id === this.auth.currentUser()?.id || (account.role === Role.Owner && !this.auth.isOwner());
   });
-  readonly roleHint = signal('');
   readonly uiModes = UI_MODES;
-
-  uiModeHint(): string {
-    return UI_MODES.find((m) => m.value === this.form.controls.ui_mode.value)?.hint ?? '';
-  }
 
   takesBookings(member: StaffMember): boolean {
     return member.active && member.services.length > 0;
@@ -273,7 +268,6 @@ export class StaffListComponent {
     });
     if (this.roleLocked()) this.form.controls.role.disable();
     else this.form.controls.role.enable();
-    this.updateRoleHint();
     this.selectedServices.set(new Set(member?.services.map((s) => s.id) ?? []));
     const first = this.salonShifts()[0];
     const hours = member?.working_hours ?? [1, 2, 3, 4, 5].map((weekday) => ({ weekday, week: 0, starts_at: first?.starts_at ?? '09:00', ends_at: first?.ends_at ?? '17:00' }));
@@ -284,9 +278,6 @@ export class StaffListComponent {
     this.modalOpen.set(true);
   }
 
-  updateRoleHint(): void {
-    this.roleHint.set(STAFF_ROLE_OPTIONS.find((o) => o.value === this.form.controls.role.value)?.hint.replace(' Samo za nalog vezan za zaposlenog.', '') ?? '');
-  }
 
   closeForm(): void {
     this.modalOpen.set(false);
