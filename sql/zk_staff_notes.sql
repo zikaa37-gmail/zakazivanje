@@ -27,7 +27,8 @@ CREATE TABLE `zk_staff_notes` (
   CONSTRAINT `zk_staff_notes_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_resolved_by_foreign` FOREIGN KEY (`resolved_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `zk_staff_notes_taken_by_foreign` FOREIGN KEY (`taken_by`) REFERENCES `zk_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_staff_notes` VALUES (3,8,'Proba setovanja aplikacije','Polako ucimo kako se setuje aplikacija za rad. Vuk je na dobrom putu da savlada sve. Luka je glavni konsultant za razvoj aplikacije',NULL,NULL,NULL,NULL,NULL,'2026-11-25 11:24:19','2026-11-25 11:24:19');
 
 SET FOREIGN_KEY_CHECKS=1;

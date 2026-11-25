@@ -18,5 +18,6 @@ CREATE TABLE `zk_staff_note_recipients` (
   CONSTRAINT `zk_staff_note_recipients_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `zk_users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+INSERT INTO `zk_staff_note_recipients` VALUES (3,4,NULL),(3,7,NULL),(3,14,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
