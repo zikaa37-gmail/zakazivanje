@@ -110,6 +110,16 @@
     flex: none;
   }
 
+  .field-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .field-label-row .info-tip {
+    margin-block: -0.5rem;
+  }
+
   .info-tip-button {
     display: inline-flex;
     align-items: center;

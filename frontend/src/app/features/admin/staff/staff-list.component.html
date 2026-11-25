@@ -160,7 +160,7 @@
           />
         </div>
         <div class="field">
-          <span class="flex items-center gap-1">
+          <span class="field-label-row">
             <label for="staff-role">Uloga</label>
             <app-info-tip heading="Uloga">
               @for (option of roleOptions(); track option.value) {
@@ -409,7 +409,7 @@
 
       @if (editing()?.account; as account) {
         <div class="field mt-3" data-testid="staff-ui-mode">
-          <span class="flex items-center gap-1">
+          <span class="field-label-row">
             <span class="text-sm font-semibold">Prikaz</span>
             <app-info-tip heading="Prikaz">
               @for (mode of uiModes; track mode.value) {
