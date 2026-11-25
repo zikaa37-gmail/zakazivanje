@@ -97,21 +97,19 @@
         }
       </div>
     </div>
-    @if (member.services.length > 0) {
-      <div>
-        <div class="text-xs font-semibold muted">Radno vreme · {{ hoursSummary(member) }}</div>
-        <div class="flex gap-1 mt-1">
-          @for (day of weekdays; track day.value) {
-            <span
-              class="day-dot"
-              [class.on]="workDays(member).has(day.value)"
-              [title]="day.label"
-              >{{ day.short }}</span
-            >
-          }
-        </div>
+    <div>
+      <div class="text-xs font-semibold muted">Radno vreme · {{ hoursSummary(member) }}</div>
+      <div class="flex gap-1 mt-1">
+        @for (day of weekdays; track day.value) {
+          <span
+            class="day-dot"
+            [class.on]="workDays(member).has(day.value)"
+            [title]="day.label"
+            >{{ day.short }}</span
+          >
+        }
       </div>
-    }
+    </div>
     <div class="flex flex-wrap gap-2">
       @if (takesBookings(member)) {
         <span class="badge badge-success">Prima termine</span>
