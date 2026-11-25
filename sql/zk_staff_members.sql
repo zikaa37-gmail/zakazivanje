@@ -1,4 +1,4 @@
--- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (19.11.2026). Generiše deploy/build-database.py.
+-- Tabela `zk_staff_members`: šema i podaci iz lokalne baze (25.11.2026). Generiše deploy/build-database.py.
 
 SET NAMES utf8mb4;
 SET TIME_ZONE='+00:00';
@@ -25,8 +25,8 @@ CREATE TABLE `zk_staff_members` (
   `rotation_weeks` tinyint unsigned NOT NULL DEFAULT '1',
   `rotation_starts_on` date DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-INSERT INTO `zk_staff_members` VALUES (1,'Danijela','Đokić','Vlasnica','+381646370620','devtestzikaa+danijela@gmail.com','#c2185b',NULL,NULL,1,0,'2026-11-17 13:07:44','2026-11-17 13:51:29',1,NULL),(2,'Tijana','XXX','Kozmetičarka','063111111','devtestzikaa+tijana@gmail.com','#7c3aed',NULL,NULL,1,1,'2026-11-17 13:07:44','2026-11-17 13:52:04',1,NULL),(3,'Luka','Matović',NULL,'+381656635952','luka.matovic@gmail.com','#7c3aed',NULL,NULL,1,0,'2026-11-18 15:19:32','2026-11-18 15:19:32',1,NULL);
+INSERT INTO `zk_staff_members` VALUES (1,'Danijela','Đokić','Vlasnica','+381646370620','devtestzikaa+danijela@gmail.com','#c2185b',NULL,NULL,1,0,'2026-11-17 13:07:44','2026-11-17 13:51:29',1,NULL),(2,'Tijana','XXX','Kozmetičarka','063111111','devtestzikaa+tijana@gmail.com','#7c3aed',NULL,NULL,1,1,'2026-11-17 13:07:44','2026-11-17 13:52:04',1,NULL),(3,'Luka','Matović',NULL,'+381656635952','luka.matovic@gmail.com','#7c3aed',NULL,NULL,1,0,'2026-11-18 15:19:32','2026-11-18 15:19:32',1,NULL),(5,'Luka','Matović',NULL,NULL,'luka@fiskultura.rs',NULL,NULL,NULL,0,2,'2026-11-25 07:40:23','2026-11-25 07:42:30',1,NULL),(6,'Vuk','Matović',NULL,NULL,'drogiranirakun619@gmail.com',NULL,NULL,NULL,1,3,'2026-11-25 07:40:23','2026-11-25 07:40:23',1,NULL);
 
 SET FOREIGN_KEY_CHECKS=1;
